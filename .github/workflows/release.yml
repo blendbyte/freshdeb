@@ -93,7 +93,7 @@ jobs:
 
       # The release must read package.yaml at the commit that was built:
       # release.py refuses builds whose versions disagree with it.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.source.outputs.sha }}
 
