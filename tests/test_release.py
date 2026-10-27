@@ -99,12 +99,12 @@ class ReleaseTests(unittest.TestCase):
                     (build / "build-info.json").write_text(json.dumps(info))
         return out
 
-    def publish(self, artifacts, bootstrap=False):
+    def publish(self, artifacts, bootstrap=False, all_builds=False):
         repo = Path(tempfile.mkdtemp(dir=self.work)) / "repo"
         repo.mkdir()
         run("bash", str(ROOT / "scripts/sync-repo.sh"), "pull", str(repo), str(self.remote))
         changed = release.release(self.root, repo, artifacts, self.key, bootstrap=bootstrap,
-                                  pool_source=str(self.remote))
+                                  pool_source=str(self.remote), all_builds=all_builds)
         run("bash", str(ROOT / "scripts/sync-repo.sh"), "push", str(repo), str(self.remote))
         return changed
 
@@ -188,6 +188,21 @@ class ReleaseTests(unittest.TestCase):
         before = self.bootstrap()
         self.edit_package('.tracks["9.1"].revision = 2')
         self.publish(self.artifacts(tracks=["9.1"], publish=False))
+        self.assertEqual(before, self.indexes())
+
+    def test_bootstrap_with_nothing_to_publish_fails(self):
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "nothing to publish"):
+            self.publish(self.artifacts(publish=False), bootstrap=True)
+
+    def test_manual_release_publishes_test_only_builds(self):
+        self.publish(self.artifacts(publish=False), bootstrap=True, all_builds=True)
+        pkg = freshdeb.load_package("valkey", self.root)
+        self.assertEqual(self.version_in(self.indexes(), "bookworm", "valkey-9"),
+                         pkg.version(self.config, "9.1", "bookworm"))
+
+    def test_nothing_new_still_syncs(self):
+        before = self.bootstrap()
+        self.assertEqual(self.publish(self.artifacts(tracks=["9.1"], publish=False)), 0)
         self.assertEqual(before, self.indexes())
 
     def test_refuses_builds_that_disagree_with_the_manifest(self):

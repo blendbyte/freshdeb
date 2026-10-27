@@ -59,7 +59,14 @@ case "$mode" in
         # new Release next to old Packages files ("Hash Sum mismatch").
         immutable=(--cache-control "public, max-age=31536000, immutable")
         fresh=(--cache-control "no-cache")
-        aws s3 sync "$repo/pool/" "$remote/pool/" "${immutable[@]}" "${options[@]}"
+        for dir in db dists; do
+            [[ -d "$repo/$dir" ]] || { echo "ERROR: $repo/$dir missing; refusing to upload" >&2; exit 1; }
+        done
+        # pool/ only holds files new in this release; an alias-only or
+        # nothing-new release has none.
+        if [[ -d "$repo/pool" ]]; then
+            aws s3 sync "$repo/pool/" "$remote/pool/" "${immutable[@]}" "${options[@]}"
+        fi
         aws s3 sync "$repo/db/" "$remote/db/" "${options[@]}"
         aws s3 sync "$repo/dists/" "$remote/dists/" "${fresh[@]}" \
             --exclude '*/Release' --exclude '*/Release.gpg' --exclude '*/InRelease' "${options[@]}"

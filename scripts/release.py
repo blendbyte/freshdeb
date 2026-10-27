@@ -123,8 +123,12 @@ def read_indexes(repo, catalog):
 
 # ─── artifacts ──────────────────────────────────────────────────────────────
 
-def collect(artifacts, catalog):
+def collect(artifacts, catalog, all_builds=False):
     """Validate build results against the catalog at this commit.
+
+    Builds not marked publishable (canaries, test-only runs) are ignored,
+    unless all_builds is set: a release dispatched by hand for a specific
+    run publishes everything in it.
 
     Returns [(info, component, [(deb_path, fields)])] for builds to publish.
     """
@@ -133,7 +137,7 @@ def collect(artifacts, catalog):
     for info_path in sorted(artifacts.rglob("build-info.json")):
         info = json.loads(info_path.read_text())
         label = f"{info['package']} {info['track']} {info['codename']}/{info['arch']}"
-        if not info.get("publish"):
+        if not info.get("publish") and not all_builds:
             print(f"  ignore   {label}: not a publishable build")
             continue
         if info.get("skipped"):
@@ -287,7 +291,7 @@ def write_status(repo, catalog, after, commit=None):
     (repo / "status.json").write_text(json.dumps(status, indent=2, sort_keys=True) + "\n")
 
 
-def release(root, repo, artifacts, key, bootstrap=False, pool_source=None, commit=None):
+def release(root, repo, artifacts, key, bootstrap=False, pool_source=None, commit=None, all_builds=False):
     catalog = Catalog(root)
     errors = freshdeb.validate_all(root)
     require(not errors, "catalog does not validate:\n  " + "\n  ".join(errors))
@@ -303,7 +307,9 @@ def release(root, repo, artifacts, key, bootstrap=False, pool_source=None, commi
     before = read_indexes(repo, catalog)
     print(f"Restored state: {len(before)} index entries")
 
-    builds = collect(artifacts, catalog)
+    builds = collect(artifacts, catalog, all_builds)
+    require(builds or not bootstrap, "nothing to publish; a bootstrap needs at least one build "
+                                     "(were the builds made with publishing off? use --all-builds)")
     expected = include(repo, catalog, before, builds)
     sync_aliases(repo, catalog, pool_source)
     reprepro(repo, "export")
@@ -325,10 +331,12 @@ def main():
     parser.add_argument("--bootstrap", action="store_true", help="create a new, empty repository")
     parser.add_argument("--pool-source", help="s3://bucket[/prefix] or a local directory holding pool/")
     parser.add_argument("--commit", help="freshdeb commit being released (recorded in status.json)")
+    parser.add_argument("--all-builds", action="store_true",
+                        help="also publish builds not marked publishable (manual releases of a chosen run)")
     args = parser.parse_args()
     try:
         release(args.root.resolve(), args.repo.resolve(), args.artifacts.resolve(), args.key,
-                args.bootstrap, args.pool_source, args.commit)
+                args.bootstrap, args.pool_source, args.commit, args.all_builds)
     except FreshdebError as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 1

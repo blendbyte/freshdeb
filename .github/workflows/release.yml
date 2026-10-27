@@ -71,6 +71,8 @@ jobs:
           script: |
             const runId = process.env.RUN_ID;
             if (!/^[0-9]+$/.test(runId)) throw new Error('run_id must be a numeric Actions run ID');
+            // The release runs this branch's tooling with the signing key.
+            if (context.ref !== 'refs/heads/main') throw new Error('Releases run from main only');
             const { data: run } = await github.rest.actions.getWorkflowRun({
               owner: context.repo.owner, repo: context.repo.repo, run_id: Number(runId),
             });
@@ -98,11 +100,11 @@ jobs:
             }
             core.setOutput('sha', run.head_sha);
 
-      # The release must read package.yaml at the commit that was built:
-      # release.py refuses builds whose versions disagree with it.
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ steps.source.outputs.sha }}
+      # Release tooling and package.yaml come from main as it is now, so
+      # release fixes also apply to re-publishing older runs. A build can't
+      # drift from the manifest: release.py refuses builds whose versions
+      # disagree with package.yaml.
+      - uses: actions/checkout@v7
 
       - name: Install repository tools
         run: |
@@ -142,10 +144,18 @@ jobs:
           retention-days: 30
 
       - name: Merge builds and validate
+        env:
+          # The commit the builds came from; recorded in status.json so the
+          # next push to main plans everything changed since.
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           export GNUPGHOME="$RUNNER_TEMP/gnupg"
-          args=(repo artifacts --key "$GPG_KEY_ID" --pool-source "s3://${BUCKET}" --commit "$(git rev-parse HEAD)")
+          args=(repo artifacts --key "$GPG_KEY_ID" --pool-source "s3://${BUCKET}" --commit "$SOURCE_SHA")
           [[ "$BOOTSTRAP" == "true" ]] && args+=(--bootstrap)
+          # Dispatched by hand for a chosen run: publish all of its builds,
+          # including ones built with publishing off. ci.yml's automatic
+          # release only takes the builds its plan marked publishable.
+          [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]] && args+=(--all-builds)
           python3 scripts/release.py "${args[@]}" | tee release.log
           {
             echo '### Release'
