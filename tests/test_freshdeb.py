@@ -141,6 +141,17 @@ class ControlTests(unittest.TestCase):
         self.assertIn("Build-Depends:\n debhelper-compat (= 13),\n libfoo-dev,\n", text)
         self.assertIn("Description: demo\n long text\n .\n more\n", text)
         self.assertEqual(freshdeb.control_binaries(tmp), {"demo-bin": "any", "demo-doc": "all"})
+        self.assertIn("Source: demo\nPriority: optional\n", text)
+        shutil.rmtree(tmp)
+
+    def test_rewrite_keeps_existing_priority(self):
+        tmp = Path(tempfile.mkdtemp())
+        (tmp / "control").write_text("Source: demo\nSection: net\nPriority: extra\nMaintainer: x <x@x>\n\n"
+                                     "Package: demo\nArchitecture: any\nDescription: d\n")
+        freshdeb.rewrite_control(tmp, "freshdeb <packages@freshdeb.com>")
+        text = (tmp / "control").read_text()
+        self.assertIn("Section: net\nPriority: extra\n", text)
+        self.assertEqual(text.count("Priority"), 1)
         shutil.rmtree(tmp)
 
     def test_autopkgtest_plan(self):

@@ -670,7 +670,11 @@ def make_orig_tarball(src, tarball, prefix, mtime):
 
 def rewrite_control(debian_dir, maintainer):
     """Make us the maintainer of the source package and drop Debian's VCS
-    pointers: bugs in our builds must come to us, not to Debian."""
+    pointers: bugs in our builds must come to us, not to Debian.
+
+    Also default Priority to optional. Current Debian packaging may omit it
+    (dpkg >= 1.22 fills it in), but older dpkg then builds .debs without a
+    Priority, and reprepro refuses those."""
     path = debian_dir / "control"
     paragraphs = control_paragraphs(path.read_text())
     source = paragraphs[0]
@@ -686,6 +690,9 @@ def rewrite_control(debian_dir, maintainer):
                 kept.append(["XSBC-Original-Maintainer", original.strip()])
             continue
         kept.append([key, value])
+    if not any(key == "Priority" for key, _ in kept):
+        after = next((i + 1 for i, (key, _) in enumerate(kept) if key == "Section"), 1)
+        kept.insert(after, ["Priority", "optional"])
     paragraphs[0] = kept
     path.write_text(render_control(paragraphs))
 
