@@ -1,0 +1,11 @@
+# This is included in a test file, which never gets displayed in a browser.
+golang-github-rclone-rclone-dev: privacy-breach-logo (http://www.memset.com/images/memset_logo_2010.gif) [usr/share/gocode/src/github.com/rclone/rclone/backend/http/test/index_files/memstore.html]
+# These are test files checking for handling odd encodings
+golang-github-rclone-rclone-dev: national-encoding [usr/share/gocode/src/github.com/rclone/rclone/cmd/bisync/testdata/*]
+# Files are needed for tests, they are not docs
+golang-github-rclone-rclone-dev: package-contains-documentation-outside-usr-share-doc [*/test/*]
+golang-github-rclone-rclone-dev: package-contains-documentation-outside-usr-share-doc [*/testdata/*]
+golang-github-rclone-rclone-dev: package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/rclone/rclone/cmd/mountlib/mount.md]
+golang-github-rclone-rclone-dev: package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/rclone/rclone/cmd/selfupdate/selfupdate.md]
+golang-github-rclone-rclone-dev: package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/rclone/rclone/cmd/serve/docker/docker.md]
+golang-github-rclone-rclone-dev: package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/rclone/rclone/vfs/vfs.md]

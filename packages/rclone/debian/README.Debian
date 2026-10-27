@@ -1,0 +1,23 @@
+Disabled Features
+=================
+
+Some rclone features are disabled in the Debian build,
+since the go modules they depend on are not yet available in Debian.
+
+Disabled backends:
+- archive (squashfs): requires diskfs
+- azureblob and azurefiles
+- cloudinary
+- filescom
+- internxt (requires internxt/rclone-adapter)
+- oracleobjectstorage
+- qingstor
+- storj
+
+Disabled commands:
+- nfsmount (serve nfs)
+- serve ftp
+- serve s3
+
+Other disabled features:
+- gomobile

@@ -1,0 +1,89 @@
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Date: Thu, 15 Oct 2026 15:32:10 -0400
+Subject: Disable nfs server
+
+Forwarded: not-needed
+
+This patch disables the nfs server (cmd/serve/nfs) as willscott/go-nfs is
+currently not available in Debian.
+---
+ cmd/all/all.go                       | 2 --
+ cmd/nfsmount/nfsmount.go             | 2 +-
+ cmd/nfsmount/nfsmount_test.go        | 2 +-
+ cmd/nfsmount/nfsmount_unsupported.go | 2 --
+ cmd/serve/nfs/nfs.go                 | 2 +-
+ cmd/serve/nfs/nfs_test.go            | 2 +-
+ 6 files changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/cmd/all/all.go b/cmd/all/all.go
+index f27072e..dc9cd90 100644
+--- a/cmd/all/all.go
++++ b/cmd/all/all.go
+@@ -47,7 +47,6 @@ import (
+ 	_ "github.com/rclone/rclone/cmd/move"
+ 	_ "github.com/rclone/rclone/cmd/moveto"
+ 	_ "github.com/rclone/rclone/cmd/ncdu"
+-	_ "github.com/rclone/rclone/cmd/nfsmount"
+ 	_ "github.com/rclone/rclone/cmd/obscure"
+ 	_ "github.com/rclone/rclone/cmd/purge"
+ 	_ "github.com/rclone/rclone/cmd/rc"
+@@ -61,7 +60,6 @@ import (
+ 	_ "github.com/rclone/rclone/cmd/serve/dlna"
+ 	_ "github.com/rclone/rclone/cmd/serve/docker"
+ 	_ "github.com/rclone/rclone/cmd/serve/http"
+-	_ "github.com/rclone/rclone/cmd/serve/nfs"
+ 	_ "github.com/rclone/rclone/cmd/serve/restic"
+ 	_ "github.com/rclone/rclone/cmd/serve/s3"
+ 	_ "github.com/rclone/rclone/cmd/serve/sftp"
+diff --git a/cmd/nfsmount/nfsmount.go b/cmd/nfsmount/nfsmount.go
+index b33fb2d..24b84e6 100644
+--- a/cmd/nfsmount/nfsmount.go
++++ b/cmd/nfsmount/nfsmount.go
+@@ -1,4 +1,4 @@
+-//go:build unix
++//go:build ignore
+ 
+ // Package nfsmount implements mounting functionality using serve nfs command
+ //
+diff --git a/cmd/nfsmount/nfsmount_test.go b/cmd/nfsmount/nfsmount_test.go
+index f55d1d8..0bff899 100644
+--- a/cmd/nfsmount/nfsmount_test.go
++++ b/cmd/nfsmount/nfsmount_test.go
+@@ -1,4 +1,4 @@
+-//go:build unix
++//go:build ignore
+ 
+ package nfsmount
+ 
+diff --git a/cmd/nfsmount/nfsmount_unsupported.go b/cmd/nfsmount/nfsmount_unsupported.go
+index 7ff9f1a..f00efcc 100644
+--- a/cmd/nfsmount/nfsmount_unsupported.go
++++ b/cmd/nfsmount/nfsmount_unsupported.go
+@@ -1,7 +1,5 @@
+ // Build for nfsmount for unsupported platforms to stop go complaining
+ // about "no buildable Go source files "
+ 
+-//go:build !unix
+-
+ // Package nfsmount implements mount command using NFS.
+ package nfsmount
+diff --git a/cmd/serve/nfs/nfs.go b/cmd/serve/nfs/nfs.go
+index 3a4b9a2..c1acd5a 100644
+--- a/cmd/serve/nfs/nfs.go
++++ b/cmd/serve/nfs/nfs.go
+@@ -1,4 +1,4 @@
+-//go:build unix
++//go:build ignore
+ 
+ // Package nfs implements a server to serve a VFS remote over the NFSv3 protocol
+ //
+diff --git a/cmd/serve/nfs/nfs_test.go b/cmd/serve/nfs/nfs_test.go
+index 7031157..4109b0a 100644
+--- a/cmd/serve/nfs/nfs_test.go
++++ b/cmd/serve/nfs/nfs_test.go
+@@ -1,4 +1,4 @@
+-//go:build unix
++//go:build ignore
+ 
+ // The serving is tested in cmd/nfsmount - here we test anything else
+ package nfs

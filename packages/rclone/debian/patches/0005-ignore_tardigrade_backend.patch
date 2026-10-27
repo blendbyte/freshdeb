@@ -1,0 +1,45 @@
+From: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Date: Fri, 27 Nov 2020 02:06:23 +0800
+Subject: ignore_tardigrade_backend
+
+===================================================================
+
+Forwarded: not-needed
+---
+ backend/all/all.go      | 1 -
+ backend/storj/fs.go     | 2 +-
+ backend/storj/object.go | 2 +-
+ 3 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/backend/all/all.go b/backend/all/all.go
+index 586d7a3..7bd59b3 100644
+--- a/backend/all/all.go
++++ b/backend/all/all.go
+@@ -62,7 +62,6 @@ import (
+ 	_ "github.com/rclone/rclone/backend/sharefile"
+ 	_ "github.com/rclone/rclone/backend/sia"
+ 	_ "github.com/rclone/rclone/backend/smb"
+-	_ "github.com/rclone/rclone/backend/storj"
+ 	_ "github.com/rclone/rclone/backend/sugarsync"
+ 	_ "github.com/rclone/rclone/backend/swift"
+ 	_ "github.com/rclone/rclone/backend/ulozto"
+diff --git a/backend/storj/fs.go b/backend/storj/fs.go
+index 84be8bc..2257550 100644
+--- a/backend/storj/fs.go
++++ b/backend/storj/fs.go
+@@ -1,4 +1,4 @@
+-//go:build !plan9
++//go:build ignore
+ 
+ // Package storj provides an interface to Storj decentralized object storage.
+ package storj
+diff --git a/backend/storj/object.go b/backend/storj/object.go
+index 479d54a..1c5a0e5 100644
+--- a/backend/storj/object.go
++++ b/backend/storj/object.go
+@@ -1,4 +1,4 @@
+-//go:build !plan9
++//go:build ignore
+ 
+ package storj
+ 

@@ -1,0 +1,28 @@
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Date: Thu, 15 Oct 2026 15:32:10 -0400
+Subject: Disable azure backends
+
+Forwarded: not-needed
+
+The azure backends depend on golang-github-azure-azure-sdk-for-go, but the
+Debian package is outdated. Therefore, we can't use the azure backends for
+now.
+
+See https://bugs.debian.org/1059083 for more info.
+---
+ backend/all/all.go | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/backend/all/all.go b/backend/all/all.go
+index 740e136..b42b5ba 100644
+--- a/backend/all/all.go
++++ b/backend/all/all.go
+@@ -5,8 +5,6 @@ import (
+ 	// Active file systems
+ 	_ "github.com/rclone/rclone/backend/alias"
+ 	_ "github.com/rclone/rclone/backend/archive"
+-	_ "github.com/rclone/rclone/backend/azureblob"
+-	_ "github.com/rclone/rclone/backend/azurefiles"
+ 	_ "github.com/rclone/rclone/backend/b2"
+ 	_ "github.com/rclone/rclone/backend/box"
+ 	_ "github.com/rclone/rclone/backend/cache"

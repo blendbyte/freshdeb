@@ -1,0 +1,29 @@
+From: "Dr. Tobias Quathamer" <toddy@debian.org>
+Date: Thu, 17 Oct 2019 22:53:27 +0200
+Subject: Do not include installation instructions in manpage
+
+Forwarded: not-needed
+---
+ bin/make_manual.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bin/make_manual.py b/bin/make_manual.py
+index 2ba0380..904a282 100755
+--- a/bin/make_manual.py
++++ b/bin/make_manual.py
+@@ -16,7 +16,6 @@ outfile = "MANUAL.md"
+ # Order to add docs segments to make outfile
+ docs = [
+     "_index.md",
+-    "install.md",
+     "docs.md",
+     "remote_setup.md",
+     "filtering.md",
+@@ -132,6 +131,7 @@ commands_order = [
+ 
+ # Docs which aren't made into outfile
+ ignore_docs = [
++    "install.md",
+     "downloads.md",
+     "privacy.md",
+     "sponsor.md",

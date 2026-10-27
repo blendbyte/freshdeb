@@ -1,0 +1,2 @@
+usr/bin/rclone usr/sbin/mount.rclone
+usr/share/man/man1/rclone.1.gz usr/share/man/man1/mount.rclone.1.gz

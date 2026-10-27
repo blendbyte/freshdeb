@@ -1,0 +1,4 @@
+#False positive, generated from make_manual.py (and re-made during build)
+rclone source: source-is-missing [MANUAL.html]
+#False positive, this is preferred form for modification of this file
+rclone source: source-is-missing [lib/http/templates/index.html]

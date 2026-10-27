@@ -1,0 +1,351 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -5,200 +5,20 @@
+  Dr. Tobias Quathamer <toddy@debian.org>,
+  Matthew Vernon <matthew@debian.org>,
+ Build-Depends:
+- debhelper-compat (= 14),
+- dh-sequence-bash-completion,
+- dh-sequence-golang,
+- fuse3 [linux-any],
+- golang-any,
+- golang-bazil-fuse-dev (>= 0.0~git20230120.62a210f~),
+- golang-github-a8m-tree-dev,
+- golang-github-aalpar-deheap-dev (>= 1.1.2~),
+- golang-github-abbot-go-http-auth-dev (>= 0.4.0),
+- golang-github-adrg-xdg-dev,
+- golang-github-a1ex3-zstd-seekable-format-go-dev,
+- golang-github-anacrolix-dms-dev (>= 1.7.2~),
+- golang-github-atotto-clipboard-dev (>= 0.1.4~),
+- golang-github-aws-aws-sdk-go-v2-dev (>= 1.41.5~),
+- golang-github-azure-go-ntlmssp-dev,
+- golang-github-buengese-sgzip-dev,
+- golang-github-cloudsoda-go-smb2-dev (>= 0.0~20250228.d4c70e6~),
+- golang-github-colinmarc-hdfs-dev (>= 2.4.0~),
+- golang-github-coreos-bbolt-dev (>= 1.3.5),
+- golang-github-coreos-go-semver-dev (>= 0.3.1~),
+- golang-github-coreos-go-systemd-dev,
+- golang-github-dop251-scsu-dev,
+- golang-github-dropbox-dropbox-sdk-go-unofficial-dev (>= 6.4.0~),
+- golang-github-gabriel-vasile-mimetype-dev,
+- golang-github-gdamore-tcell.v2-dev,
+- golang-github-go-chi-chi-dev (>= 5.2.5~),
+- golang-github-go-git-go-billy-dev,
+- golang-github-golang-jwt-jwt-v5-dev (>= 5.3.1~),
+- golang-github-google-uuid-dev,
+- golang-github-hanwen-go-fuse-dev (>= 2.9.0~),
+- golang-github-ibm-go-sdk-core-v5-dev,
+- golang-github-jcmturner-gokrb5.v8-dev (>= 8.4.4~),
+- golang-github-jlaffaye-ftp-dev,
+- golang-github-jzelinskie-whirlpool-dev,
+- golang-github-klauspost-compress-dev (>= 1.18.5~),
+- golang-github-koofr-go-httpclient-dev,
+- golang-github-koofr-go-koofrclient-dev,
+- golang-github-lanrat-extsort-dev,
+- golang-github-mattn-go-colorable-dev (>= 0.1.14~),
+- golang-github-mattn-go-runewidth-dev,
+- golang-github-mholt-archives-dev,
+- golang-github-minio-minio-go-v7-dev,
+- golang-github-max-sum-base32768-dev,
+- golang-github-mitchellh-go-homedir-dev,
+- golang-github-moby-sys-dev,
+- golang-github-muesli-reflow-dev,
+- golang-github-ncw-swift-v2-dev (>= 2.0.5~),
+- golang-github-patrickmn-go-cache-dev,
+- golang-github-peterh-liner-dev,
+- golang-github-pkg-sftp-dev (>= 1.13.10~),
+- golang-github-pmezard-go-difflib-dev,
+- golang-github-prometheus-client-golang-dev,
+- golang-github-putdotio-go-putio-dev,
+- golang-github-rclone-go-proton-api-dev,
+- golang-github-rclone-proton-api-bridge-dev,
+- golang-github-rfjakob-eme-dev (>= 1.2.0~),
+- golang-github-rivo-uniseg-dev,
+- golang-github-rogpeppe-go-internal-dev,
+- golang-github-shirou-gopsutil-dev (>= 4.26.3~),
+- golang-github-skratchdot-open-golang-dev,
+- golang-github-spf13-cobra-dev (>= 1.10.2~),
+- golang-github-spf13-pflag-dev (>= 1.0.10~),
+- golang-github-stretchr-testify-dev (>= 1.11.1~) <!nocheck>,
+- golang-github-t3rm1n4l-go-mega-dev (>= 0.0~git20251120.6845944~),
+- golang-github-unknwon-goconfig-dev,
+- golang-github-wk8-go-ordered-map-dev,
+- golang-github-xanzy-ssh-agent-dev (>= 0.3.3~),
+- golang-github-youmark-pkcs8-dev,
+- golang-github-zeebo-blake3-dev,
+- golang-github-zeebo-xxh3-dev,
+- golang-golang-x-crypto-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-oauth2-dev,
+- golang-golang-x-sync-dev,
+- golang-golang-x-sys-dev,
+- golang-golang-x-text-dev (>= 0.37.0~),
+- golang-golang-x-time-dev,
+- golang-google-api-dev (>= 0.275.0~),
+- golang-gopkg-natefinch-lumberjack.v2-dev,
+- golang-gopkg-validator.v2-dev,
+- golang-gopkg-yaml.v3-dev,
+- golang-github-moul-http2curl-dev,
+- golang-github-protonmail-go-crypto-dev,
+- golang-github-golang-jwt-jwt-dev (>= 5.0.0+really4.5.2~),
+- golang-github-pkg-xattr-dev,
+- golang-github-pquerna-otp-dev,
+- golang-golang-x-mobile-dev,
+- golang-golang-x-term-dev,
+- pandoc | go-md2man, mandoc,
++ debhelper-compat (= 13),
++ pandoc,
+  python3,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.3
+ Homepage: https://github.com/rclone/rclone
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/rclone
+ Vcs-Git: https://salsa.debian.org/go-team/packages/rclone.git
+ XS-Go-Import-Path: github.com/rclone/rclone
+ 
+-Package: golang-github-rclone-rclone-dev
+-Section: golang
+-Architecture: all
+-Depends:
+- golang-bazil-fuse-dev (>= 0.0~git20230120.62a210f~),
+- golang-github-a8m-tree-dev,
+- golang-github-aalpar-deheap-dev (>= 1.1.2~),
+- golang-github-abbot-go-http-auth-dev (>= 0.4.0),
+- golang-github-adrg-xdg-dev,
+- golang-github-a1ex3-zstd-seekable-format-go-dev,
+- golang-github-anacrolix-dms-dev (>= 1.7.2~),
+- golang-github-atotto-clipboard-dev (>= 0.1.4~),
+- golang-github-aws-aws-sdk-go-v2-dev (>= 1.41.5~),
+- golang-github-azure-go-ntlmssp-dev,
+- golang-github-buengese-sgzip-dev,
+- golang-github-cloudsoda-go-smb2-dev (>= 0.0~20250228.d4c70e6~),
+- golang-github-colinmarc-hdfs-dev (>= 2.4.0~),
+- golang-github-coreos-bbolt-dev (>= 1.3.5),
+- golang-github-coreos-go-semver-dev (>= 0.3.1~),
+- golang-github-coreos-go-systemd-dev,
+- golang-github-dop251-scsu-dev,
+- golang-github-dropbox-dropbox-sdk-go-unofficial-dev (>= 6.4.0~),
+- golang-github-gabriel-vasile-mimetype-dev,
+- golang-github-gdamore-tcell.v2-dev,
+- golang-github-go-chi-chi-dev (>= 5.2.5~),
+- golang-github-go-git-go-billy-dev,
+- golang-github-golang-jwt-jwt-v5-dev (>= 5.3.1~),
+- golang-github-google-uuid-dev,
+- golang-github-hanwen-go-fuse-dev (>= 2.9.0~),
+- golang-github-ibm-go-sdk-core-v5-dev,
+- golang-github-jcmturner-gokrb5.v8-dev (>= 8.4.4~),
+- golang-github-jlaffaye-ftp-dev,
+- golang-github-jzelinskie-whirlpool-dev,
+- golang-github-klauspost-compress-dev (>= 1.18.5~),
+- golang-github-koofr-go-httpclient-dev,
+- golang-github-koofr-go-koofrclient-dev,
+- golang-github-lanrat-extsort-dev,
+- golang-github-mattn-go-colorable-dev (>= 0.1.14~),
+- golang-github-mattn-go-runewidth-dev,
+- golang-github-mholt-archives-dev,
+- golang-github-minio-minio-go-v7-dev,
+- golang-github-max-sum-base32768-dev,
+- golang-github-mitchellh-go-homedir-dev,
+- golang-github-moby-sys-dev,
+- golang-github-muesli-reflow-dev,
+- golang-github-ncw-swift-v2-dev (>= 2.0.5~),
+- golang-github-patrickmn-go-cache-dev,
+- golang-github-peterh-liner-dev,
+- golang-github-pkg-sftp-dev (>= 1.13.10~),
+- golang-github-pmezard-go-difflib-dev,
+- golang-github-prometheus-client-golang-dev,
+- golang-github-putdotio-go-putio-dev,
+- golang-github-rclone-go-proton-api-dev,
+- golang-github-rclone-proton-api-bridge-dev,
+- golang-github-rfjakob-eme-dev (>= 1.2.0~),
+- golang-github-rivo-uniseg-dev,
+- golang-github-rogpeppe-go-internal-dev,
+- golang-github-shirou-gopsutil-dev (>= 4.26.3~),
+- golang-github-skratchdot-open-golang-dev,
+- golang-github-spf13-cobra-dev (>= 1.10.2~),
+- golang-github-spf13-pflag-dev (>= 1.0.10~),
+- golang-github-stretchr-testify-dev (>= 1.11.1~) <!nocheck>,
+- golang-github-t3rm1n4l-go-mega-dev (>= 0.0~git20251120.6845944~),
+- golang-github-unknwon-goconfig-dev,
+- golang-github-wk8-go-ordered-map-dev,
+- golang-github-xanzy-ssh-agent-dev (>= 0.3.3~),
+- golang-github-youmark-pkcs8-dev,
+- golang-github-zeebo-blake3-dev,
+- golang-github-zeebo-xxh3-dev,
+- golang-golang-x-crypto-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-oauth2-dev,
+- golang-golang-x-sync-dev,
+- golang-golang-x-sys-dev,
+- golang-golang-x-text-dev (>= 0.37.0~),
+- golang-golang-x-time-dev,
+- golang-google-api-dev (>= 0.275.0~),
+- golang-gopkg-natefinch-lumberjack.v2-dev,
+- golang-gopkg-validator.v2-dev,
+- golang-gopkg-yaml.v3-dev,
+- golang-github-moul-http2curl-dev,
+- golang-github-protonmail-go-crypto-dev,
+- golang-github-golang-jwt-jwt-dev (>= 5.0.0+really4.5.2~),
+- golang-github-pkg-xattr-dev,
+- golang-github-pquerna-otp-dev,
+- golang-golang-x-mobile-dev,
+- golang-golang-x-term-dev,
+-Description: go source code of rclone
+- Rclone is a program to sync files and directories between the local
+- file system and a variety of cloud storage providers.
+- .
+- This package contains rclone's source code.
+-
+ Package: rclone
+ Architecture: any
+-Static-Built-Using:
+- ${misc:Static-Built-Using},
++Depends:
++ ${misc:Depends},
++ ${shlibs:Depends},
+ Suggests:
+  ca-certificates,
+  fuse | fuse3,
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -1,98 +1,54 @@
+ #!/usr/bin/make -f
+ 
+-# Disable backends/servers that depend on packages not (yet) in Debian.
+-# Also disable librclone and commands with missing dependencies.
+-export DH_GOLANG_EXCLUDES := \
+-	backend/archive \
+-	backend/azureblob \
+-	backend/azurefiles \
+-	backend/cloudinary \
+-	backend/filen \
+-	backend/filescom \
+-	backend/internxt \
+-	backend/oracleobjectstorage \
+-	backend/qingstor \
+-	backend/storj \
+-	cmd/archive \
+-	cmd/serve/ftp \
+-	cmd/serve/nfs \
+-	cmd/serve/s3 \
+-	librclone \
+-	# EOL
+-
+-# Also install test data and embedded asset files for //go:embed
+-export DH_GOLANG_INSTALL_EXTRA := \
+-	backend/alias/test \
+-	backend/drive/test \
+-	backend/http/test \
+-	backend/s3/provider \
+-	cmd/bisync/rc.md \
+-	cmd/lsf/testfiles \
+-	cmd/gui/dist.tag \
+-	cmd/gui/dist.zip \
+-	cmd/mountlib/mount.md \
+-	cmd/selfupdate/selfupdate.md \
+-	cmd/serve/docker/docker.md \
+-	cmd/serve/http/favicon.png \
+-	cmd/tree/testfiles \
+-	docs/data/backends \
+-	fs/operations/operationsflags/operationsflags.md \
+-	lib/http/templates \
+-	lib/transform/transform.md \
+-	vfs/vfs.md \
+-	# EOL
+-
+-export BUILDTESTDIR = $(CURDIR)/buildtest
+-include /usr/share/dpkg/buildopts.mk
+-NUM_CPUS := $(or $(DEB_BUILD_OPTION_PARALLEL),$(shell getconf _NPROCESSORS_ONLN 2>/dev/null),1)
+-
+-# some arches need more than 10 min to run TestTestsToRegexpLive
+-ARCHES_SLOW_TEST := mips64el mipsel
+-ifneq ($(findstring $(DEB_BUILD_ARCH),$(ARCHES_SLOW_TEST)),)
+-  EXTRA_TESTFLAGS := -timeout 20m
+-endif
++include /usr/share/dpkg/pkg-info.mk
++
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's ~170 golang-* packages, which
++# older releases don't have. That also brings back everything Debian has to
++# exclude for lack of packaged libraries (Azure, Oracle, Storj, serve s3/ftp/
++# nfs, ...): this is the same feature set as upstream's release binaries,
++# built with the same flags. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment.
++export CGO_ENABLED := 0
+ 
+ %:
+-	dh $@ --buildsystem=golang --builddirectory=_build
++	dh $@
++
++override_dh_auto_configure:
+ 
+-# The docs (MANUAL.md, MANUAL.html and rclone.1 manpage) all
+-# contain information about the download and installation
+-# of rclone. This is not useful for Debian.
+-# The solution is a patch for the docs build system, then
+-# regenerate the docs. See #941209.
+-execute_before_dh_install:
+-	# Generate MANUAL.md
+-	PATH=$${PATH}:$(CURDIR)/_build/bin ./bin/make_manual.py
+-	# Generate HTML and manpage
+-	if [ -x /usr/bin/pandoc ]; then \
+-	  pandoc -s --from markdown --to man MANUAL.md -o rclone.1; \
+-	  pandoc -s --from markdown --to html MANUAL.md -o MANUAL.html; \
+-	else \
+-	  go-md2man -in=MANUAL.md -out=rclone.1; \
+-	  mandoc -T html rclone.1 > MANUAL.html; \
+-	fi
++override_dh_auto_build:
++	go version
++	go build -trimpath -ldflags "-s -X github.com/rclone/rclone/fs.Version=v$(DEB_VERSION_UPSTREAM)" \
++		-o build/bin/rclone .
++	# Docs as in Debian: regenerate MANUAL.md (without installation
++	# instructions, see 0004) and build the man page and HTML from it.
++	PATH=$${PATH}:$(CURDIR)/build/bin ./bin/make_manual.py
++	pandoc -s --from markdown --to man MANUAL.md -o rclone.1
++	pandoc -s --from markdown --to html MANUAL.md -o MANUAL.html
+ 	sed 's|src="https://rclone.org/img/logo_on_light__horizontal_color.svg"|src="logo_on_light__horizontal_color.svg"|g' -i MANUAL.html
+ 	# Replace remote images with links to avoid privacy breaches
+ 	perl -0777 -i -pe 's{<img\b(?=[^>]*?\bsrc=["\x27](https?://[^"\x27]+)["\x27])(?=[^>]*?\balt=["\x27]([^"\x27]+)["\x27])?[^>]*?>}{defined $$2 ? qq{<a href="$$1">[$$2]</a>} : qq{<a href="$$1">[image]</a>}}gise' MANUAL.html
+-	# Now fix some lexgrog errors in the manpage:
+-	# Remove the only line with .hy on it (near the top of the file)
+ 	sed -i -e "/^\.hy/d" rclone.1
+-	# Use a proper NAME section header
+ 	sed -i -e "s/^\.SH Rclone/.SH NAME\nRclone \-/" rclone.1
+-	# Finally, replace the first occurence of .PP with a section header
+ 	sed -i -e "1,/^\.PP/{s/\.PP/.SH DESCRIPTION/}" rclone.1
++	# Shell completions from the binary itself, so they match this version.
++	build/bin/rclone completion bash - > build/rclone.bash
++	build/bin/rclone completion zsh - > build/rclone.zsh
++	build/bin/rclone completion fish - > build/rclone.fish
++
++# Upstream's test suite: Debian runs it but ignores failures, so it gates
++# nothing; freshdeb's smoke and upgrade tests run against the installed
++# package instead.
++override_dh_auto_test:
+ 
+-execute_after_dh_auto_clean:
+-	rm -f MANUAL.md MANUAL.html rclone.1 || /bin/true
++override_dh_auto_install:
++	install -D -m 0755 build/bin/rclone debian/tmp/usr/bin/rclone
++	install -D -m 0644 build/rclone.bash debian/rclone/usr/share/bash-completion/completions/rclone
++	install -D -m 0644 build/rclone.zsh debian/rclone/usr/share/zsh/vendor-completions/_rclone
++	install -D -m 0644 build/rclone.fish debian/rclone/usr/share/fish/vendor_completions.d/rclone.fish
+ 
+-# build-time tests for github.com/ncw/rclone/vfs access the config file
+-# so provide a null config
+-override_dh_auto_test:
+-ifeq ($(NUM_CPUS),1)
+-	@echo "Skipping dh_auto_test, known to hang autobuilder when there is only one CPU."
+-else
+-	-export RCLONE_CONFIG="/notfound"; dh_auto_test -- $(EXTRA_TESTFLAGS)
+-endif
++# Stripped Go binary: nothing for dwz to compress.
++override_dh_dwz:
+ 
+-execute_after_dh_fixperms:
+-	find debian/golang-github-rclone-rclone-dev/usr/share/gocode/src -executable -a -type f | xargs -r chmod a-x
++override_dh_auto_clean:
++	rm -rf build MANUAL.md MANUAL.html rclone.1

@@ -1,0 +1,59 @@
+From: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Date: Thu, 15 Oct 2026 15:32:10 -0400
+Subject: disable_backend_cloudinary
+
+===================================================================
+
+Forwarded: not-needed
+---
+ backend/all/all.go                           | 1 -
+ backend/cloudinary/cloudinary.go             | 3 +++
+ backend/cloudinary/cloudinary_test.go        | 2 ++
+ backend/cloudinary/cloudinary_unsupported.go | 2 ++
+ 4 files changed, 7 insertions(+), 1 deletion(-)
+ create mode 100644 backend/cloudinary/cloudinary_unsupported.go
+
+diff --git a/backend/all/all.go b/backend/all/all.go
+index b42b5ba..fde8e24 100644
+--- a/backend/all/all.go
++++ b/backend/all/all.go
+@@ -9,7 +9,6 @@ import (
+ 	_ "github.com/rclone/rclone/backend/box"
+ 	_ "github.com/rclone/rclone/backend/cache"
+ 	_ "github.com/rclone/rclone/backend/chunker"
+-	_ "github.com/rclone/rclone/backend/cloudinary"
+ 	_ "github.com/rclone/rclone/backend/combine"
+ 	_ "github.com/rclone/rclone/backend/compress"
+ 	_ "github.com/rclone/rclone/backend/crypt"
+diff --git a/backend/cloudinary/cloudinary.go b/backend/cloudinary/cloudinary.go
+index 8e9f17e..aa01f5f 100644
+--- a/backend/cloudinary/cloudinary.go
++++ b/backend/cloudinary/cloudinary.go
+@@ -1,4 +1,7 @@
+ // Package cloudinary provides an interface to the Cloudinary DAM
++
++//go:build ignore
++
+ package cloudinary
+ 
+ import (
+diff --git a/backend/cloudinary/cloudinary_test.go b/backend/cloudinary/cloudinary_test.go
+index 009771e..6366b5c 100644
+--- a/backend/cloudinary/cloudinary_test.go
++++ b/backend/cloudinary/cloudinary_test.go
+@@ -1,5 +1,7 @@
+ // Test Cloudinary filesystem interface
+ 
++//go:build ignore
++
+ package cloudinary_test
+ 
+ import (
+diff --git a/backend/cloudinary/cloudinary_unsupported.go b/backend/cloudinary/cloudinary_unsupported.go
+new file mode 100644
+index 0000000..abd38e9
+--- /dev/null
++++ b/backend/cloudinary/cloudinary_unsupported.go
+@@ -0,0 +1,2 @@
++// Package cloudinary provides an interface to the Cloudinary DAM
++package cloudinary

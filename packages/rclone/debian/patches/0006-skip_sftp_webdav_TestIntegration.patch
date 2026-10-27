@@ -1,0 +1,36 @@
+From: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Date: Fri, 27 Nov 2020 02:06:23 +0800
+Subject: skip_sftp_webdav_TestIntegration
+
+===================================================================
+
+Forwarded: not-needed
+---
+ backend/sftp/sftp_test.go     | 1 +
+ backend/webdav/webdav_test.go | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/backend/sftp/sftp_test.go b/backend/sftp/sftp_test.go
+index 2e9ad9f..6ea8278 100644
+--- a/backend/sftp/sftp_test.go
++++ b/backend/sftp/sftp_test.go
+@@ -14,6 +14,7 @@ import (
+ 
+ // TestIntegration runs integration tests against the remote
+ func TestIntegration(t *testing.T) {
++	t.Skip("no configuration available for sftp backend")
+ 	fstests.Run(t, &fstests.Opt{
+ 		RemoteName: "TestSFTPOpenssh:",
+ 		NilObject:  (*sftp.Object)(nil),
+diff --git a/backend/webdav/webdav_test.go b/backend/webdav/webdav_test.go
+index 1949a41..ec61fad 100644
+--- a/backend/webdav/webdav_test.go
++++ b/backend/webdav/webdav_test.go
+@@ -11,6 +11,7 @@ import (
+ 
+ // TestIntegration runs integration tests against the remote
+ func TestIntegration(t *testing.T) {
++	t.Skip("no configuration available for webdav backend")
+ 	fstests.Run(t, &fstests.Opt{
+ 		RemoteName: "TestWebdavNextcloud:",
+ 		NilObject:  (*Object)(nil),

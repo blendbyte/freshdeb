@@ -1,0 +1,65 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Fri, 16 Oct 2026 19:29:21 -0400
+Subject: Disable unsupported backends and commands in Debian
+
+Disable backends (archive, filen, internxt)
+and commands (archive, serve s3) whose dependencies are
+not packaged in Debian.
+
+Forwarded: not-needed
+---
+ backend/all/all.go | 7 -------
+ cmd/all/all.go     | 5 -----
+ 2 files changed, 12 deletions(-)
+
+Index: rclone/backend/all/all.go
+===================================================================
+--- rclone.orig/backend/all/all.go	2026-10-21 18:21:29.044576519 +0200
++++ rclone/backend/all/all.go	2026-10-21 18:21:44.824459794 +0200
+@@ -4,7 +4,6 @@
+ import (
+ 	// Active file systems
+ 	_ "github.com/rclone/rclone/backend/alias"
+-	_ "github.com/rclone/rclone/backend/archive"
+ 	_ "github.com/rclone/rclone/backend/b2"
+ 	_ "github.com/rclone/rclone/backend/box"
+ 	_ "github.com/rclone/rclone/backend/cache"
+@@ -19,7 +18,6 @@
+ 	_ "github.com/rclone/rclone/backend/fichier"
+ 	_ "github.com/rclone/rclone/backend/filefabric"
+ 	_ "github.com/rclone/rclone/backend/filelu"
+-	_ "github.com/rclone/rclone/backend/filen"
+ 	_ "github.com/rclone/rclone/backend/ftp"
+ 	_ "github.com/rclone/rclone/backend/gofile"
+ 	_ "github.com/rclone/rclone/backend/googlecloudstorage"
+@@ -32,7 +30,6 @@
+ 	_ "github.com/rclone/rclone/backend/iclouddrive"
+ 	_ "github.com/rclone/rclone/backend/imagekit"
+ 	_ "github.com/rclone/rclone/backend/internetarchive"
+-	_ "github.com/rclone/rclone/backend/internxt"
+ 	_ "github.com/rclone/rclone/backend/jottacloud"
+ 	_ "github.com/rclone/rclone/backend/koofr"
+ 	_ "github.com/rclone/rclone/backend/linkbox"
+Index: rclone/cmd/all/all.go
+===================================================================
+--- rclone.orig/cmd/all/all.go	2026-10-21 18:21:29.044576519 +0200
++++ rclone/cmd/all/all.go	2026-10-21 18:21:29.042386776 +0200
+@@ -5,10 +5,6 @@
+ 	// Active commands
+ 	_ "github.com/rclone/rclone/cmd"
+ 	_ "github.com/rclone/rclone/cmd/about"
+-	_ "github.com/rclone/rclone/cmd/archive"
+-	_ "github.com/rclone/rclone/cmd/archive/create"
+-	_ "github.com/rclone/rclone/cmd/archive/extract"
+-	_ "github.com/rclone/rclone/cmd/archive/list"
+ 	_ "github.com/rclone/rclone/cmd/authorize"
+ 	_ "github.com/rclone/rclone/cmd/backend"
+ 	_ "github.com/rclone/rclone/cmd/bisync"
+@@ -61,7 +57,6 @@
+ 	_ "github.com/rclone/rclone/cmd/serve/docker"
+ 	_ "github.com/rclone/rclone/cmd/serve/http"
+ 	_ "github.com/rclone/rclone/cmd/serve/restic"
+-	_ "github.com/rclone/rclone/cmd/serve/s3"
+ 	_ "github.com/rclone/rclone/cmd/serve/sftp"
+ 	_ "github.com/rclone/rclone/cmd/serve/webdav"
+ 	_ "github.com/rclone/rclone/cmd/settier"

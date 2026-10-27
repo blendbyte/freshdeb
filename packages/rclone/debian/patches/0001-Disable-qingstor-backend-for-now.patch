@@ -1,0 +1,21 @@
+From: "Dr. Tobias Quathamer" <toddy@debian.org>
+Date: Mon, 9 Apr 2018 21:16:28 +0200
+Subject: Disable qingstor backend for now
+
+Forwarded: not-needed
+---
+ backend/all/all.go | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/backend/all/all.go b/backend/all/all.go
+index 37c8f56..586d7a3 100644
+--- a/backend/all/all.go
++++ b/backend/all/all.go
+@@ -54,7 +54,6 @@ import (
+ 	_ "github.com/rclone/rclone/backend/premiumizeme"
+ 	_ "github.com/rclone/rclone/backend/protondrive"
+ 	_ "github.com/rclone/rclone/backend/putio"
+-	_ "github.com/rclone/rclone/backend/qingstor"
+ 	_ "github.com/rclone/rclone/backend/quatrix"
+ 	_ "github.com/rclone/rclone/backend/s3"
+ 	_ "github.com/rclone/rclone/backend/seafile"

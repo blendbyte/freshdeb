@@ -1,0 +1,5 @@
+usr/bin/bin
+usr/bin/build_csv
+usr/bin/gen
+usr/bin/test_vfs
+usr/bin/test_all

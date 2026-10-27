@@ -1,0 +1,15 @@
+Document: rclone
+Title: Rclone user Manual
+Author: Nick Craig-Wood
+Abstract: This manual describes what rclone is
+ and how it can be used to
+ sync files and directories to and from
+ cloud storage providers.
+Section: Network/File Transfer
+
+Format: text
+Files: /usr/share/doc/rclone/MANUAL.md.gz
+
+Format: HTML
+Index: /usr/share/doc/rclone/MANUAL.html
+Files: /usr/share/doc/rclone/MANUAL.html

@@ -1,0 +1,21 @@
+From: Matthew Vernon <mvernon@wikimedia.org>
+Date: Fri, 25 Nov 2022 16:58:12 +0000
+Subject: Don't build the mobile binding bits
+
+...as this needs a rather large extra build-dependency
+
+Forwarded: not-needed
+---
+ librclone/gomobile/gomobile.go | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/librclone/gomobile/gomobile.go b/librclone/gomobile/gomobile.go
+index ff3f451..f6563a6 100644
+--- a/librclone/gomobile/gomobile.go
++++ b/librclone/gomobile/gomobile.go
+@@ -1,3 +1,5 @@
++// +build ignore
++
+ // Package gomobile exports shims for gomobile use
+ package gomobile
+ 

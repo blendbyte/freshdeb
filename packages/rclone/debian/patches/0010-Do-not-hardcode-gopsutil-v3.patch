@@ -1,0 +1,40 @@
+From: Guillem Jover <gjover@sipwise.com>
+Date: Tue, 1 Oct 2024 22:53:33 +0200
+Subject: Do not hardcode gopsutil v3
+
+We can use v4 when no version suffix is used. Remove it so that we can
+upgrade the gopsutil modules from v3 to v4 in Debian.
+
+
+Forwarded: not-needed
+---
+ lib/buildinfo/osversion.go         | 2 +-
+ lib/buildinfo/osversion_windows.go | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/buildinfo/osversion.go b/lib/buildinfo/osversion.go
+index f04e56b..aab7022 100644
+--- a/lib/buildinfo/osversion.go
++++ b/lib/buildinfo/osversion.go
+@@ -5,7 +5,7 @@ package buildinfo
+ import (
+ 	"strings"
+ 
+-	"github.com/shirou/gopsutil/v4/host"
++	"github.com/shirou/gopsutil/host"
+ )
+ 
+ // GetOSVersion returns OS version, kernel and bitness
+diff --git a/lib/buildinfo/osversion_windows.go b/lib/buildinfo/osversion_windows.go
+index 4fcb524..2bd8fcc 100644
+--- a/lib/buildinfo/osversion_windows.go
++++ b/lib/buildinfo/osversion_windows.go
+@@ -5,7 +5,7 @@ import (
+ 	"strings"
+ 	"unsafe"
+ 
+-	"github.com/shirou/gopsutil/v4/host"
++	"github.com/shirou/gopsutil/host"
+ 	"golang.org/x/sys/windows"
+ )
+ 

@@ -1,0 +1,98 @@
+#!/usr/bin/make -f
+
+# Disable backends/servers that depend on packages not (yet) in Debian.
+# Also disable librclone and commands with missing dependencies.
+export DH_GOLANG_EXCLUDES := \
+	backend/archive \
+	backend/azureblob \
+	backend/azurefiles \
+	backend/cloudinary \
+	backend/filen \
+	backend/filescom \
+	backend/internxt \
+	backend/oracleobjectstorage \
+	backend/qingstor \
+	backend/storj \
+	cmd/archive \
+	cmd/serve/ftp \
+	cmd/serve/nfs \
+	cmd/serve/s3 \
+	librclone \
+	# EOL
+
+# Also install test data and embedded asset files for //go:embed
+export DH_GOLANG_INSTALL_EXTRA := \
+	backend/alias/test \
+	backend/drive/test \
+	backend/http/test \
+	backend/s3/provider \
+	cmd/bisync/rc.md \
+	cmd/lsf/testfiles \
+	cmd/gui/dist.tag \
+	cmd/gui/dist.zip \
+	cmd/mountlib/mount.md \
+	cmd/selfupdate/selfupdate.md \
+	cmd/serve/docker/docker.md \
+	cmd/serve/http/favicon.png \
+	cmd/tree/testfiles \
+	docs/data/backends \
+	fs/operations/operationsflags/operationsflags.md \
+	lib/http/templates \
+	lib/transform/transform.md \
+	vfs/vfs.md \
+	# EOL
+
+export BUILDTESTDIR = $(CURDIR)/buildtest
+include /usr/share/dpkg/buildopts.mk
+NUM_CPUS := $(or $(DEB_BUILD_OPTION_PARALLEL),$(shell getconf _NPROCESSORS_ONLN 2>/dev/null),1)
+
+# some arches need more than 10 min to run TestTestsToRegexpLive
+ARCHES_SLOW_TEST := mips64el mipsel
+ifneq ($(findstring $(DEB_BUILD_ARCH),$(ARCHES_SLOW_TEST)),)
+  EXTRA_TESTFLAGS := -timeout 20m
+endif
+
+%:
+	dh $@ --buildsystem=golang --builddirectory=_build
+
+# The docs (MANUAL.md, MANUAL.html and rclone.1 manpage) all
+# contain information about the download and installation
+# of rclone. This is not useful for Debian.
+# The solution is a patch for the docs build system, then
+# regenerate the docs. See #941209.
+execute_before_dh_install:
+	# Generate MANUAL.md
+	PATH=$${PATH}:$(CURDIR)/_build/bin ./bin/make_manual.py
+	# Generate HTML and manpage
+	if [ -x /usr/bin/pandoc ]; then \
+	  pandoc -s --from markdown --to man MANUAL.md -o rclone.1; \
+	  pandoc -s --from markdown --to html MANUAL.md -o MANUAL.html; \
+	else \
+	  go-md2man -in=MANUAL.md -out=rclone.1; \
+	  mandoc -T html rclone.1 > MANUAL.html; \
+	fi
+	sed 's|src="https://rclone.org/img/logo_on_light__horizontal_color.svg"|src="logo_on_light__horizontal_color.svg"|g' -i MANUAL.html
+	# Replace remote images with links to avoid privacy breaches
+	perl -0777 -i -pe 's{<img\b(?=[^>]*?\bsrc=["\x27](https?://[^"\x27]+)["\x27])(?=[^>]*?\balt=["\x27]([^"\x27]+)["\x27])?[^>]*?>}{defined $$2 ? qq{<a href="$$1">[$$2]</a>} : qq{<a href="$$1">[image]</a>}}gise' MANUAL.html
+	# Now fix some lexgrog errors in the manpage:
+	# Remove the only line with .hy on it (near the top of the file)
+	sed -i -e "/^\.hy/d" rclone.1
+	# Use a proper NAME section header
+	sed -i -e "s/^\.SH Rclone/.SH NAME\nRclone \-/" rclone.1
+	# Finally, replace the first occurence of .PP with a section header
+	sed -i -e "1,/^\.PP/{s/\.PP/.SH DESCRIPTION/}" rclone.1
+
+execute_after_dh_auto_clean:
+	rm -f MANUAL.md MANUAL.html rclone.1 || /bin/true
+
+# build-time tests for github.com/ncw/rclone/vfs access the config file
+# so provide a null config
+override_dh_auto_test:
+ifeq ($(NUM_CPUS),1)
+	@echo "Skipping dh_auto_test, known to hang autobuilder when there is only one CPU."
+else
+	-export RCLONE_CONFIG="/notfound"; dh_auto_test -- $(EXTRA_TESTFLAGS)
+endif
+
+execute_after_dh_fixperms:
+	find debian/golang-github-rclone-rclone-dev/usr/share/gocode/src -executable -a -type f | xargs -r chmod a-x

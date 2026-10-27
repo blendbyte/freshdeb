@@ -1,0 +1,36 @@
+From: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Date: Thu, 15 Oct 2026 15:32:10 -0400
+Subject: drop_generated_docs
+
+===================================================================
+
+Forwarded: not-needed
+---
+ backend/onedrive/onedrive.go | 1 -
+ cmd/gitannex/gitannex.go     | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/backend/onedrive/onedrive.go b/backend/onedrive/onedrive.go
+index ab11b85..7527df3 100644
+--- a/backend/onedrive/onedrive.go
++++ b/backend/onedrive/onedrive.go
+@@ -104,7 +104,6 @@ var (
+ 	// QuickXorHashType is the hash.Type for OneDrive
+ 	QuickXorHashType hash.Type
+ 
+-	//go:embed metadata.md
+ 	metadataHelp string
+ )
+ 
+diff --git a/cmd/gitannex/gitannex.go b/cmd/gitannex/gitannex.go
+index 7d9185f..28f15d3 100644
+--- a/cmd/gitannex/gitannex.go
++++ b/cmd/gitannex/gitannex.go
+@@ -40,7 +40,6 @@ import (
+ const subcommandName string = "gitannex"
+ const uniqueCommandName string = "git-annex-remote-rclone-builtin"
+ 
+-//go:embed gitannex.md
+ var gitannexHelp string
+ 
+ func init() {

@@ -1,0 +1,64 @@
+From: "Dr. Tobias Quathamer" <toddy@debian.org>
+Date: Tue, 4 Dec 2018 22:53:21 +0100
+Subject: Disable FTP server of rclone
+
+The FTP server depends on goftp.io/server/v2 which is not packaged
+in Debian. Disable the command implementation and drop the registration
+from cmd/all/all.go.
+
+Forwarded: not-needed
+---
+ cmd/all/all.go                   | 1 -
+ cmd/serve/ftp/ftp.go             | 2 +-
+ cmd/serve/ftp/ftp_test.go        | 2 +-
+ cmd/serve/ftp/ftp_unsupported.go | 2 --
+ 4 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/cmd/all/all.go b/cmd/all/all.go
+index 912cde6..f27072e 100644
+--- a/cmd/all/all.go
++++ b/cmd/all/all.go
+@@ -60,7 +60,6 @@ import (
+ 	_ "github.com/rclone/rclone/cmd/serve"
+ 	_ "github.com/rclone/rclone/cmd/serve/dlna"
+ 	_ "github.com/rclone/rclone/cmd/serve/docker"
+-	_ "github.com/rclone/rclone/cmd/serve/ftp"
+ 	_ "github.com/rclone/rclone/cmd/serve/http"
+ 	_ "github.com/rclone/rclone/cmd/serve/nfs"
+ 	_ "github.com/rclone/rclone/cmd/serve/restic"
+diff --git a/cmd/serve/ftp/ftp.go b/cmd/serve/ftp/ftp.go
+index bb426a9..13ffe42 100644
+--- a/cmd/serve/ftp/ftp.go
++++ b/cmd/serve/ftp/ftp.go
+@@ -1,4 +1,4 @@
+-//go:build !plan9
++//go:build ignore
+ 
+ // Package ftp implements an FTP server for rclone
+ package ftp
+diff --git a/cmd/serve/ftp/ftp_test.go b/cmd/serve/ftp/ftp_test.go
+index efcc83a..2d75a1f 100644
+--- a/cmd/serve/ftp/ftp_test.go
++++ b/cmd/serve/ftp/ftp_test.go
+@@ -3,7 +3,7 @@
+ //
+ // We skip tests on platforms with troublesome character mappings
+ 
+-//go:build !windows && !darwin && !plan9
++//go:build ignore
+ 
+ package ftp
+ 
+diff --git a/cmd/serve/ftp/ftp_unsupported.go b/cmd/serve/ftp/ftp_unsupported.go
+index f4c5415..b72f1ea 100644
+--- a/cmd/serve/ftp/ftp_unsupported.go
++++ b/cmd/serve/ftp/ftp_unsupported.go
+@@ -1,8 +1,6 @@
+ // Build  for unsupported platforms to stop go complaining
+ // about "no buildable Go source files "
+ 
+-//go:build plan9
+-
+ // Package ftp implements an FTP server for rclone
+ package ftp
+ 

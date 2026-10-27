@@ -1,0 +1,37 @@
+# rclone: https://rclone.org
+#
+# Packaging is Debian's (salsa.debian.org/go-team/packages/rclone); debian/
+# is an unmodified import of the commit in packaging.ref. Debian builds
+# against ~170 Debian-packaged Go libraries and has to exclude every backend
+# and command whose libraries aren't packaged; overlays/go-build.patch builds
+# with a pinned Go toolchain and vendored, checksum-verified modules instead,
+# which gives the full feature set of upstream's binaries. See README.md.
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: rclone
+description: "rclone, rsync for cloud storage"
+homepage: https://rclone.org
+maintainers:
+  - bashgeek
+
+upstream:
+  git: https://github.com/rclone/rclone.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/go-team/packages/rclone.git
+  ref: 0107a8fe07db38bfa110b468256a41c246f7a19f  # 1.75.2-2, unstable
+
+tracks:
+  main:
+    tag: "v1.75.2"
+    commit: be8d6044eacb843b74d335db0c5fbe09222031fe
+    revision: 1
+    go: "1.26.10"  # upstream's go.mod: go 1.26.0; newest 1.26.x
+    patches: patches/main  # from Debian's: 0004 (manpage) and 0013 (version), none of the backend exclusions
+
+overlays:
+  # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
+  - patch: overlays/go-build.patch
