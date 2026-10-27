@@ -12,7 +12,7 @@ Subcommands
                   builder container, after "apt-get update".
   watch           Look for new upstream releases and, with --apply, edit
                   package.yaml files accordingly (used by watch.yml).
-  components      Print every APT component, one per line.
+  components      Print every project and APT component, one per line.
 
 Only the Python standard library and PyYAML are required. "prepare" and
 "guard" also need git, patch and dpkg, which the builder image provides.
@@ -195,7 +195,9 @@ class Package:
         return match.group("version")
 
     def component(self, key):
-        return f"{self.name}-{key}"
+        """APT component of a track or alias in this package's repository
+        (deb.freshdeb.com/<name>): "v9.1", "v9"; non-numeric keys as is."""
+        return f"v{key}" if key[:1].isdigit() else key
 
     def components(self):
         """Track components first, then aliases, in manifest order."""
@@ -411,7 +413,6 @@ def validate_all(root=ROOT, today=None):
     for arch, entry in config.architectures.items():
         if not (isinstance(entry, dict) and entry.get("runner")):
             errors.append(f"config.yaml: architecture {arch} needs a runner")
-    seen = {}
     for name in package_names(root):
         try:
             pkg = load_package(name, root)
@@ -419,10 +420,6 @@ def validate_all(root=ROOT, today=None):
             errors.append(f"{name}: {error}")
             continue
         errors.extend(validate_package(pkg, config, today))
-        for component in pkg.components():
-            if component in seen:
-                errors.append(f"{name}: component {component} is also used by {seen[component]}")
-            seen[component] = name
     return errors
 
 
@@ -461,8 +458,12 @@ def newest_track(keys):
     return max(numeric, key=_VersionKey) if numeric else keys[0]
 
 
-def plan_changes(root, base, head, today=None):
+def plan_changes(root, base, head, today=None, package_bases=None):
     """Work out what a diff needs built.
+
+    package_bases maps a package to the commit it was last released from;
+    its own files are diffed from there, so a failed or skipped release is
+    planned again. Everything else is diffed from base.
 
     Returns (selected, errors, alias_changes): selected maps (package, track)
     to {"publish": bool, "codenames": {"*"} or a set}; errors lists packaging
@@ -483,6 +484,8 @@ def plan_changes(root, base, head, today=None):
     """
     config = load_config(root)
     files = changed_files(root, base, head)
+    package_bases = package_bases or {}
+    diffs = {base: files}
     selected = {}
     errors = []
     new_codenames = set()
@@ -505,8 +508,11 @@ def plan_changes(root, base, head, today=None):
             continue
         newest = newest_track(active)
         prefix = f"packages/{pkg.name}/"
-        pkg_files = [f[len(prefix):] for f in files if f.startswith(prefix)]
-        base_text = git_show(root, base, prefix + "package.yaml")
+        pkg_base = package_bases.get(pkg.name, base)
+        if pkg_base not in diffs:
+            diffs[pkg_base] = changed_files(root, pkg_base, head)
+        pkg_files = [f[len(prefix):] for f in diffs[pkg_base] if f.startswith(prefix)]
+        base_text = git_show(root, pkg_base, prefix + "package.yaml")
         base_pkg = parse_package(pkg.name, pkg.path, yaml.safe_load(base_text)) if base_text else None
 
         if pkg_files and base_pkg is None:
@@ -571,6 +577,26 @@ def expand_matrix(root, selected, codename_filter=None, today=None):
     return include
 
 
+def released_bases(root, path, head):
+    """{package: commit} from the registry (deb.freshdeb.com/status.json),
+    keeping only commits this checkout has as ancestors of head."""
+    if not path or not Path(path).is_file() or not Path(path).read_text().strip():
+        return {}
+    try:
+        projects = json.loads(Path(path).read_text()).get("projects") or {}
+    except (json.JSONDecodeError, AttributeError):
+        print(f"plan: ignoring unreadable {path}", file=sys.stderr)
+        return {}
+    bases = {}
+    for name, entry in projects.items():
+        commit = (entry or {}).get("commit")
+        if commit and re.fullmatch(r"[0-9a-f]{7,40}", commit) and subprocess.run(
+                ["git", "merge-base", "--is-ancestor", commit, head], cwd=root, capture_output=True).returncode == 0:
+            bases[name] = commit
+            print(f"plan: {name} last released from {commit[:12]}", file=sys.stderr)
+    return bases
+
+
 def cmd_plan(args):
     root = args.root
     today = dt.date.today()
@@ -602,7 +628,8 @@ def cmd_plan(args):
                         selected[(pkg.name, key)] = {"publish": True, "codenames": {"*"}}
             errors = []
         else:
-            selected, errors, alias_changes = plan_changes(root, base, args.head, today)
+            selected, errors, alias_changes = plan_changes(root, base, args.head, today,
+                                                           released_bases(root, args.released, args.head))
         if not args.publish:
             for entry in selected.values():
                 entry["publish"] = False
@@ -1007,7 +1034,7 @@ def cmd_autopkgtest_plan(args):
 def cmd_components(args):
     for pkg in load_packages(args.root):
         for component in pkg.components():
-            print(component)
+            print(f"{pkg.name} {component}")
     return 0
 
 
@@ -1037,6 +1064,7 @@ def main(argv=None):
 
     p = sub.add_parser("plan")
     p.add_argument("--base")
+    p.add_argument("--released", help="registry JSON (status.json) with each project's last released commit")
     p.add_argument("--head", default="HEAD")
     p.add_argument("--all", action="store_true", help="every package and active track")
     p.add_argument("--packages", nargs="*")

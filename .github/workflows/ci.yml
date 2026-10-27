@@ -105,15 +105,12 @@ jobs:
               args=(--base "$PR_BASE")
               ;;
             push)
-              # Plan from the last released commit, not just this push:
-              # pending runs on main can be cancelled by newer pushes.
-              base="$PUSH_BEFORE"
-              released="$(curl -fsS --max-time 20 https://deb.freshdeb.com/status.json | jq -r '.commit // empty' || true)"
-              if [[ -n "$released" ]] && git merge-base --is-ancestor "$released" HEAD 2>/dev/null; then
-                base="$released"
-              fi
-              echo "Planning changes since $base"
-              args=(--base "$base" --publish)
+              # Each package is planned from the commit it was last released
+              # from (the registry on deb.freshdeb.com), not just this push:
+              # pending runs on main can be cancelled by newer pushes, and a
+              # failed release of one project must be retried.
+              curl -fsS --max-time 20 https://deb.freshdeb.com/status.json -o released.json || true
+              args=(--base "$PUSH_BEFORE" --released released.json --publish)
               ;;
             workflow_dispatch)
               # shellcheck disable=SC2206

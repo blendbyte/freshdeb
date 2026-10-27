@@ -5,8 +5,9 @@
 # lives in patches/ and overlays/. See README.md in this directory.
 #
 # Valkey patches every supported minor line in parallel, so each minor is a
-# track with its own APT component (valkey-9.1, valkey-9.0, …). The aliases
-# valkey-9 and valkey-8 follow the newest minor of their major.
+# track with its own APT component (v9.1, v9.0, …) in the valkey repository
+# (deb.freshdeb.com/valkey). The aliases v9 and v8 follow the newest minor
+# of their major.
 # Support dates: https://valkey.io/topics/releases/
 
 name: valkey

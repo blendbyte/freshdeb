@@ -254,6 +254,26 @@ class PlanTests(unittest.TestCase):
         self.assertEqual({job["codename"] for job in matrix}, {"stonking"})
         self.assertEqual(len(matrix), 4 * 2)
 
+    def test_unreleased_changes_are_planned_again(self):
+        # Commit 1 bumps 9.1 but its release failed; commit 2 only touches docs.
+        self.edit("packages/valkey/package.yaml", "revision: 1\n    eol: 2031-05-19", "revision: 2\n    eol: 2031-05-19")
+        self.commit()
+        previous = git(self.repo, "rev-parse", "HEAD").strip()
+        self.edit("packages/valkey/README.md", "# valkey", "# valkey\n")
+        self.commit()
+        selected, _, _ = freshdeb.plan_changes(self.repo, previous, "HEAD", TODAY)
+        self.assertEqual(selected, {})
+        selected, _, _ = freshdeb.plan_changes(self.repo, previous, "HEAD", TODAY, {"valkey": self.base})
+        self.assertEqual({k: v["publish"] for k, v in selected.items()}, {("valkey", "9.1"): True})
+
+    def test_released_bases_from_registry(self):
+        registry = self.repo / "released.json"
+        registry.write_text(json.dumps({"projects": {"valkey": {"commit": self.base},
+                                                     "gone": {"commit": "f" * 40}}}))
+        self.assertEqual(freshdeb.released_bases(self.repo, registry, "HEAD"), {"valkey": self.base})
+        registry.write_text("not json")
+        self.assertEqual(freshdeb.released_bases(self.repo, registry, "HEAD"), {})
+
     def test_matrix_shape(self):
         matrix = freshdeb.expand_matrix(self.repo, {("valkey", "9.1"): {"publish": True, "codenames": {"*"}}},
                                         None, TODAY)

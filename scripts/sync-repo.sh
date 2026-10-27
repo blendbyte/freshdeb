@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Transfer only the repository state and the files a release needs.
+# Transfer one project's repository: only its state and the files a release
+# needs. release.py calls this per project and uploads the root files
+# (keyring, registry) itself.
 #
 #   scripts/sync-repo.sh pull|push <local-repo> <remote> [--dry-run]
 #
-# <remote> is s3://bucket[/prefix] in production (Cloudflare R2 through its
+# <remote> is s3://bucket/<project> in production (Cloudflare R2 through its
 # S3 API; endpoint and credentials come from the AWS_* environment), or a
 # local directory (used by the release tests; ordering only matters for S3).
 set -euo pipefail
@@ -19,7 +21,7 @@ elif [[ -n "${4:-}" ]]; then
     echo "Unknown option: $4" >&2
     exit 1
 fi
-ROOT_FILES=(freshdeb-archive-keyring.gpg freshdeb-archive-keyring.asc status.json)
+ROOT_FILES=(status.json)
 
 if [[ "$remote" != s3://* ]]; then
     case "$mode" in

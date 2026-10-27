@@ -13,7 +13,7 @@ packages/<name>/
 └── README.md           packaging notes: where things came from, quirks
 ```
 
-Nothing outside this directory needs to change to add a package. The builder installs build-dependencies from `debian/control`, CI picks the package up from the diff, and the release adds its components.
+Nothing outside this directory needs to change to add a package. The builder installs build-dependencies from `debian/control`, CI picks the package up from the diff, and the first release creates its own repository at `deb.freshdeb.com/<name>`.
 
 ## package.yaml
 
@@ -34,7 +34,7 @@ packaging:
 
 epoch: 5                        # optional; only if the distro packages carry an epoch
 
-tracks:                         # one APT component per track: <name>-<track>
+tracks:                         # one APT component per track: v<track> ("9.1" -> v9.1)
   "9.1":                        # quote keys: YAML reads 9.1 as a number
     tag: "9.1.3"
     commit: <full commit the tag points to>
@@ -44,7 +44,7 @@ tracks:                         # one APT component per track: <name>-<track>
     codenames: [trixie]         # optional; default: every distribution
 
 aliases:                        # optional; extra components mirroring a track
-  "9": "9.1"                    # valkey-9 contains exactly what valkey-9.1 contains
+  "9": "9.1"                    # component v9 contains exactly what v9.1 contains
 
 overlays:                       # optional; patches to the assembled source tree
   - patch: overlays/legacy-sysusers.patch

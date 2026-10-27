@@ -4,10 +4,12 @@
 
 | Track | Component | Upstream support ends | Patch set from |
 |---|---|---|---|
-| 9.1 | `valkey-9.1` (alias `valkey-9`) | 2031-05-19 (security) | Debian 9.1.2-1 |
-| 9.0 | `valkey-9.0` | 2028-10-21 | Ubuntu 9.0.4-0ubuntu0.2 (Debian never packaged 9.0) |
-| 8.1 | `valkey-8.1` (alias `valkey-8`) | 2030-03-31 (security) | Debian 8.1.4+dfsg1-2 |
-| 8.0 | `valkey-8.0` | 2027-09-15 | Debian 8.0.2+dfsg1-1 |
+| 9.1 | `v9.1` (alias `v9`) | 2031-05-19 (security) | Debian 9.1.2-1 |
+| 9.0 | `v9.0` | 2028-10-21 | Ubuntu 9.0.4-0ubuntu0.2 (Debian never packaged 9.0) |
+| 8.1 | `v8.1` (alias `v8`) | 2030-03-31 (security) | Debian 8.1.4+dfsg1-2 |
+| 8.0 | `v8.0` | 2027-09-15 | Debian 8.0.2+dfsg1-1 |
+
+Repository: `deb [signed-by=…] https://deb.freshdeb.com/valkey <codename> v9`
 
 Binary packages: `valkey-server`, `valkey-sentinel`, `valkey-tools`, with the same names, paths, user and config as Debian's.
 

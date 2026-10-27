@@ -130,53 +130,39 @@ jobs:
           GNUPGHOME="$RUNNER_TEMP/gnupg" gpg --batch --import "$RUNNER_TEMP/gpg-key.asc" 2>&1 | tail -3
           shred -u "$RUNNER_TEMP/gpg-key.asc"
 
-      - name: Restore repository state
-        run: |
-          mkdir -p repo
-          bash scripts/sync-repo.sh pull repo "s3://${BUCKET}"
-          tar -czf repo-state-before.tar.gz -C repo .
-
-      - name: Keep pre-release state for recovery
-        uses: actions/upload-artifact@v7
-        with:
-          name: repo-state-before-${{ github.run_id }}-${{ github.run_attempt }}
-          path: repo-state-before.tar.gz
-          retention-days: 30
-
-      - name: Merge builds and validate
+      - name: Release
         env:
-          # The commit the builds came from; recorded in status.json so the
-          # next push to main plans everything changed since.
+          # The commit the builds came from; recorded per project in the
+          # registry so the next push to main plans everything since.
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           export GNUPGHOME="$RUNNER_TEMP/gnupg"
-          args=(repo artifacts --key "$GPG_KEY_ID" --pool-source "s3://${BUCKET}" --commit "$SOURCE_SHA")
+          args=(--artifacts artifacts --remote "s3://${BUCKET}" --key "$GPG_KEY_ID" --work release-work
+                --commit "$SOURCE_SHA")
           [[ "$BOOTSTRAP" == "true" ]] && args+=(--bootstrap)
+          [[ "$DRY_RUN" == "true" ]] && args+=(--dry-run)
           # Dispatched by hand for a chosen run: publish all of its builds,
           # including ones built with publishing off. ci.yml's automatic
           # release only takes the builds its plan marked publishable.
           [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]] && args+=(--all-builds)
-          python3 scripts/release.py "${args[@]}" | tee release.log
+          status=0
+          python3 scripts/release.py "${args[@]}" 2>&1 | tee release.log || status=$?
           {
             echo '### Release'
             echo '```'
             cat release.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
 
-      - name: Export public keyring
-        run: |
-          export GNUPGHOME="$RUNNER_TEMP/gnupg"
-          gpg --export --armor "$GPG_KEY_ID" > repo/freshdeb-archive-keyring.asc
-          gpg --export "$GPG_KEY_ID" > repo/freshdeb-archive-keyring.gpg
-
-      - name: Upload (dry run)
-        if: env.DRY_RUN == 'true'
-        run: bash scripts/sync-repo.sh push repo "s3://${BUCKET}" --dry-run
-
-      - name: Upload
-        if: env.DRY_RUN != 'true'
-        run: bash scripts/sync-repo.sh push repo "s3://${BUCKET}"
+      - name: Keep pre-release state for recovery
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: repo-state-before-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release-work/state-before/
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Remove signing key
         if: always()

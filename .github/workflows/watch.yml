@@ -77,7 +77,7 @@ jobs:
               title="${package} ${track}: update to ${tag}"
               body="Upstream released [${tag}](${notes}). This bumps track \`${track}\` and resets its revision to 1.
 
-          Merging builds and tests every codename/arch, then publishes to \`${package}-${track}\` and any alias pointing at it. If a build fails, nothing is published."
+          Merging builds and tests every codename/arch, then publishes to the ${package} repository (the track's component and any alias pointing at it). If a build fails, nothing is published."
             else
               title="${package}: add track ${track} (${tag})"
               body="Upstream started a new release line: [${tag}](${notes}).
