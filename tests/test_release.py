@@ -112,7 +112,7 @@ class ReleaseTests(unittest.TestCase):
         (pkg / "debian/source/format").write_text("3.0 (quilt)\n")
         (pkg / "tests/smoke.sh").write_text("true\n")
 
-    def artifacts(self, tracks=None, codenames=None, skipped=(), publish=True, name="valkey"):
+    def artifacts(self, tracks=None, codenames=None, skipped=(), publish=True, name="valkey", derived=None):
         """Fake CI output: one build dir per track/codename/arch."""
         out = Path(tempfile.mkdtemp(dir=self.work))
         pkg = freshdeb.load_package(name, self.root)
@@ -129,7 +129,8 @@ class ReleaseTests(unittest.TestCase):
                     if not info["skipped"]:
                         for binary, declared in binaries.items():
                             deb_arch = "all" if declared == "all" else arch
-                            info["debs"].append(fake_deb(build, binary, version, deb_arch).name)
+                            deb_version = (derived or {}).get(binary, "") + version
+                            info["debs"].append(fake_deb(build, binary, deb_version, deb_arch).name)
                     (build / "build-info.json").write_text(json.dumps(info))
         return out
 
@@ -308,6 +309,19 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual({r["Architecture"] for r in runtime.values()}, {"all"})
             for arch in self.config.architectures:
                 self.assertEqual(records[(codename, "main", arch, "neovim")]["Architecture"], arch)
+
+    def test_binaries_may_carry_a_derived_version(self):
+        # Like znc-push: 1.0.0+git…+<znc version>.
+        self.assertEqual(self.publish(self.artifacts(derived={"valkey-tools": "1.0.0+git20190521+"}),
+                                      bootstrap=True), {})
+        pkg = freshdeb.load_package("valkey", self.root)
+        version = pkg.version(self.config, "9.1", "trixie")
+        self.assertEqual(self.version_in(self.indexes(), "trixie", "v9.1", package="valkey-tools"),
+                         f"1.0.0+git20190521+{version}")
+
+    def test_refuses_unrelated_binary_versions(self):
+        failures = self.publish(self.artifacts(derived={"valkey-tools": "1.0.0~"}), bootstrap=True)
+        self.assertIn("has version", failures["valkey"])
 
     def test_refuses_incomplete_build(self):
         self.bootstrap()

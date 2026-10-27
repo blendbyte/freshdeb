@@ -203,7 +203,11 @@ def collect(artifacts, project, all_builds=False):
             fields = dict(line.split(": ", 1) for line in
                           run("dpkg-deb", "--field", str(path), "Package", "Version", "Architecture").splitlines())
             require(fields["Package"] in info["binaries"], f"{label}: unexpected binary {fields['Package']}")
-            require(fields["Version"] == info["version"], f"{label}: {name} has version {fields['Version']}")
+            # A binary carries the package's version, or one derived from it
+            # (Debian's convention for bundled extras: znc-push is
+            # 1.0.0+git…+<znc version>).
+            require(fields["Version"] == info["version"] or fields["Version"].endswith("+" + info["version"]),
+                    f"{label}: {name} has version {fields['Version']}, not {info['version']} or …+{info['version']}")
             require(fields["Architecture"] in (info["arch"], "all"),
                     f"{label}: {name} has architecture {fields['Architecture']}")
             if fields["Architecture"] == "all" and not primary:

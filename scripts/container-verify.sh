@@ -34,7 +34,9 @@ install_ours() {
     local binary installed
     for binary in $FRESHDEB_BINARIES; do
         installed="$(dpkg-query -W -f='${Version}' "$binary" 2>/dev/null || true)"
-        [[ "$installed" == "$FRESHDEB_VERSION" ]] || fail "$binary is at '$installed', expected $FRESHDEB_VERSION"
+        # The package version, or one derived from it (bundled extras: …+<version>).
+        [[ "$installed" == "$FRESHDEB_VERSION" || "$installed" == *"+$FRESHDEB_VERSION" ]] \
+            || fail "$binary is at '$installed', expected $FRESHDEB_VERSION"
     done
     endsection
 }

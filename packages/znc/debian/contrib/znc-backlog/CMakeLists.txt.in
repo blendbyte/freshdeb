@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.13)
+project(ExternalModules LANGUAGES CXX)
+find_package(ZNC @ZNC_VERSION@ REQUIRED)
+set(CMAKE_VERBOSE_MAKEFILE true)
+
+add_library(module_backlog MODULE backlog.cpp)
+znc_setup_module(TARGET module_backlog NAME backlog)
+target_link_libraries(module_backlog PRIVATE)

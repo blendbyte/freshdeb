@@ -1,0 +1,2 @@
+usr/lib/znc/modtcl.so usr/lib/znc/
+usr/share/znc/modtcl/*.tcl usr/share/znc/modtcl/

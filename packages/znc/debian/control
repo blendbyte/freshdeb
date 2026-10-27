@@ -1,0 +1,182 @@
+Source: znc
+Section: net
+Maintainer: Patrick Matthäi <pmatthaei@debian.org>
+Uploaders: Mattia Rizzolo <mattia@debian.org>
+Build-Depends: debhelper-compat (= 13),
+ dh-python,
+ cmake,
+ google-mock,
+ googletest,
+ pkgconf,
+ swig,
+ libargon2-dev,
+ libboost-all-dev,
+ libcurl4-openssl-dev,
+ libssl-dev,
+ libperl-dev,
+ libicu-dev,
+ libsasl2-dev,
+ zlib1g-dev,
+ tcl-dev,
+ python3-dev
+Standards-Version: 4.7.3
+Homepage: https://www.znc.in/
+
+Package: znc
+Architecture: any
+Depends: ${shlibs:Depends},
+ ${misc:Depends},
+ adduser,
+ openssl
+Recommends: znc-tcl,
+ znc-perl,
+ znc-python
+Conflicts: znc-webadmin,
+ znc-extra
+Breaks: znc-extra (<< ${binary:Version})
+Replaces: znc-webadmin,
+ znc-extra
+Description: advanced modular IRC bouncer
+ znc is an IRC proxy. It runs as a daemon and connects to IRC server,
+ then allows you to connect from a workstation and work as the user that
+ is logged in to the IRC server. After you disconnect, it maintains the
+ connection to the server. It acts like any normal IRC server, so you can
+ use any IRC client to connect to it.
+ .
+ Some of its features include support for multiple users, multiple clients,
+ and multiple IRC servers; playback buffers to catch up with what happened
+ while you were detached, SSL encryption, DCC proxying, and a plugin
+ interface with many plugins supporting other features.
+
+Package: znc-dev
+Architecture: any
+Depends: ${misc:Depends},
+ ${python3:Depends},
+ znc (>= ${binary:Version}),
+ cmake,
+ libicu-dev,
+ libssl-dev,
+ pkgconf,
+ tcl-dev,
+ python3-dev
+Recommends: g++
+Description: advanced modular IRC bouncer (development headers)
+ znc is an IRC proxy. It runs as a daemon and connects to IRC server,
+ then allows you to connect from a workstation and work as the user that
+ is logged in to the IRC server. After you disconnect, it maintains the
+ connection to the server. It acts like any normal IRC server, so you can
+ use any IRC client to connect to it.
+ .
+ Some of its features include support for multiple users, multiple clients,
+ and multiple IRC servers; playback buffers to catch up with what happened
+ while you were detached, SSL encryption, DCC proxying, and a plugin
+ interface with many plugins supporting other features.
+ .
+ This package contains the znc development headers for developing modules.
+
+Package: znc-perl
+Architecture: any
+Depends: ${shlibs:Depends},
+ ${misc:Depends},
+ znc (= ${binary:Version})
+Description: advanced modular IRC bouncer (Perl extension)
+ znc is an IRC proxy. It runs as a daemon and connects to IRC server,
+ then allows you to connect from a workstation and work as the user that
+ is logged in to the IRC server. After you disconnect, it maintains the
+ connection to the server. It acts like any normal IRC server, so you can
+ use any IRC client to connect to it.
+ .
+ Some of its features include support for multiple users, multiple clients,
+ and multiple IRC servers; playback buffers to catch up with what happened
+ while you were detached, SSL encryption, DCC proxying, and a plugin
+ interface with many plugins supporting other features.
+ .
+ This package contains the znc Perl extension.
+
+Package: znc-python
+Architecture: any
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ ${python3:Depends},
+ znc (= ${binary:Version})
+Description: advanced modular IRC bouncer (Python extension)
+ znc is an IRC proxy. It runs as a daemon and connects to IRC server,
+ then allows you to connect from a workstation and work as the user that
+ is logged in to the IRC server. After you disconnect, it maintains the
+ connection to the server. It acts like any normal IRC server, so you can
+ use any IRC client to connect to it.
+ .
+ Some of its features include support for multiple users, multiple clients,
+ and multiple IRC servers; playback buffers to catch up with what happened
+ while you were detached, SSL encryption, DCC proxying, and a plugin
+ interface with many plugins supporting other features.
+ .
+ This package contains the znc Python extension.
+
+Package: znc-tcl
+Section: interpreters
+Architecture: any
+Depends: ${shlibs:Depends},
+ ${misc:Depends},
+ znc (= ${binary:Version})
+Description: advanced modular IRC bouncer (Tcl extension)
+ znc is an IRC proxy. It runs as a daemon and connects to IRC server,
+ then allows you to connect from a workstation and work as the user that
+ is logged in to the IRC server. After you disconnect, it maintains the
+ connection to the server. It acts like any normal IRC server, so you can
+ use any IRC client to connect to it.
+ .
+ Some of its features include support for multiple users, multiple clients,
+ and multiple IRC servers; playback buffers to catch up with what happened
+ while you were detached, SSL encryption, DCC proxying, and a plugin
+ interface with many plugins supporting other features.
+ .
+ This package contains the znc Tcl extension.
+
+Package: znc-push
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ znc (= ${binVer}),
+Enhances: znc
+Homepage: https://github.com/jreese/znc-push
+Description: znc plugin to send push notification to various services
+ ZNC Push is a third party ZNC module that will send notifications to
+ multiple push  notification services, or SMS for any private message or
+ channel highlight that matches a configurable set of conditions.
+ .
+ ZNC Push current supports the following services:
+  * Boxcar
+  * Boxcar 2
+  * Pushover
+  * Pushsafer
+  * Prowl
+  * Supertoasty
+  * PushBullet
+  * Airgram
+  * Faast
+  * Nexmo
+  * Pushalot
+  * Pushjet
+  * Telegram
+  * Custom URL GET requests
+ .
+ For more information about ZNC, see the znc package.
+
+Package: znc-backlog
+Architecture: any
+Depends: ${shlibs:Depends},
+ ${misc:Depends},
+ znc (= ${binVer}),
+Enhances: znc
+Homepage: https://github.com/FruitieX/znc-backlog
+Description: module for requesting backlog from znc bouncer
+ znc-backlog is a third party ZNC module that makes it easy to request backlog.
+ Its intended use is for when you have just launched your IRC client and gotten
+ a few lines of backlog sent to you, but want to read more. Instead of having
+ to deal with shelling into the box where you run ZNC and manually sifting
+ through the logs, you can issue a short command in your IRC client to request
+ any amount of the most recent lines of log.
+ .
+ For more information about ZNC, see the znc package.

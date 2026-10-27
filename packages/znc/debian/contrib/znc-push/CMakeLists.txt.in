@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.13)
+project(ExternalModules LANGUAGES CXX)
+find_package(ZNC @ZNC_VERSION@ REQUIRED)
+set(CMAKE_VERBOSE_MAKEFILE true)
+
+add_library(module_push MODULE push.cpp)
+add_compile_definitions(USE_CURL)
+znc_setup_module(TARGET module_push NAME push)
+target_link_libraries(module_push PRIVATE curl)

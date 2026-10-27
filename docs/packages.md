@@ -32,7 +32,9 @@ upstream:
 
 packaging:
   origin: https://salsa.debian.org/debian/valkey.git
-  ref: <full commit>            # the commit debian/ was imported from
+  ref: <full commit>            # the commit debian/ was imported from, or
+                                # sha256:<checksum> of the .debian.tar.* when
+                                # Debian keeps the packaging without a VCS
 
 epoch: 5                        # optional; only if the distro packages carry an epoch
 
@@ -83,6 +85,10 @@ Debian builds Go programs against Debian-packaged Go libraries (`golang-*-dev`) 
 ### Bundled dependencies (prepare hooks)
 
 Some projects build their own copies of libraries that older releases lack or have too old. Neovim does this with upstream's pinned `cmake.deps/deps.txt`. A `build.prepare` hook fetches those sources before the build, in the unpacked source tree, with network access, so the build itself runs offline. Hooks get the source directory as their argument (and `FRESHDEB_PACKAGE`, `FRESHDEB_TRACK`, `FRESHDEB_UPSTREAM_VERSION`). They **must verify every download against a pinned checksum**; nothing checks them later. See `packages/neovim/hooks/prefetch-deps.py`. Make the build fail on any download attempt that slipped through (neovim's rules set an unusable proxy).
+
+### Binaries with derived versions
+
+Every binary carries the package's version, with one exception from Debian's conventions: bundled extras versioned from it, e.g. ZNC's `znc-push` as `1.0.0+git20190521.78d0385+<znc version>`. The release and the install test accept a binary version that equals the package version or ends in `+<package version>`, and nothing else.
 
 ### Architecture: all packages
 

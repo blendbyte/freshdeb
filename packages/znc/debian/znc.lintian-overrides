@@ -1,0 +1,3 @@
+znc: embedded-javascript-library please use libjs-jquery [usr/share/znc/webskins/_default_/pub/jquery-*.js]
+znc: spelling-error-in-binary * [usr/lib/znc/controlpanel.so]
+znc: package-contains-documentation-outside-usr-share-doc [usr/share/znc/webskins/_default_/pub/robots.txt]

@@ -1,0 +1,80 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_REVISION ?= "+deb$(shell echo $(DEB_VERSION) | cut -d- -f2)"
+
+znc_backlog_pth = $(CURDIR)/debian/contrib/znc-backlog
+znc_backlog_ver = 0.20180824+$(DEB_VERSION)
+znc_push_pth = $(CURDIR)/debian/contrib/znc-push
+znc_push_ver = 1.0.0+git20190521.78d0385+$(DEB_VERSION)
+
+DEB_CONFIGURE_EXTRA_FLAGS := \
+	-DCMAKE_INSTALL_LIBDIR=lib \
+	-DVERSION_EXTRA=$(DEB_REVISION) \
+	-DGTEST_ROOT="/usr/src/googletest/googletest" \
+	-DGMOCK_ROOT="/usr/src/googletest/googlemock" \
+	-DWANT_SYSTEMD=false \
+	-DWANT_TCL=true \
+	-DWANT_CYRUS=true \
+	-DWANT_PYTHON=true \
+	-DWANT_PERL=true \
+	-DWANT_I18N=true
+
+export VERBOSE=1
+
+%:
+	dh $@ --with python3 --buildsystem=cmake
+
+override_dh_auto_clean:
+	dh_auto_clean
+	dh_auto_clean --buildsystem=cmake -D$(znc_backlog_pth) -Bobj-backlog
+	dh_auto_clean --buildsystem=cmake -D$(znc_push_pth) -Bobj-push
+	rm -fv $(znc_push_pth)/CMakeLists.txt $(znc_backlog_pth)/CMakeLists.txt
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(DEB_CONFIGURE_EXTRA_FLAGS)
+
+build_contrib_plugins: export PATH := $(CURDIR)/debian/tmp/usr/bin:$(PATH)
+build_contrib_plugins: export CXXFLAGS += -I$(CURDIR)/debian/tmp/usr/include
+build_contrib_plugins: export CMAKE_PREFIX_PATH := $(CURDIR)/debian/tmp/usr/share/znc/cmake
+build_contrib_plugins:
+	sed -e 's/@ZNC_VERSION@/$(UPSTREAM_MAJ_MIN)/' $(znc_push_pth)/CMakeLists.txt.in > $(znc_push_pth)/CMakeLists.txt
+	sed -e 's/@ZNC_VERSION@/$(UPSTREAM_MAJ_MIN)/' $(znc_backlog_pth)/CMakeLists.txt.in > $(znc_backlog_pth)/CMakeLists.txt
+	dh_auto_configure -Scmake -Bobj-push -D$(znc_push_pth) -- -DPUSHVERSION="$(znc_push_ver)"
+	dh_auto_configure -Scmake -Bobj-backlog -D$(znc_backlog_pth)
+	dh_auto_build -Scmake -Bobj-push -D$(znc_push_pth)
+	dh_auto_build -Scmake -Bobj-backlog -D$(znc_backlog_pth)
+
+override_dh_installsystemd:
+	dh_installsystemd --no-start --no-enable --restart-after-upgrade
+
+override_dh_python3:
+	dh_python3 \
+		-p znc-python \
+		--exclude=znc.py \
+		--exclude=znc_core.py
+
+override_dh_install: build_contrib_plugins
+	dh_install
+	dh_install -p znc-dev \
+		usr/lib/pkgconfig/* usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig/
+	# Fix pkg-config file.
+	sed '/^Cflags:/d' -i $(CURDIR)/debian/znc-dev/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig/znc.pc
+	sed '/Libs:/d' -i $(CURDIR)/debian/znc-dev/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig/znc.pc
+
+override_dh_missing:
+	dh_missing --fail-missing
+
+override_dh_installchangelogs:
+	dh_installchangelogs -pznc-backlog -XChangeLog.md
+	dh_installchangelogs -pznc-push -XChangeLog.md
+	dh_installchangelogs --remaining-packages
+
+override_dh_gencontrol:
+	dh_gencontrol -pznc-backlog -- -v$(znc_backlog_ver) -VbinVer=$(DEB_VERSION)
+	dh_gencontrol -pznc-push -- -v$(znc_push_ver) -VbinVer=$(DEB_VERSION)
+	dh_gencontrol --remaining-packages

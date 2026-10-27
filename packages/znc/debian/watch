@@ -1,0 +1,4 @@
+Version: 5
+Source: https://znc.in/releases/
+Matching-Pattern: znc-@ANY_VERSION@@ARCHIVE_EXT@
+Pgpsig-Url-Mangle: s/$/.sig/

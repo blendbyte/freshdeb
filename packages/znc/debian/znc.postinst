@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+	configure)
+		getent group _znc >/dev/null 2>&1 || addgroup --force-badname --system _znc
+		adduser --force-badname --system --home /var/lib/znc --quiet _znc --ingroup _znc || true
+	;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+	;;
+
+	*)
+		echo "postinst called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+#DEBHELPER#
+
+exit 0

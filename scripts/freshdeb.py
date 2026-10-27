@@ -358,8 +358,10 @@ def validate_package(pkg, config, today=None):
         regex = None
     packaging = data.get("packaging") or {}
     check(isinstance(packaging.get("origin"), str), "packaging.origin is required (where debian/ came from)")
-    check(COMMIT_RE.match(str(packaging.get("ref", ""))) is not None,
-          "packaging.ref must be the full commit the debian/ directory was imported from")
+    ref = str(packaging.get("ref", ""))
+    check(COMMIT_RE.match(ref) is not None or re.fullmatch(r"sha256:[0-9a-f]{64}", ref) is not None,
+          "packaging.ref must be the full commit debian/ was imported from, or sha256:<checksum> of the "
+          "Debian source package's .debian.tar.* when its packaging isn't kept in a VCS")
     epoch = data.get("epoch")
     check(epoch is None or (isinstance(epoch, int) and epoch > 0), "epoch must be a positive integer")
 
@@ -875,7 +877,7 @@ def changelog_entry(pkg, config, track, codename, version, when):
            f"    (sha256 {track.sha256})."] if track.sha256 else []),
         *([f"  * Built with Go {track.go}, dependencies vendored and verified",
            "    against go.sum and sum.golang.org."] if track.go else []),
-        f"  * Packaging: {packaging['origin']} at {packaging['ref'][:12]},",
+        f"  * Packaging: {packaging['origin']} at {packaging['ref'].removeprefix('sha256:')[:12]},",
         f"    freshdeb revision {track.revision}.",
         "",
         f" -- {config.archive['maintainer']}  {email.utils.formatdate(when).replace('-0000', '+0000')}",

@@ -1,0 +1,42 @@
+=== Manual start as user ===
+
+To get started using znc, run "znc --makeconf" to interactively create a
+configuration file (~/.znc/configs/znc.conf).
+
+Once you have znc set up, you may want to start the daemon on boot, with
+this in a user's crontab:
+@reboot znc
+
+To connect to znc from your irc client, you will use a command like this:
+/server <znc_server_ip> <port> <username>:<pass>
+Note that the username and password are sent as the irc server password.
+
+
+=== Automatic start with systemd ===
+
+Starting with znc 1.7.4-2 a _znc user will be created and a default systemd
+service file is installed, but not enabled by default.
+If you want to control znc with systemd, you have to setup a configuration
+first:
+
+	# sudo -u _znc /usr/bin/znc --datadir=/var/lib/znc --makeconf
+
+After that you can enable the systemd service:
+
+	# systemctl enable znc
+
+Now znc will run as a system daemon.
+
+=== oidentd configuration ===
+
+Especially if you use the systemd service, you are not able to connect to many
+IRC networks, because you will use the default username (_znc), which is
+invalid.
+You can configure oidentd to allow identity spoofing or to reply with "znc" as
+username. You will find an example here:
+	/usr/share/doc/znc/examples/oidentd.conf
+You have to copy it to the home directory of the znc user:
+	/var/lib/znc/.oidentd.conf
+
+You will find more information and configuration examples here:
+	https://wiki.znc.in/Identfile

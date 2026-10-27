@@ -1,0 +1,32 @@
+# ZNC: https://znc.in
+#
+# Packaging is Debian's (source package znc 1.10.3-1, maintained without a
+# public VCS); debian/ is an unmodified import of its .debian.tar.xz, which
+# packaging.ref identifies. It patches nothing upstream and builds unchanged
+# on every release. Besides ZNC itself it builds the third-party znc-push
+# and znc-backlog modules, kept in debian/contrib, with versions derived
+# from ZNC's (1.0.0+git…+<znc version>).
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: znc
+description: "ZNC IRC bouncer"
+homepage: https://znc.in
+
+upstream:
+  git: https://github.com/znc/znc.git
+  tag_regex: '^znc-(?P<version>\d+\.\d+\.\d+)$'
+  # Debian builds from the release tarball (identical to its orig tarball).
+  tarball: https://znc.in/releases/archive/znc-{version}.tar.gz
+
+packaging:
+  origin: https://deb.debian.org/debian/pool/main/z/znc/znc_1.10.3-1.debian.tar.xz
+  ref: sha256:e945eb96f710b6e209c5a3c2f6e8dad6bd32510edba26ca164aa305ffc154d8e  # 1.10.3-1, unstable
+
+tracks:
+  main:
+    tag: "znc-1.10.3"
+    commit: 6bd91573cebd1e4ee954ebd4eb6db5b654e0e412
+    sha256: 68f3f6641b480c041010c5596e1234043e05c9137eda06233845017603095f5b
+    revision: 1
