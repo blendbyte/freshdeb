@@ -1,0 +1,73 @@
+Source: neovim
+Section: editors
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Uploaders: James McCoy <jamessan@debian.org>
+Build-Depends:
+ cmake (>= 3.16),
+ debhelper-compat (= 14),
+ dh-sequence-builtusing,
+ dh-sequence-shell-completions,
+ gettext,
+ git <!nocheck>,
+ less <!nocheck>,
+ libacl1-dev,
+ libluajit-5.1-dev [amd64 armel armhf arm64 hurd-i386 i386 powerpc ppc64el riscv64] | liblua5.1-dev,
+ libnss-wrapper <!nocheck>,
+ libtree-sitter-dev (>= 0.26),
+ libunibilium-dev,
+ libutf8proc-dev (>= 2.10),
+ libuv1-dev,
+ locales <!nocheck>,
+ lua-bitop,
+ lua-coxpcall <!nocheck>,
+ lua-filesystem (>= 1.7) <!nocheck>,
+ lua-lpeg (>= 1.1.0),
+ lua-luv-dev (>= 1.43.0),
+ luajit [amd64 armel armhf arm64 hurd-i386 i386 powerpc ppc64el riscv64],
+ lua5.1,
+ ninja-build,
+ python3-pynvim (>= 0.5.2-2~) [!hppa !ia64 !sh4] <!nocheck>,
+ tree-sitter-c-src (>= 0.24.1),
+ tree-sitter-lua-src (>= 0.5.0),
+ tree-sitter-markdown-src (>= 0.5.3),
+ tree-sitter-markdown-inline-src (>= 0.5.3),
+ tree-sitter-query-src (>= 0.8.0),
+ tree-sitter-vim-src (>= 0.8.1),
+ tree-sitter-vimdoc-src (>= 4.1.0),
+ tzdata <!nocheck>,
+ xdg-utils <!nocheck>,
+Standards-Version: 4.7.4
+Homepage: https://neovim.io/
+Vcs-Git: https://salsa.debian.org/vim-team/neovim.git
+Vcs-Browser: https://salsa.debian.org/vim-team/neovim
+
+Package: neovim
+Architecture: any
+Depends:
+ neovim-runtime (= ${source:Version}),
+Static-Built-Using: ${dh-builtusing:tree-sitter-S-src}
+Recommends: python3-pynvim (>= 0.5.2-2~), xclip | xsel | wl-clipboard, xxd
+Suggests: ctags, vim-scripts
+Provides: editor
+Description: heavily refactored vim fork
+ Neovim is a fork of Vim focused on modern code and features, rather than
+ running in legacy environments.
+ .
+ msgpack API enables structured communication to/from any programming language.
+ Remote plugins run as co-processes that communicate with Neovim safely and
+ asynchronously.
+ .
+ GUIs (or TUIs) can easily embed Neovim or communicate via TCP sockets using
+ the discoverable msgpack API.
+
+Package: neovim-runtime
+Architecture: all
+Multi-Arch: foreign
+Description: heavily refactored vim fork (runtime files)
+ Neovim is a fork of Vim focused on modern code and features, rather than
+ running in legacy environments.
+ .
+ This package contains the architecture independent runtime files used by
+ neovim.  Examples of such files are: documentation, rules for
+ language-specific highlighting and indentation, color schemes, and standard
+ plugins.

@@ -28,6 +28,11 @@ changes apply), independently of the others:
 A failing project doesn't stop the others; the run fails at the end and the
 registry keeps the failed project's previous commit, so CI plans its
 changes again. --bootstrap is only for an empty bucket (no registry yet).
+
+--reset-project NAME starts a registered project's repository from scratch,
+e.g. after its components were renamed. It only works once the project's
+remote directory has been deleted by hand: a typo can't wipe a live
+repository, and a missing database without --reset-project stays an error.
 Requires reprepro, gpg, dpkg-deb, python3-yaml, python3-debian, and the aws
 CLI for s3:// remotes.
 """
@@ -188,6 +193,8 @@ def collect(artifacts, project, all_builds=False):
         require((info["track"], info["codename"], info["arch"]) not in seen, f"{label}: duplicate build")
         seen.add((info["track"], info["codename"], info["arch"]))
 
+        # Every job builds the Architecture: all packages (so each can be
+        # tested on its own); only the primary architecture's are published.
         primary = info["arch"] == config.primary_arch
         expected = {name for name, arch in info["binaries"].items() if arch != "all" or primary}
         debs = []
@@ -199,6 +206,8 @@ def collect(artifacts, project, all_builds=False):
             require(fields["Version"] == info["version"], f"{label}: {name} has version {fields['Version']}")
             require(fields["Architecture"] in (info["arch"], "all"),
                     f"{label}: {name} has architecture {fields['Architecture']}")
+            if fields["Architecture"] == "all" and not primary:
+                continue
             fields["SHA256"] = sha256(path)
             debs.append((path, fields))
         built = {fields["Package"] for _, fields in debs}
@@ -337,7 +346,8 @@ def release_project(project, repo, artifacts, key, new=False, pool_source=None, 
         # A missing database is never treated as a fresh start: a partial
         # build would otherwise erase every other package from the indexes.
         require(database.is_file() and database.stat().st_size > 0,
-                f"{project.name} is registered but its repository database is missing; refusing to recreate it")
+                f"{project.name} is registered but its repository database is missing; refusing to recreate it "
+                "(to start it from scratch on purpose, release with reset_project)")
     write_conf(repo, project, key)
     before = read_indexes(repo, project)
     print(f"{project.name}: restored {len(before)} index entries")
@@ -409,7 +419,8 @@ def export_keyring(root_dir, key):
     require(keyring.stat().st_size > 0, f"gpg exported nothing for key {key}")
 
 
-def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, all_builds=False, dry_run=False):
+def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, all_builds=False, dry_run=False,
+            reset=()):
     """Release every affected project; returns {project: error} for failures."""
     remote = remote.rstrip("/")
     errors = freshdeb.validate_all(root)
@@ -425,12 +436,17 @@ def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, al
         require(not bootstrap, f"--bootstrap given, but {remote} already has a project registry")
     unknown = set(registry["projects"]) - set(packages)
     require(not unknown, f"published projects {sorted(unknown)} are missing from packages/; never remove a package")
+    reset = set(reset)
+    unknown = reset - set(registry["projects"])
+    require(not unknown, f"--reset-project {sorted(unknown)}: not a registered project (new ones need no reset)")
 
     built = {info["package"] for _, info in build_infos(artifacts)}
     unknown = built - set(packages)
     require(not unknown, f"builds for unknown packages: {sorted(unknown)}")
     require(built or not bootstrap, "nothing to publish; a bootstrap needs at least one build "
                                     "(were the builds made with publishing off? use --all-builds)")
+    missing = reset - built
+    require(not missing, f"--reset-project {sorted(missing)}: no builds in this run to start from")
     names = sorted(set(registry["projects"]) | built)
     print(f"Projects: {', '.join(names) or 'none'}")
 
@@ -446,7 +462,11 @@ def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, al
             sync("pull", repo, f"{remote}/{name}")
             with tarfile.open(work / "state-before" / f"{name}.tar.gz", "w:gz") as tar:
                 tar.add(repo, arcname=name)
-            new = name not in registry["projects"]
+            if name in reset:
+                require(not (repo / "db").exists(), f"{name}: reset requested, but {remote}/{name}/ still has a "
+                                                    "repository database; delete that directory first")
+                print(f"{name}: starting from scratch (reset)")
+            new = name not in registry["projects"] or name in reset
             changed = release_project(project, repo, artifacts, key, new=new, pool_source=f"{remote}/{name}",
                                       commit=commit, all_builds=all_builds)
             if changed is not None:
@@ -480,10 +500,14 @@ def main():
                         help="also publish builds not marked publishable (manual releases of a chosen run)")
     parser.add_argument("--bootstrap", action="store_true", help="first release into an empty bucket")
     parser.add_argument("--dry-run", action="store_true", help="prepare and validate, upload nothing")
+    parser.add_argument("--reset-project", action="append", default=[], metavar="NAME",
+                        help="start this registered project's repository from scratch (its remote "
+                             "directory must already be deleted)")
     args = parser.parse_args()
     try:
         failures = publish(args.root.resolve(), args.work.resolve(), args.artifacts.resolve(), args.remote,
-                           args.key, args.bootstrap, args.commit, args.all_builds, args.dry_run)
+                           args.key, args.bootstrap, args.commit, args.all_builds, args.dry_run,
+                           args.reset_project)
     except FreshdebError as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 1

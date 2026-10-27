@@ -26,6 +26,11 @@ on:
         required: false
         default: false
         type: boolean
+      reset_project:
+        description: 'Start these projects from scratch, space separated (delete their directory in the bucket first)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -65,6 +70,7 @@ jobs:
       RUN_ID: ${{ inputs.run_id }}
       DRY_RUN: ${{ inputs.dry_run == true }}
       BOOTSTRAP: ${{ inputs.bootstrap == true }}
+      RESET_PROJECT: ${{ inputs.reset_project }}
     steps:
       - name: Validate source run
         id: source
@@ -144,6 +150,7 @@ jobs:
                 --commit "$SOURCE_SHA")
           [[ "$BOOTSTRAP" == "true" ]] && args+=(--bootstrap)
           [[ "$DRY_RUN" == "true" ]] && args+=(--dry-run)
+          for project in $RESET_PROJECT; do args+=(--reset-project "$project"); done
           # Dispatched by hand for a chosen run: publish all of its builds,
           # including ones built with publishing off. ci.yml's automatic
           # release only takes the builds its plan marked publishable.

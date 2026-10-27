@@ -431,6 +431,9 @@ def validate_package(pkg, config, today=None):
             check(set(overlay.get("codenames") or []) <= set(config.distributions), f"{where}: unknown codename")
 
     build = data.get("build") or {}
+    hook = build.get("prepare")
+    if hook is not None:
+        check(isinstance(hook, str) and (pkg.path / hook).is_file(), f"build.prepare: {hook} does not exist")
     for key in ("options", "profiles"):
         values = build.get(key) or []
         check(isinstance(values, list) and all(isinstance(v, str) and OPTION_RE.match(v) for v in values),
@@ -786,6 +789,20 @@ def vendor_go_modules(srcdir, env):
         print(f"  {' '.join(command)}: ok")
 
 
+def run_prepare_hook(pkg, track, srcdir, hook):
+    """Run a package's prepare hook in the unpacked source tree, with network
+    access. Hooks fetch extra sources a build would otherwise download (e.g.
+    bundled dependencies), and must verify every download against a pinned
+    checksum: the build itself runs without them checking anything."""
+    script = (pkg.path / hook).resolve()
+    command = [sys.executable, str(script)] if script.suffix == ".py" else ["bash", str(script)]
+    env = {**os.environ, "FRESHDEB_PACKAGE": pkg.name, "FRESHDEB_TRACK": track.key,
+           "FRESHDEB_UPSTREAM_VERSION": pkg.upstream_version(track.tag)}
+    result = subprocess.run([*command, str(srcdir)], cwd=srcdir, env=env, text=True, capture_output=True)
+    print(result.stdout, end="")
+    require(result.returncode == 0, f"{pkg.name}: prepare hook {hook} failed:\n{result.stdout}{result.stderr}")
+
+
 def fetch_upstream(pkg, track, dest):
     url = pkg.upstream["git"]
     dest.mkdir(parents=True)
@@ -891,6 +908,9 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     if (srcdir / "debian").exists():
         print(f"  upstream ships a debian/ directory; replacing it with ours")
         shutil.rmtree(srcdir / "debian")
+    build = pkg.data.get("build") or {}
+    if build.get("prepare"):
+        run_prepare_hook(pkg, track, srcdir, build["prepare"])
     build_env = {}
     if track.go:
         goroot = install_go(config, track.go, arch, out / "toolchain")
@@ -931,7 +951,6 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         "binaries": binaries,
         "build_options": build.get("options") or [],
         "build_profiles": build.get("profiles") or [],
-        "build_arch_indep": arch == config.primary_arch,
         "build_env": build_env,
         "overlays": applied,
         "publish": bool(publish),

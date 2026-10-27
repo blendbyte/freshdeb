@@ -128,8 +128,9 @@ class ReleaseTests(unittest.TestCase):
                             "version": version, "binaries": binaries, "publish": publish,
                             "skipped": (key, codename) in skipped, "skip_reason": "test", "debs": []}
                     if not info["skipped"]:
-                        for binary in binaries:
-                            info["debs"].append(fake_deb(build, binary, version, arch).name)
+                        for binary, declared in binaries.items():
+                            deb_arch = "all" if declared == "all" else arch
+                            info["debs"].append(fake_deb(build, binary, version, deb_arch).name)
                     (build / "build-info.json").write_text(json.dumps(info))
         return out
 
@@ -296,6 +297,19 @@ class ReleaseTests(unittest.TestCase):
         self.edit_package('.tracks["9.1"].revision = 4')
         self.assertIn("refusing downgrade", self.publish(self.artifacts(tracks=["9.1"]))["valkey"])
 
+    def test_arch_all_packages_come_from_the_primary_architecture(self):
+        # Every job builds neovim-runtime (Architecture: all) so it can be
+        # tested on its own; only the primary architecture's copy is published.
+        self.assertEqual(self.publish(self.artifacts(name="neovim"), bootstrap=True), {})
+        records = self.indexes("neovim")
+        primary = self.config.primary_arch
+        for codename in self.config.distributions:
+            runtime = {arch: records[(codename, "main", arch, "neovim-runtime")] for arch in self.config.architectures}
+            self.assertEqual({r["SHA256"] for r in runtime.values()}, {runtime[primary]["SHA256"]})
+            self.assertEqual({r["Architecture"] for r in runtime.values()}, {"all"})
+            for arch in self.config.architectures:
+                self.assertEqual(records[(codename, "main", arch, "neovim")]["Architecture"], arch)
+
     def test_refuses_incomplete_build(self):
         self.bootstrap()
         self.edit_package('.tracks["9.1"].revision = 2')
@@ -345,6 +359,52 @@ class ReleaseTests(unittest.TestCase):
         projects = self.registry()["projects"]
         self.assertEqual(projects["demo"]["commit"], "beef")
         self.assertEqual(projects["valkey"]["commit"], "c0ffee")  # retried by the next plan
+
+    # ─── reset ──────────────────────────────────────────────────────────
+
+    def publish_reset(self, artifacts, reset):
+        work = Path(tempfile.mkdtemp(dir=self.work))
+        return release.publish(self.root, work, artifacts, str(self.remote), self.key, commit="beef",
+                               reset=reset)
+
+    def rename_valkey_tracks(self):
+        # Like memcached's 1.6 -> main: the published components disappear.
+        self.edit_package('.tracks = {"main": .tracks["9.1"]} | del(.aliases)')
+
+    def test_renamed_components_need_a_reset(self):
+        self.bootstrap()
+        self.rename_valkey_tracks()
+        self.assertIn("never remove a track", self.publish(self.artifacts())["valkey"])
+
+    def test_reset_refuses_while_the_old_repository_exists(self):
+        self.bootstrap()
+        self.rename_valkey_tracks()
+        failures = self.publish_reset(self.artifacts(), ["valkey"])
+        self.assertIn("delete that directory first", failures["valkey"])
+        self.assertTrue((self.remote / "valkey/dists/trixie/v9.1").is_dir())
+
+    def test_reset_starts_the_project_from_scratch(self):
+        self.bootstrap()
+        self.add_demo_package()
+        self.publish(self.artifacts(name="demo"))
+        demo_before = self.indexes("demo")
+        self.rename_valkey_tracks()
+        shutil.rmtree(self.remote / "valkey")
+        self.assertEqual(self.publish_reset(self.artifacts(), ["valkey"]), {})
+        records = self.indexes("valkey")
+        self.assertEqual({key[1] for key in records}, {"main"})
+        release_file = (self.remote / "valkey/dists/trixie/Release").read_text()
+        self.assertRegex(release_file, r"(?m)^Components: main$")
+        self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "beef")
+        self.assertEqual(demo_before, self.indexes("demo"))
+
+    def test_reset_needs_a_registered_project_and_builds(self):
+        self.bootstrap()
+        self.add_demo_package()
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "not a registered project"):
+            self.publish_reset(self.artifacts(name="demo"), ["demo"])
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "no builds in this run"):
+            self.publish_reset(self.artifacts(name="demo"), ["valkey"])
 
     def test_refuses_removed_project(self):
         self.bootstrap()

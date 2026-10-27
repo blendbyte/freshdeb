@@ -1,0 +1,32 @@
+From: James McCoy <jamessan@debian.org>
+Date: Mon, 10 Mar 2025 22:45:00 -0400
+Subject: Skip flaky tests in test_stat.vim
+
+Test_checktime and Test_autoread_file_deleted are particularly flaky on s390x, so skip them to avoid the noise.
+
+Forwarded: not-needed
+Signed-off-by: James McCoy <jamessan@debian.org>
+---
+ test/old/testdir/test_stat.vim | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/test/old/testdir/test_stat.vim b/test/old/testdir/test_stat.vim
+index b9fd7f5..d1ec5b2 100644
+--- a/test/old/testdir/test_stat.vim
++++ b/test/old/testdir/test_stat.vim
+@@ -60,6 +60,7 @@ func SleepForTimestamp()
+ endfunc
+ 
+ func Test_checktime()
++  throw 'skipped: Flaky test'
+   let fname = 'Xtest.tmp'
+ 
+   let fl = ['Hello World!']
+@@ -109,6 +110,7 @@ func Test_autoread_fast()
+ endfunc
+ 
+ func Test_autoread_file_deleted()
++  throw 'skipped: Flaky test'
+   new Xautoread
+   set autoread
+   call setline(1, 'original')

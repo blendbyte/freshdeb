@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+# Cleanup after dropping rview/rvim from the set of registered alternatives in 0.10.4-7
+if [ "$1" = "configure" ]; then
+  update-alternatives --quiet --remove rview /usr/libexec/neovim/rview
+  update-alternatives --quiet --remove rvim /usr/libexec/neovim/rvim
+fi
+
+#DEBHELPER#

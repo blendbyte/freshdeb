@@ -2,11 +2,9 @@
 
 [memcached](https://memcached.org) packaged from Debian's packaging (`salsa.debian.org/lamby/pkg-memcached`, where Debian's uploads come from).
 
-| Track | Component | Upstream support |
-|---|---|---|
-| 1.6 | `v1.6` (alias `v1`) | the only maintained release line |
+Upstream maintains only its latest release, so there is one track, `main`, which follows every release.
 
-Repository: `deb [signed-by=…] https://deb.freshdeb.com/memcached <codename> v1`
+Repository: `deb [signed-by=…] https://deb.freshdeb.com/memcached <codename> main`
 
 Binary package: `memcached`, with the same paths, `memcache` user, `/etc/memcached.conf` and services as Debian's.
 

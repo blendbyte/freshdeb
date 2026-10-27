@@ -1,0 +1,31 @@
+Name: editor
+Link: /usr/bin/editor
+Alternative: /usr/bin/nvim
+Dependents:
+  /usr/share/man/man1/editor.1.gz editor.1.gz /usr/share/man/man1/nvim.1.gz
+Priority: 30
+
+Name: ex
+Link: /usr/bin/ex
+Alternative: /usr/libexec/neovim/ex
+Priority: 30
+
+Name: vi
+Link: /usr/bin/vi
+Alternative: /usr/bin/nvim
+Priority: 30
+
+Name: vim
+Link: /usr/bin/vim
+Alternative: /usr/bin/nvim
+Priority: 30
+
+Name: view
+Link: /usr/bin/view
+Alternative: /usr/libexec/neovim/view
+Priority: 30
+
+Name: vimdiff
+Link: /usr/bin/vimdiff
+Alternative: /usr/libexec/neovim/vimdiff
+Priority: 30

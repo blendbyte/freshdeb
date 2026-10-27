@@ -1,0 +1,8 @@
+.nvimlog
+debian/fakehome/
+debian/fakeruntime/
+debian/group
+debian/passwd
+runtime/doc/tags
+runtime/parser/
+Xtest*

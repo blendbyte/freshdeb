@@ -1,0 +1,39 @@
+# Neovim: https://neovim.io
+#
+# Packaging is Debian's (salsa.debian.org/vim-team/neovim); debian/ is an
+# unmodified import of the commit in packaging.ref. Debian builds against
+# system libuv, LuaJIT, luv, tree-sitter etc., which older releases lack or
+# have too old; overlays/bundled-deps.patch builds with neovim's bundled
+# dependencies instead, as upstream's release builds do. See README.md.
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: neovim
+description: "Neovim text editor"
+homepage: https://neovim.io
+maintainers:
+  - bashgeek
+
+upstream:
+  git: https://github.com/neovim/neovim.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'  # not "stable"/"nightly"
+
+packaging:
+  origin: https://salsa.debian.org/vim-team/neovim.git
+  ref: 9b99e384350e71beaddccd07d0452ad02f3d1803  # 0.12.4-1, unstable
+
+tracks:
+  main:
+    tag: "v0.12.6"
+    commit: 779c36969e31080503be2dfccbcc3f999e289606
+    revision: 1
+
+overlays:
+  # Bundled dependencies instead of system libraries (all releases).
+  - patch: overlays/bundled-deps.patch
+
+build:
+  # Downloads and verifies the bundled dependencies listed in upstream's
+  # cmake.deps/deps.txt, so the build runs offline.
+  prepare: hooks/prefetch-deps.py

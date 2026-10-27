@@ -37,7 +37,7 @@ packaging:
 
 epoch: 5                        # optional; only if the distro packages carry an epoch
 
-tracks:                         # one APT component per track: v<track> ("9.1" -> v9.1)
+tracks:                         # one APT component per track: main, or v<track> ("9.1" -> v9.1)
   "9.1":                        # quote keys: YAML reads 9.1 as a number
     tag: "9.1.3"
     commit: <full commit the tag points to>
@@ -62,6 +62,7 @@ watch: true                     # optional; false stops watch.yml for this packa
 build:
   options: [nocheck]            # DEB_BUILD_OPTIONS
   profiles: []                  # DEB_BUILD_PROFILES
+  prepare: hooks/prefetch.py    # optional; fetches extra pinned sources (see below)
 ```
 
 `scripts/freshdeb.py validate` checks all of this. CI runs it on every change.
@@ -80,11 +81,25 @@ Debian builds Go programs against Debian-packaged Go libraries (`golang-*-dev`) 
 - **Packaging:** keep Debian's `debian/` and replace the dh-golang build with an overlay (see `packages/restic/overlays/go-build.patch`): drop the `golang-*` build-dependencies and build with `go build`.
 - **watch.yml:** on a new upstream release, it reads `go.mod` and moves the track to a newer Go minor if upstream requires one. When Go publishes a patch release of a track's minor, it opens a rebuild PR (new toolchain, `revision` + 1). Those releases are mostly security fixes, and a static binary only gets them by being rebuilt.
 
+### Bundled dependencies (prepare hooks)
+
+Some projects build their own copies of libraries that older releases lack or have too old. Neovim does this with upstream's pinned `cmake.deps/deps.txt`. A `build.prepare` hook fetches those sources before the build, in the unpacked source tree, with network access, so the build itself runs offline. Hooks get the source directory as their argument (and `FRESHDEB_PACKAGE`, `FRESHDEB_TRACK`, `FRESHDEB_UPSTREAM_VERSION`). They **must verify every download against a pinned checksum**; nothing checks them later. See `packages/neovim/hooks/prefetch-deps.py`. Make the build fail on any download attempt that slipped through (neovim's rules set an unusable proxy).
+
+### Architecture: all packages
+
+Every build job also builds the package's `Architecture: all` binaries, so each job's packages install and test on their own (`neovim` needs `neovim-runtime`). The release publishes them only from the first architecture in `config.yaml`.
+
 ### Tracks
 
-Use one track if upstream has a single release line, for example `"1"` for a project that only ships 1.x. Use one track per line when upstream patches several lines in parallel. The track key must be the version prefix of its tags (`"9.1"` covers 9.1.x). watch.yml relies on that to find patch releases and new lines.
+Most projects only maintain their latest release. They get one track named `main` (component `main`), which follows every upstream release, minors and majors included:
 
-Never remove a track. When upstream support ends, the `eol` date stops builds and the component stays published as-is. The release refuses to publish if a component disappears.
+```
+deb [signed-by=…] https://deb.freshdeb.com/restic trixie main
+```
+
+Use version tracks only when upstream patches several release lines in parallel, like valkey. Each line gets a track keyed by its version prefix (`"9.1"` covers 9.1.x, component `v9.1`), plus optional aliases per major (`"9"` → component `v9`). watch.yml relies on the prefix to find patch releases and to propose new lines.
+
+Never remove a track. When upstream support ends, the `eol` date stops builds and the component stays published as-is. The release refuses to publish if a component disappears. If components really have to change before anyone uses them, delete the project's directory in the bucket and release with `reset_project` (a dispatch input of release.yml).
 
 ### Versions
 

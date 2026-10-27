@@ -66,10 +66,12 @@ profile_args=()
 apt-get build-dep -y --no-install-recommends "${profile_args[@]}" "$SRC"
 echo "::endgroup::"
 
-build_type=any
-[[ "$(info build_arch_indep)" == "True" ]] && build_type=any,all
-# Packages without architecture-dependent binaries are only planned on the
-# primary architecture, so "any" alone never comes up empty there.
+# Every job builds the Architecture: all packages too, so each one can be
+# installed and tested on its own (e.g. neovim needs neovim-runtime); the
+# release publishes those only from the primary architecture's job.
+build_type=any,all
+# Packages with only Architecture: all binaries are only planned on the
+# primary architecture; "any" would come up empty there.
 if ! python3 - "$WORK/build-info.json" <<'EOF'
 import json, sys
 info = json.load(open(sys.argv[1]))

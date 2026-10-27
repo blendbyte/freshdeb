@@ -352,30 +352,63 @@ class TarballTests(unittest.TestCase):
 
     def package(self, sha256):
         pkg = freshdeb.load_package("memcached", self.tmp)
-        pkg.tracks["1.6"].tag, pkg.tracks["1.6"].sha256 = "1.6.99", sha256
+        pkg.tracks["main"].tag, pkg.tracks["main"].sha256 = "1.6.99", sha256
         return pkg
 
     def test_fetch_verifies_and_unpacks(self):
         orig, dest = self.tmp / "orig.tar.gz", self.tmp / "src"
         pkg = self.package(self.sha256)
-        freshdeb.fetch_tarball(pkg, pkg.tracks["1.6"], orig, dest)
+        freshdeb.fetch_tarball(pkg, pkg.tracks["main"], orig, dest)
         self.assertTrue((dest / "configure").is_file())
         self.assertEqual(orig.read_bytes(), self.tarball.read_bytes())
 
     def test_fetch_refuses_wrong_checksum(self):
         pkg = self.package("0" * 64)
         with self.assertRaisesRegex(freshdeb.FreshdebError, "package.yaml pins"):
-            freshdeb.fetch_tarball(pkg, pkg.tracks["1.6"], self.tmp / "orig.tar.gz", self.tmp / "src")
+            freshdeb.fetch_tarball(pkg, pkg.tracks["main"], self.tmp / "orig.tar.gz", self.tmp / "src")
         self.assertFalse((self.tmp / "src").exists())
 
     def test_watch_pins_the_new_tarball(self):
         if not shutil.which("yq"):
             self.skipTest("yq not available")
-        freshdeb.apply_change(self.tmp, {"package": "memcached", "kind": "bump", "track": "1.6",
+        freshdeb.apply_change(self.tmp, {"package": "memcached", "kind": "bump", "track": "main",
                                          "tag": "1.6.99", "commit": "c" * 40})
-        track = freshdeb.load_package("memcached", self.tmp).tracks["1.6"]
+        track = freshdeb.load_package("memcached", self.tmp).tracks["main"]
         self.assertEqual((track.tag, track.commit, track.sha256, track.revision),
                          ("1.6.99", "c" * 40, self.sha256, 1))
+
+
+class PrepareHookTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.pkg = freshdeb.load_package("neovim", self.tmp)
+        self.src = self.tmp / "src"
+        self.src.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def hook(self, body):
+        path = self.pkg.path / "hooks/test-hook.sh"
+        path.write_text(body)
+        return "hooks/test-hook.sh"
+
+    def test_hook_runs_in_the_source_tree(self):
+        hook = self.hook('set -e\necho "$FRESHDEB_PACKAGE $FRESHDEB_UPSTREAM_VERSION" > fetched.txt\n')
+        freshdeb.run_prepare_hook(self.pkg, self.pkg.tracks["main"], self.src, hook)
+        self.assertEqual((self.src / "fetched.txt").read_text().strip(), "neovim 0.12.6")
+
+    def test_failing_hook_stops_the_build(self):
+        hook = self.hook('echo "checksum mismatch" >&2\nexit 1\n')
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "checksum mismatch"):
+            freshdeb.run_prepare_hook(self.pkg, self.pkg.tracks["main"], self.src, hook)
+
+    def test_missing_hook_is_a_validation_error(self):
+        y = self.pkg.path / "package.yaml"
+        y.write_text(y.read_text().replace("hooks/prefetch-deps.py", "hooks/nope.py"))
+        self.assertTrue(any("build.prepare" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
 
 
 class GoTests(unittest.TestCase):
@@ -410,7 +443,7 @@ class GoTests(unittest.TestCase):
 
     def test_go_patch_release_proposes_a_rebuild(self):
         extra = freshdeb.watch_go(self.pkg, [], self.RELEASES)
-        self.assertEqual(extra, [{"package": "restic", "kind": "toolchain", "track": "0", "from": "1.25.14",
+        self.assertEqual(extra, [{"package": "restic", "kind": "toolchain", "track": "main", "from": "1.25.14",
                                   "go": "1.25.15", "go_sha256": self.RELEASES["1.25.15"]}])
 
     def test_newest_patch_needs_no_rebuild(self):
@@ -419,22 +452,22 @@ class GoTests(unittest.TestCase):
 
     def test_bump_follows_the_go_minor_upstream_requires(self):
         freshdeb.required_go_minor = lambda url, tag: "1.26"
-        change = {"package": "restic", "kind": "bump", "track": "0", "tag": "v0.20.0", "commit": "c" * 40}
+        change = {"package": "restic", "kind": "bump", "track": "main", "tag": "v0.20.0", "commit": "c" * 40}
         self.assertEqual(freshdeb.watch_go(self.pkg, [change], self.RELEASES), [])
         self.assertEqual(change["go"], "1.26.3")
 
     def test_bump_keeps_the_minor_but_takes_its_newest_patch(self):
         freshdeb.required_go_minor = lambda url, tag: "1.24"
-        change = {"package": "restic", "kind": "bump", "track": "0", "tag": "v0.19.2", "commit": "c" * 40}
+        change = {"package": "restic", "kind": "bump", "track": "main", "tag": "v0.19.2", "commit": "c" * 40}
         freshdeb.watch_go(self.pkg, [change], self.RELEASES)
         self.assertEqual(change["go"], "1.25.15")
 
     def test_apply_toolchain_rebuild(self):
         if not shutil.which("yq"):
             self.skipTest("yq not available")
-        freshdeb.apply_change(self.tmp, {"package": "restic", "kind": "toolchain", "track": "0",
+        freshdeb.apply_change(self.tmp, {"package": "restic", "kind": "toolchain", "track": "main",
                                          "go": "1.25.15", "go_sha256": self.RELEASES["1.25.15"]})
-        track = freshdeb.load_package("restic", self.tmp).tracks["0"]
+        track = freshdeb.load_package("restic", self.tmp).tracks["main"]
         self.assertEqual((track.go, track.revision), ("1.25.15", 2))
         config = freshdeb.load_config(self.tmp)
         self.assertEqual(config.toolchains["go"]["1.25.15"], self.RELEASES["1.25.15"])
