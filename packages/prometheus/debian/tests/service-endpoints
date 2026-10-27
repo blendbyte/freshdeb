@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eo pipefail
+
+echo "Waiting for Prometheus to start up (up to 60s)..."
+for i in $(seq 1 60); do
+    if curl -s http://127.0.0.1:9090/metrics > /dev/null; then
+        echo "Prometheus is up!"
+        break
+    fi
+    echo "Attempt $i: Prometheus not ready yet, sleeping 1s..."
+    sleep 1
+    if [ "$i" -eq 60 ]; then
+        echo "Prometheus failed to start within 60 seconds."
+        systemctl status prometheus || true
+        journalctl -u prometheus --no-pager || true
+        exit 1
+    fi
+done
+
+echo "Checking /api/v1/status/buildinfo..."
+curl -s -f http://127.0.0.1:9090/api/v1/status/buildinfo | grep '"status":"success"'
+
+echo "Checking root endpoint (UI placeholder)..."
+# We removed the UI and replaced it with a static page. Verify the placeholder is served.
+# The root endpoint redirects to /query, so we need -L to follow it.
+curl -L -s -f http://127.0.0.1:9090/ | grep -i "does not include"
+
+echo "Checking systemctl status..."
+systemctl is-active prometheus
+
+echo "All tests passed successfully!"

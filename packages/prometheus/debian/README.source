@@ -1,0 +1,85 @@
+Web UI in Prometheus
+====================
+
+As of Prometheus 3.5.3 (Debian version 3.5.3+ds1-1), the web UI has been
+completely disabled in the Debian package. If a user accesses the root web
+endpoint, they will be served a basic "no-ui" HTML page explaining the
+situation.
+
+This document serves to explain the reasoning behind this decision and outline
+the three different UI implementations that have historically existed in the
+Prometheus source tree, along with the challenges of packaging them in Debian,
+in accordance with Debian Policy Manual section 4.14 regarding packages with a
+particularly complex or unintuitive source layout.
+
+1. The Classic UI (jQuery / Bootstrap)
+--------------------------------------
+Upstream completely removed the classic HTML/jQuery/Bootstrap UI in Prometheus
+v2.34.0. For a long time, the Debian package kept this UI alive by carrying a
+massive patch (`0011-Reinstate-classic-web-UI.patch`) which resurrected the Go
+backend template rendering handlers, and by distributing the frontend assets
+manually inside `debian/missing-sources/ui/`. 
+
+This approach was ultimately dropped because it added over 5,000 lines of
+legacy code to the Debian packaging, creating an unsustainable maintenance
+burden. The classic UI was also entirely missing support for all the modern
+PromQL and API features added in Prometheus 3.x.
+
+2. The "Old" React UI (`web/ui/react-app`)
+------------------------------------------
+When the Classic UI was deprecated years ago, upstream replaced it with a
+React-based UI. In Prometheus 3.0, upstream introduced an even newer UI (the
+Mantine UI, see below) but kept this React app around as a fallback,
+accessible via the `--enable-feature=old-ui` flag. 
+
+Why it's disabled in Debian:
+The `web/ui/react-app` directory contains pre-compiled Javascript blobs which
+violate the DFSG. Consequently, `web/ui/react-app` is listed in
+`Files-Excluded` in `debian/copyright`, meaning the directory is entirely
+stripped from the Debian source tarball by `uscan`.
+
+Building it from source is also not feasible. It is built using
+`react-scripts` (Create React App), which has an enormous, deeply-nested
+dependency tree (Webpack, Babel, etc.) that is not fully packaged in Debian.
+Vendoring the `node_modules` for this UI offline would require downloading
+hundreds of megabytes of dependencies and writing aggressive scrubbing scripts
+to ensure no pre-compiled `.node` or minified `.min.js` binaries remained.
+Given that upstream has already officially deprecated this UI, investing the
+massive effort to DFSG-clean its vendor tree is a poor use of maintainer time.
+
+3. The "New" Mantine UI (`web/ui/mantine-ui`)
+---------------------------------------------
+Introduced in Prometheus 3.0, this is the current default upstream UI. It is a
+modern React application built with Mantine components.
+
+Why it's disabled in Debian:
+Starting with version 6, Vite (the build tool used for this UI) introduced a
+hard runtime dependency on `rolldown`, which is a Rust-based bundler.
+`rust-rolldown` is a massive Rust project that is not yet packaged in Debian. 
+
+Because we cannot use pre-compiled binaries (like the NPM-fetched
+`rolldown.node`) due to the DFSG, and we cannot compile it from source because
+the Rust toolchain dependencies are missing from Debian Main, we are
+hard-blocked from building the Mantine UI.
+
+References: Bug #1138247 (Prometheus UI disabled), Bug #1141177 (RFP for
+node-vite/rust-rolldown).
+
+Re-enabling the UI in the Future
+--------------------------------
+To reinstate a web UI for Prometheus in Debian, maintainers have two main
+paths forward:
+
+1. Wait for Debian Tooling: Wait until `node-vite` and `rust-rolldown` (Bug
+#1141177) are officially packaged in Debian. Once these build tools are
+available in `main`, we can leverage Debian's native nodejs infrastructure to
+build the Mantine UI properly from source.
+
+2. Offline Vendoring (Not Recommended): If the UI becomes a critical blocker
+before Vite/Rolldown are packaged, maintainers could attempt to vendor the NPM
+dependencies into the Debian source package. This would involve running `npm
+install` inside the source tree, fetching the dependencies, and implementing a
+rigorous scrubbing script to delete all binaries, `.wasm` files, and minified
+code from the vendored `node_modules` tree to comply with DFSG. This is
+extremely fragile and would need constant updates.
+

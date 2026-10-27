@@ -1,0 +1,72 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Thu, 2 Jul 2026 02:35:00 -0400
+Subject: Use UTF8Validation for TextParser to fix test panics
+
+Forwarded: not-needed
+Origin: vendor, Debian
+Bug-Debian: https://bugs.debian.org/1138247
+
+When dropping the legacy label validation patch, the
+expfmt.TextParser zero-value constructor will panic in newer
+versions of prometheus/common if a validation scheme is not
+explicitly set. This updates all instances of expfmt.TextParser
+to use expfmt.NewTextParser(model.UTF8Validation).
+---
+ cmd/prometheus/main_test.go | 2 +-
+ cmd/promtool/main.go        | 2 +-
+ scrape/scrape_test.go       | 2 +-
+ util/fmtutil/format.go      | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/cmd/prometheus/main_test.go b/cmd/prometheus/main_test.go
+index dd362b9..7886815 100644
+--- a/cmd/prometheus/main_test.go
++++ b/cmd/prometheus/main_test.go
+@@ -664,7 +664,7 @@ func reloadPrometheusConfig(t *testing.T, reloadURL string) {
+ func getMetricValue(t *testing.T, body io.Reader, metricType model.MetricType, metricName string) (float64, error) {
+ 	t.Helper()
+ 
+-	p := expfmt.NewTextParser(model.LegacyValidation)
++	p := expfmt.NewTextParser(model.UTF8Validation)
+ 	metricFamilies, err := p.TextToMetricFamilies(body)
+ 	if err != nil {
+ 		return 0, err
+diff --git a/cmd/promtool/main.go b/cmd/promtool/main.go
+index e71dcf0..1e53cbb 100644
+--- a/cmd/promtool/main.go
++++ b/cmd/promtool/main.go
+@@ -1054,7 +1054,7 @@ type metricStat struct {
+ }
+ 
+ func checkMetricsExtended(r io.Reader) ([]metricStat, int, error) {
+-	p := expfmt.NewTextParser(model.LegacyValidation)
++	p := expfmt.NewTextParser(model.UTF8Validation)
+ 	metricFamilies, err := p.TextToMetricFamilies(r)
+ 	if err != nil {
+ 		return nil, 0, fmt.Errorf("error while parsing text to metric families: %w", err)
+diff --git a/scrape/scrape_test.go b/scrape/scrape_test.go
+index 47829bf..8db2a6f 100644
+--- a/scrape/scrape_test.go
++++ b/scrape/scrape_test.go
+@@ -1437,7 +1437,7 @@ func makeTestGauges(n int) []byte {
+ func promTextToProto(tb testing.TB, text []byte) []byte {
+ 	tb.Helper()
+ 
+-	var p expfmt.TextParser
++	p := expfmt.NewTextParser(model.UTF8Validation)
+ 	fams, err := p.TextToMetricFamilies(bytes.NewReader(text))
+ 	if err != nil {
+ 		tb.Fatal(err)
+diff --git a/util/fmtutil/format.go b/util/fmtutil/format.go
+index 779f101..83bc6c1 100644
+--- a/util/fmtutil/format.go
++++ b/util/fmtutil/format.go
+@@ -46,7 +46,7 @@ var MetricMetadataTypeValue = map[string]int32{
+ 
+ // MetricTextToWriteRequest consumes an io.Reader and return the data in write request format.
+ func MetricTextToWriteRequest(input io.Reader, labels map[string]string) (*prompb.WriteRequest, error) {
+-	parser := expfmt.NewTextParser(model.LegacyValidation)
++	parser := expfmt.NewTextParser(model.UTF8Validation)
+ 	mf, err := parser.TextToMetricFamilies(input)
+ 	if err != nil {
+ 		return nil, err

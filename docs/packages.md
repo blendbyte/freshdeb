@@ -29,6 +29,8 @@ upstream:
   tarball: https://memcached.org/files/memcached-{version}.tar.gz
                                 # optional; build from upstream's release tarball
                                 # instead of the git tag (see below)
+  assets:                       # optional; extra release files the build needs
+    web-ui: https://github.com/prometheus/prometheus/releases/download/v{version}/prometheus-web-ui-{version}.tar.gz
 
 packaging:
   origin: https://salsa.debian.org/debian/valkey.git
@@ -44,6 +46,9 @@ tracks:                         # one APT component per track: main, or v<track>
     commit: <full commit the tag points to>
     sha256: <tarball checksum>  # only with upstream.tarball; watch.yml fills it in
     go: "1.25.14"               # only for Go programs: toolchain from config.yaml (see below)
+    assets:                     # only with upstream.assets: sha256 of each; watch.yml fills them in
+      web-ui: <sha256>
+    line: "3.13"                # only for named tracks: the release line it stays on (see Tracks)
     revision: 1                 # freshdeb packaging revision; back to 1 on a new tag
     eol: 2031-05-19             # optional; after this date the track isn't built anymore
     patches: patches/9.1        # optional; replaces debian/patches for this track
@@ -71,6 +76,10 @@ build:
 ### Git tag or release tarball
 
 By default the source is the git tag, checked out at the pinned commit. Set `upstream.tarball` when Debian builds from upstream's release tarball instead, typically because it contains generated files (`configure`, version stamps) that the git tag doesn't. The tarball becomes the orig tarball, verified against the track's `sha256` before anything is unpacked. The tag's commit is still checked, so a moved tag fails the build either way.
+
+### Release assets
+
+Some builds need files that upstream publishes with each release but doesn't keep in git, such as Prometheus' built web UI. List them under `upstream.assets` (name → URL with `{version}`) and pin each one per track under `assets:` with its sha256. The build downloads them into the source tree as `freshdeb-assets/<name>` plus the URL's archive suffix (`freshdeb-assets/web-ui.tar.gz`), verifies them, and the orig tarball includes them, so the source package holds everything the build used. watch.yml pins the new checksums when it bumps a track. Assets can't be combined with `upstream.tarball`.
 
 ### Go programs
 
@@ -103,6 +112,19 @@ deb [signed-by=…] https://deb.freshdeb.com/restic trixie main
 ```
 
 Use version tracks only when upstream patches several release lines in parallel, like valkey. Each line gets a track keyed by its version prefix (`"9.1"` covers 9.1.x, component `v9.1`), plus optional aliases per major (`"9"` → component `v9`). watch.yml relies on the prefix to find patch releases and to propose new lines.
+
+When upstream names one line for long-term support and the lines around it come and go quickly, like Prometheus (a minor every six weeks, one LTS line a year), use `main` plus a named track with a `line`:
+
+```yaml
+tracks:
+  main:             # every release
+    tag: "v3.15.1"
+  lts:              # component lts, only 3.13.x
+    line: "3.13"
+    tag: "v3.13.5"
+```
+
+watch.yml only bumps `lts` within its line. When upstream names the next LTS, move `line` and `tag` to it in a PR, so users of the `lts` component move along.
 
 Never remove a track. When upstream support ends, the `eol` date stops builds and the component stays published as-is. The release refuses to publish if a component disappears. If components really have to change before anyone uses them, delete the project's directory in the bucket and release with `reset_project` (a dispatch input of release.yml).
 

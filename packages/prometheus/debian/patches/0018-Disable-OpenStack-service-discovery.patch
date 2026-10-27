@@ -1,0 +1,263 @@
+From: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Date: Wed, 17 Jun 2026 10:43:29 -0400
+Subject: Disable OpenStack service discovery
+
+The golang-github-gophercloud-gophercloud-v2-dev package is
+not available in Debian.
+---
+ config/config_test.go                    | 48 --------------------------------
+ config/testdata/conf.good.yml            | 11 --------
+ config/testdata/roundtrip.good.yml       | 10 -------
+ discovery/install/install.go             |  1 -
+ discovery/openstack/hypervisor.go        |  3 ++
+ discovery/openstack/hypervisor_test.go   |  3 ++
+ discovery/openstack/instance.go          |  3 ++
+ discovery/openstack/instance_test.go     |  3 ++
+ discovery/openstack/loadbalancer.go      |  3 ++
+ discovery/openstack/loadbalancer_test.go |  3 ++
+ discovery/openstack/metrics.go           |  3 ++
+ discovery/openstack/mock_test.go         |  3 ++
+ discovery/openstack/openstack.go         |  3 ++
+ plugins/plugins.go                       |  2 --
+ 14 files changed, 27 insertions(+), 72 deletions(-)
+
+diff --git a/config/config_test.go b/config/config_test.go
+index be29511..eb91328 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -43,7 +43,6 @@ import (
+ 	"github.com/prometheus/prometheus/discovery/linode"
+ 	"github.com/prometheus/prometheus/discovery/marathon"
+ 	"github.com/prometheus/prometheus/discovery/moby"
+-	"github.com/prometheus/prometheus/discovery/openstack"
+ 	"github.com/prometheus/prometheus/discovery/ovhcloud"
+ 	"github.com/prometheus/prometheus/discovery/puppetdb"
+ 	"github.com/prometheus/prometheus/discovery/scaleway"
+@@ -992,45 +991,6 @@ var expectedConf = &Config{
+ 				},
+ 			},
+ 		},
+-		{
+-			JobName: "service-openstack",
+-
+-			HonorTimestamps:                true,
+-			ScrapeInterval:                 model.Duration(15 * time.Second),
+-			ScrapeTimeout:                  DefaultGlobalConfig.ScrapeTimeout,
+-			EnableCompression:              true,
+-			BodySizeLimit:                  globBodySizeLimit,
+-			SampleLimit:                    globSampleLimit,
+-			TargetLimit:                    globTargetLimit,
+-			LabelLimit:                     globLabelLimit,
+-			LabelNameLengthLimit:           globLabelNameLengthLimit,
+-			LabelValueLengthLimit:          globLabelValueLengthLimit,
+-			ScrapeProtocols:                DefaultGlobalConfig.ScrapeProtocols,
+-			ScrapeFailureLogFile:           globScrapeFailureLogFile,
+-			MetricNameValidationScheme:     DefaultGlobalConfig.MetricNameValidationScheme,
+-			MetricNameEscapingScheme:       DefaultGlobalConfig.MetricNameEscapingScheme,
+-			AlwaysScrapeClassicHistograms:  boolPtr(false),
+-			ConvertClassicHistogramsToNHCB: boolPtr(false),
+-
+-			MetricsPath:      DefaultScrapeConfig.MetricsPath,
+-			Scheme:           DefaultScrapeConfig.Scheme,
+-			HTTPClientConfig: config.DefaultHTTPClientConfig,
+-
+-			ServiceDiscoveryConfigs: discovery.Configs{
+-				&openstack.SDConfig{
+-					Role:            "instance",
+-					Region:          "RegionOne",
+-					Port:            80,
+-					Availability:    "public",
+-					RefreshInterval: model.Duration(60 * time.Second),
+-					TLSConfig: config.TLSConfig{
+-						CAFile:   "testdata/valid_ca_file",
+-						CertFile: "testdata/valid_cert_file",
+-						KeyFile:  "testdata/valid_key_file",
+-					},
+-				},
+-			},
+-		},
+ 		{
+ 			JobName: "service-puppetdb",
+ 
+@@ -2033,14 +1993,6 @@ var expectedErrors = []struct {
+ 		filename: "marathon_authtoken_authorization.bad.yml",
+ 		errMsg:   "marathon_sd: at most one of auth_token, auth_token_file & authorization must be configured",
+ 	},
+-	{
+-		filename: "openstack_role.bad.yml",
+-		errMsg:   "unknown OpenStack SD role",
+-	},
+-	{
+-		filename: "openstack_availability.bad.yml",
+-		errMsg:   "unknown availability invalid, must be one of admin, internal or public",
+-	},
+ 	{
+ 		filename: "url_in_targetgroup.bad.yml",
+ 		errMsg:   "\"http://bad\" is not a valid hostname",
+diff --git a/config/testdata/conf.good.yml b/config/testdata/conf.good.yml
+index 48442c0..e2d9c0d 100644
+--- a/config/testdata/conf.good.yml
++++ b/config/testdata/conf.good.yml
+@@ -299,17 +299,6 @@ scrape_configs:
+       - host: http://127.0.0.1:2375
+         role: nodes
+ 
+-  - job_name: service-openstack
+-    openstack_sd_configs:
+-      - role: instance
+-        region: RegionOne
+-        port: 80
+-        refresh_interval: 1m
+-        tls_config:
+-          ca_file: valid_ca_file
+-          cert_file: valid_cert_file
+-          key_file: valid_key_file
+-
+   - job_name: service-puppetdb
+     puppetdb_sd_configs:
+       - url: https://puppetserver/
+diff --git a/config/testdata/roundtrip.good.yml b/config/testdata/roundtrip.good.yml
+index cf93fdb..103fde8 100644
+--- a/config/testdata/roundtrip.good.yml
++++ b/config/testdata/roundtrip.good.yml
+@@ -97,16 +97,6 @@ scrape_configs:
+         paths:
+           - /monitoring
+ 
+-    openstack_sd_configs:
+-      - role: instance
+-        region: RegionOne
+-        port: 80
+-        refresh_interval: 1m
+-        tls_config:
+-          ca_file: valid_ca_file
+-          cert_file: valid_cert_file
+-          key_file: valid_key_file
+-
+     static_configs:
+       - targets:
+           - localhost:9093
+diff --git a/discovery/install/install.go b/discovery/install/install.go
+index 0bdfb4c..9294bad 100644
+--- a/discovery/install/install.go
++++ b/discovery/install/install.go
+@@ -29,7 +29,6 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/linode"       // register linode
+ 	_ "github.com/prometheus/prometheus/discovery/marathon"     // register marathon
+ 	_ "github.com/prometheus/prometheus/discovery/moby"         // register moby
+-	_ "github.com/prometheus/prometheus/discovery/openstack"    // register openstack
+ 	_ "github.com/prometheus/prometheus/discovery/ovhcloud"     // register ovhcloud
+ 	_ "github.com/prometheus/prometheus/discovery/puppetdb"     // register puppetdb
+ 	_ "github.com/prometheus/prometheus/discovery/scaleway"     // register scaleway
+diff --git a/discovery/openstack/hypervisor.go b/discovery/openstack/hypervisor.go
+index e7a6362..3060e00 100644
+--- a/discovery/openstack/hypervisor.go
++++ b/discovery/openstack/hypervisor.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/hypervisor_test.go b/discovery/openstack/hypervisor_test.go
+index e4a97f3..fa1c086 100644
+--- a/discovery/openstack/hypervisor_test.go
++++ b/discovery/openstack/hypervisor_test.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/instance.go b/discovery/openstack/instance.go
+index 6c2f79b..4a2bd82 100644
+--- a/discovery/openstack/instance.go
++++ b/discovery/openstack/instance.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/instance_test.go b/discovery/openstack/instance_test.go
+index 0933b57..9ba7614 100644
+--- a/discovery/openstack/instance_test.go
++++ b/discovery/openstack/instance_test.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/loadbalancer.go b/discovery/openstack/loadbalancer.go
+index 254b713..fcdb561 100644
+--- a/discovery/openstack/loadbalancer.go
++++ b/discovery/openstack/loadbalancer.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/loadbalancer_test.go b/discovery/openstack/loadbalancer_test.go
+index eee21b9..dc8f890 100644
+--- a/discovery/openstack/loadbalancer_test.go
++++ b/discovery/openstack/loadbalancer_test.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/metrics.go b/discovery/openstack/metrics.go
+index a64c1a6..9576887 100644
+--- a/discovery/openstack/metrics.go
++++ b/discovery/openstack/metrics.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2015 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/mock_test.go b/discovery/openstack/mock_test.go
+index 34e09c7..628142c 100644
+--- a/discovery/openstack/mock_test.go
++++ b/discovery/openstack/mock_test.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/openstack/openstack.go b/discovery/openstack/openstack.go
+index d7b5878..ad4d4ca 100644
+--- a/discovery/openstack/openstack.go
++++ b/discovery/openstack/openstack.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2017 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/plugins/plugins.go b/plugins/plugins.go
+index 3aa4e9f..6c675fc 100644
+--- a/plugins/plugins.go
++++ b/plugins/plugins.go
+@@ -41,8 +41,6 @@ import (
+ 	// Register moby plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/moby"
+ 
+-	// Register openstack plugin.
+-	_ "github.com/prometheus/prometheus/discovery/openstack"
+ 	// Register ovhcloud plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/ovhcloud"
+ 	// Register puppetdb plugin.

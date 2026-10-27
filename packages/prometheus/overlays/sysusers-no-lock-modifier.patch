@@ -1,0 +1,6 @@
+diff -ruN a/debian/prometheus.sysusers b/debian/prometheus.sysusers
+--- a/debian/prometheus.sysusers
++++ b/debian/prometheus.sysusers
+@@ -1 +1 @@
+-u! prometheus - "Prometheus daemon" /var/lib/prometheus
++u prometheus - "Prometheus daemon" /var/lib/prometheus

@@ -1,0 +1,1530 @@
+prometheus (3.5.3+ds1-6) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable. No changes since 3.5.3+ds1-6~exp1.
+
+ -- Juan Manuel Méndez Rey <juan.mendezr@proton.me>  Tue, 29 Sep 2026 13:59:39 +0200
+
+prometheus (3.5.3+ds1-6~exp1) experimental; urgency=medium
+
+  * Team upload.
+  * Use go.opentelemetry.io/otel/semconv/v1.43.0 in tracing: otel 1.46.0
+    sdk/resource uses semconv v1.43.0 and mismatching schema URLs make
+    tracer provider setup fail with "conflicting Schema URL".
+  * Build-Depend and have golang-github-prometheus-prometheus-dev depend
+    on golang-opentelemetry-otel-dev (>= 1.46.0~) and
+    golang-github-prometheus-alertmanager-dev (>= 0.33.1-5~), which is
+    the first alertmanager-dev co-installable with otel-dev 1.46.0.
+
+ -- Juan Manuel Méndez Rey <juan.mendezr@proton.me>  Mon, 21 Sep 2026 20:53:44 +0200
+
+prometheus (3.5.3+ds1-5) unstable; urgency=medium
+
+  * debian/control: depend on golang-k8s-kube-openapi-dev >= 0.0~git20260721.d427ff9-1~
+
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 18 Sep 2026 14:13:32 -0400
+
+prometheus (3.5.3+ds1-4) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Juan Manuel Méndez Rey ]
+  * Backport upstream fix for discovery/kubernetes tests with client-go
+    >= 0.35 (Closes: #1147746)
+
+  [ Reinhard Tartler ]
+  * debian/patches: unconditionally disable flaky
+    TestHeadCompactionWhileScraping (Closes: #1145937)
+  * debian/patches: skip flaky TestQueryConcurrency and
+    TestEndpointsSlicesDiscoveryWithUpdatedNodeMetadata
+    (Closes: #1099026, #1135688)
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 17 Sep 2026 20:55:14 -0400
+
+prometheus (3.5.3+ds1-3) unstable; urgency=medium
+
+  * Team upload.
+  * Add distro patches for two more flaky cmd/prometheus tests:
+    - TestHeadCompactionWhileScraping is timing-sensitive and failed on
+      the riscv64 buildd; skip it in short mode, which Debian enables on
+      slow architectures (armel, armhf, mips64el, riscv64).
+      Ref: https://github.com/prometheus/prometheus/issues/17956
+    - TestQueryLog is flaky due to an upstream port-binding race
+      (connection refused / bind: address already in use on arm64 debci);
+      disable until upstream fixes
+      https://github.com/prometheus/prometheus/issues/16843
+
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 31 Jul 2026 08:52:20 +0200
+
+prometheus (3.5.3+ds1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Add distro patches to skip two flaky tests on slow/non-mainstream
+    architectures
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 30 Jul 2026 08:09:41 -0400
+
+prometheus (3.5.3+ds1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release 3.5.3. (Closes: #1138247)
+    - Fixes CVE-2026-42151 and CVE-2026-42154. (Closes: #1135999)
+    - Fixes flaky tests. (Closes: #1135260)
+  * Refresh patches.
+  * Drop web UI due to missing dependencies in Debian (rust-rolldown).
+  * Drop obsolete UI dependencies (fonts, libjs) from debian/control.
+  * Drop legacy UTF-8 label validation patches to fix test panics and
+    restore test coverage.
+  * Add comprehensive autopkgtest for Prometheus systemd service.
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sun, 19 Jul 2026 10:17:49 -0300
+
+prometheus (2.53.5+ds1-5) unstable; urgency=medium
+
+  * Team upload
+
+  [ Guillem Jover ]
+  * d/rules:
+    - Remove «Rules-Requires-Root: no», which is now the default
+    - Remove «Priority: optional», which is now the default
+    - Bump Standards-Version to 4.7.4
+  * Switch to debian/watch format version 5
+  * Run wrap-and-sort -ast
+  * Switch debian/gitlab-ci.yml to debian/salsa-ci.yml
+  * Namespace debhelper fragment files with binary package name
+
+  [ Mathias Gibbens ]
+  * Add patch to update expected otel semconv version (Closes: #1137403)
+  * Drop patch for building with old version of golang-github-ovh-go-ovh-dev
+  * Update minimum versions of packages in Build-Depends and Depends in
+    d/control
+
+ -- Mathias Gibbens <gibmat@debian.org>  Thu, 04 Jun 2026 00:29:45 +0000
+
+prometheus (2.53.5+ds1-4) unstable; urgency=medium
+
+  [ Nicolas Peugnet ]
+  * Team upload.
+  * Update deprecated type to fix build with Moby v28, Closes: #1131820
+
+  [ Reinhard Tartler ]
+  * Build against docker 28
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 26 Mar 2026 06:11:28 -0400
+
+prometheus (2.53.5+ds1-3) unstable; urgency=medium
+
+  * Add new 0025-Support-prometheus-common-v0.66.0.patch
+  * Bump golang-github-prometheus-common-dev version constraint (>= 0.66.0)
+  * wrap-and-sort -at
+  * Sync Build-Depends to -dev package also
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 31 Dec 2025 19:01:34 +0000
+
+prometheus (2.53.5+ds1-2) unstable; urgency=medium
+
+  * Team upload.
+  * d/control: Require B-D golang-k8s-client-go-dev >= 0.33.0
+  * d/p/*: Create patch to update informer watch error handler for client-go
+    (Closes: #1113806)
+
+ -- Arthur Diniz <arthurbdiniz@gmail.com>  Tue, 02 Sep 2025 23:03:33 +0100
+
+prometheus (2.53.5+ds1-1) unstable; urgency=medium
+
+  * Final release of 2.53.x LTS series, whose upstream support has now ended
+  * Bump Standards-Version to 4.7.2 (no changes)
+  * Drop obsolete 0016-Use-opentelemetry-1.26.patch (applied upstream)
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 20 Aug 2025 14:37:12 +0000
+
+prometheus (2.53.4+ds1-1) unstable; urgency=medium
+
+  * Really final release of 2.53.x LTS series
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 19 Aug 2025 14:07:21 +0000
+
+prometheus (2.53.3+ds1-2) unstable; urgency=medium
+
+  * Simplify Debian test helper functions
+  * Add new 0023-Use-legacy-label-name-validation.patch
+  * Include labels builder in classic UI template contexts (Closes: #1108095)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 23 Jun 2025 18:11:33 +0000
+
+prometheus (2.53.3+ds1-1) unstable; urgency=medium
+
+  * New upstream release 2.53.3: the last LTS (Long-Term Support) release of
+    the 2.x series.
+    10 years since the first commit in the Debian packaging repo!
+  * Add missing documentation and examples
+  * d/control: Migrate to Static-Built-Using
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 16 Feb 2025 17:31:36 +0000
+
+prometheus (2.53.1+ds-3) unstable; urgency=medium
+
+  * d/rules: remove obsolete includes
+  * Replace patches to skip tests with proper fixes
+  * Remove obsolete 0007-Fix-hanging-test.patch
+  * Merge patches for resources-related test failures
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 14 Feb 2025 04:23:39 +0000
+
+prometheus (2.53.1+ds-2) unstable; urgency=medium
+
+  * Add patches to fix/skip test failures on 32-bit
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 10 Feb 2025 18:59:15 +0000
+
+prometheus (2.53.1+ds-1) unstable; urgency=medium
+
+  * gbp.conf: Add defaults to automatically find upstream git tags when
+    importing a new upstream release with `gbp import-orig`
+  * Vendor new dependency too small to package
+  * Add dependencies and vendored code for k8s SD
+  * Disable Azure SD until SDK package is updated
+  * Disable OTLP Ingestion endpoint. This can be re-enabled once golang-
+    opentelemetry-collector is in Debian (#1080354)
+  * Add patch to fix a test error for OVH
+  * Add lintian overrides for long Built-Using field
+  * Reenable Kubernetes service discovery
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 10 Feb 2025 05:11:10 +0000
+
+prometheus (2.45.6+ds-9) unstable; urgency=medium
+
+  * Add Breaks / Replaces to promtool package (Closes: #1088956)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 05 Dec 2024 20:49:55 +0000
+
+prometheus (2.45.6+ds-8) unstable; urgency=medium
+
+  * Add new 0027-Extend-testing-CA-certificates-expiry-date.patch
+    (Closes: #1078633)
+  * Split out promtool binary to separate package (Closes: #1087992)
+  * Modernize d/rules to produce more visually appealing man pages
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 30 Nov 2024 09:13:50 +0000
+
+prometheus (2.45.6+ds-7) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable
+
+ -- Reinhard Tartler <siretart@tauware.de>  Thu, 31 Oct 2024 06:22:01 -0400
+
+prometheus (2.45.6+ds-6) experimental; urgency=medium
+
+  * Team upload.
+  * Tighten dependencies on opentelemetry
+  * Fix tests against opentelemetry 1.26
+
+ -- Reinhard Tartler <siretart@tauware.de>  Tue, 22 Oct 2024 06:31:28 -0400
+
+prometheus (2.45.6+ds-5) unstable; urgency=medium
+
+  * golang-github-prometheus-prometheus-dev: include example config files
+    required by tests
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 07 Oct 2024 15:29:08 +0000
+
+prometheus (2.45.6+ds-4) unstable; urgency=medium
+
+  * Source-only re-upload
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 06 Oct 2024 10:59:38 +0000
+
+prometheus (2.45.6+ds-3) unstable; urgency=medium
+
+  * Reinstate "New UI" link in nav header
+  * d/control: add golang-github-prometheus-prometheus-dev package for
+    applications which import (parts of) Prometheus as a library
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 04 Oct 2024 10:38:55 +0000
+
+prometheus (2.45.6+ds-2) unstable; urgency=medium
+
+  * Reinstate React web UI support in backend
+  * Fix duplicate path prefix in templates/rules.html (Closes: #1071995)
+  * Drop obsolete 0013-Revert-OpenStack-Gophercloud-API-change.patch and
+    bump golang-github-gophercloud-gophercloud-dev version constraint to
+    (>= 0.19.0)
+  * Add React web UI install-ui.sh helper script
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 23 Sep 2024 01:22:56 +0000
+
+prometheus (2.45.6+ds-1) unstable; urgency=medium
+
+  * New upstream release (no code changes)
+  * Add new 0025-Support-docker-v25.patch
+  * Bump golang-github-docker-docker-dev version constraint (>= 25.0)
+  * Drop obsolete 0014-Disable-OpenTelemetry.patch
+  * Add new build-dep golang-opentelemetry-contrib-dev
+  * Bump Standards-Version to 4.7.0 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Aug 2024 11:29:12 +0000
+
+prometheus (2.45.5+ds-1) unstable; urgency=medium
+
+  * New upstream (bugfix) release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 03 May 2024 17:24:59 +0000
+
+prometheus (2.45.4+ds-2) unstable; urgency=medium
+
+  * Add new 0024-Fix-deadlock-in-TestQuerierIndexQueriesRace.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 31 Mar 2024 15:56:05 +0000
+
+prometheus (2.45.4+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * dh_auto_test: increase test timeout to 60m
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 29 Mar 2024 11:03:56 +0000
+
+prometheus (2.45.3+ds-3) unstable; urgency=medium
+
+  * Add new 0023-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 18 Mar 2024 04:58:20 +0000
+
+prometheus (2.45.3+ds-2) unstable; urgency=medium
+
+  * Add new 0022-Support-prometheus-common-v0.47.0.patch (Closes: #1064765)
+  * Bump golang-github-prometheus-common-dev version constraint to >= 0.47.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 27 Feb 2024 05:26:30 +0000
+
+prometheus (2.45.3+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Feb 2024 11:58:47 +0000
+
+prometheus (2.45.1+ds-3) unstable; urgency=medium
+
+  * Override dh_auto_test gcflags on riscv64 to workaround
+    https://github.com/golang/go/issues/63167
+  * Increase test timeout and skip long tests on mips64el and riscv64
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 22 Nov 2023 21:58:21 +0000
+
+prometheus (2.45.1+ds-2) unstable; urgency=medium
+
+  * Add new 0021-Partially-backport-PR-12650.patch to fix FTBFS with recent
+    versions of golang-golang-x-exp-dev
+  * Drop LimitNOFILE from systemd service, since systemd >= 240 defaults to a
+    higher hard limit than what we previously specified
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 22 Nov 2023 17:34:47 +0000
+
+prometheus (2.45.1+ds-1) unstable; urgency=medium
+
+  [ Antoine Beaupré ]
+  * Do not restart service on config syntax errors (Closes: #1022724)
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Drop obsolete 0021-Fix-Linode-SD-int32-overflows.patch (applied upstream)
+  * Bump minimum required golang-github-hetznercloud-hcloud-go-dev to 2.0.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 09 Oct 2023 13:17:35 +0000
+
+prometheus (2.45.0+ds-3) unstable; urgency=medium
+
+  * Add new Fix-Linode-SD-int32-overflows.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 16 Jul 2023 17:38:35 +0000
+
+prometheus (2.45.0+ds-2) unstable; urgency=medium
+
+  * Re-enable Linode service discovery
+  * Drop obsolete Revert-switch-to-go-zookeeper.patch
+  * Drop unused build-dep golang-github-samuel-go-zookeeper-dev
+  * Add new build-deps:
+    - golang-github-go-zookeeper-zk-dev
+    - golang-github-linode-linodego-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 16 Jul 2023 12:48:41 +0000
+
+prometheus (2.45.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Convert patches to gbp-pq format and refresh
+  * Add new Disable-Azure-AD-authentication-support.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 14 Jul 2023 18:45:22 +0000
+
+prometheus (2.44.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Add new 96-Disable-write-documentation-flag.patch
+  * Add missing build-dep golang-google-protobuf-dev
+  * Drop redundant build-dep version constraints
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 12 Jul 2023 10:37:15 +0000
+
+prometheus (2.43.1+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete 95-Support-prometheus-common-0.42.0.patch
+  * Drop unused golang-github-dgryski-go-sip13-dev build-dep
+  * Add new 95-Revert-kingpin-import-path.patch
+  * d/rules: restore docker SD test fixture filename for older build-deps
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 07 Jul 2023 22:24:58 +0000
+
+prometheus (2.42.0+ds-6) unstable; urgency=medium
+
+  * Add new 95-Support-prometheus-common-0.42.0.patch to support building
+    against golang-github-prometheus-common-dev >= 0.42.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 28 Jun 2023 22:51:17 +0000
+
+prometheus (2.42.0+ds-5) unstable; urgency=medium
+
+  * Fix typo in debian/rules pertaining to arch-specific test flags
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 06 Feb 2023 09:24:28 +0000
+
+prometheus (2.42.0+ds-4) unstable; urgency=medium
+
+  * Skip TestConcurrentRangeQueries on riscv64 also
+  * Skip flaky TestPartialTruncateWAL test on certain archs
+  * d/rules: skip long tests on riscv64, which cause build failures due to
+    test timeouts
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 05 Feb 2023 08:02:02 +0000
+
+prometheus (2.42.0+ds-3) unstable; urgency=medium
+
+  * Skip TestConcurrentRangeQueries on 32-bit archs due to consistent timeouts
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 05 Feb 2023 05:28:28 +0000
+
+prometheus (2.42.0+ds-2) unstable; urgency=medium
+
+  * Combine memory-intesive test skip patches which address a common root
+    cause
+  * Drop obsolete 31-Disable_fsnotify_mips64el.patch (fixed upstream)
+  * Add new 34-Fix_slow_tests.patch to address slow test timeouts on heavily-
+    loaded buildd hosts
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 05 Feb 2023 02:02:35 +0000
+
+prometheus (2.42.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 04 Feb 2023 00:19:21 +0000
+
+prometheus (2.41.0+ds-2) unstable; urgency=medium
+
+  * Extend 36-Disable_rules_test_arm.patch to other 32-bit archs (and rename
+    to 36-Disable_rules_test_32-bit.patch) (Closes: #1025234)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 09 Jan 2023 04:04:27 +0000
+
+prometheus (2.41.0+ds-1) unstable; urgency=medium
+
+  * New upstream version
+  * Bump minimum required golang-github-prometheus-common-dev version to
+    0.39.0
+  * Bump Standards-Version to 4.6.2 (no changes)
+  * dh_auto_test: increase Go test timeout to 30 mins
+  * Patch css / js paths in console_templates/prom.lib
+  * Increase open file descriptor limit to 32768
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 21 Dec 2022 00:30:48 +0000
+
+prometheus (2.40.7+ds-1) unstable; urgency=medium
+
+  * New upstream version
+  * d/copyright: drop Files-Excluded patterns for files which are no longer
+    shipped by upstream
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 19 Dec 2022 03:50:09 +0000
+
+prometheus (2.40.5+ds-3) unstable; urgency=medium
+
+  * Patch in skip32bit test helper function
+  * Skip TestChunkSnapshot on 32-bit arch due to memory exhaustion
+  * Skip TestQueryHistogramFromBlocksWithCompaction additionally on armel /
+    armhf
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Dec 2022 22:37:58 +0000
+
+prometheus (2.40.5+ds-2) unstable; urgency=medium
+
+  * Drop obsolete 83-Revert_grafana_regexp.patch
+  * Add new build-dep golang-github-grafana-regexp-dev
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Dec 2022 00:17:09 +0000
+
+prometheus (2.40.5+ds-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 02 Dec 2022 02:13:01 +0000
+
+prometheus (2.40.4+ds-2) unstable; urgency=medium
+
+  * Skip TestQueryHistogramFromBlocksWithCompaction on 386 due to memory
+    exhaustion
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 01 Dec 2022 05:26:34 +0000
+
+prometheus (2.40.4+ds-1) unstable; urgency=medium
+
+  * New upstream release (fixes CVE-2022-46146)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 30 Nov 2022 06:35:44 +0000
+
+prometheus (2.40.3+ds-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 25 Nov 2022 05:51:03 +0000
+
+prometheus (2.40.2+ds-3) unstable; urgency=medium
+
+  * Skip additional memory-intensive tests which fail on 32-bit archs
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 20 Nov 2022 06:32:08 +0000
+
+prometheus (2.40.2+ds-2) unstable; urgency=medium
+
+  * Fix 35-Disable_memory_intensive_tests.patch so as to not build-exclude
+    shared test setup functions
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 20 Nov 2022 04:32:19 +0000
+
+prometheus (2.40.2+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add new 35-Disable_memory_intensive_tests.patch to disable
+    memory-intensive tests which are known to fail on 32-bit archs
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 20 Nov 2022 03:09:15 +0000
+
+prometheus (2.40.1+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Remove --help output from default file
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 09 Nov 2022 15:31:49 +0000
+
+prometheus (2.40.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete 34-Disable_wal_test_goleak.patch
+  * Add new build-deps:
+    - golang-github-ovh-go-ovh-dev
+    - golang-golang-x-exp-dev
+  * Bump required golang-github-prometheus-exporter-toolkit-dev version to
+    0.8.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 09 Nov 2022 11:52:06 +0000
+
+prometheus (2.39.1+ds1-2) unstable; urgency=medium
+
+  * Drop obsolete patches:
+    - 02-Disable_ionos.patch
+    - 06-Disable_scaleway.patch
+  * Add new build-deps:
+    - golang-github-ionos-cloud-sdk-go-dev
+    - golang-github-scaleway-scaleway-sdk-go-dev
+  * Make 21-Disable_TSDB_lockfile.patch less intrusive
+  * d/rules: drop no longer necessary GODEBUG x509sha1=1
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 26 Oct 2022 22:06:53 +0000
+
+prometheus (2.39.1+ds1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Oct 2022 17:24:32 +0000
+
+prometheus (2.38.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete 96-Fix_golang_API_change.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Oct 2022 16:27:49 +0000
+
+prometheus (2.37.1+ds1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Add new 08-Disable_nomad.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Oct 2022 16:06:41 +0000
+
+prometheus (2.36.2+ds1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Add new build-dep golang-github-vultr-govultr-dev
+  * Add new 02-Disable_ionos.patch
+  * Bump minimum required Go version to 1.17, as per upstream release notes
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Oct 2022 15:36:46 +0000
+
+prometheus (2.35.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete patches:
+    - 35-Integer_overflows.patch
+    - 97-Fix_common_API_change.patch
+  * Add new build-dep golang-uber-automaxprocs-dev
+  * Restrict build-dep version for golang-github-azure-go-autorest-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Oct 2022 14:43:13 +0000
+
+prometheus (2.34.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add classic web UI assets to debian/missing-sources
+  * Refresh patches
+  * Drop obsolete patches:
+    - 02-Disable_jaeger.patch
+    - 03-Disable_uyuni.patch
+  * Refactor existing patches:
+    - 92-Disable_react_UI.patch
+    - 93-Do_not_embed_blobs.patch
+  * Add new patches:
+    - 83-Revert_grafana_regexp.patch
+    - 91-Disable_opentelemetry.patch
+    - 94-Splice_classic_web_UI.patch
+  * Add new build-deps:
+    - golang-github-kolo-xmlrpc-dev
+    - golang-opentelemetry-otel-dev
+  * Update gbp.conf to current team standard
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Oct 2022 14:06:50 +0000
+
+prometheus (2.33.5+ds1-4) unstable; urgency=medium
+
+  * Reorder and renumber patches.
+  * Disable Consul SD until its Debian package is back in shape.
+  * Avoid test failures on armhf due to memory exhaustion.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 17 Oct 2022 23:29:27 +0000
+
+prometheus (2.33.5+ds1-3) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Add new 93-client_golang_api_v1.patch (Closes: #1020145)
+  * Add new 94-common_http2.patch
+  * Migrate lintian-overrides to pointed hints format
+  * Adjust dependency versions according to what patches expect
+  * Bump Standards-Version to 4.6.1 (no changes)
+  * Drop obsolete lintian-overrides
+
+  [ Martina Ferrari ]
+  * Adjust dependencies versions to avoid build failures.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 12 Oct 2022 16:28:49 +0000
+
+prometheus (2.33.5+ds1-2) unstable; urgency=medium
+
+  * New patch: Avoid literal integer overflows in 32 bit arches.
+  * debian/rules: Avoid test failures due to newer crypto/x509
+    requirements.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 23 Mar 2022 22:28:20 +0000
+
+prometheus (2.33.5+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/gbp.conf: Avoid re-creating orig tarball.
+  * debian/copyright: Exclude more files from React UI.
+  * Refresh and reorganise patches.
+    - Removed 11-Set_temporary_storage_path_for_tsdb.patch as the fix was
+      implemented upstream.
+    - Renamed and split 01-Do_not_embed_blobs.patch into
+      11-Disable_react_UI.patch and 12-Do_not_embed_blobs.patch to separate
+      concerns and reflect actual patch order.
+  * debian/patches: Add classic UI page for agent mode.
+  * debian/rules: Update test data paths.
+  * debian/default: Update available flags and descriptions.
+  * debian/copyright: Update years.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 16 Mar 2022 06:03:09 +0000
+
+prometheus (2.31.2+ds1-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Daniel Swarbrick ]
+  * New upstream release (bugfix only).
+  * Update my email address.
+  * d/copyright: fix typo in Files-Excluded field.
+
+  [ Guillem Jover ]
+  * Add missing sources for bootstrap3-typeahead as debian/copyright documents.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 22 Jan 2022 03:07:45 +0100
+
+prometheus (2.31.1+ds2-2) unstable; urgency=medium
+
+  * Team upload.
+  * Require golang-github-prometheus-common-dev (>= 0.32.1-4~). From -2 to -3
+    part of an API break was reverted, which at the same time broke this
+    package. Require the unbroken version to make sure the builds succeed.
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 26 Nov 2021 23:45:46 +0100
+
+prometheus (2.31.1+ds2-1) unstable; urgency=medium
+
+  * Team upload.
+  * Update debian/watch.
+  * Update Files-Exclude to match unvendoring.
+  * Remove vendored dennwc/varint now available in Debian.
+  * Switch from vendored dennwc/varint to packaged one.
+  * Switch to go-kit/log and remove reverting patch.
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 25 Nov 2021 19:37:49 +0100
+
+prometheus (2.31.1+ds1-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Guillem Jover ]
+  * New upstream release.
+    - Fix build failure in test suite with Go 1.16. (Closes: #995999)
+  * Use $(BUILDDIR) uniformly instead of the literal build/.
+  * Update copyright claims.
+  * Move note about license location on Debian systems into a Comment field.
+  * Update version.BuildUser to match the Maintainer address.
+  * Decapitalize synopsis first word.
+  * Update gitlab-ci.yml from latest upstream version.
+  * Add After=time-sync.target to systemd unit file. (Closes: #981110)
+  * Switch to Standards-Version 4.6.0 (no changes needed).
+  * Add missing build dependencies needed by new upstream release.
+  * Refresh patches for new upstream release.
+  * Disable XDS, Uyuni, Linode and Scaleway support.
+  * Revert upstream commits introducing unavailable dependencies.
+  * Fix test failure for dennwc/varint.
+  * Replace patch with entry in DH_GOLANG_INSTALL_EXTRA.
+  * Add required fixtures for new upstream release to DH_GOLANG_INSTALL_EXTRA.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Update debian/copyright for new upstream.
+  * Update default file from latest upstream output.
+  * Add /.pc/ to .gitignore.
+  * Switch to use .build/ as the build directory like upstream.
+
+  [ Daniel Swarbrick ]
+  * Unvendor github.com/prometheus/exporter-toolkit
+  * Add new build-dep golang-github-prometheus-exporter-toolkit-dev
+
+  [ Martina Ferrari ]
+  * Correct my email address.
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 18 Nov 2021 19:18:18 +0100
+
+prometheus (2.24.1+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Refresh patches
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 20 Jan 2021 14:35:15 +0000
+
+prometheus (2.24.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Add missing build-dep golang-github-alecthomas-units-dev
+  * Add new build-dep golang-github-stretchr-testify-dev
+  * Refresh patches
+  * d/watch: update to version 4 format
+  * Add vendored github.com/prometheus/exporter-toolkit
+
+  [ Guillem Jover ]
+  * Switch to Standards-Version 4.5.1 (no changes needed)
+  * Remove nocheck handling from override_dh_auto_test. This is handled
+    automatically since debhelper compatibility level 13.
+  * Remove code switching symlinks to directories. This would ideally use
+    dpkg-maintscript-helper, but it's now been enough time that it should
+    not be needed anymore. Remove the maintainer script.
+  * Remove leftover templates.old debconf file
+  * Remove old Prometheus version 1 database handling code. This happened
+    between the current Debian oldstable (stretch) and stable (buster),
+    and we do not support upgrades across multiple releases. Remove the no
+    longer needed database format support.
+  * Change systemd service Restart directive from always to on-failure.
+    The always value is unusual, as it ignores successful exits. The
+    prometheus daemon can also be requested to exit from its API, that
+    should be honored.
+  * Do not enable DH_VERBOSE by default. The default should be fine.
+  * Use $() instead of `` in init script
+  * Use '' instead of `' in text
+  * Remove unnecessary error suppression from init script. The init script
+    does not run with «set -e» so there is no need to suppress errors. And
+    in any case this error should not be suppressed as that would make the
+    daemon fail anyway.
+  * Remove error suppression from postinst. These commands need to succeed
+    for the program to be considered configured. Ignoring them will mean a
+    non-functional installation anyway.
+  * Run adduser unconditionally. The adduser command handles existing
+    users gracefully, so there is no need to check for them beforehand.
+  * Do not change pathname metadata if there are dpkg statoverrides in
+    place. These are user specified overrides which we should respect, as
+    dpkg does when unpacking these pathnames.
+  * Update gitignore file
+  * Remove $syslog dependency from init script. We write directly into the
+    log file.
+  * Remove all rotated logs on purge
+  * Add man:prometheus(1) to systemd unit Documentation field
+  * Switch from /var/run to /run
+  * Rewrite init script using start-stop-daemon. This removes the
+    dependency on daemon | systemd-sysv, and simplifies the init script
+    substantially.
+  * Do not change the permission for /var/log/prometheus anymore. On
+    sysvinit systems, the log file is now owned by root so there is no
+    need to change the owner and group of the log directory anymore.
+
+  [ Michael Prokop ]
+  * Harden prometheus systemd service (Closes: #950759)
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 20 Jan 2021 02:52:40 +0000
+
+prometheus (2.22.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Standalone tsdb CLI tool is now a subcommand of promtool
+  * Re-enable Azure service discovery
+  * Refresh patches
+  * Drop obsolete patches
+    - 00-Disable_azure.patch
+    - 12-Revert_commit_2908653.patch
+    - 14-Use-SAN-in-test-certificate.patch
+  * Add new patches
+    - 04-Disable_hetzner_robot.patch
+    - 14-Disable_built-in_assets.patch
+    - 15-Disable_wal_test_goleak.patch
+  * Add new build-dependencies
+    - golang-github-hetznercloud-hcloud-go-dev
+    - golang-go.uber-atomic-dev
+  * Bump minimum required golang-github-prometheus-common-dev
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Tue, 20 Oct 2020 14:51:25 +0000
+
+prometheus (2.20.0+ds-2) unstable; urgency=medium
+
+  * Team upload.
+  * Backport patch to fix tests with go1.15 (Closes: #971212)
+
+ -- Shengjing Zhu <zhsj@debian.org>  Wed, 07 Oct 2020 17:16:33 +0800
+
+prometheus (2.20.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Add b-d on golang-github-docker-docker-dev
+  * Add b-d on golang-github-digitalocean-godo-dev
+  * Update version constraint of golang-github-prometheus-client-golang-dev
+  * d/p/06-Disable_TSDB_lockfile.patch: updated to fix a tsdb test
+
+ -- Lucas Kanashiro <kanashiro@debian.org>  Thu, 23 Jul 2020 16:57:30 -0300
+
+prometheus (2.19.2+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * d/prometheus.templates: Fix syntax lintian nag
+  * Run debconf-updatepo
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Wed, 08 Jul 2020 14:42:00 +0000
+
+prometheus (2.18.2+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Refresh patches
+  * Add patch to disable Jaeger tracing
+  * Add d/upstream/metadata, fix a few lintian nags
+  * d/lintian-overrides: fix package name
+  * d/control: add new build-dep golang-github-oklog-run-dev
+
+  [ Lucas Kanashiro ]
+  * Fix Author field of the patches' headers. The value generated from
+    Gpb-Pq was not reflecting the original patch author.
+
+  [ Martina Ferrari ]
+  * debian/defaults: Update cmdline options.
+  * Update my name and email.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 04 Jul 2020 22:19:59 +0000
+
+prometheus (2.17.2+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches
+  * Update years of upstream copyright
+
+ -- Lucas Kanashiro <kanashiro@debian.org>  Wed, 24 Jun 2020 18:09:46 +0100
+
+prometheus (2.16.0+ds-1) unstable; urgency=medium
+
+  [ Martina Ferrari ]
+  * New upstream release.
+
+  [ Lucas Kanashiro ]
+  * Add patch to fix path to prom config file in tests
+  * Add patch to set temp storage path to tsdb
+  * Add patch to revert commit 2908653
+  * d/p/05-Fix-test-prom-invocations.patch: change port used in
+    TestReadyAndHealthy
+  * Add myself to the Uploaders list
+  * Bump debhelper compatibility level to 13
+  * Declare compliance with Debian Policy 4.5.0
+
+ -- Lucas Kanashiro <kanashiro@debian.org>  Mon, 15 Jun 2020 09:55:04 -0300
+
+prometheus (2.15.2+ds-2) unstable; urgency=medium
+
+  * Bump build-dep version for golang-github-opentracing-contrib-go-stdlib,
+    in order to support gRPC streaming responses on remote read endpoint,
+    as used by Thanos. (Closes: #948565)
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Mon, 13 Jan 2020 10:10:54 +0000
+
+prometheus (2.15.2+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Add myself to uploaders.
+  * Refresh patches.
+  * Patch out support for React web UI until build-deps can be satisfied.
+
+  [ Martina Ferrari ]
+  * debian/rules: Defer computation of some variables to build time.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 08 Jan 2020 17:07:22 +0000
+
+prometheus (2.13.1+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * debian/patches: drop 10-Close-Querier.patch. Drop patch which was
+    implemented upstream in v2.6.0. Retaining this patch longer than
+    necessary led to q.Close() being called multiple times, resulting in a
+    negative WaitGroup panic (see
+    https://github.com/prometheus/prometheus/issues/5408).
+
+  [ Martina Ferrari ]
+  * New upstream release.
+  * Name update.
+  * Update dependencies and versions.
+  * Update patching of UI.
+  * Disable Azure until the Debian packages are updated.
+  * Update dependencies and vendored copyright information.
+  * Refresh patches. Make sure port 9090 is never used during tests, so
+    autopkgtests don't fail. (Closes: #907171)
+  * Re-enable pprof support.
+  * Improve init script.
+  * Update build exclusions.
+  * Automated cme fixes.
+  * Increase compat level to 12; add needed Pre-Depends for sysvinit.
+  * Add manpage for tsdb(1).
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 31 Oct 2019 03:38:37 +0000
+
+prometheus (2.7.1+ds-3) unstable; urgency=medium
+
+  * Missed one use of port :9090.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 10 Feb 2019 18:10:02 +0000
+
+prometheus (2.7.1+ds-2) unstable; urgency=medium
+
+  * Use a lower port for tests, as most build daemons had 64999 in use.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 10 Feb 2019 16:05:46 +0000
+
+prometheus (2.7.1+ds-1) unstable; urgency=medium
+
+  * New upstream release. Includes fix for CVE-2019-3826 (Stored DOM cross-site
+    scripting (XSS) attack via crafted URL). Closes: #921615
+  * Refresh patches.
+  * debian/control: Update tsdb version dependency.
+  * Update Standards-Version with no changes.
+  * Revert commit c7d83b2 as the feature it introduces pulls a new version
+    of a dependency. To be removed soon.
+  * debian/rules: Regenerate protobuf files at buildtime.
+  * Use a different port for tests that run prometheus.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 10 Feb 2019 04:45:36 +0000
+
+prometheus (2.6.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches.
+  * Update version requirement for tsdb and common.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 19 Dec 2018 15:52:20 +0000
+
+prometheus (2.5.0+ds-2) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Cherry pick one-line patch from upstream to close dangling querier,
+    avoiding deadlock in TSDB compaction.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 30 Nov 2018 11:25:51 +0100
+
+prometheus (2.5.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Increase max open FDs to allow for higher scrape target volume.
+    Signed-off-by: Daniel Swarbrick <daniel.swarbrick@profitbricks.com>
+
+  [ Martina Ferrari ]
+  * New upstream release.
+    Does not match exactly upstream's release, due to git history issues.
+    Instead is based on commit c2f32c99.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 12 Nov 2018 02:36:30 +0000
+
+prometheus (2.4.3+ds-2) unstable; urgency=medium
+
+  * Fix test hanging due to connections kept open. Closes: #911434.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 22 Oct 2018 04:09:52 +0000
+
+prometheus (2.4.3+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add German debconf translation. Closes: #905760.
+  * Refresh patches
+  * Update autorest patch.
+  * Disable pprof support until dependency is packaged.
+  * Fix test fixtures paths.
+  * Update Standards-Version with no changes.
+  * debian/control: Depend on current TSDB version.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 15 Oct 2018 15:37:24 +0000
+
+prometheus (2.3.2+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Update tsdb version dependency.
+  * Bump Standards-Version (no changes).
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 28 Jul 2018 23:14:10 +0000
+
+prometheus (2.3.1+ds-1) unstable; urgency=medium
+
+  * New upstream version.
+  * debian/control: Adjust dependencies versions.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 29 Jun 2018 11:57:47 +0000
+
+prometheus (2.3.0+ds-1) unstable; urgency=medium
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Martina Ferrari ]
+  * New upstream version.
+  * New dependency golang-github-json-iterator-go-dev.
+  * Refresh patches.
+  * Depend on version of fsnotify with new import path.
+  * Depend on latest common and client libs; remove now unneeded patch.
+  * Add debconf translations for es, fr, nl, pt, and ru.
+    Closes: #898186, #898299, #899024, #899230, #900713.
+  * debian/copyright: properly place repackaging comment.
+  * debian/control: Automated cme fixes.
+  * Update dh compat level to 11.
+  * debian/postinst: Stop changing permissions recursively.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 11 Jun 2018 15:27:23 +0000
+
+prometheus (2.2.1+ds-2) unstable; urgency=high
+
+  * debian/control: Require latest TSDB version, that solves serious bugs
+    in the DB.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 29 Mar 2018 09:17:37 +0000
+
+prometheus (2.2.1+ds-1) unstable; urgency=high
+
+  * New upstream release, with critical fixes.
+  * Ignore fsnotify on mips64el, rely only on timeouts for file discovery on
+    that platform, and disable the tests.
+    https://github.com/fsnotify/fsnotify/issues/241
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 26 Mar 2018 04:34:44 +0000
+
+prometheus (2.2.0+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #888153.
+  * Add notice about DB changes.
+  * Update TSDB version.
+  * Refresh patches.
+  * Update Azure patch for new breakage.
+  * Inline unreleased method from the golang client lib.
+  * Stop creating a tsdb lockfile by default.
+    Replace storage.tsdb.no-lockfile flag with storage.tsdb.use-lockfile, so
+    the default is not to create a lockfile, while still allowing people to
+    request the feature.  Closes: #890501
+  * Rename patches, and remove unused AWS patch.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 14 Mar 2018 18:18:37 +0000
+
+prometheus (2.1.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Re-vendor github.com/oklog/oklog/pkg/group.
+  * Refresh patches.
+  * Patch test that uses prometheus binary.
+  * Refine and update versions of dependencies.
+  * debian/init: Update metrics path.
+  * debian/rules: Fix whatis entries in man pages.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 21 Jan 2018 21:30:42 +0000
+
+prometheus (2.0.0+ds3-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Martina Ferrari ]
+  * New upstream release, with many breaking changes.
+  * Remove new vendored dependencies.
+  * Replace new JS vendored dependency with sources.
+  * Revendor consul API.
+  * Refresh patches.
+  * debian/rules: Add new test fixtures.
+  * Update cmdline help, init script, and add notice in NEWS.
+  * Update default config.
+  * Add missing licensing info.
+  * debian/watch: More robust rules; accept more pre-releases.
+  * Update overrides.
+  * Stop using pristine-tar.
+  * Increase compat to 10; remove dh-systemd dep.
+  * Update Standards-Version and Priority.
+  * debian/copyright: Remove now obsolete Files-Excluded. Closes: #884081
+
+  [ Christoph Berg ]
+  * The database format changed, metrics data directory is now
+    /var/lib/prometheus/metrics2. On upgrade, a debconf prompt asks if the old
+    data directory /var/lib/prometheus/metrics should be removed.
+  * Add new B-D golang-github-cespare-xxhash-dev,
+    golang-github-cockroachdb-cmux-dev, golang-github-dgryski-go-bits-dev,
+    golang-github-gogo-protobuf-dev, golang-github-go-logfmt-logfmt-dev,
+    golang-github-go-stack-stack-dev,
+    golang-github-grpc-ecosystem-grpc-gateway-dev,
+    golang-github-nightlyone-lockfile-dev, golang-github-oklog-ulid-dev,
+    golang-github-pkg-errors-dev, golang-gopkg-alecthomas-kingpin.v2-dev.
+  * Build prometheus and promtool manpages from --help-man.
+  * Ship NOTICE file as required by the Apache license.
+
+ -- Christoph Berg <myon@debian.org>  Thu, 04 Jan 2018 19:22:17 +0100
+
+prometheus (1.8.1+ds-2) unstable; urgency=medium
+
+  * Replace gogo/protobuf dependency with golang equivalent.
+  * Workaround for FTBFS in i386 until #877541 is solved.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 24 Oct 2017 22:32:55 +0000
+
+prometheus (1.8.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches.
+  * Update AWS dependency and remove patch.
+  * Re-vendor consul API.
+  * Update Standards-Version and Priority.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 24 Oct 2017 10:32:53 +0000
+
+prometheus (1.7.2+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches.
+  * debian/watch: More robust rules; accept more pre-releases.
+  * Update default config.
+  * Stop using pristine-tar.
+  * Increase compat to 10; remove dh-systemd dep.
+  * Replace new JS vendored dependency with sources.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 02 Oct 2017 13:15:32 +0000
+
+prometheus (1.7.1+ds-3) unstable; urgency=medium
+
+  * Add patch to work with latest azure-go-autorest package.
+  * Move adduser to normal Depends.
+  * debian/control: Remove all non-direct dependencies.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 05 Sep 2017 01:46:43 +0000
+
+prometheus (1.7.1+ds-2) unstable; urgency=medium
+
+  * Update versioned dependency on -common.
+  * Remove now unneeded lintian overrides.
+  * Replace dpkg-parsechangelog with /usr/share/dpkg/pkg-info.mk
+  * debian/control: Update Standards-Version (no changes).
+  * debian/rules: Replace DH_GOPKG with XS-Go-Import-Path.
+  * Automatic fixes to control and copyright from cme.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 29 Aug 2017 00:17:30 +0000
+
+prometheus (1.7.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches, delete now unneeded 07-New_common_compat.patch.
+  * Add new dependencies.
+  * Update debian/changelog to reflect removed dependencies.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 04 Aug 2017 08:08:16 +0000
+
+prometheus (1.6.3+ds2-1) unstable; urgency=high
+
+  * Add patch to handle properly old-style graph URLs, which are used by the
+    Debian version of Grafana.
+  * Only depend on daemon if systemd-sysv is not installed.
+  * Use dh-systemd to properly enable systemd service.
+  * debian/default: Update description of flags. Closes: #870147.
+  * Repack upstream source:
+    - Remove now unneeded influxDB vendored deps.
+    - Remove all remaining vendored dependencies & use Debian packages.
+      Closes: #851817.
+  * Backport commit 4d9b917 to solve build failure. Closes: #868943.
+    Increasing urgency as it is an RC bug.
+  * Remove gen-orig-tgz target, replace with gbp configuration.
+  * Renumber patches.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 30 Jul 2017 18:23:03 +0000
+
+prometheus (1.6.3+ds-1) unstable; urgency=medium
+
+  * Use new goleveldb package name. Closes: #866920.
+  * New upstream release. Closes: #865786
+  * debian/control: Update Standards-Version without changes.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 05 Jul 2017 11:03:15 +0000
+
+prometheus (1.6.2+ds-2) unstable; urgency=medium
+
+  * Uploading to unstable version already in experimental.
+  * debian/control: Fix Vcs-* fields.
+  * debian/control: Mark package as autopkgtest-able.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 21 Jun 2017 10:00:24 +0100
+
+prometheus (1.6.2+ds-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Add missing epoch from golang-go dependency.
+  * Add version to libjs-mustache dependency. Closes: #855808.
+  * Refresh patches.
+  * Update copyright for embedded fuzzy lib.
+  * Update dependencies.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 19 May 2017 21:12:15 +0000
+
+prometheus (1.5.2+ds-2) unstable; urgency=medium
+
+  * Disable "long" tests in arm*, which take way too long and run out of
+    memory. Closes: #852959.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 10 Feb 2017 23:13:51 -0300
+
+prometheus (1.5.2+ds-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 11 Feb 2017 00:27:48 +0000
+
+prometheus (1.5.0+ds-1) unstable; urgency=medium
+
+  * The "Only use non-alternative facts for monitoring" release.
+  * Refresh patches: re-enable test, disable parts of ec2 discovery that
+    require a different sdk.
+  * Disable completely Kubernetes support, due to the insane amount of
+    dependencies in their client library.
+  * Remove prometheus-cli from Recommends.
+  * Add original sources for JS fuzzy library.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 26 Jan 2017 22:38:53 +0000
+
+prometheus (1.2.3+ds2-5) unstable; urgency=medium
+
+  * Last test failures were actually problems with fsnotify+gccgo.
+    Throwing the towel on it: prometheus will only compile with golang-go for
+    now.
+  * Increase the tests timeout again even more for armel. Closes: #847764
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 12 Dec 2016 11:17:25 +0100
+
+prometheus (1.2.3+ds2-4) unstable; urgency=high
+
+  * Remove unneeded dependencies.
+  * Increase test timeouts (some tests still failing on slow arches),
+    and re-enable disabled tests on arm.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 01 Dec 2016 12:07:27 +0100
+
+prometheus (1.2.3+ds2-3) unstable; urgency=high
+
+  * Re-enable buildflags (needed for version information), which were
+    removed by mistake.
+  * Avoid conflicts with vendored dependencies when compiling with gccgo.
+  * Disable TestDropMetrics, which is flaky in armel and has been
+    preventing transition to testing (raising urgency).
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 30 Nov 2016 11:28:54 +0100
+
+prometheus (1.2.3+ds2-2) unstable; urgency=medium
+
+  * Fix the new datetime picker control (was not working at all).
+    Closes: #844513.
+  * Replace libjs-handlebars with libjs-mustache. Closes: #835661.
+  * Add dependency on new golang-golang-x-oauth2-google-dev.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 17 Nov 2016 05:59:48 +0000
+
+prometheus (1.2.3+ds2-1) unstable; urgency=high
+
+  * The "We had all the monitoring and alerting, yet the worst still happened"
+    release.
+  * New source release, removing the vendoring of bootstrap-datetimepicker.
+  * Switch to golang-google-cloud-compute-metadata-dev dep.
+  * Backport math fixes from 1.3.1 that fix build issues in armel (raising
+    urgency). Hopefully prometheus will enter testing again now.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 09 Nov 2016 21:07:14 +0000
+
+prometheus (1.2.3+ds-2) unstable; urgency=medium
+
+  * Correct extra unneeded deps (the relevant parts are already vendored-in).
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 04 Nov 2016 00:54:10 +0000
+
+prometheus (1.2.3+ds-1) unstable; urgency=medium
+
+  * New upstream release, containing a few bugfixes.
+  * Add minimum version for jquery dependency (relevant for backports).
+  * Re-vendor github.com/hashicorp/consul until the Debian package is
+    stable.
+  * Remove unneeded build-deps.
+  * Update dependency on golang-github-miekg-dns-dev.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 03 Nov 2016 23:45:07 +0000
+
+prometheus (1.2.2+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 31 Oct 2016 22:26:59 +0000
+
+prometheus (1.2.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update dependencies.
+  * Refresh patches.
+  * Unvendor jquery and replace with Debian's packaged version.
+  * Update prometheus-common dependency.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 23 Oct 2016 20:21:28 +0000
+
+prometheus (1.1.3+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Switch away from node-less as it has bad arch support.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 02 Oct 2016 16:52:48 +0000
+
+prometheus (1.1.2+ds-2) unstable; urgency=medium
+
+  * Add a patch that fixes build issues in i386 and armhf.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 10 Sep 2016 20:06:40 +0000
+
+prometheus (1.1.2+ds-1) unstable; urgency=medium
+
+  * New upstream release, fixing some bugs.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 09 Sep 2016 17:24:48 +0300
+
+prometheus (1.1.1+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #835741.
+  * debian/control: Update dependency name for client_golang.
+  * debian/control: Add new dependency for gRPC.
+  * debian/control: Add explicit dependency for snappy.
+  * Install examples, but do not build them.
+  * debian/patches/07-Disable_dns_test.patch: Disable test that accesses the
+    network.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 08 Sep 2016 12:56:40 +0000
+
+prometheus (1.0.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Update dependency version for prometheus/common.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 15 Aug 2016 13:08:24 +0100
+
+prometheus (1.0.0+ds-1) unstable; urgency=medium
+
+  * New upstream release. 1.0!
+  * Update debian/copyright.
+  * debian/patches:
+    - Refresh patches.
+    - Remove old patch for go 1.3 compatibility.
+  * Add logrotate script.
+  * Update default configuration (breaking changes).
+  * debian/init: Check config during init.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 19 Jul 2016 04:48:06 +0000
+
+prometheus (0.20.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update lintian overrides for new binary.
+  * Update dependencies.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 24 Jun 2016 16:15:53 +0000
+
+prometheus (0.19.3+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Remove obsolete golang-github-prometheus-log-dev
+    dependency.
+  * debian/control:
+    - Update Vcs-Git to use HTTPS.
+    - Switch to depend on golang-any instead of golang-go.
+    - Change dh-golang dependency to work in backports.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 15 Jun 2016 11:49:27 +0000
+
+prometheus (0.19.2+ds-2) unstable; urgency=medium
+
+  * debian/rules: catch up with changes in linker flags so build information
+    is shown again.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 31 May 2016 00:19:12 +0000
+
+prometheus (0.19.2+ds-1) unstable; urgency=medium
+
+  [ Filippo Giunchedi ]
+  * debian/service: match sysvinit behaviour (send SIGTERM with 20s timeout,
+    never send SIGKILL) Closes: #824842
+
+  [ Martina Ferrari ]
+  * New upstream release. Update dependencies.
+  * Switch to use the golang-github-prometheus-client-model-dev package.
+  * Improve the way datetimepicker is built.
+  * Refresh patches.
+  * Tidy up debian/rules.
+  * debian/control: add versions to depends that solve bugs.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 30 May 2016 09:54:35 +0000
+
+prometheus (0.18.0+ds-2) unstable; urgency=medium
+
+  * Depend on fsnotify 1.3.0-3, which fixes build issues in arm64, ppc64, and
+    ppc64el. Remove workaround patch.
+  * Fix default configuration file. Closes: #822471.
+  * debian/control: Update Standards-Version without changes.
+  * debian/control: Make all URLs use https.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 30 Apr 2016 23:16:14 +0100
+
+prometheus (0.18.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 19 Apr 2016 13:54:45 +0000
+
+prometheus (0.18.0~rc1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 11 Apr 2016 14:32:45 +0100
+
+prometheus (0.17.0+ds-3) unstable; urgency=medium
+
+  * Completely disable fsnofity in arm64, ppc64, and ppc64el, as it is broken
+    in these architectures.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 28 Mar 2016 21:50:05 +0100
+
+prometheus (0.17.0+ds-2) unstable; urgency=medium
+
+  * debian/rules: disable all retrieval tests for arm, as these are too flaky in
+    slow architectures.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 28 Mar 2016 17:43:15 +0000
+
+prometheus (0.17.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/init: sleep longer when stopping the daemon.
+  * debian/watch: fix watch file for RC releases.
+  * debian/patches/06-Bug#818417-AWS_SDK_changes.patch: Fix FTBFS, thanks to
+    Filippo Giunchedi for the patch. Closes: #818417.
+  * debian/service: Add systemd unit, thanks to Michael Gebetsroither for the
+    patch. Closes: #814802.
+  * debian/init: Add support for reload, thanks to Filippo Giunchedi for the
+    patch. Closes: #817403.
+  * debian/default: Update default values and help text.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 26 Mar 2016 05:50:45 +0000
+
+prometheus (0.16.2+ds-1) unstable; urgency=high
+
+  * New upstream release.
+  * debian/rules: improve build-reproducibility.
+  * Fix build issues due to changes in dependencies. Closes: #811236.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 25 Jan 2016 11:05:02 +0000
+
+prometheus (0.15.1+ds-2) unstable; urgency=high
+
+  * Make the build date match the changelog, to improve reproducibility.
+  * Disable completely some tests that depend on timing. Closes: #792053.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 28 Aug 2015 09:25:37 +0000
+
+prometheus (0.15.1+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #792053.
+  * Add missing dependency on adduser. Closes: #792498.
+  * Update dependencies, refresh patches.
+  * Stop adding examples as unowned files. Instead leave a README file pointing
+    to the location of the examples. Closes: #792105.
+  * debian/rules: Avoid some tests that fail on slow architectures.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 25 Aug 2015 02:57:50 +0000
+
+prometheus (0.14.0+ds-1) unstable; urgency=medium
+
+  * Fix upstream version (it is a repackage, so it should be marked).
+  * Un-vendor github.com/prometheus/log as it is now a separate package.
+  * debian/control: Update prometheus/log package name.
+  * debian/postrm: Do not remove directories forcefully, as these are shared
+    with other prometheus tools.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 07 Jul 2015 08:21:19 +0000
+
+prometheus (0.14.0-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #777048)
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 30 Jun 2015 14:41:58 +0000

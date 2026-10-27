@@ -1,0 +1,116 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Fri, 14 Jul 2023 19:05:46 +0200
+Subject: Disable write-documentation flag / command
+
+Forwarded: not-needed
+Last-Update: 2025-02-08
+
+This functionality requires a newer version of the alecthomas/kingpin
+package, which has not yet landed in unstable.
+---
+ cmd/prometheus/main.go          | 11 +----------
+ cmd/prometheus/main_test.go     |  1 +
+ cmd/promtool/main.go            |  6 ------
+ cmd/promtool/main_test.go       |  1 +
+ util/documentcli/documentcli.go |  3 +++
+ 5 files changed, 6 insertions(+), 16 deletions(-)
+
+diff --git a/cmd/prometheus/main.go b/cmd/prometheus/main.go
+index 1be30cb..5d8aa07 100644
+--- a/cmd/prometheus/main.go
++++ b/cmd/prometheus/main.go
+@@ -74,8 +74,8 @@ import (
+ 	"github.com/prometheus/prometheus/tracing"
+ 	"github.com/prometheus/prometheus/tsdb"
+ 	"github.com/prometheus/prometheus/tsdb/agent"
++
+ 	"github.com/prometheus/prometheus/util/compression"
+-	"github.com/prometheus/prometheus/util/documentcli"
+ 	"github.com/prometheus/prometheus/util/logging"
+ 	"github.com/prometheus/prometheus/util/notifications"
+ 	prom_runtime "github.com/prometheus/prometheus/util/runtime"
+@@ -570,15 +570,6 @@ func main() {
+ 
+ 	promslogflag.AddFlags(a, &cfg.promslogConfig)
+ 
+-	a.Flag("write-documentation", "Generate command line documentation. Internal use.").Hidden().Action(func(_ *kingpin.ParseContext) error {
+-		if err := documentcli.GenerateMarkdown(a.Model(), os.Stdout); err != nil {
+-			os.Exit(1)
+-			return err
+-		}
+-		os.Exit(0)
+-		return nil
+-	}).Bool()
+-
+ 	_, err := a.Parse(os.Args[1:])
+ 	if err != nil {
+ 		fmt.Fprintf(os.Stderr, "Error parsing command line arguments: %s\n", err)
+diff --git a/cmd/prometheus/main_test.go b/cmd/prometheus/main_test.go
+index c6f6f64..6ea3731 100644
+--- a/cmd/prometheus/main_test.go
++++ b/cmd/prometheus/main_test.go
+@@ -558,6 +558,7 @@ func TestModeSpecificFlags(t *testing.T) {
+ }
+ 
+ func TestDocumentation(t *testing.T) {
++	t.Skip("Skipping unsupported test")
+ 	if runtime.GOOS == "windows" {
+ 		t.SkipNow()
+ 	}
+diff --git a/cmd/promtool/main.go b/cmd/promtool/main.go
+index a9697b5..85b8de9 100644
+--- a/cmd/promtool/main.go
++++ b/cmd/promtool/main.go
+@@ -58,7 +58,6 @@ import (
+ 	"github.com/prometheus/prometheus/promql/promqltest"
+ 	"github.com/prometheus/prometheus/rules"
+ 	"github.com/prometheus/prometheus/scrape"
+-	"github.com/prometheus/prometheus/util/documentcli"
+ )
+ 
+ var promqlEnableDelayedNameRemoval = false
+@@ -308,8 +307,6 @@ func main() {
+ 
+ 	featureList := app.Flag("enable-feature", "Comma separated feature names to enable. Valid options: promql-experimental-functions, promql-delayed-name-removal. See https://prometheus.io/docs/prometheus/latest/feature_flags/ for more details").Default("").Strings()
+ 
+-	documentationCmd := app.Command("write-documentation", "Generate command line documentation. Internal use.").Hidden()
+-
+ 	parsedCmd := kingpin.MustParse(app.Parse(os.Args[1:]))
+ 
+ 	var p printer
+@@ -439,9 +436,6 @@ func main() {
+ 	case queryAnalyzeCmd.FullCommand():
+ 		os.Exit(checkErr(queryAnalyzeCfg.run(serverURL, httpRoundTripper)))
+ 
+-	case documentationCmd.FullCommand():
+-		os.Exit(checkErr(documentcli.GenerateMarkdown(app.Model(), os.Stdout)))
+-
+ 	case promQLFormatCmd.FullCommand():
+ 		checkExperimental(*experimental)
+ 		os.Exit(checkErr(formatPromQL(*promQLFormatQuery)))
+diff --git a/cmd/promtool/main_test.go b/cmd/promtool/main_test.go
+index 7cb7c7b..523655c 100644
+--- a/cmd/promtool/main_test.go
++++ b/cmd/promtool/main_test.go
+@@ -463,6 +463,7 @@ func TestExitCodes(t *testing.T) {
+ }
+ 
+ func TestDocumentation(t *testing.T) {
++	t.Skip("Skipping unsupported test")
+ 	if runtime.GOOS == "windows" {
+ 		t.SkipNow()
+ 	}
+diff --git a/util/documentcli/documentcli.go b/util/documentcli/documentcli.go
+index 42d9658..ee35489 100644
+--- a/util/documentcli/documentcli.go
++++ b/util/documentcli/documentcli.go
+@@ -17,6 +17,9 @@
+ // tailored specifically to the way in which the Prometheus documentation is
+ // rendered, and should be avoided for use by third-party users.
+ 
++//go:build ignore
++// +build ignore
++
+ package documentcli
+ 
+ import (

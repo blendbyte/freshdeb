@@ -1,0 +1,65 @@
+From: Arthur Diniz <arthurbdiniz@gmail.com>
+Date: Tue, 2 Sep 2025 22:45:21 +0100
+Subject: Update informer watch error handler for client-go
+
+Forwarded: not-needed
+Origin: other, https://patch-diff.githubusercontent.com/raw/prometheus/prometheus/pull/16768.patch
+Bug: https://github.com/prometheus/prometheus/issues/16767
+
+Description: The signature of cache.DefaultWatchErrorHandler in
+ k8s.io/client-go changed in v0.33.0:
+ .
+ Before: func(r *cache.Reflector, err error)
+ After:  func(ctx context.Context, r *cache.Reflector, err error)
+ .
+ Prometheus Kubernetes discovery still called the old variant, which
+ breaks the build after bumping client-go.
+ .
+ In addition, informers now require setting the handler via
+ SetWatchErrorHandlerWithContext instead of SetWatchErrorHandler.
+ .
+ This patch updates informerWatchErrorHandler to accept a context
+ parameter and updates informer creation code to use
+ SetWatchErrorHandlerWithContext. This restores compatibility with
+ client-go >= v0.33.0 and allows Prometheus to build successfully.
+---
+ discovery/kubernetes/kubernetes.go | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/discovery/kubernetes/kubernetes.go b/discovery/kubernetes/kubernetes.go
+index 2261fb3..aa1e292 100644
+--- a/discovery/kubernetes/kubernetes.go
++++ b/discovery/kubernetes/kubernetes.go
+@@ -758,16 +758,16 @@ func (d *Discovery) newEndpointSlicesByNodeInformer(plw *cache.ListWatch, object
+ 	return d.mustNewSharedIndexInformer(plw, object, resyncDisabled, indexers)
+ }
+ 
+-func (d *Discovery) informerWatchErrorHandler(r *cache.Reflector, err error) {
++func (d *Discovery) informerWatchErrorHandler(ctx context.Context, r *cache.Reflector, err error) {
+ 	d.metrics.failuresCount.Inc()
+-	cache.DefaultWatchErrorHandler(r, err)
++	cache.DefaultWatchErrorHandler(ctx, r, err)
+ }
+ 
+ func (d *Discovery) mustNewSharedInformer(lw cache.ListerWatcher, exampleObject runtime.Object, defaultEventHandlerResyncPeriod time.Duration) cache.SharedInformer {
+ 	informer := cache.NewSharedInformer(lw, exampleObject, defaultEventHandlerResyncPeriod)
+-	// Invoking SetWatchErrorHandler should fail only if the informer has been started beforehand.
++	// Invoking SetWatchErrorHandlerWithContext should fail only if the informer has been started beforehand.
+ 	// Such a scenario would suggest an incorrect use of the API, thus the panic.
+-	if err := informer.SetWatchErrorHandler(d.informerWatchErrorHandler); err != nil {
++	if err := informer.SetWatchErrorHandlerWithContext(d.informerWatchErrorHandler); err != nil {
+ 		panic(err)
+ 	}
+ 	return informer
+@@ -775,9 +775,9 @@ func (d *Discovery) mustNewSharedInformer(lw cache.ListerWatcher, exampleObject
+ 
+ func (d *Discovery) mustNewSharedIndexInformer(lw cache.ListerWatcher, exampleObject runtime.Object, defaultEventHandlerResyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+ 	informer := cache.NewSharedIndexInformer(lw, exampleObject, defaultEventHandlerResyncPeriod, indexers)
+-	// Invoking SetWatchErrorHandler should fail only if the informer has been started beforehand.
++	// Invoking SetWatchErrorHandlerWithContext should fail only if the informer has been started beforehand.
+ 	// Such a scenario would suggest an incorrect use of the API, thus the panic.
+-	if err := informer.SetWatchErrorHandler(d.informerWatchErrorHandler); err != nil {
++	if err := informer.SetWatchErrorHandlerWithContext(d.informerWatchErrorHandler); err != nil {
+ 		panic(err)
+ 	}
+ 	return informer

@@ -1,0 +1,4 @@
+debian/index.html  usr/share/prometheus/web/no-ui
+debian/install-ui.sh  usr/share/prometheus
+debian/prometheus.yml  etc/prometheus
+usr/bin/prometheus

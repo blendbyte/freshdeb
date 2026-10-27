@@ -504,9 +504,122 @@ class GoTests(unittest.TestCase):
 
     def test_build_environment_is_offline(self):
         env = freshdeb.go_env(Path("/opt/go"), Path("/build/cache"), offline=True)
-        self.assertEqual((env["GOFLAGS"], env["GOPROXY"], env["GOTOOLCHAIN"]), ("-mod=vendor", "off", "local"))
+        self.assertEqual((env["GOFLAGS"], env["GOPROXY"], env["GOTOOLCHAIN"], env["GOWORK"]),
+                         ("-mod=vendor", "off", "local", "off"))
         self.assertTrue(env["PATH"].startswith("/opt/go/bin:"))
         self.assertNotIn("GOPROXY", freshdeb.go_env(Path("/opt/go"), Path("/c"), offline=False))
+
+
+class LineTrackTests(unittest.TestCase):
+    """Named tracks that stay on one release line (prometheus "lts")."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.yaml = self.tmp / "packages/prometheus/package.yaml"
+        self.pkg = freshdeb.load_package("prometheus", self.tmp)
+        self.tags = {t.tag: t.commit for t in self.pkg.tracks.values()}
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_lts_gets_only_its_line(self):
+        tags = {**self.tags, "v3.13.6": "a" * 40, "v3.16.0": "b" * 40, "v3.16.0-rc.0": "c" * 40}
+        changes = freshdeb.watch_package(self.pkg, tags, TODAY)
+        self.assertEqual(sorted((c["track"], c["tag"]) for c in changes), [("lts", "v3.13.6"), ("main", "v3.16.0")])
+
+    def test_main_follows_every_release(self):
+        changes = freshdeb.watch_package(self.pkg, {**self.tags, "v4.0.0": "a" * 40}, TODAY)
+        self.assertEqual([(c["track"], c["tag"]) for c in changes], [("main", "v4.0.0")])
+
+    def test_tag_outside_the_line(self):
+        self.yaml.write_text(self.yaml.read_text().replace('tag: "v3.13.5"', 'tag: "v3.14.0"'))
+        self.assertTrue(any("does not belong to track lts (line 3.13)" in e
+                            for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+    def test_line_is_only_for_named_tracks(self):
+        y = self.tmp / "packages/valkey/package.yaml"
+        y.write_text(y.read_text().replace('    tag: "9.1.3"', '    line: "9.1"\n    tag: "9.1.3"'))
+        self.assertTrue(any("line is only for named tracks" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+    def test_moving_the_line_is_a_track_change(self):
+        old = self.pkg.tracks["lts"]
+        moved = freshdeb.parse_package("prometheus", self.pkg.path, yaml_replace(self.yaml, '"3.13"', '"3.15"')).tracks["lts"]
+        self.assertNotEqual(freshdeb.track_fields(old), freshdeb.track_fields(moved))
+
+
+def yaml_replace(path, old, new):
+    return freshdeb.yaml.safe_load(path.read_text().replace(old, new))
+
+
+class AssetTests(unittest.TestCase):
+    """Pinned release assets (prometheus' web UI), served from file://."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        releases = self.tmp / "releases"
+        releases.mkdir()
+        self.asset = releases / "prometheus-web-ui-3.99.0.tar.gz"
+        self.asset.write_bytes(b"built web ui")
+        self.sha256 = hashlib.sha256(self.asset.read_bytes()).hexdigest()
+        self.yaml = self.tmp / "packages/prometheus/package.yaml"
+        self.yaml.write_text(re.sub(r"https://github.com/prometheus/prometheus/releases/download/v\{version\}/",
+                                    f"file://{releases}/", self.yaml.read_text()))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def track(self, sha256):
+        pkg = freshdeb.load_package("prometheus", self.tmp)
+        track = pkg.tracks["main"]
+        track.tag, track.assets = "v3.99.0", {"web-ui": sha256}
+        return pkg, track
+
+    def test_fetch_verifies_into_the_source_tree(self):
+        pkg, track = self.track(self.sha256)
+        src = self.tmp / "src"
+        fetched = freshdeb.fetch_assets(pkg, track, src)
+        self.assertEqual((src / "freshdeb-assets/web-ui.tar.gz").read_bytes(), b"built web ui")
+        self.assertEqual(fetched[0]["sha256"], self.sha256)
+
+    def test_fetch_refuses_wrong_checksum(self):
+        pkg, track = self.track("0" * 64)
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "package.yaml pins"):
+            freshdeb.fetch_assets(pkg, track, self.tmp / "src")
+
+    def test_every_track_pins_every_asset(self):
+        self.yaml.write_text(self.yaml.read_text().replace(
+            "      web-ui: c84c2c7eed84e184309cb5a07effade15a30ff767770eb9474e6fb4688ee02e1\n", "      other: " + "a" * 64 + "\n"))
+        self.assertTrue(any("track lts: assets needs the sha256 of every upstream asset (web-ui)" in e
+                            for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+    def test_assets_without_upstream_assets_are_rejected(self):
+        y = self.tmp / "packages/restic/package.yaml"
+        y.write_text(y.read_text().replace("    revision: 1\n", "    revision: 1\n    assets: {web-ui: " + "a" * 64 + "}\n"))
+        self.assertTrue(any("only used with upstream.assets" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+    def test_changelog_records_the_asset(self):
+        config = freshdeb.load_config(self.tmp)
+        pkg = freshdeb.load_package("prometheus", self.tmp)
+        entry = freshdeb.changelog_entry(pkg, config, pkg.tracks["main"], "trixie", "3.15.1-1+freshdeb~deb13", 0)
+        self.assertIn(f"Release asset web-ui: file://{self.tmp}/releases/prometheus-web-ui-3.15.1.tar.gz", entry)
+        self.assertIn("(commit bae3eced0a5369e050e83ea73bc381d7c4b1a719).", entry)
+
+    def test_watch_pins_the_new_assets(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        freshdeb.apply_change(self.tmp, {"package": "prometheus", "kind": "bump", "track": "main",
+                                         "tag": "v3.99.0", "commit": "c" * 40, "go": "1.27.3",
+                                         "go_sha256": freshdeb.load_config(self.tmp).toolchains["go"]["1.27.3"]})
+        track = freshdeb.load_package("prometheus", self.tmp).tracks["main"]
+        self.assertEqual((track.tag, track.revision, track.assets), ("v3.99.0", 1, {"web-ui": self.sha256}))
+        self.assertIn("# The built web UI", self.yaml.read_text())
+        # Apart from this test's file:// URL.
+        errors = [e for e in freshdeb.validate_all(self.tmp, TODAY) if "must be an https:// URL" not in e]
+        self.assertEqual(errors, [])
 
 
 class WatchTests(unittest.TestCase):

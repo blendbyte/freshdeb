@@ -1,0 +1,213 @@
+Source: prometheus
+Section: golang
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders:
+ Martina Ferrari <tina@debian.org>,
+ Daniel Swarbrick <dswarbrick@debian.org>,
+ Lucas Kanashiro <kanashiro@debian.org>,
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-golang,
+ dh-sequence-installsysusers,
+ gogoprotobuf,
+ golang-github-alecthomas-units-dev,
+ golang-github-aws-aws-sdk-go-dev,
+ golang-github-bboreham-go-loser-dev,
+ golang-github-cespare-xxhash-dev,
+ golang-github-dennwc-varint-dev,
+ golang-github-digitalocean-godo-dev,
+ golang-github-docker-docker-dev (>= 28.5),
+ golang-github-edsrzf-mmap-go-dev,
+ golang-github-facette-natsort-dev,
+ golang-github-fsnotify-fsnotify-dev,
+ golang-github-go-kit-log-dev,
+ golang-github-go-openapi-strfmt-dev,
+ golang-github-go-zookeeper-zk-dev,
+ golang-github-gogo-protobuf-dev,
+ golang-github-golang-snappy-dev,
+ golang-github-google-go-cmp-dev,
+ golang-github-google-pprof-dev,
+ golang-github-google-uuid-dev,
+ golang-github-gophercloud-gophercloud-dev (>= 0.19.0),
+ golang-github-grafana-regexp-dev,
+ golang-github-grpc-ecosystem-grpc-gateway-dev,
+ golang-github-hetznercloud-hcloud-go-dev (>= 2.0.0),
+ golang-github-ionos-cloud-sdk-go-dev,
+ golang-github-json-iterator-go-dev,
+ golang-github-kimmachinegun-automemlimit-dev,
+ golang-github-klauspost-compress-dev,
+ golang-github-kolo-xmlrpc-dev,
+ golang-github-linode-linodego-dev,
+ golang-github-miekg-dns-dev,
+ golang-github-munnerz-goautoneg-dev,
+ golang-github-mwitkow-go-conntrack-dev,
+ golang-github-oklog-run-dev,
+ golang-github-oklog-ulid-dev,
+ golang-github-opentracing-contrib-go-stdlib-dev,
+ golang-github-opentracing-opentracing-go-dev,
+ golang-github-ovh-go-ovh-dev (>= 1.9.0),
+ golang-github-prometheus-alertmanager-dev (>= 0.33.1-5~),
+ golang-github-prometheus-client-golang-dev (>= 1.19.0),
+ golang-github-prometheus-client-model-dev,
+ golang-github-prometheus-common-dev (>= 0.66.0),
+ golang-github-prometheus-exporter-toolkit-dev,
+ golang-github-scaleway-scaleway-sdk-go-dev,
+ golang-github-stretchr-testify-dev,
+ golang-github-vultr-govultr-dev,
+ golang-go,
+ golang-go.uber-atomic-dev,
+ golang-go.uber-multierr-dev,
+ golang-golang-x-exp-dev,
+ golang-golang-x-net-dev,
+ golang-golang-x-oauth2-google-dev,
+ golang-golang-x-sync-dev,
+ golang-golang-x-sys-dev,
+ golang-golang-x-time-dev,
+ golang-google-api-dev,
+ golang-google-genproto-dev,
+ golang-google-grpc-dev,
+ golang-google-protobuf-dev,
+ golang-gopkg-alecthomas-kingpin.v2-dev,
+ golang-gopkg-yaml.v2-dev,
+ golang-gopkg-yaml.v3-dev,
+ golang-grpc-gateway,
+ golang-k8s-api-dev,
+ golang-k8s-apimachinery-dev,
+ golang-k8s-client-go-dev (>= 0.33.0),
+ golang-k8s-kube-openapi-dev (>= 0.0~git20260721.d427ff9-1~),
+ golang-opentelemetry-contrib-dev (>= 0.56),
+ golang-opentelemetry-otel-dev (>= 1.46.0~),
+ golang-uber-automaxprocs-dev,
+ golang-uber-goleak-dev,
+Testsuite: autopkgtest-pkg-go
+Standards-Version: 4.7.4
+Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus
+Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus.git
+Homepage: https://prometheus.io/
+XS-Go-Import-Path: github.com/prometheus/prometheus
+
+Package: prometheus
+Section: net
+Architecture: any
+Pre-Depends:
+ ${misc:Pre-Depends},
+Depends:
+ promtool,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Static-Built-Using: ${misc:Static-Built-Using},
+Recommends:
+ prometheus-node-exporter,
+Description: monitoring system and time series database
+ Prometheus is a systems and services monitoring system. It collects metrics
+ from configured targets at given intervals, evaluates rule expressions,
+ displays the results, and can trigger alerts if some condition is observed to
+ be true.
+ .
+ Prometheus' main distinguishing features as compared to other monitoring
+ systems are:
+ .
+  * A multi-dimensional data model (timeseries defined by metric name and set
+    of key/value dimensions).
+  * A flexible query language to leverage this dimensionality.
+  * No dependency on distributed storage; single server nodes are autonomous.
+  * Timeseries collection happens via a pull model over HTTP.
+  * Pushing timeseries is supported via an intermediary gateway.
+  * Targets are discovered via service discovery or static configuration.
+  * Multiple modes of graphing and dashboarding support.
+  * Federation support coming soon.
+
+Package: promtool
+Section: net
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Static-Built-Using: ${misc:Static-Built-Using},
+Enhances:
+ prometheus,
+Breaks:
+ prometheus (<< 2.45.6+ds-9),
+Replaces:
+ prometheus (<< 2.45.6+ds-9),
+Description: tooling for the Prometheus monitoring system
+ promtool is a command-line utility for managing and interacting with a
+ Prometheus monitoring system and its configuration / rules.
+
+Package: golang-github-prometheus-prometheus-dev
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ golang-github-alecthomas-units-dev,
+ golang-github-aws-aws-sdk-go-dev,
+ golang-github-bboreham-go-loser-dev,
+ golang-github-cespare-xxhash-dev,
+ golang-github-dennwc-varint-dev,
+ golang-github-digitalocean-godo-dev,
+ golang-github-docker-docker-dev (>= 28.5),
+ golang-github-edsrzf-mmap-go-dev,
+ golang-github-facette-natsort-dev,
+ golang-github-fsnotify-fsnotify-dev,
+ golang-github-go-kit-log-dev,
+ golang-github-go-openapi-strfmt-dev,
+ golang-github-go-zookeeper-zk-dev,
+ golang-github-gogo-protobuf-dev,
+ golang-github-golang-snappy-dev,
+ golang-github-google-go-cmp-dev,
+ golang-github-google-pprof-dev,
+ golang-github-google-uuid-dev,
+ golang-github-gophercloud-gophercloud-dev (>= 0.19.0),
+ golang-github-grafana-regexp-dev,
+ golang-github-grpc-ecosystem-grpc-gateway-dev,
+ golang-github-hetznercloud-hcloud-go-dev (>= 2.0.0),
+ golang-github-ionos-cloud-sdk-go-dev,
+ golang-github-json-iterator-go-dev,
+ golang-github-kimmachinegun-automemlimit-dev,
+ golang-github-klauspost-compress-dev,
+ golang-github-kolo-xmlrpc-dev,
+ golang-github-linode-linodego-dev,
+ golang-github-miekg-dns-dev,
+ golang-github-munnerz-goautoneg-dev,
+ golang-github-mwitkow-go-conntrack-dev,
+ golang-github-oklog-run-dev,
+ golang-github-oklog-ulid-dev,
+ golang-github-opentracing-contrib-go-stdlib-dev,
+ golang-github-opentracing-opentracing-go-dev,
+ golang-github-ovh-go-ovh-dev (>= 1.9.0),
+ golang-github-prometheus-alertmanager-dev (>= 0.33.1-5~),
+ golang-github-prometheus-client-golang-dev (>= 1.19.0),
+ golang-github-prometheus-client-model-dev,
+ golang-github-prometheus-common-dev (>= 0.66.0),
+ golang-github-prometheus-exporter-toolkit-dev,
+ golang-github-scaleway-scaleway-sdk-go-dev,
+ golang-github-stretchr-testify-dev,
+ golang-github-vultr-govultr-dev,
+ golang-go.uber-atomic-dev,
+ golang-go.uber-multierr-dev,
+ golang-golang-x-exp-dev,
+ golang-golang-x-net-dev,
+ golang-golang-x-oauth2-google-dev,
+ golang-golang-x-sync-dev,
+ golang-golang-x-sys-dev,
+ golang-golang-x-time-dev,
+ golang-google-api-dev,
+ golang-google-genproto-dev,
+ golang-google-grpc-dev,
+ golang-google-protobuf-dev,
+ golang-gopkg-alecthomas-kingpin.v2-dev,
+ golang-gopkg-yaml.v2-dev,
+ golang-gopkg-yaml.v3-dev,
+ golang-grpc-gateway,
+ golang-k8s-api-dev,
+ golang-k8s-apimachinery-dev,
+ golang-k8s-client-go-dev (>= 0.33.0),
+ golang-k8s-kube-openapi-dev (>= 0.0~git20260721.d427ff9-1~),
+ golang-opentelemetry-contrib-dev (>= 0.56),
+ golang-opentelemetry-otel-dev (>= 1.46.0~),
+ golang-uber-automaxprocs-dev,
+ golang-uber-goleak-dev,
+ ${misc:Depends},
+Description: Prometheus monitoring system and time series database (library)
+ This package contains the source code of the Prometheus monitoring system and
+ time series database, for applications which make use of its exported
+ functions such as the promql parser.

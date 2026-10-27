@@ -1,0 +1,104 @@
+#!/usr/bin/make -f
+# -*- Mode: makefile -*-
+include /usr/share/dpkg/pkg-info.mk
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# Include test fixtures.
+export DH_GOLANG_INSTALL_EXTRA := \
+    cmd/prometheus/testdata \
+    cmd/promtool/testdata \
+    config/testdata \
+    discovery/file/fixtures \
+    discovery/http/fixtures \
+    discovery/moby/testdata \
+    discovery/puppetdb/fixtures \
+    documentation/examples/prometheus-agent.yml \
+    documentation/examples/prometheus.yml \
+    model/rulefmt/testdata \
+    promql/fuzz-data \
+    rules/fixtures \
+    scrape/testdata \
+    tsdb/testdata \
+    # EOL
+
+# Do not build examples
+export DH_GOLANG_EXCLUDES := documentation storage/remote/azuread
+# Disable OTLP Ingestion
+export DH_GOLANG_EXCLUDES += storage/remote/otlptranslator
+
+BUILDDIR   := $(CURDIR)/.build
+PKG        := github.com/prometheus/prometheus
+METAPKG    := github.com/prometheus/common
+
+BRANCH     := debian/sid
+USER       := team+pkg-go@tracker.debian.org
+BUILD_DATE  = $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+    +%Y%m%d-%H:%M:%S)
+GO_VERSION  = $(shell go version | sed 's/go version \(\S*\).*/\1/')
+BUILDFLAGS  = -ldflags \
+  " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Branch=$(BRANCH)\
+    -X $(METAPKG)/version.BuildUser=$(USER)\
+    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+
+ifeq ($(DEB_HOST_ARCH_CPU),arm)
+  # Tests in armel take way too long, and run out of memory in armhf.
+  TESTFLAGS := -timeout 60m -short
+else ifeq ($(DEB_HOST_ARCH_CPU),mips64el)
+  # mips64el is also super slow
+  TESTFLAGS := -timeout 60m -short
+else ifeq ($(DEB_HOST_ARCH_CPU),riscv64)
+  # Override gcflags to workaround https://github.com/golang/go/issues/63167
+  TESTFLAGS := -timeout 60m -short -gcflags=all=-d=wrapglobalmapctl=1
+else
+  TESTFLAGS := -timeout 60m
+endif
+
+%:
+	dh $@ --buildsystem=golang --builddirectory=$(BUILDDIR)
+
+PROMPB := $(BUILDDIR)/src/$(PKG)/prompb
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(BUILDFLAGS)
+	protoc --gogofast_out=plugins=grpc:$(PROMPB) \
+            -I$(PROMPB) \
+            -I$(BUILDDIR)/src/github.com/gogo/protobuf \
+            $(PROMPB)/*.proto
+	# Restore docker SD test fixture filename for older build-deps
+	ln -s json.json \
+        $(BUILDDIR)/src/$(PKG)/discovery/moby/testdata/dockerprom/containers/json_limit_0.json
+	# Copy vendored packages
+	cp -a debian/vendor $(BUILDDIR)/src/$(PKG)/
+
+# Exclude package without non-test files.
+override_dh_auto_build: DH_GOLANG_EXCLUDES += tsdb/test
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+
+MAN_WHATIS := "prometheus \\- The Prometheus monitoring server"
+MAN_WHATIS_TOOL := "promtool \\- Tooling for the Prometheus monitoring system"
+MAN_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' '+%B %Y')
+
+execute_before_dh_installman:
+	$(BUILDDIR)/bin/prometheus --help-man > $(BUILDDIR)/prometheus.1
+	$(BUILDDIR)/bin/promtool --help-man > $(BUILDDIR)/promtool.1
+	# Fix title and header footers.
+	sed -i '/^.TH .*/c.TH PROMETHEUS "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        $(BUILDDIR)/prometheus.1
+	sed -i '/^.TH .*/c.TH PROMTOOL "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        $(BUILDDIR)/promtool.1
+	# Remove build user/build date/go version headers, which is ugly.
+	sed -i '/^  /d' $(BUILDDIR)/*.1
+	# Fix whatis entries.
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n'$(MAN_WHATIS) $(BUILDDIR)/prometheus.1
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n'$(MAN_WHATIS_TOOL) $(BUILDDIR)/promtool.1
+	# Remove default values, as they create unwieldy long lines.
+	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' $(BUILDDIR)/*.1
+
+override_dh_auto_test:
+	dh_auto_test -- $(TESTFLAGS)

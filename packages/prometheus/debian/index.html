@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Prometheus</title>
+    <style>
+      body {
+        font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,Liberation Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Prometheus</h1>
+    <p>
+      This Debian package of Prometheus does not include the modern React web UI, due to the
+      complexity of packaging it without violating Debian policy.
+    </p>
+    <p>
+      Although the classic web UI was removed in Prometheus v2.34.0, it has been carried over to
+      subsequent Debian packages for a limited time. Since the classic web UI is no longer
+      maintained by upstream, and since it lacks the full set of features that the modern React UI
+      offers, the classic UI will be removed in a future Debian package.
+      <ul>
+        <li><a href="classic/graph">Use classic web UI</a></li>
+      </ul>
+    </p>
+    <p>
+      Alternatively, you can deploy the React web UI yourself with the assistance of the
+      <code>/usr/share/prometheus/install-ui.sh</code> helper script.
+    </p>
+    <p>
+      You can also still use the HTTP API (e.g., with tools such as <code>promtool</code> or
+      third-party applications such as Grafana), and the special handler endpoints:
+      <ul>
+        <li><a href="metrics">/metrics</a></li>
+        <li><a href="-/reload">/-/reload</a></li>
+        <li><a href="-/healthy">/-/healthy</a></li>
+        <li><a href="-/ready">/-/ready</a></li>
+      </ul>
+    </p>
+  </body>
+</html>

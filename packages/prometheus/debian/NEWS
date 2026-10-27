@@ -1,0 +1,179 @@
+prometheus (3.5.3+ds1-1) experimental; urgency=medium
+
+  * The Prometheus Web UI has been completely disabled in this package.
+    Upstream removed the Classic UI in v2.34.0. The newer React and Mantine
+    UIs cannot be shipped because they require complex, pre-compiled
+    toolchains (node-vite and rust-rolldown) that are not yet packaged in
+    Debian and cannot be built offline.
+    The API and telemetry endpoints continue to work normally. Accessing the
+    root web endpoint will now display a static "No UI" placeholder page.
+
+ -- Reinhard Tartler <siretart@tauware.de>  Wed, 01 Jul 2026 03:57:00 -0400
+
+prometheus (2.13.1+ds-1) unstable; urgency=medium
+
+  This release removes Azure support, as it is a fast moving target, and the
+  Debian packaging is not keeping up. I hope to restore it in the near future.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 30 Oct 2019 16:49:03 +0000
+
+prometheus (2.4.3+ds-1) unstable; urgency=medium
+
+  This release includes multiple bugfixes and features. Further, the WAL
+  implementation has been re-written so the storage is not forwards compatible.
+  Prometheus 2.3 storage will work on 2.4 but not vice-versa.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 12 Sep 2018 15:19:58 +0000
+
+prometheus (2.2.0+ds-1) unstable; urgency=medium
+
+  NOTE: This release introduces improvements to the storage format and fixes a
+  regression introduced in 2.1. As a result Prometheus servers upgraded to 2.2
+  cannot be downgraded to a lower version anymore!
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 14 Mar 2018 14:30:00 +0000
+
+prometheus (2.0.0+ds3-1) unstable; urgency=medium
+
+  BREAKING CHANGES
+
+  The data format in Prometheus 2.0 has completely changed and is not
+  backwards compatible with 1.x. Prometheus 2 will create a new data directory
+  in /var/lib/prometheus/metrics2. The old data in /var/lib/prometheus/metrics
+  can not be read by the new version.
+
+  There is no conversion tool; if you want to retain access to the old data,
+  it is necessary to run a separate Prometheus 1.x instance on that data
+  directory. (This package makes no provision to allow this.)
+
+
+  Command-line flags now take two slashes. For example `-web.listen-address` is
+  now `--web.listen-address`.
+
+
+  Rules are now stored in YAML files instead of using a domain-specific
+  language. The `promtool update rules` command can assist you in the
+  transition.
+
+ -- Christoph Berg <christoph.berg@credativ.de>  Fri, 15 Dec 2017 15:49:51 +0100
+
+prometheus (1.5.0+ds-1) unstable; urgency=medium
+
+  Differences from upstream:
+
+  * The profile support for EC2 discovery has been disabled, as that requires a
+    different version of the AWS SDK.
+  * Kubernetes support has been completely removed, due to the insane amount of
+    dependencies in their client library.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 26 Jan 2017 17:39:25 +0000
+
+prometheus (1.0.0+ds-1) unstable; urgency=medium
+
+  First stable release!
+
+  * [CHANGE] Remove deprecated query language keywords
+  * [CHANGE] Change Kubernetes SD to require specifying Kubernetes role
+  * [CHANGE] Use service address in Consul SD if available
+  * [CHANGE] Standardize all Prometheus internal metrics to second units
+  * [CHANGE] Remove unversioned legacy HTTP API
+  * [CHANGE] Remove legacy ingestion of JSON metric format
+  * [CHANGE] Remove deprecated `target_groups` configuration
+  * [FEATURE] Add binary power operation to PromQL
+  * [FEATURE] Add `count_values` aggregator
+  * [FEATURE] Add `-web.route-prefix` flag
+  * [FEATURE] Allow `on()`, `by()`, `without()` in PromQL with empty label sets
+  * [ENHANCEMENT] Make `topk/bottomk` query functions aggregators
+  * [BUGFIX] Fix annotations in alert rule printing
+  * [BUGFIX] Expand alert templating at evaluation time
+  * [BUGFIX] Fix edge case handling in crash recovery
+  * [BUGFIX] Hide testing package flags from help output
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 19 Jul 2016 04:20:40 +0100
+
+prometheus (0.20.0+ds-1) unstable; urgency=medium
+
+  This release contains multiple breaking changes to the configuration schema.
+
+  * [CHANGE] Rename `target_groups` to `static_configs` in config files
+  * [CHANGE] Rename `names` to `files` in file SD configuration
+  * [CHANGE] Remove kubelet port config option in Kubernetes SD configuration
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 24 Jun 2016 16:04:05 +0000
+
+prometheus (0.19.2+ds-1) unstable; urgency=medium
+
+  This version contains a breaking change to the query language.
+  Please read the documentation on the changed grouping behavior of vector
+  matching: https://prometheus.io/docs/querying/operators/#vector-matching
+
+  * [FEATURE] Add experimental Microsoft Azure service discovery
+  * [FEATURE] Add `ignoring` modifier for binary operations
+  * [FEATURE] Add pod discovery to Kubernetes service discovery
+  * [CHANGE] Vector matching takes grouping labels from one-side
+  * [ENHANCEMENT] Support time range on /api/v1/series endpoint
+  * [ENHANCEMENT] Partition status page into indivdual pages
+  * [BUGFIX] Fix issue of hanging target scrapes
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 30 May 2016 09:52:19 +0000
+
+prometheus (0.18.0+ds-1) unstable; urgency=medium
+
+  * Support for the old alerting rule syntax was dropped for this version as
+    announced with the 0.17.0 release.  The new alerting rule syntax is
+    documented [1] and a script to convert existing rules exists [2]
+
+    [1] http://prometheus.io/docs/alerting/rules/
+    [2] https://gist.github.com/xbglowx/d798da98ff9937e33862b285d0121bde#gistcomment-1752515
+
+  * This release introduces a new chunk encoding with variable bit width, in
+    parts inspired by Facebook's "Gorilla" paper.  At the price of increased
+    CPU cost and run-time of queries, the chunk space requirement drops by ~60%
+    for typical data sets.  The varbit encoding has to be enabled with the
+    command line flag -storage.local.chunk-encoding-version=2, all newly
+    created chunks will have the new chunk encoding. It is safe to use a mix of
+    different chunk encodings.
+
+  * Several storage improvements dramatically increase the performance of
+    instant queries for the most recent value of time series, as it typically
+    happens in rule evaluations and for federation. On servers with a lot of
+    series churn (i.e. many older series that don't receive samples anymore),
+    we have seen a 12x speedup of rule evaluations with CPU usage reduced by
+    75%.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 19 Apr 2016 14:02:19 +0100
+
+prometheus (0.16.2+ds-1) unstable; urgency=high
+
+  Breaking changes in this release:
+
+  * Remove undocumented 2nd argument of the `delta` function.
+  * Release tarballs now contain the built binaries in a nested directory.
+  * The `hash_mod` relabeling action now uses MD5 hashes instead of FNV hashes
+     to achieve a better distribution.
+  * The DNS-SD meta label `__meta_dns_srv_name` was renamed to
+     `__meta_dns_name` to reflect support for DNS record types other than
+     `SRV`.
+  * The default full refresh interval for the file-based service discovery has
+     been increased from 30 seconds to 5 minutes.
+  * In relabeling, parts of a source label that weren't matched by the
+     specified regular expression are no longer included in the replacement
+     output.
+  * Queries no longer interpolate between two data points. Instead, the
+     resulting value will always be the latest value before the evaluation
+     query timestamp.
+  * Regular expressions supplied via the configuration are now anchored to
+     match full strings instead of substrings.
+  * Global labels are not appended upon storing time series anymore. Instead,
+     they are only appended when communicating with external systems
+     (Alertmanager, remote storages, federation). They have thus also been
+     renamed from `global.labels` to `global.external_labels`.
+  * The names and units of metrics related to remote storage sample appends
+     have been changed.
+  * The experimental support for writing to InfluxDB has been updated to work
+     with InfluxDB 0.9.x. 0.8.x versions of InfluxDB are not supported anymore.
+  * Escape sequences in double- and single-quoted string literals in rules or
+     query expressions are now interpreted like escape sequences in Go string
+     literals (https://golang.org/ref/spec#String_literals).
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 25 Jan 2016 07:34:22 -0300

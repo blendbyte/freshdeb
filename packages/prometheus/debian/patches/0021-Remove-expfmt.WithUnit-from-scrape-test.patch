@@ -1,0 +1,25 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Thu, 18 Jun 2026 05:27:29 -0400
+Subject: Remove expfmt.WithUnit from scrape test
+
+expfmt.WithUnit() was removed in prometheus/common v0.68.0.
+This is the version packaged in Debian.
+
+Forwarded: not-needed
+---
+ scrape/manager_test.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scrape/manager_test.go b/scrape/manager_test.go
+index df19dd5..608b440 100644
+--- a/scrape/manager_test.go
++++ b/scrape/manager_test.go
+@@ -867,7 +867,7 @@ func prepareTestEncodedCounter(t *testing.T, format config.ScrapeProtocol, mName
+ 		return protoMarshalDelimited(t, inputMetric)
+ 	case config.OpenMetricsText1_0_0:
+ 		buf := &bytes.Buffer{}
+-		require.NoError(t, expfmt.NewEncoder(buf, expfmt.NewFormat(expfmt.TypeOpenMetrics), expfmt.WithCreatedLines(), expfmt.WithUnit()).Encode(inputMetric))
++		require.NoError(t, expfmt.NewEncoder(buf, expfmt.NewFormat(expfmt.TypeOpenMetrics), expfmt.WithCreatedLines()).Encode(inputMetric))
+ 		_, _ = buf.WriteString("# EOF")
+ 
+ 		t.Log("produced OM text to expose:", buf.String())

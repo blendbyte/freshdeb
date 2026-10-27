@@ -1,0 +1,37 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Wed, 1 Jul 2026 03:49:52 -0400
+Subject: Disable UI flags in CLI help
+
+Since the UI is entirely disabled in Debian due to DFSG and build
+tooling limitations (node-vite/rust-rolldown), exposing the 'old-ui'
+feature flag and 'UI' in the listen-address help string causes
+unnecessary user confusion.
+
+Forwarded: not-needed
+---
+ cmd/prometheus/main.go | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/cmd/prometheus/main.go b/cmd/prometheus/main.go
+index 5e1db7f..b03d1b0 100644
+--- a/cmd/prometheus/main.go
++++ b/cmd/prometheus/main.go
+@@ -240,9 +240,6 @@ func (c *flagConfig) setFeatureListOptions(logger *slog.Logger) error {
+ 				logger.Info("Experimental PromQL delayed name removal enabled.")
+ 			case "":
+ 				continue
+-			case "old-ui":
+-				c.web.UseOldUI = true
+-				logger.Info("Serving previous version of the Prometheus web UI.")
+ 
+ 			case "type-and-unit-labels":
+ 				c.scrape.EnableTypeAndUnitLabels = true
+@@ -311,7 +308,7 @@ func main() {
+ 	a.Flag("config.auto-reload-interval", "Specifies the interval for checking and automatically reloading the Prometheus configuration file upon detecting changes.").
+ 		Default("30s").SetValue(&cfg.autoReloadInterval)
+ 
+-	a.Flag("web.listen-address", "Address to listen on for UI, API, and telemetry. Can be repeated.").
++	a.Flag("web.listen-address", "Address to listen on for API and telemetry. Can be repeated.").
+ 		Default("0.0.0.0:9090").StringsVar(&cfg.web.ListenAddresses)
+ 
+ 	a.Flag("auto-gomaxprocs", "Automatically set GOMAXPROCS to match Linux container CPU quota").

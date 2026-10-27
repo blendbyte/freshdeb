@@ -1,0 +1,32 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Wed, 12 Feb 2025 21:59:20 +0000
+Subject: Backport fixes for 32-bit archs
+
+Forwarded: not-needed
+Last-Update: 2025-02-12
+
+Adapted from pull request #15548 (318d6bc4b)
+---
+ tsdb/querier_test.go | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tsdb/querier_test.go b/tsdb/querier_test.go
+index cd3b15a..049e176 100644
+--- a/tsdb/querier_test.go
++++ b/tsdb/querier_test.go
+@@ -3590,13 +3590,13 @@ func TestQueryWithDeletedHistograms(t *testing.T) {
+ 		"intCounter": func(i int) (*histogram.Histogram, *histogram.FloatHistogram) {
+ 			return tsdbutil.GenerateTestHistogram(int64(i)), nil
+ 		},
+-		"intgauge": func(_ int) (*histogram.Histogram, *histogram.FloatHistogram) {
++		"intgauge": func(i int) (*histogram.Histogram, *histogram.FloatHistogram) {
+ 			return tsdbutil.GenerateTestGaugeHistogram(rand.Int63() % 1000), nil
+ 		},
+ 		"floatCounter": func(i int) (*histogram.Histogram, *histogram.FloatHistogram) {
+ 			return nil, tsdbutil.GenerateTestFloatHistogram(int64(i))
+ 		},
+-		"floatGauge": func(_ int) (*histogram.Histogram, *histogram.FloatHistogram) {
++		"floatGauge": func(i int) (*histogram.Histogram, *histogram.FloatHistogram) {
+ 			return nil, tsdbutil.GenerateTestGaugeFloatHistogram(rand.Int63() % 1000)
+ 		},
+ 	}

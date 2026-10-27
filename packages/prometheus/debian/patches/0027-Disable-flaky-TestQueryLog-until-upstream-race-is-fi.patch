@@ -1,0 +1,34 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Fri, 31 Jul 2026 08:29:15 +0200
+Subject: Disable flaky TestQueryLog until upstream race is fixed
+
+TestQueryLog fails intermittently on the arm64 debci runner with
+"connection refused" when the query is sent, or the prometheus process
+exits with "bind: address already in use". The readiness probe can
+succeed against a process that has not yet bound the expected port
+because testutil.RandomUnprivilegedPort releases the port before the
+child process binds it (time-of-check/time-of-use race); a parallel
+test or a socket in TIME_WAIT can grab it in between.
+
+Tracked upstream as prometheus#16843 with an open fix in prometheus#18615.
+Disable the test until upstream resolves the race and drop this patch
+afterwards.
+
+Bug: https://github.com/prometheus/prometheus/issues/16843
+Forwarded: not-needed
+---
+ cmd/prometheus/query_log_test.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/cmd/prometheus/query_log_test.go b/cmd/prometheus/query_log_test.go
+index 7c073b5..2547a1b 100644
+--- a/cmd/prometheus/query_log_test.go
++++ b/cmd/prometheus/query_log_test.go
+@@ -450,6 +450,7 @@ func TestQueryLog(t *testing.T) {
+ 	if testing.Short() {
+ 		t.Skip("skipping test in short mode.")
+ 	}
++	t.Skip("Disabled for Debian build: flaky port binding race, see https://github.com/prometheus/prometheus/issues/16843")
+ 	t.Parallel()
+ 
+ 	cwd, err := os.Getwd()

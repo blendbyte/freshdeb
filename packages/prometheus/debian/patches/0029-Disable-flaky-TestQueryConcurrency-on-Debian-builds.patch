@@ -1,0 +1,29 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Thu, 17 Sep 2026 16:10:51 -0400
+Subject: Disable flaky TestQueryConcurrency on Debian builds
+
+TestQueryConcurrency tests PromQL query concurrency limits, but relies
+on a hardcoded 20ms channel timeout to check if a query has started.
+On slower or busy architectures (such as ppc64el in Debian CI), 20ms
+is too short, causing intermittent test failures.
+
+Skip the test in Debian package builds until upstream increases the timeout.
+
+Bug-Debian: https://bugs.debian.org/1099026
+Forwarded: not-needed
+---
+ promql/engine_test.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/promql/engine_test.go b/promql/engine_test.go
+index f352d59..a67a526 100644
+--- a/promql/engine_test.go
++++ b/promql/engine_test.go
+@@ -58,6 +58,7 @@ func TestMain(m *testing.M) {
+ }
+ 
+ func TestQueryConcurrency(t *testing.T) {
++	t.Skip("Disabled for Debian build: flaky on loaded runners due to 20ms timeout threshold, see Debian #1099026")
+ 	maxConcurrency := 10
+ 
+ 	queryTracker := promql.NewActiveQueryTracker(t.TempDir(), maxConcurrency, nil)

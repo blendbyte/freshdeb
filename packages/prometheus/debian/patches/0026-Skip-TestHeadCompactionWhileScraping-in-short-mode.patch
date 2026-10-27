@@ -1,0 +1,39 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Fri, 31 Jul 2026 08:29:11 +0200
+Subject: Disable flaky TestHeadCompactionWhileScraping in Debian builds
+
+This test needs three TSDB head compactions to finish within a hard-coded
+15s require.Eventually window and spawns five prometheus instances in
+parallel. It is timing-sensitive and flaky on slow builders: on the
+riscv64 buildd a single compaction of a 12ms block took 7.76s, so fewer
+than three compactions completed within the window and the test failed
+with "Condition never satisfied". It has also been observed to fail on
+the ppc64el debci runner (Debian bug #1145937).
+
+Disable this test unconditionally for Debian builds, matching the
+approach used for other flaky integration tests (e.g. TestDelayedCompaction
+in patch 0024 and TestQueryLog in patch 0027).
+
+Related upstream flakes: prometheus#17541 (Windows CI) and prometheus#17956.
+Fix proposals exist upstream in prometheus#17966 and prometheus#19192; drop
+this patch once upstream hardens the test.
+
+Bug: https://github.com/prometheus/prometheus/issues/17956
+Bug-Debian: https://bugs.debian.org/1145937
+Forwarded: not-needed
+---
+ cmd/prometheus/main_test.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/cmd/prometheus/main_test.go b/cmd/prometheus/main_test.go
+index 7886815..6a2788c 100644
+--- a/cmd/prometheus/main_test.go
++++ b/cmd/prometheus/main_test.go
+@@ -814,6 +814,7 @@ runtime:
+ // concurrently with a scrape does not trigger the data race described in
+ // https://github.com/prometheus/prometheus/issues/16490.
+ func TestHeadCompactionWhileScraping(t *testing.T) {
++	t.Skip("Disabled for Debian build: timing-sensitive and flaky on slow architectures (Closes: #1145937)")
+ 	t.Parallel()
+ 
+ 	// To increase the chance of reproducing the data race

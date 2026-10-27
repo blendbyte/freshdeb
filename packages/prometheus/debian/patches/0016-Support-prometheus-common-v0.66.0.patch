@@ -1,0 +1,49 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Thu, 18 Jun 2026 10:52:34 -0400
+Subject: Support prometheus/common v0.66.0
+
+---
+ cmd/prometheus/main_test.go | 2 +-
+ cmd/promtool/main.go        | 2 +-
+ util/fmtutil/format.go      | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cmd/prometheus/main_test.go b/cmd/prometheus/main_test.go
+index 6ea3731..2f86ef0 100644
+--- a/cmd/prometheus/main_test.go
++++ b/cmd/prometheus/main_test.go
+@@ -664,7 +664,7 @@ func reloadPrometheusConfig(t *testing.T, reloadURL string) {
+ func getMetricValue(t *testing.T, body io.Reader, metricType model.MetricType, metricName string) (float64, error) {
+ 	t.Helper()
+ 
+-	p := expfmt.TextParser{}
++	p := expfmt.NewTextParser(model.LegacyValidation)
+ 	metricFamilies, err := p.TextToMetricFamilies(body)
+ 	if err != nil {
+ 		return 0, err
+diff --git a/cmd/promtool/main.go b/cmd/promtool/main.go
+index 85b8de9..e71dcf0 100644
+--- a/cmd/promtool/main.go
++++ b/cmd/promtool/main.go
+@@ -1054,7 +1054,7 @@ type metricStat struct {
+ }
+ 
+ func checkMetricsExtended(r io.Reader) ([]metricStat, int, error) {
+-	p := expfmt.TextParser{}
++	p := expfmt.NewTextParser(model.LegacyValidation)
+ 	metricFamilies, err := p.TextToMetricFamilies(r)
+ 	if err != nil {
+ 		return nil, 0, fmt.Errorf("error while parsing text to metric families: %w", err)
+diff --git a/util/fmtutil/format.go b/util/fmtutil/format.go
+index a10908b..779f101 100644
+--- a/util/fmtutil/format.go
++++ b/util/fmtutil/format.go
+@@ -46,7 +46,7 @@ var MetricMetadataTypeValue = map[string]int32{
+ 
+ // MetricTextToWriteRequest consumes an io.Reader and return the data in write request format.
+ func MetricTextToWriteRequest(input io.Reader, labels map[string]string) (*prompb.WriteRequest, error) {
+-	var parser expfmt.TextParser
++	parser := expfmt.NewTextParser(model.LegacyValidation)
+ 	mf, err := parser.TextToMetricFamilies(input)
+ 	if err != nil {
+ 		return nil, err

@@ -1,0 +1,80 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Wed, 17 Jun 2026 17:09:43 -0400
+Subject: Remove klog slog bridge due to missing functions in Debian klog
+ package
+
+---
+ cmd/prometheus/main.go | 46 ++++------------------------------------------
+ 1 file changed, 4 insertions(+), 42 deletions(-)
+
+diff --git a/cmd/prometheus/main.go b/cmd/prometheus/main.go
+index f4a950c..5e1db7f 100644
+--- a/cmd/prometheus/main.go
++++ b/cmd/prometheus/main.go
+@@ -53,8 +53,7 @@ import (
+ 	"go.uber.org/atomic"
+ 	"go.uber.org/automaxprocs/maxprocs"
+ 	"gopkg.in/alecthomas/kingpin.v2"
+-	"k8s.io/klog"
+-	klogv2 "k8s.io/klog/v2"
++
+ 
+ 	"github.com/prometheus/prometheus/config"
+ 	"github.com/prometheus/prometheus/discovery"
+@@ -82,44 +81,7 @@ import (
+ 	"github.com/prometheus/prometheus/web"
+ )
+ 
+-// klogv1OutputCallDepth is the stack depth where we can find the origin of this call.
+-const klogv1OutputCallDepth = 6
+-
+-// klogv1DefaultPrefixLength is the length of the log prefix that we have to strip out.
+-const klogv1DefaultPrefixLength = 53
+-
+-// klogv1Writer is used in SetOutputBySeverity call below to redirect any calls
+-// to klogv1 to end up in klogv2.
+-// This is a hack to support klogv1 without use of go-kit/log. It is inspired
+-// by klog's upstream klogv1/v2 coexistence example:
+-// https://github.com/kubernetes/klog/blob/main/examples/coexist_klog_v1_and_v2/coexist_klog_v1_and_v2.go
+-type klogv1Writer struct{}
+-
+-// Write redirects klogv1 calls to klogv2.
+-// This is a hack to support klogv1 without use of go-kit/log. It is inspired
+-// by klog's upstream klogv1/v2 coexistence example:
+-// https://github.com/kubernetes/klog/blob/main/examples/coexist_klog_v1_and_v2/coexist_klog_v1_and_v2.go
+-func (kw klogv1Writer) Write(p []byte) (n int, err error) {
+-	if len(p) < klogv1DefaultPrefixLength {
+-		klogv2.InfoDepth(klogv1OutputCallDepth, string(p))
+-		return len(p), nil
+-	}
+-
+-	switch p[0] {
+-	case 'I':
+-		klogv2.InfoDepth(klogv1OutputCallDepth, string(p[klogv1DefaultPrefixLength:]))
+-	case 'W':
+-		klogv2.WarningDepth(klogv1OutputCallDepth, string(p[klogv1DefaultPrefixLength:]))
+-	case 'E':
+-		klogv2.ErrorDepth(klogv1OutputCallDepth, string(p[klogv1DefaultPrefixLength:]))
+-	case 'F':
+-		klogv2.FatalDepth(klogv1OutputCallDepth, string(p[klogv1DefaultPrefixLength:]))
+-	default:
+-		klogv2.InfoDepth(klogv1OutputCallDepth, string(p[klogv1DefaultPrefixLength:]))
+-	}
+-
+-	return len(p), nil
+-}
++
+ 
+ var (
+ 	appName = "prometheus"
+@@ -739,8 +701,8 @@ func main() {
+ 	noStepSubqueryInterval := &safePromQLNoStepSubqueryInterval{}
+ 	noStepSubqueryInterval.Set(config.DefaultGlobalConfig.EvaluationInterval)
+ 
+-	klogv2.SetSlogLogger(logger.With("component", "k8s_client_runtime"))
+-	klog.SetOutputBySeverity("INFO", klogv1Writer{})
++	// klogv2.SetSlogLogger(logger.With("component", "k8s_client_runtime"))
++	// klog.SetOutputBySeverity("INFO", klogv1Writer{})
+ 
+ 	modeAppName := "Prometheus Server"
+ 	mode := "server"

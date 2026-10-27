@@ -1,0 +1,31 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Thu, 17 Sep 2026 16:11:14 -0400
+Subject: Disable flaky TestEndpointsSlicesDiscoveryWithUpdatedNodeMetadata
+
+TestEndpointsSlicesDiscoveryWithUpdatedNodeMetadata updates a node label
+from "us-east1" to "us-central1", but its assertion incorrectly still
+expects the old "us-east1" label.
+
+If the update event arrives before the test's 1-second timeout expires
+(as observed on s390x in Debian CI), the test fails with a label mismatch.
+
+Skip the test in Debian package builds until upstream fixes the test.
+
+Bug-Debian: https://bugs.debian.org/1135688
+Forwarded: not-needed
+---
+ discovery/kubernetes/endpointslice_test.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/discovery/kubernetes/endpointslice_test.go b/discovery/kubernetes/endpointslice_test.go
+index 9eea9ab..cd236a2 100644
+--- a/discovery/kubernetes/endpointslice_test.go
++++ b/discovery/kubernetes/endpointslice_test.go
+@@ -730,6 +730,7 @@ func TestEndpointsSlicesDiscoveryWithNodeMetadata(t *testing.T) {
+ }
+ 
+ func TestEndpointsSlicesDiscoveryWithUpdatedNodeMetadata(t *testing.T) {
++	t.Skip("Disabled for Debian build: timing race between node update and discovery timeout, see Debian #1135688")
+ 	t.Parallel()
+ 	metadataConfig := AttachMetadataConfig{Node: true}
+ 	nodeLabels1 := map[string]string{"az": "us-east1"}

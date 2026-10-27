@@ -1,0 +1,4 @@
+etc/prometheus
+etc/prometheus/console_libraries
+etc/prometheus/consoles
+usr/share/prometheus/web/static/vendor

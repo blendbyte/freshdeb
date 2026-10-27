@@ -1,0 +1,145 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Tue, 25 Oct 2022 22:21:11 +0200
+Subject: Disable Nomad service discovery
+
+Forwarded: not-needed
+Last-Update: 2022-10-21
+
+The requisite build-dependencies for Nomad service discovery do not
+exist as Debian packages.
+---
+ config/config_test.go         | 40 ----------------------------------------
+ config/testdata/conf.good.yml |  4 ----
+ discovery/install/install.go  |  1 -
+ discovery/nomad/nomad.go      |  3 +++
+ discovery/nomad/nomad_test.go |  3 +++
+ plugins/plugins.go            |  3 +--
+ 6 files changed, 7 insertions(+), 47 deletions(-)
+
+diff --git a/config/config_test.go b/config/config_test.go
+index 3a65d1a..0e0f398 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -44,7 +44,6 @@ import (
+ 	"github.com/prometheus/prometheus/discovery/linode"
+ 	"github.com/prometheus/prometheus/discovery/marathon"
+ 	"github.com/prometheus/prometheus/discovery/moby"
+-	"github.com/prometheus/prometheus/discovery/nomad"
+ 	"github.com/prometheus/prometheus/discovery/openstack"
+ 	"github.com/prometheus/prometheus/discovery/ovhcloud"
+ 	"github.com/prometheus/prometheus/discovery/puppetdb"
+@@ -593,45 +592,6 @@ var expectedConf = &Config{
+ 				},
+ 			},
+ 		},
+-		{
+-			JobName: "service-nomad",
+-
+-			HonorTimestamps:                true,
+-			ScrapeInterval:                 model.Duration(15 * time.Second),
+-			ScrapeTimeout:                  DefaultGlobalConfig.ScrapeTimeout,
+-			EnableCompression:              true,
+-			BodySizeLimit:                  globBodySizeLimit,
+-			SampleLimit:                    globSampleLimit,
+-			TargetLimit:                    globTargetLimit,
+-			LabelLimit:                     globLabelLimit,
+-			LabelNameLengthLimit:           globLabelNameLengthLimit,
+-			LabelValueLengthLimit:          globLabelValueLengthLimit,
+-			ScrapeProtocols:                DefaultGlobalConfig.ScrapeProtocols,
+-			ScrapeFailureLogFile:           globScrapeFailureLogFile,
+-			MetricNameValidationScheme:     DefaultGlobalConfig.MetricNameValidationScheme,
+-			MetricNameEscapingScheme:       DefaultGlobalConfig.MetricNameEscapingScheme,
+-			AlwaysScrapeClassicHistograms:  boolPtr(false),
+-			ConvertClassicHistogramsToNHCB: boolPtr(false),
+-
+-			MetricsPath:      DefaultScrapeConfig.MetricsPath,
+-			Scheme:           DefaultScrapeConfig.Scheme,
+-			HTTPClientConfig: config.DefaultHTTPClientConfig,
+-
+-			ServiceDiscoveryConfigs: discovery.Configs{
+-				&nomad.SDConfig{
+-					AllowStale:      true,
+-					Namespace:       "default",
+-					RefreshInterval: model.Duration(60 * time.Second),
+-					Region:          "global",
+-					Server:          "http://localhost:4646",
+-					TagSeparator:    ",",
+-					HTTPClientConfig: config.HTTPClientConfig{
+-						FollowRedirects: true,
+-						EnableHTTP2:     true,
+-					},
+-				},
+-			},
+-		},
+ 		{
+ 			JobName: "service-ec2",
+ 
+diff --git a/config/testdata/conf.good.yml b/config/testdata/conf.good.yml
+index 1b0dd6f..323501f 100644
+--- a/config/testdata/conf.good.yml
++++ b/config/testdata/conf.good.yml
+@@ -220,10 +220,6 @@ scrape_configs:
+           cert_file: valid_cert_file
+           key_file: valid_key_file
+ 
+-  - job_name: service-nomad
+-    nomad_sd_configs:
+-      - server: 'http://localhost:4646'
+-
+   - job_name: service-ec2
+     ec2_sd_configs:
+       - region: us-east-1
+diff --git a/discovery/install/install.go b/discovery/install/install.go
+index b563882..11713d0 100644
+--- a/discovery/install/install.go
++++ b/discovery/install/install.go
+@@ -30,7 +30,6 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/linode"       // register linode
+ 	_ "github.com/prometheus/prometheus/discovery/marathon"     // register marathon
+ 	_ "github.com/prometheus/prometheus/discovery/moby"         // register moby
+-	_ "github.com/prometheus/prometheus/discovery/nomad"        // register nomad
+ 	_ "github.com/prometheus/prometheus/discovery/openstack"    // register openstack
+ 	_ "github.com/prometheus/prometheus/discovery/ovhcloud"     // register ovhcloud
+ 	_ "github.com/prometheus/prometheus/discovery/puppetdb"     // register puppetdb
+diff --git a/discovery/nomad/nomad.go b/discovery/nomad/nomad.go
+index 7516308..0dc9af7 100644
+--- a/discovery/nomad/nomad.go
++++ b/discovery/nomad/nomad.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package nomad
+ 
+ import (
+diff --git a/discovery/nomad/nomad_test.go b/discovery/nomad/nomad_test.go
+index a73b457..f14fed0 100644
+--- a/discovery/nomad/nomad_test.go
++++ b/discovery/nomad/nomad_test.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package nomad
+ 
+ import (
+diff --git a/plugins/plugins.go b/plugins/plugins.go
+index 603ad85..c1feff5 100644
+--- a/plugins/plugins.go
++++ b/plugins/plugins.go
+@@ -41,8 +41,7 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/marathon"
+ 	// Register moby plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/moby"
+-	// Register nomad plugin.
+-	_ "github.com/prometheus/prometheus/discovery/nomad"
++
+ 	// Register openstack plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/openstack"
+ 	// Register ovhcloud plugin.

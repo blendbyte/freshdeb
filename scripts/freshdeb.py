@@ -45,6 +45,9 @@ TRACK_RE = re.compile(r"^[0-9a-z][0-9a-z.]*$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 TARBALL_SUFFIXES = (".tar.gz", ".tar.xz", ".tar.bz2")
+ASSET_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+NUMERIC_RE = re.compile(r"^\d+(\.\d+)*$")
+ASSETS_DIR = "freshdeb-assets"
 OPTION_RE = re.compile(r"^[a-z0-9][a-z0-9=_.,-]*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[0-9][A-Za-z0-9.+~]*$")
 VENDOR_PREFIX = {"debian": "deb", "ubuntu": "ubuntu"}
@@ -171,9 +174,17 @@ class Track:
     codenames: list[str] | None = None
     sha256: str | None = None  # release tarball checksum, for upstream.tarball packages
     go: str | None = None      # Go toolchain version (config.yaml toolchains.go) for Go packages
+    line: str | None = None    # version prefix a named track follows ("3.13" for "lts")
+    assets: dict[str, str] | None = None  # {asset name: sha256} for upstream.assets
 
     def active(self, today=None):
         return self.eol is None or self.eol >= (today or dt.date.today())
+
+    def follows(self, version):
+        """Whether an upstream version belongs to this track: numeric keys
+        and line are version prefixes, other tracks follow every release."""
+        prefix = self.key if NUMERIC_RE.match(self.key) else self.line
+        return prefix is None or version == prefix or version.startswith(prefix + ".")
 
 
 @dataclass
@@ -202,6 +213,17 @@ class Package:
         tarballs (generated configure scripts etc.), or None for git."""
         template = self.upstream.get("tarball")
         return template.format(version=version) if template else None
+
+    @property
+    def assets(self):
+        """{name: URL template} of extra release files (upstream.assets)."""
+        return self.upstream.get("assets") or {}
+
+    def asset_path(self, name):
+        """Where prepare puts an asset, relative to the source tree."""
+        url = self.assets[name]
+        suffix = next((s for s in TARBALL_SUFFIXES if url.endswith(s)), "")
+        return f"{ASSETS_DIR}/{name}{suffix}"
 
     def upstream_version(self, tag):
         match = self.tag_regex.match(tag)
@@ -261,7 +283,10 @@ def parse_package(name, path, data):
                             revision=entry.get("revision"), eol=eol, patches=entry.get("patches"),
                             codenames=entry.get("codenames"),
                             sha256=str(entry["sha256"]) if entry.get("sha256") is not None else None,
-                            go=str(entry["go"]) if entry.get("go") is not None else None)
+                            go=str(entry["go"]) if entry.get("go") is not None else None,
+                            line=str(entry["line"]) if entry.get("line") is not None else None,
+                            assets=({str(k): str(v) for k, v in entry["assets"].items()}
+                                    if isinstance(entry.get("assets"), dict) else entry.get("assets")))
     aliases = {}
     for key, target in (data.get("aliases") or {}).items():
         require(isinstance(key, str) and isinstance(target, str),
@@ -350,6 +375,17 @@ def validate_package(pkg, config, today=None):
               and tarball.endswith(TARBALL_SUFFIXES),
               "upstream.tarball must be an https:// URL containing {version} and ending in "
               + "/".join(TARBALL_SUFFIXES))
+    assets = upstream.get("assets")
+    if assets is not None:
+        check(isinstance(assets, dict) and assets, "upstream.assets must map asset names to URLs")
+        for name, url in (assets.items() if isinstance(assets, dict) else []):
+            check(isinstance(name, str) and ASSET_RE.match(name) is not None,
+                  f"upstream.assets: invalid name {name!r} (lowercase letters, digits, dashes)")
+            check(isinstance(url, str) and url.startswith("https://") and "{version}" in url,
+                  f"upstream.assets {name}: must be an https:// URL containing {{version}}")
+        # The orig tarball would be upstream's, without them.
+        check(tarball is None, "upstream.assets can't be combined with upstream.tarball")
+    asset_names = set(assets) if isinstance(assets, dict) else set()
     try:
         regex = pkg.tag_regex
         check("version" in regex.groupindex, "upstream.tag_regex needs a (?P<version>…) group")
@@ -389,9 +425,13 @@ def validate_package(pkg, config, today=None):
                 version = match.group("version")
                 check(UPSTREAM_VERSION_RE.match(version) is not None,
                       f"{where}: upstream version {version!r} is not a valid Debian upstream version")
-                if re.fullmatch(r"\d+(\.\d+)*", key):
-                    check(version == key or version.startswith(key + "."),
-                          f"{where}: tag {track.tag} does not belong to track {key}")
+                if NUMERIC_RE.match(key) or track.line is not None:
+                    check(track.follows(version),
+                          f"{where}: tag {track.tag} does not belong to track {key}"
+                          + (f" (line {track.line})" if track.line else ""))
+        if track.line is not None:
+            check(not NUMERIC_RE.match(key), f"{where}: line is only for named tracks; {key} is a line already")
+            check(NUMERIC_RE.match(track.line) is not None, f"{where}: line must be a version prefix like \"3.13\"")
         check(COMMIT_RE.match(track.commit) is not None, f"{where}: commit must be a full 40-character SHA")
         if track.go is not None:
             sums = config.toolchains.get("go", {}).get(track.go)
@@ -404,6 +444,12 @@ def validate_package(pkg, config, today=None):
                   f"{where}: sha256 of the release tarball is required (upstream.tarball is set)")
         else:
             check(track.sha256 is None, f"{where}: sha256 is only used with upstream.tarball")
+        if asset_names:
+            pinned = track.assets if isinstance(track.assets, dict) else {}
+            check(set(pinned) == asset_names and all(SHA256_RE.match(v) for v in pinned.values()),
+                  f"{where}: assets needs the sha256 of every upstream asset ({', '.join(sorted(asset_names))})")
+        else:
+            check(track.assets is None, f"{where}: assets is only used with upstream.assets")
         check(isinstance(track.revision, int) and not isinstance(track.revision, bool) and track.revision >= 1,
               f"{where}: revision must be an integer >= 1")
         if track.patches is not None:
@@ -498,7 +544,8 @@ def changed_files(root, base, head):
 
 
 def track_fields(track):
-    return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256, track.go)
+    return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256, track.go,
+            track.line, sorted((track.assets or {}).items()))
 
 
 def newest_track(keys):
@@ -748,6 +795,26 @@ def fetch_tarball(pkg, track, orig, dest):
     require(any(dest.iterdir()), f"{pkg.name}: {url} unpacked to nothing")
 
 
+def fetch_assets(pkg, track, srcdir):
+    """Download the track's release assets (upstream.assets, e.g. a prebuilt
+    web UI) into the source tree, each verified against its pinned sha256.
+    They end up in the orig tarball, so the source package holds everything
+    the build used."""
+    version = pkg.upstream_version(track.tag)
+    fetched = []
+    for name, template in pkg.assets.items():
+        url = template.format(version=version)
+        dest = srcdir / pkg.asset_path(name)
+        require(not dest.exists(), f"{pkg.name}: {dest} already exists in the source tree")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        digest = download(url, dest)
+        expected = track.assets[name]
+        require(digest == expected, f"{pkg.name}: {url} has sha256 {digest}, package.yaml pins {expected}")
+        print(f"  asset {name}: {url} (sha256 ok)")
+        fetched.append({"name": name, "url": url, "sha256": digest, "path": pkg.asset_path(name)})
+    return fetched
+
+
 GO_DOWNLOAD = "https://go.dev/dl/go{version}.linux-{arch}.tar.gz"
 
 
@@ -771,6 +838,7 @@ def go_env(goroot, cache, offline):
     env = {
         "PATH": f"{goroot}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "GOTOOLCHAIN": "local",          # never let go.mod switch to a downloaded toolchain
+        "GOWORK": "off",                 # vendor and build the main module only, not a go.work workspace
         "GOPATH": f"{cache}/gopath",
         "GOMODCACHE": f"{cache}/gopath/pkg/mod",
         "GOCACHE": f"{cache}/gocache",
@@ -872,9 +940,12 @@ def changelog_entry(pkg, config, track, codename, version, when):
         "",
         f"  * freshdeb build of {pkg.name} {pkg.upstream_version(track.tag)} for {dist.title}.",
         f"  * Upstream: {pkg.upstream['git']} tag {track.tag}",
-        f"    (commit {track.commit}).",
+        f"    (commit {track.commit}).",  # debian/rules may read it from here (prometheus)
         *([f"  * Release tarball: {pkg.tarball_url(pkg.upstream_version(track.tag))}",
            f"    (sha256 {track.sha256})."] if track.sha256 else []),
+        *[line for name, template in pkg.assets.items()
+          for line in (f"  * Release asset {name}: {template.format(version=pkg.upstream_version(track.tag))}",
+                       f"    (sha256 {track.assets[name]}).")],
         *([f"  * Built with Go {track.go}, dependencies vendored and verified",
            "    against go.sum and sum.golang.org."] if track.go else []),
         f"  * Packaging: {packaging['origin']} at {packaging['ref'].removeprefix('sha256:')[:12]},",
@@ -914,6 +985,7 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     build = pkg.data.get("build") or {}
     if build.get("prepare"):
         run_prepare_hook(pkg, track, srcdir, build["prepare"])
+    assets = fetch_assets(pkg, track, srcdir)
     build_env = {}
     if track.go:
         goroot = install_go(config, track.go, arch, out / "toolchain")
@@ -955,6 +1027,7 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         "build_options": build.get("options") or [],
         "build_profiles": build.get("profiles") or [],
         "build_env": build_env,
+        "assets": assets,
         "overlays": applied,
         "publish": bool(publish),
         "skipped": False,
@@ -1052,7 +1125,7 @@ def watch_package(pkg, tags, today=None):
 
     for key, track in active.items():
         current = pkg.upstream_version(track.tag)
-        candidates = [v for v in releases if (v == key or v.startswith(key + ".")) or not re.fullmatch(r"\d+(\.\d+)*", key)]
+        candidates = [v for v in releases if track.follows(v)]
         if not candidates:
             continue
         newest = max(candidates, key=lambda v: _VersionKey(v))
@@ -1206,6 +1279,15 @@ def apply_change(root, change):
         with tempfile.TemporaryDirectory() as tmp:
             sha256 = download(url, Path(tmp) / "release")
         change["sha256"] = sha256
+    assets = change.get("assets")
+    if assets is None and pkg.assets:
+        # Pin the release assets the same way.
+        version = pkg.upstream_version(change["tag"])
+        assets = {}
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, template in pkg.assets.items():
+                assets[name] = download(template.format(version=version), Path(tmp) / name)
+        change["assets"] = assets
     if change["kind"] == "bump":
         expr = (f'.tracks[{key}].tag = {yq_string(change["tag"])} | '
                 f'.tracks[{key}].commit = {yq_string(change["commit"])} | '
@@ -1214,6 +1296,8 @@ def apply_change(root, change):
             expr += f' | .tracks[{key}].sha256 = {yq_string(sha256)}'
         if change.get("go"):
             expr += f' | .tracks[{key}].go = {yq_string(change["go"])}'
+        for name, digest in (assets or {}).items():
+            expr += f' | .tracks[{key}].assets[{yq_string(name)}] = {yq_string(digest)}'
     else:
         base = pkg.tracks[change["based_on"]]
         entry = {"tag": change["tag"], "commit": change["commit"], "revision": 1}
@@ -1221,6 +1305,8 @@ def apply_change(root, change):
             entry["sha256"] = sha256
         if change.get("go"):
             entry["go"] = change["go"]
+        if assets:
+            entry["assets"] = assets
         if base.patches:
             new_dir = f"patches/{change['track']}"
             src = pkg.path / base.patches

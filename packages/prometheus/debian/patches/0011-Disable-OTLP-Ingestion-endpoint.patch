@@ -1,0 +1,1150 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Sun, 9 Feb 2025 23:02:10 +0000
+Subject: Disable OTLP Ingestion endpoint
+
+This depends on code not yet in Debian.
+---
+ cmd/prometheus/main.go          |  21 +-
+ storage/remote/codec.go         |  87 +-----
+ storage/remote/codec_test.go    |  10 -
+ storage/remote/write_handler.go | 166 -----------
+ storage/remote/write_test.go    | 594 ----------------------------------------
+ web/api/v1/api.go               |  18 +-
+ web/api/v1/errors_test.go       |   5 +-
+ web/web.go                      |   8 +-
+ 8 files changed, 13 insertions(+), 896 deletions(-)
+
+diff --git a/cmd/prometheus/main.go b/cmd/prometheus/main.go
+index 5d8aa07..f4a950c 100644
+--- a/cmd/prometheus/main.go
++++ b/cmd/prometheus/main.go
+@@ -223,6 +223,7 @@ func (c *flagConfig) setFeatureListOptions(logger *slog.Logger) error {
+ 		opts := strings.Split(f, ",")
+ 		for _, o := range opts {
+ 			switch o {
++
+ 			case "exemplar-storage":
+ 				c.tsdb.EnableExemplarStorage = true
+ 				logger.Info("Experimental in-memory exemplar storage enabled")
+@@ -280,16 +281,7 @@ func (c *flagConfig) setFeatureListOptions(logger *slog.Logger) error {
+ 			case "old-ui":
+ 				c.web.UseOldUI = true
+ 				logger.Info("Serving previous version of the Prometheus web UI.")
+-			case "otlp-deltatocumulative":
+-				c.web.ConvertOTLPDelta = true
+-				logger.Info("Converting delta OTLP metrics to cumulative")
+-			case "otlp-native-delta-ingestion":
+-				// Experimental OTLP native delta ingestion.
+-				// This currently just stores the raw delta value as-is with unknown metric type. Better typing and
+-				// type-aware functions may come later.
+-				// See proposal: https://github.com/prometheus/proposals/pull/48
+-				c.web.NativeOTLPDeltaIngestion = true
+-				logger.Info("Enabling native ingestion of delta OTLP metrics, storing the raw sample values without conversion. WARNING: Delta support is in an early stage of development. The ingestion and querying process is likely to change over time.")
++
+ 			case "type-and-unit-labels":
+ 				c.scrape.EnableTypeAndUnitLabels = true
+ 				logger.Info("Experimental type and unit labels enabled")
+@@ -302,9 +294,7 @@ func (c *flagConfig) setFeatureListOptions(logger *slog.Logger) error {
+ 		}
+ 	}
+ 
+-	if c.web.ConvertOTLPDelta && c.web.NativeOTLPDeltaIngestion {
+-		return errors.New("cannot enable otlp-deltatocumulative and otlp-native-delta-ingestion features at the same time")
+-	}
++
+ 
+ 	return nil
+ }
+@@ -413,8 +403,7 @@ func main() {
+ 	a.Flag("web.remote-write-receiver.accepted-protobuf-messages", fmt.Sprintf("List of the remote write protobuf messages to accept when receiving the remote writes. Supported values: %v", supportedRemoteWriteProtoMsgs.String())).
+ 		Default(supportedRemoteWriteProtoMsgs.Strings()...).SetValue(rwProtoMsgFlagValue(&cfg.web.AcceptRemoteWriteProtoMsgs))
+ 
+-	a.Flag("web.enable-otlp-receiver", "Enable API endpoint accepting OTLP write requests.").
+-		Default("false").BoolVar(&cfg.web.EnableOTLPWriteReceiver)
++
+ 
+ 	a.Flag("web.console.templates", "Path to the console template directory, available at /consoles.").
+ 		Default("/etc/prometheus/consoles").StringVar(&cfg.web.ConsoleTemplatesPath)
+@@ -563,7 +552,7 @@ func main() {
+ 	a.Flag("scrape.discovery-reload-interval", "Interval used by scrape manager to throttle target groups updates.").
+ 		Hidden().Default("5s").SetValue(&cfg.scrape.DiscoveryReloadInterval)
+ 
+-	a.Flag("enable-feature", "Comma separated feature names to enable. Valid options: exemplar-storage, expand-external-labels, memory-snapshot-on-shutdown, promql-per-step-stats, promql-experimental-functions, extra-scrape-metrics, auto-gomaxprocs, native-histograms, created-timestamp-zero-ingestion, concurrent-rule-eval, delayed-compaction, old-ui, otlp-deltatocumulative, promql-duration-expr, use-uncached-io. See https://prometheus.io/docs/prometheus/latest/feature_flags/ for more details.").
++	a.Flag("enable-feature", "Comma separated feature names to enable. Valid options: agent, auto-gomemlimit, exemplar-storage, expand-external-labels, memory-snapshot-on-shutdown, promql-per-step-stats, promql-experimental-functions, remote-write-receiver (DEPRECATED), extra-scrape-metrics, new-service-discovery-manager, auto-gomaxprocs, no-default-scrape-port, native-histograms, created-timestamp-zero-ingestion, concurrent-rule-eval. See https://prometheus.io/docs/prometheus/latest/feature_flags/ for more details.").
+ 		Default("").StringsVar(&cfg.featureList)
+ 
+ 	a.Flag("agent", "Run Prometheus in 'Agent mode'.").BoolVar(&agentMode)
+diff --git a/storage/remote/codec.go b/storage/remote/codec.go
+index 634244d..cee077c 100644
+--- a/storage/remote/codec.go
++++ b/storage/remote/codec.go
+@@ -14,7 +14,6 @@
+ package remote
+ 
+ import (
+-	"compress/gzip"
+ 	"errors"
+ 	"fmt"
+ 	"io"
+@@ -27,25 +26,19 @@ import (
+ 	"github.com/gogo/protobuf/proto"
+ 	"github.com/golang/snappy"
+ 	"github.com/prometheus/common/model"
+-	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+ 
+ 	"github.com/prometheus/prometheus/model/histogram"
+ 	"github.com/prometheus/prometheus/model/labels"
+ 	"github.com/prometheus/prometheus/prompb"
+-	writev2 "github.com/prometheus/prometheus/prompb/io/prometheus/write/v2"
++
+ 	"github.com/prometheus/prometheus/storage"
+ 	"github.com/prometheus/prometheus/tsdb/chunkenc"
+ 	"github.com/prometheus/prometheus/tsdb/chunks"
+ 	"github.com/prometheus/prometheus/util/annotations"
+ )
+ 
+-const (
+-	// decodeReadLimit is the maximum size of a read request body in bytes.
+-	decodeReadLimit = 32 * 1024 * 1024
+-
+-	pbContentType   = "application/x-protobuf"
+-	jsonContentType = "application/json"
+-)
++// decodeReadLimit is the maximum size of a read request body in bytes.
++const decodeReadLimit = 32 * 1024 * 1024
+ 
+ type HTTPError struct {
+ 	msg    string
+@@ -856,77 +849,3 @@ func DecodeWriteRequest(r io.Reader) (*prompb.WriteRequest, error) {
+ 	return &req, nil
+ }
+ 
+-// DecodeWriteV2Request from an io.Reader into a writev2.Request, handling
+-// snappy decompression.
+-// Used also by documentation/examples/remote_storage.
+-func DecodeWriteV2Request(r io.Reader) (*writev2.Request, error) {
+-	compressed, err := io.ReadAll(r)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	reqBuf, err := snappy.Decode(nil, compressed)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	var req writev2.Request
+-	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+-		return nil, err
+-	}
+-
+-	return &req, nil
+-}
+-
+-func DecodeOTLPWriteRequest(r *http.Request) (pmetricotlp.ExportRequest, error) {
+-	contentType := r.Header.Get("Content-Type")
+-	var decoderFunc func(buf []byte) (pmetricotlp.ExportRequest, error)
+-	switch contentType {
+-	case pbContentType:
+-		decoderFunc = func(buf []byte) (pmetricotlp.ExportRequest, error) {
+-			req := pmetricotlp.NewExportRequest()
+-			return req, req.UnmarshalProto(buf)
+-		}
+-
+-	case jsonContentType:
+-		decoderFunc = func(buf []byte) (pmetricotlp.ExportRequest, error) {
+-			req := pmetricotlp.NewExportRequest()
+-			return req, req.UnmarshalJSON(buf)
+-		}
+-
+-	default:
+-		return pmetricotlp.NewExportRequest(), fmt.Errorf("unsupported content type: %s, supported: [%s, %s]", contentType, jsonContentType, pbContentType)
+-	}
+-
+-	reader := r.Body
+-	// Handle compression.
+-	switch r.Header.Get("Content-Encoding") {
+-	case "gzip":
+-		gr, err := gzip.NewReader(reader)
+-		if err != nil {
+-			return pmetricotlp.NewExportRequest(), err
+-		}
+-		reader = gr
+-
+-	case "":
+-		// No compression.
+-
+-	default:
+-		return pmetricotlp.NewExportRequest(), fmt.Errorf("unsupported compression: %s. Only \"gzip\" or no compression supported", r.Header.Get("Content-Encoding"))
+-	}
+-
+-	body, err := io.ReadAll(reader)
+-	if err != nil {
+-		r.Body.Close()
+-		return pmetricotlp.NewExportRequest(), err
+-	}
+-	if err = r.Body.Close(); err != nil {
+-		return pmetricotlp.NewExportRequest(), err
+-	}
+-	otlpReq, err := decoderFunc(body)
+-	if err != nil {
+-		return pmetricotlp.NewExportRequest(), err
+-	}
+-
+-	return otlpReq, nil
+-}
+diff --git a/storage/remote/codec_test.go b/storage/remote/codec_test.go
+index b3e9580..25c0d03 100644
+--- a/storage/remote/codec_test.go
++++ b/storage/remote/codec_test.go
+@@ -23,7 +23,6 @@ import (
+ 
+ 	"github.com/gogo/protobuf/proto"
+ 	"github.com/prometheus/common/model"
+-	"github.com/prometheus/common/promslog"
+ 	"github.com/stretchr/testify/require"
+ 
+ 	"github.com/prometheus/prometheus/config"
+@@ -637,15 +636,6 @@ func TestDecodeWriteRequest(t *testing.T) {
+ 	require.Equal(t, writeRequestFixture, actual)
+ }
+ 
+-func TestDecodeWriteV2Request(t *testing.T) {
+-	buf, _, _, err := buildV2WriteRequest(promslog.NewNopLogger(), writeV2RequestFixture.Timeseries, writeV2RequestFixture.Symbols, nil, nil, nil, "snappy")
+-	require.NoError(t, err)
+-
+-	actual, err := DecodeWriteV2Request(bytes.NewReader(buf))
+-	require.NoError(t, err)
+-	require.Equal(t, writeV2RequestFixture, actual)
+-}
+-
+ func TestStreamResponse(t *testing.T) {
+ 	lbs1 := prompb.FromLabels(labels.FromStrings("instance", "localhost1", "job", "demo1"), nil)
+ 	lbs2 := prompb.FromLabels(labels.FromStrings("instance", "localhost2", "job", "demo2"), nil)
+diff --git a/storage/remote/write_handler.go b/storage/remote/write_handler.go
+index 786ed08..303d338 100644
+--- a/storage/remote/write_handler.go
++++ b/storage/remote/write_handler.go
+@@ -25,15 +25,9 @@ import (
+ 
+ 	"github.com/gogo/protobuf/proto"
+ 	"github.com/golang/snappy"
+-	deltatocumulative "github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatocumulativeprocessor"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/client_golang/prometheus/promauto"
+ 	"github.com/prometheus/common/model"
+-	"go.opentelemetry.io/collector/component"
+-	"go.opentelemetry.io/collector/consumer"
+-	"go.opentelemetry.io/collector/pdata/pmetric"
+-	"go.opentelemetry.io/collector/processor"
+-	"go.opentelemetry.io/otel/metric/noop"
+ 
+ 	"github.com/prometheus/prometheus/config"
+ 	"github.com/prometheus/prometheus/model/exemplar"
+@@ -43,7 +37,6 @@ import (
+ 	"github.com/prometheus/prometheus/prompb"
+ 	writev2 "github.com/prometheus/prometheus/prompb/io/prometheus/write/v2"
+ 	"github.com/prometheus/prometheus/storage"
+-	otlptranslator "github.com/prometheus/prometheus/storage/remote/otlptranslator/prometheusremotewrite"
+ 	"github.com/prometheus/prometheus/util/compression"
+ )
+ 
+@@ -541,165 +534,6 @@ func (h *writeHandler) handleHistogramZeroSample(app storage.Appender, ref stora
+ 	return ref, err
+ }
+ 
+-type OTLPOptions struct {
+-	// Convert delta samples to their cumulative equivalent by aggregating in-memory
+-	ConvertDelta bool
+-	// Store the raw delta samples as metrics with unknown type (we don't have a proper type for delta yet, therefore
+-	// marking the metric type as unknown for now).
+-	// We're in an early phase of implementing delta support (proposal: https://github.com/prometheus/proposals/pull/48/)
+-	NativeDelta bool
+-}
+-
+-// NewOTLPWriteHandler creates a http.Handler that accepts OTLP write requests and
+-// writes them to the provided appendable.
+-func NewOTLPWriteHandler(logger *slog.Logger, _ prometheus.Registerer, appendable storage.Appendable, configFunc func() config.Config, opts OTLPOptions) http.Handler {
+-	if opts.NativeDelta && opts.ConvertDelta {
+-		// This should be validated when iterating through feature flags, so not expected to fail here.
+-		panic("cannot enable native delta ingestion and delta2cumulative conversion at the same time")
+-	}
+-
+-	ex := &rwExporter{
+-		writeHandler: &writeHandler{
+-			logger:     logger,
+-			appendable: appendable,
+-		},
+-		config:                configFunc,
+-		allowDeltaTemporality: opts.NativeDelta,
+-	}
+-
+-	wh := &otlpWriteHandler{logger: logger, defaultConsumer: ex}
+-
+-	if opts.ConvertDelta {
+-		fac := deltatocumulative.NewFactory()
+-		set := processor.Settings{
+-			ID:                component.NewID(fac.Type()),
+-			TelemetrySettings: component.TelemetrySettings{MeterProvider: noop.NewMeterProvider()},
+-		}
+-		d2c, err := fac.CreateMetrics(context.Background(), set, fac.CreateDefaultConfig(), wh.defaultConsumer)
+-		if err != nil {
+-			// fac.CreateMetrics directly calls [deltatocumulativeprocessor.createMetricsProcessor],
+-			// which only errors if:
+-			//   - cfg.(type) != *Config
+-			//   - telemetry.New fails due to bad set.TelemetrySettings
+-			//
+-			// both cannot be the case, as we pass a valid *Config and valid TelemetrySettings.
+-			// as such, we assume this error to never occur.
+-			// if it is, our assumptions are broken in which case a panic seems acceptable.
+-			panic(fmt.Errorf("failed to create metrics processor: %w", err))
+-		}
+-		if err := d2c.Start(context.Background(), nil); err != nil {
+-			// deltatocumulative does not error on start. see above for panic reasoning
+-			panic(err)
+-		}
+-		wh.d2cConsumer = d2c
+-	}
+-
+-	return wh
+-}
+-
+-type rwExporter struct {
+-	*writeHandler
+-	config                func() config.Config
+-	allowDeltaTemporality bool
+-}
+-
+-func (rw *rwExporter) ConsumeMetrics(ctx context.Context, md pmetric.Metrics) error {
+-	otlpCfg := rw.config().OTLPConfig
+-
+-	converter := otlptranslator.NewPrometheusConverter()
+-	annots, err := converter.FromMetrics(ctx, md, otlptranslator.Settings{
+-		AddMetricSuffixes:                 otlpCfg.TranslationStrategy != config.NoTranslation,
+-		AllowUTF8:                         otlpCfg.TranslationStrategy != config.UnderscoreEscapingWithSuffixes,
+-		PromoteResourceAttributes:         otlptranslator.NewPromoteResourceAttributes(otlpCfg),
+-		KeepIdentifyingResourceAttributes: otlpCfg.KeepIdentifyingResourceAttributes,
+-		ConvertHistogramsToNHCB:           otlpCfg.ConvertHistogramsToNHCB,
+-		AllowDeltaTemporality:             rw.allowDeltaTemporality,
+-	})
+-	if err != nil {
+-		rw.logger.Warn("Error translating OTLP metrics to Prometheus write request", "err", err)
+-	}
+-	ws, _ := annots.AsStrings("", 0, 0)
+-	if len(ws) > 0 {
+-		rw.logger.Warn("Warnings translating OTLP metrics to Prometheus write request", "warnings", ws)
+-	}
+-
+-	err = rw.write(ctx, &prompb.WriteRequest{
+-		Timeseries: converter.TimeSeries(),
+-		Metadata:   converter.Metadata(),
+-	})
+-	return err
+-}
+-
+-func (rw *rwExporter) Capabilities() consumer.Capabilities {
+-	return consumer.Capabilities{MutatesData: false}
+-}
+-
+-type otlpWriteHandler struct {
+-	logger *slog.Logger
+-
+-	defaultConsumer consumer.Metrics // stores deltas as-is
+-	d2cConsumer     consumer.Metrics // converts deltas to cumulative
+-}
+-
+-func (h *otlpWriteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+-	req, err := DecodeOTLPWriteRequest(r)
+-	if err != nil {
+-		h.logger.Error("Error decoding OTLP write request", "err", err.Error())
+-		http.Error(w, err.Error(), http.StatusBadRequest)
+-		return
+-	}
+-
+-	md := req.Metrics()
+-	// If deltatocumulative conversion enabled AND delta samples exist, use slower conversion path.
+-	// While deltatocumulative can also accept cumulative metrics (and then just forwards them as-is), it currently
+-	// holds a sync.Mutex when entering ConsumeMetrics. This is slow and not necessary when ingesting cumulative metrics.
+-	if h.d2cConsumer != nil && hasDelta(md) {
+-		err = h.d2cConsumer.ConsumeMetrics(r.Context(), md)
+-	} else {
+-		// Otherwise use default consumer (alongside cumulative samples, this will accept delta samples and write as-is
+-		// if native-delta-support is enabled).
+-		err = h.defaultConsumer.ConsumeMetrics(r.Context(), md)
+-	}
+-
+-	switch {
+-	case err == nil:
+-	case errors.Is(err, storage.ErrOutOfOrderSample), errors.Is(err, storage.ErrOutOfBounds), errors.Is(err, storage.ErrDuplicateSampleForTimestamp):
+-		// Indicated an out of order sample is a bad request to prevent retries.
+-		http.Error(w, err.Error(), http.StatusBadRequest)
+-		return
+-	default:
+-		h.logger.Error("Error appending remote write", "err", err.Error())
+-		http.Error(w, err.Error(), http.StatusInternalServerError)
+-		return
+-	}
+-
+-	w.WriteHeader(http.StatusOK)
+-}
+-
+-func hasDelta(md pmetric.Metrics) bool {
+-	for i := range md.ResourceMetrics().Len() {
+-		sms := md.ResourceMetrics().At(i).ScopeMetrics()
+-		for i := range sms.Len() {
+-			ms := sms.At(i).Metrics()
+-			for i := range ms.Len() {
+-				temporality := pmetric.AggregationTemporalityUnspecified
+-				m := ms.At(i)
+-				switch ms.At(i).Type() {
+-				case pmetric.MetricTypeSum:
+-					temporality = m.Sum().AggregationTemporality()
+-				case pmetric.MetricTypeExponentialHistogram:
+-					temporality = m.ExponentialHistogram().AggregationTemporality()
+-				case pmetric.MetricTypeHistogram:
+-					temporality = m.Histogram().AggregationTemporality()
+-				}
+-				if temporality == pmetric.AggregationTemporalityDelta {
+-					return true
+-				}
+-			}
+-		}
+-	}
+-	return false
+-}
+ 
+ type timeLimitAppender struct {
+ 	storage.Appender
+diff --git a/storage/remote/write_test.go b/storage/remote/write_test.go
+index 45f2b07..f43794c 100644
+--- a/storage/remote/write_test.go
++++ b/storage/remote/write_test.go
+@@ -14,37 +14,19 @@
+ package remote
+ 
+ import (
+-	"bytes"
+-	"context"
+ 	"errors"
+-	"fmt"
+-	"log/slog"
+-	"math/rand/v2"
+-	"net/http"
+-	"net/http/httptest"
+ 	"net/url"
+-	"os"
+-	"reflect"
+-	"runtime"
+-	"strconv"
+-	"sync"
+ 	"testing"
+ 	"time"
+ 
+-	"github.com/google/go-cmp/cmp"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	common_config "github.com/prometheus/common/config"
+ 	"github.com/prometheus/common/model"
+ 	"github.com/stretchr/testify/require"
+-	"go.opentelemetry.io/collector/pdata/pcommon"
+-	"go.opentelemetry.io/collector/pdata/pmetric"
+-	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+ 
+ 	"github.com/prometheus/prometheus/config"
+-	"github.com/prometheus/prometheus/model/histogram"
+ 	"github.com/prometheus/prometheus/model/labels"
+ 	"github.com/prometheus/prometheus/model/relabel"
+-	"github.com/prometheus/prometheus/storage"
+ )
+ 
+ func testRemoteWriteConfig() *config.RemoteWriteConfig {
+@@ -379,579 +361,3 @@ func TestWriteStorageApplyConfig_PartialUpdate(t *testing.T) {
+ 
+ 	require.NoError(t, s.Close())
+ }
+-
+-func TestOTLPWriteHandler(t *testing.T) {
+-	timestamp := time.Now()
+-	exportRequest := generateOTLPWriteRequest(timestamp)
+-	for _, testCase := range []struct {
+-		name            string
+-		otlpCfg         config.OTLPConfig
+-		expectedSamples []mockSample
+-	}{
+-		{
+-			name: "NoTranslation",
+-			otlpCfg: config.OTLPConfig{
+-				TranslationStrategy: config.NoTranslation,
+-			},
+-			expectedSamples: []mockSample{
+-				{
+-					l: labels.New(labels.Label{Name: "__name__", Value: "test.counter"},
+-						labels.Label{Name: "foo.bar", Value: "baz"},
+-						labels.Label{Name: "instance", Value: "test-instance"},
+-						labels.Label{Name: "job", Value: "test-service"}),
+-					t: timestamp.UnixMilli(),
+-					v: 10.0,
+-				},
+-				{
+-					l: labels.New(
+-						labels.Label{Name: "__name__", Value: "target_info"},
+-						labels.Label{Name: "host.name", Value: "test-host"},
+-						labels.Label{Name: "instance", Value: "test-instance"},
+-						labels.Label{Name: "job", Value: "test-service"},
+-					),
+-					t: timestamp.UnixMilli(),
+-					v: 1,
+-				},
+-			},
+-		},
+-		{
+-			name: "UnderscoreEscapingWithSuffixes",
+-			otlpCfg: config.OTLPConfig{
+-				TranslationStrategy: config.UnderscoreEscapingWithSuffixes,
+-			},
+-			expectedSamples: []mockSample{
+-				{
+-					l: labels.New(labels.Label{Name: "__name__", Value: "test_counter_total"},
+-						labels.Label{Name: "foo_bar", Value: "baz"},
+-						labels.Label{Name: "instance", Value: "test-instance"},
+-						labels.Label{Name: "job", Value: "test-service"}),
+-					t: timestamp.UnixMilli(),
+-					v: 10.0,
+-				},
+-				{
+-					l: labels.New(
+-						labels.Label{Name: "__name__", Value: "target_info"},
+-						labels.Label{Name: "host_name", Value: "test-host"},
+-						labels.Label{Name: "instance", Value: "test-instance"},
+-						labels.Label{Name: "job", Value: "test-service"},
+-					),
+-					t: timestamp.UnixMilli(),
+-					v: 1,
+-				},
+-			},
+-		},
+-
+-		{
+-			name: "NoUTF8EscapingWithSuffixes",
+-			otlpCfg: config.OTLPConfig{
+-				TranslationStrategy: config.NoUTF8EscapingWithSuffixes,
+-			},
+-			expectedSamples: []mockSample{
+-				{
+-					l: labels.New(labels.Label{Name: "__name__", Value: "test.counter_total"},
+-						labels.Label{Name: "foo.bar", Value: "baz"},
+-						labels.Label{Name: "instance", Value: "test-instance"},
+-						labels.Label{Name: "job", Value: "test-service"}),
+-					t: timestamp.UnixMilli(),
+-					v: 10.0,
+-				},
+-				{
+-					l: labels.New(
+-						labels.Label{Name: "__name__", Value: "target_info"},
+-						labels.Label{Name: "host.name", Value: "test-host"},
+-						labels.Label{Name: "instance", Value: "test-instance"},
+-						labels.Label{Name: "job", Value: "test-service"},
+-					),
+-					t: timestamp.UnixMilli(),
+-					v: 1,
+-				},
+-			},
+-		},
+-	} {
+-		t.Run(testCase.name, func(t *testing.T) {
+-			appendable := handleOTLP(t, exportRequest, testCase.otlpCfg)
+-			for _, sample := range testCase.expectedSamples {
+-				requireContainsSample(t, appendable.samples, sample)
+-			}
+-			require.Len(t, appendable.samples, 12)   // 1 (counter) + 1 (gauge) + 1 (target_info) + 7 (hist_bucket) + 2 (hist_sum, hist_count)
+-			require.Len(t, appendable.histograms, 1) // 1 (exponential histogram)
+-			require.Len(t, appendable.exemplars, 1)  // 1 (exemplar)
+-		})
+-	}
+-}
+-
+-func requireContainsSample(t *testing.T, actual []mockSample, expected mockSample) {
+-	t.Helper()
+-
+-	for _, got := range actual {
+-		if labels.Equal(expected.l, got.l) && expected.t == got.t && expected.v == got.v {
+-			return
+-		}
+-	}
+-	require.Fail(t, fmt.Sprintf("Sample not found: \n"+
+-		"expected: %v\n"+
+-		"actual  : %v", expected, actual))
+-}
+-
+-func handleOTLP(t *testing.T, exportRequest pmetricotlp.ExportRequest, otlpCfg config.OTLPConfig) *mockAppendable {
+-	buf, err := exportRequest.MarshalProto()
+-	require.NoError(t, err)
+-
+-	req, err := http.NewRequest("", "", bytes.NewReader(buf))
+-	require.NoError(t, err)
+-	req.Header.Set("Content-Type", "application/x-protobuf")
+-
+-	appendable := &mockAppendable{}
+-	handler := NewOTLPWriteHandler(nil, nil, appendable, func() config.Config {
+-		return config.Config{
+-			OTLPConfig: otlpCfg,
+-		}
+-	}, OTLPOptions{})
+-	recorder := httptest.NewRecorder()
+-	handler.ServeHTTP(recorder, req)
+-
+-	resp := recorder.Result()
+-	require.Equal(t, http.StatusOK, resp.StatusCode)
+-
+-	return appendable
+-}
+-
+-func generateOTLPWriteRequest(timestamp time.Time) pmetricotlp.ExportRequest {
+-	d := pmetric.NewMetrics()
+-
+-	// Generate One Counter, One Gauge, One Histogram, One Exponential-Histogram
+-	// with resource attributes: service.name="test-service", service.instance.id="test-instance", host.name="test-host"
+-	// with metric attribute: foo.bar="baz"
+-
+-	resourceMetric := d.ResourceMetrics().AppendEmpty()
+-	resourceMetric.Resource().Attributes().PutStr("service.name", "test-service")
+-	resourceMetric.Resource().Attributes().PutStr("service.instance.id", "test-instance")
+-	resourceMetric.Resource().Attributes().PutStr("host.name", "test-host")
+-
+-	scopeMetric := resourceMetric.ScopeMetrics().AppendEmpty()
+-
+-	// Generate One Counter
+-	counterMetric := scopeMetric.Metrics().AppendEmpty()
+-	counterMetric.SetName("test.counter")
+-	counterMetric.SetDescription("test-counter-description")
+-	counterMetric.SetEmptySum()
+-	counterMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+-	counterMetric.Sum().SetIsMonotonic(true)
+-
+-	counterDataPoint := counterMetric.Sum().DataPoints().AppendEmpty()
+-	counterDataPoint.SetTimestamp(pcommon.NewTimestampFromTime(timestamp))
+-	counterDataPoint.SetDoubleValue(10.0)
+-	counterDataPoint.Attributes().PutStr("foo.bar", "baz")
+-
+-	counterExemplar := counterDataPoint.Exemplars().AppendEmpty()
+-
+-	counterExemplar.SetTimestamp(pcommon.NewTimestampFromTime(timestamp))
+-	counterExemplar.SetDoubleValue(10.0)
+-	counterExemplar.SetSpanID(pcommon.SpanID{0, 1, 2, 3, 4, 5, 6, 7})
+-	counterExemplar.SetTraceID(pcommon.TraceID{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
+-
+-	// Generate One Gauge
+-	gaugeMetric := scopeMetric.Metrics().AppendEmpty()
+-	gaugeMetric.SetName("test.gauge")
+-	gaugeMetric.SetDescription("test-gauge-description")
+-	gaugeMetric.SetEmptyGauge()
+-
+-	gaugeDataPoint := gaugeMetric.Gauge().DataPoints().AppendEmpty()
+-	gaugeDataPoint.SetTimestamp(pcommon.NewTimestampFromTime(timestamp))
+-	gaugeDataPoint.SetDoubleValue(10.0)
+-	gaugeDataPoint.Attributes().PutStr("foo.bar", "baz")
+-
+-	// Generate One Histogram
+-	histogramMetric := scopeMetric.Metrics().AppendEmpty()
+-	histogramMetric.SetName("test.histogram")
+-	histogramMetric.SetDescription("test-histogram-description")
+-	histogramMetric.SetEmptyHistogram()
+-	histogramMetric.Histogram().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+-
+-	histogramDataPoint := histogramMetric.Histogram().DataPoints().AppendEmpty()
+-	histogramDataPoint.SetTimestamp(pcommon.NewTimestampFromTime(timestamp))
+-	histogramDataPoint.ExplicitBounds().FromRaw([]float64{0.0, 1.0, 2.0, 3.0, 4.0, 5.0})
+-	histogramDataPoint.BucketCounts().FromRaw([]uint64{2, 2, 2, 2, 2, 2})
+-	histogramDataPoint.SetCount(10)
+-	histogramDataPoint.SetSum(30.0)
+-	histogramDataPoint.Attributes().PutStr("foo.bar", "baz")
+-
+-	// Generate One Exponential-Histogram
+-	exponentialHistogramMetric := scopeMetric.Metrics().AppendEmpty()
+-	exponentialHistogramMetric.SetName("test.exponential.histogram")
+-	exponentialHistogramMetric.SetDescription("test-exponential-histogram-description")
+-	exponentialHistogramMetric.SetEmptyExponentialHistogram()
+-	exponentialHistogramMetric.ExponentialHistogram().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+-
+-	exponentialHistogramDataPoint := exponentialHistogramMetric.ExponentialHistogram().DataPoints().AppendEmpty()
+-	exponentialHistogramDataPoint.SetTimestamp(pcommon.NewTimestampFromTime(timestamp))
+-	exponentialHistogramDataPoint.SetScale(2.0)
+-	exponentialHistogramDataPoint.Positive().BucketCounts().FromRaw([]uint64{2, 2, 2, 2, 2})
+-	exponentialHistogramDataPoint.SetZeroCount(2)
+-	exponentialHistogramDataPoint.SetCount(10)
+-	exponentialHistogramDataPoint.SetSum(30.0)
+-	exponentialHistogramDataPoint.Attributes().PutStr("foo.bar", "baz")
+-
+-	return pmetricotlp.NewExportRequestFromMetrics(d)
+-}
+-
+-func TestOTLPDelta(t *testing.T) {
+-	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
+-	appendable := &mockAppendable{}
+-	cfg := func() config.Config {
+-		return config.Config{OTLPConfig: config.DefaultOTLPConfig}
+-	}
+-	handler := NewOTLPWriteHandler(log, nil, appendable, cfg, OTLPOptions{ConvertDelta: true})
+-
+-	md := pmetric.NewMetrics()
+-	ms := md.ResourceMetrics().AppendEmpty().ScopeMetrics().AppendEmpty().Metrics()
+-
+-	m := ms.AppendEmpty()
+-	m.SetName("some.delta.total")
+-
+-	sum := m.SetEmptySum()
+-	sum.SetAggregationTemporality(pmetric.AggregationTemporalityDelta)
+-
+-	ts := time.Date(2000, 1, 2, 3, 4, 0, 0, time.UTC)
+-	for i := range 3 {
+-		dp := sum.DataPoints().AppendEmpty()
+-		dp.SetIntValue(int64(i))
+-		dp.SetTimestamp(pcommon.NewTimestampFromTime(ts.Add(time.Duration(i) * time.Second)))
+-	}
+-
+-	proto, err := pmetricotlp.NewExportRequestFromMetrics(md).MarshalProto()
+-	require.NoError(t, err)
+-
+-	req, err := http.NewRequest("", "", bytes.NewReader(proto))
+-	require.NoError(t, err)
+-	req.Header.Set("Content-Type", "application/x-protobuf")
+-
+-	rec := httptest.NewRecorder()
+-	handler.ServeHTTP(rec, req)
+-	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
+-
+-	ls := labels.FromStrings("__name__", "some_delta_total")
+-	milli := func(sec int) int64 {
+-		return time.Date(2000, 1, 2, 3, 4, sec, 0, time.UTC).UnixMilli()
+-	}
+-
+-	want := []mockSample{
+-		{t: milli(0), l: ls, v: 0}, // +0
+-		{t: milli(1), l: ls, v: 1}, // +1
+-		{t: milli(2), l: ls, v: 3}, // +2
+-	}
+-	if diff := cmp.Diff(want, appendable.samples, cmp.Exporter(func(_ reflect.Type) bool { return true })); diff != "" {
+-		t.Fatal(diff)
+-	}
+-}
+-
+-func BenchmarkOTLP(b *testing.B) {
+-	start := time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)
+-
+-	type Type struct {
+-		name string
+-		data func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric
+-	}
+-	types := []Type{{
+-		name: "sum",
+-		data: func() func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric {
+-			cumul := make(map[int]float64)
+-			return func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric {
+-				m := pmetric.NewMetric()
+-				sum := m.SetEmptySum()
+-				sum.SetAggregationTemporality(mode)
+-				dps := sum.DataPoints()
+-				for id := range dpc {
+-					dp := dps.AppendEmpty()
+-					dp.SetStartTimestamp(pcommon.NewTimestampFromTime(start))
+-					dp.SetTimestamp(pcommon.NewTimestampFromTime(start.Add(time.Duration(epoch) * time.Minute)))
+-					dp.Attributes().PutStr("id", strconv.Itoa(id))
+-					v := float64(rand.IntN(100)) / 10
+-					switch mode {
+-					case pmetric.AggregationTemporalityDelta:
+-						dp.SetDoubleValue(v)
+-					case pmetric.AggregationTemporalityCumulative:
+-						cumul[id] += v
+-						dp.SetDoubleValue(cumul[id])
+-					}
+-				}
+-				return []pmetric.Metric{m}
+-			}
+-		}(),
+-	}, {
+-		name: "histogram",
+-		data: func() func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric {
+-			bounds := [4]float64{1, 10, 100, 1000}
+-			type state struct {
+-				counts [4]uint64
+-				count  uint64
+-				sum    float64
+-			}
+-			var cumul []state
+-			return func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric {
+-				if cumul == nil {
+-					cumul = make([]state, dpc)
+-				}
+-				m := pmetric.NewMetric()
+-				hist := m.SetEmptyHistogram()
+-				hist.SetAggregationTemporality(mode)
+-				dps := hist.DataPoints()
+-				for id := range dpc {
+-					dp := dps.AppendEmpty()
+-					dp.SetStartTimestamp(pcommon.NewTimestampFromTime(start))
+-					dp.SetTimestamp(pcommon.NewTimestampFromTime(start.Add(time.Duration(epoch) * time.Minute)))
+-					dp.Attributes().PutStr("id", strconv.Itoa(id))
+-					dp.ExplicitBounds().FromRaw(bounds[:])
+-
+-					var obs *state
+-					switch mode {
+-					case pmetric.AggregationTemporalityDelta:
+-						obs = new(state)
+-					case pmetric.AggregationTemporalityCumulative:
+-						obs = &cumul[id]
+-					}
+-
+-					for i := range obs.counts {
+-						v := uint64(rand.IntN(10))
+-						obs.counts[i] += v
+-						obs.count++
+-						obs.sum += float64(v)
+-					}
+-
+-					dp.SetCount(obs.count)
+-					dp.SetSum(obs.sum)
+-					dp.BucketCounts().FromRaw(obs.counts[:])
+-				}
+-				return []pmetric.Metric{m}
+-			}
+-		}(),
+-	}, {
+-		name: "exponential",
+-		data: func() func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric {
+-			type state struct {
+-				counts [4]uint64
+-				count  uint64
+-				sum    float64
+-			}
+-			var cumul []state
+-			return func(mode pmetric.AggregationTemporality, dpc, epoch int) []pmetric.Metric {
+-				if cumul == nil {
+-					cumul = make([]state, dpc)
+-				}
+-				m := pmetric.NewMetric()
+-				ex := m.SetEmptyExponentialHistogram()
+-				ex.SetAggregationTemporality(mode)
+-				dps := ex.DataPoints()
+-				for id := range dpc {
+-					dp := dps.AppendEmpty()
+-					dp.SetStartTimestamp(pcommon.NewTimestampFromTime(start))
+-					dp.SetTimestamp(pcommon.NewTimestampFromTime(start.Add(time.Duration(epoch) * time.Minute)))
+-					dp.Attributes().PutStr("id", strconv.Itoa(id))
+-					dp.SetScale(2)
+-
+-					var obs *state
+-					switch mode {
+-					case pmetric.AggregationTemporalityDelta:
+-						obs = new(state)
+-					case pmetric.AggregationTemporalityCumulative:
+-						obs = &cumul[id]
+-					}
+-
+-					for i := range obs.counts {
+-						v := uint64(rand.IntN(10))
+-						obs.counts[i] += v
+-						obs.count++
+-						obs.sum += float64(v)
+-					}
+-
+-					dp.Positive().BucketCounts().FromRaw(obs.counts[:])
+-					dp.SetCount(obs.count)
+-					dp.SetSum(obs.sum)
+-				}
+-
+-				return []pmetric.Metric{m}
+-			}
+-		}(),
+-	}}
+-
+-	modes := []struct {
+-		name string
+-		data func(func(pmetric.AggregationTemporality, int, int) []pmetric.Metric, int) []pmetric.Metric
+-	}{{
+-		name: "cumulative",
+-		data: func(data func(pmetric.AggregationTemporality, int, int) []pmetric.Metric, epoch int) []pmetric.Metric {
+-			return data(pmetric.AggregationTemporalityCumulative, 10, epoch)
+-		},
+-	}, {
+-		name: "delta",
+-		data: func(data func(pmetric.AggregationTemporality, int, int) []pmetric.Metric, epoch int) []pmetric.Metric {
+-			return data(pmetric.AggregationTemporalityDelta, 10, epoch)
+-		},
+-	}, {
+-		name: "mixed",
+-		data: func(data func(pmetric.AggregationTemporality, int, int) []pmetric.Metric, epoch int) []pmetric.Metric {
+-			cumul := data(pmetric.AggregationTemporalityCumulative, 5, epoch)
+-			delta := data(pmetric.AggregationTemporalityDelta, 5, epoch)
+-			out := append(cumul, delta...)
+-			rand.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+-			return out
+-		},
+-	}}
+-
+-	configs := []struct {
+-		name string
+-		opts OTLPOptions
+-	}{
+-		{name: "default"},
+-		{name: "convert", opts: OTLPOptions{ConvertDelta: true}},
+-	}
+-
+-	Workers := runtime.GOMAXPROCS(0)
+-	for _, cs := range types {
+-		for _, mode := range modes {
+-			for _, cfg := range configs {
+-				b.Run(fmt.Sprintf("type=%s/temporality=%s/cfg=%s", cs.name, mode.name, cfg.name), func(b *testing.B) {
+-					if !cfg.opts.ConvertDelta && (mode.name == "delta" || mode.name == "mixed") {
+-						b.Skip("not possible")
+-					}
+-
+-					var total int
+-
+-					// reqs is a [b.N]*http.Request, divided across the workers.
+-					// deltatocumulative requires timestamps to be strictly in
+-					// order on a per-series basis. to ensure this, each reqs[k]
+-					// contains samples of differently named series, sorted
+-					// strictly in time order
+-					reqs := make([][]*http.Request, Workers)
+-					for n := range b.N {
+-						k := n % Workers
+-
+-						md := pmetric.NewMetrics()
+-						ms := md.ResourceMetrics().AppendEmpty().
+-							ScopeMetrics().AppendEmpty().
+-							Metrics()
+-
+-						for i, m := range mode.data(cs.data, n) {
+-							m.SetName(fmt.Sprintf("benchmark_%d_%d", k, i))
+-							m.MoveTo(ms.AppendEmpty())
+-						}
+-
+-						total += sampleCount(md)
+-
+-						ex := pmetricotlp.NewExportRequestFromMetrics(md)
+-						data, err := ex.MarshalProto()
+-						require.NoError(b, err)
+-
+-						req, err := http.NewRequest("", "", bytes.NewReader(data))
+-						require.NoError(b, err)
+-						req.Header.Set("Content-Type", "application/x-protobuf")
+-
+-						reqs[k] = append(reqs[k], req)
+-					}
+-
+-					log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
+-					mock := new(mockAppendable)
+-					appendable := syncAppendable{Appendable: mock, lock: new(sync.Mutex)}
+-					cfgfn := func() config.Config {
+-						return config.Config{OTLPConfig: config.DefaultOTLPConfig}
+-					}
+-					handler := NewOTLPWriteHandler(log, nil, appendable, cfgfn, cfg.opts)
+-
+-					fail := make(chan struct{})
+-					done := make(chan struct{})
+-
+-					b.ResetTimer()
+-					b.ReportAllocs()
+-
+-					// we use multiple workers to mimic a real-world scenario
+-					// where multiple OTel collectors are sending their
+-					// time-series in parallel.
+-					// this is necessary to exercise potential lock-contention
+-					// in this benchmark
+-					for k := range Workers {
+-						go func() {
+-							rec := httptest.NewRecorder()
+-							for _, req := range reqs[k] {
+-								handler.ServeHTTP(rec, req)
+-								if rec.Result().StatusCode != http.StatusOK {
+-									fail <- struct{}{}
+-									return
+-								}
+-							}
+-							done <- struct{}{}
+-						}()
+-					}
+-
+-					for range Workers {
+-						select {
+-						case <-fail:
+-							b.FailNow()
+-						case <-done:
+-						}
+-					}
+-
+-					require.Equal(b, total, len(mock.samples)+len(mock.histograms))
+-				})
+-			}
+-		}
+-	}
+-}
+-
+-func sampleCount(md pmetric.Metrics) int {
+-	var total int
+-	rms := md.ResourceMetrics()
+-	for i := range rms.Len() {
+-		sms := rms.At(i).ScopeMetrics()
+-		for i := range sms.Len() {
+-			ms := sms.At(i).Metrics()
+-			for i := range ms.Len() {
+-				m := ms.At(i)
+-				switch m.Type() {
+-				case pmetric.MetricTypeSum:
+-					total += m.Sum().DataPoints().Len()
+-				case pmetric.MetricTypeGauge:
+-					total += m.Gauge().DataPoints().Len()
+-				case pmetric.MetricTypeHistogram:
+-					dps := m.Histogram().DataPoints()
+-					for i := range dps.Len() {
+-						total += dps.At(i).BucketCounts().Len()
+-						total++ // le=+Inf series
+-						total++ // _sum series
+-						total++ // _count series
+-					}
+-				case pmetric.MetricTypeExponentialHistogram:
+-					total += m.ExponentialHistogram().DataPoints().Len()
+-				case pmetric.MetricTypeSummary:
+-					total += m.Summary().DataPoints().Len()
+-				}
+-			}
+-		}
+-	}
+-	return total
+-}
+-
+-type syncAppendable struct {
+-	lock sync.Locker
+-	storage.Appendable
+-}
+-
+-type syncAppender struct {
+-	lock sync.Locker
+-	storage.Appender
+-}
+-
+-func (s syncAppendable) Appender(ctx context.Context) storage.Appender {
+-	return syncAppender{Appender: s.Appendable.Appender(ctx), lock: s.lock}
+-}
+-
+-func (s syncAppender) Append(ref storage.SeriesRef, l labels.Labels, t int64, v float64) (storage.SeriesRef, error) {
+-	s.lock.Lock()
+-	defer s.lock.Unlock()
+-	return s.Appender.Append(ref, l, t, v)
+-}
+-
+-func (s syncAppender) AppendHistogram(ref storage.SeriesRef, l labels.Labels, t int64, h *histogram.Histogram, f *histogram.FloatHistogram) (storage.SeriesRef, error) {
+-	s.lock.Lock()
+-	defer s.lock.Unlock()
+-	return s.Appender.AppendHistogram(ref, l, t, h, f)
+-}
+diff --git a/web/api/v1/api.go b/web/api/v1/api.go
+index c924c90..f6e9546 100644
+--- a/web/api/v1/api.go
++++ b/web/api/v1/api.go
+@@ -225,7 +225,6 @@ type API struct {
+ 
+ 	remoteWriteHandler http.Handler
+ 	remoteReadHandler  http.Handler
+-	otlpWriteHandler   http.Handler
+ 
+ 	codecs []Codec
+ }
+@@ -262,7 +261,6 @@ func NewAPI(
+ 	statsRenderer StatsRenderer,
+ 	rwEnabled bool,
+ 	acceptRemoteWriteProtoMsgs []config.RemoteWriteProtoMsg,
+-	otlpEnabled, otlpDeltaToCumulative, otlpNativeDeltaIngestion bool,
+ 	ctZeroIngestionEnabled bool,
+ ) *API {
+ 	a := &API{
+@@ -302,16 +300,13 @@ func NewAPI(
+ 		a.statsRenderer = statsRenderer
+ 	}
+ 
+-	if ap == nil && (rwEnabled || otlpEnabled) {
+-		panic("remote write or otlp write enabled, but no appender passed in.")
++	if ap == nil && rwEnabled {
++		panic("remote write enabled, but no appender passed in.")
+ 	}
+ 
+ 	if rwEnabled {
+ 		a.remoteWriteHandler = remote.NewWriteHandler(logger, registerer, ap, acceptRemoteWriteProtoMsgs, ctZeroIngestionEnabled)
+ 	}
+-	if otlpEnabled {
+-		a.otlpWriteHandler = remote.NewOTLPWriteHandler(logger, registerer, ap, configFunc, remote.OTLPOptions{ConvertDelta: otlpDeltaToCumulative, NativeDelta: otlpNativeDeltaIngestion})
+-	}
+ 
+ 	return a
+ }
+@@ -409,7 +404,6 @@ func (api *API) Register(r *route.Router) {
+ 	r.Get("/notifications/live", api.notificationsSSE)
+ 	r.Post("/read", api.ready(api.remoteRead))
+ 	r.Post("/write", api.ready(api.remoteWrite))
+-	r.Post("/otlp/v1/metrics", api.ready(api.otlpWrite))
+ 
+ 	r.Get("/alerts", wrapAgent(api.alerts))
+ 	r.Get("/rules", wrapAgent(api.rules))
+@@ -1868,13 +1862,7 @@ func (api *API) remoteWrite(w http.ResponseWriter, r *http.Request) {
+ 	}
+ }
+ 
+-func (api *API) otlpWrite(w http.ResponseWriter, r *http.Request) {
+-	if api.otlpWriteHandler != nil {
+-		api.otlpWriteHandler.ServeHTTP(w, r)
+-	} else {
+-		http.Error(w, "otlp write receiver needs to be enabled with --web.enable-otlp-receiver", http.StatusNotFound)
+-	}
+-}
++
+ 
+ func (api *API) deleteSeries(r *http.Request) apiFuncResult {
+ 	if !api.enableAdmin {
+diff --git a/web/api/v1/errors_test.go b/web/api/v1/errors_test.go
+index bb70792..8fc738f 100644
+--- a/web/api/v1/errors_test.go
++++ b/web/api/v1/errors_test.go
+@@ -140,10 +140,7 @@ func createPrometheusAPI(t *testing.T, q storage.SampleAndChunkQueryable) *route
+ 		nil,
+ 		nil,
+ 		false,
+-		config.RemoteWriteProtoMsgs{config.RemoteWriteProtoMsgV1, config.RemoteWriteProtoMsgV2},
+-		false,
+-		false,
+-		false,
++		nil,
+ 		false,
+ 	)
+ 
+diff --git a/web/web.go b/web/web.go
+index 6178340..4b44953 100644
+--- a/web/web.go
++++ b/web/web.go
+@@ -288,9 +288,6 @@ type Options struct {
+ 	RemoteReadConcurrencyLimit int
+ 	RemoteReadBytesInFrame     int
+ 	EnableRemoteWriteReceiver  bool
+-	EnableOTLPWriteReceiver    bool
+-	ConvertOTLPDelta           bool
+-	NativeOTLPDeltaIngestion   bool
+ 	IsAgent                    bool
+ 	CTZeroIngestionEnabled     bool
+ 	AppName                    string
+@@ -352,7 +349,7 @@ func New(logger *slog.Logger, o *Options) *Handler {
+ 	FactoryRr := func(_ context.Context) api_v1.RulesRetriever { return h.ruleManager }
+ 
+ 	var app storage.Appendable
+-	if o.EnableRemoteWriteReceiver || o.EnableOTLPWriteReceiver {
++	if o.EnableRemoteWriteReceiver {
+ 		app = h.storage
+ 	}
+ 
+@@ -388,9 +385,6 @@ func New(logger *slog.Logger, o *Options) *Handler {
+ 		nil,
+ 		o.EnableRemoteWriteReceiver,
+ 		o.AcceptRemoteWriteProtoMsgs,
+-		o.EnableOTLPWriteReceiver,
+-		o.ConvertOTLPDelta,
+-		o.NativeOTLPDeltaIngestion,
+ 		o.CTZeroIngestionEnabled,
+ 	)
+ 

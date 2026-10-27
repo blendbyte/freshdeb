@@ -1,0 +1,246 @@
+From: Guillem Jover <gjover@sipwise.com>
+Date: Fri, 14 Jul 2023 19:05:45 +0200
+Subject: Disable xDS service discovery
+
+Forwarded: not-needed
+Last-Update: 2025-02-09
+
+This requires modules not present in Debian.
+---
+ config/config_test.go              | 35 -----------------------------------
+ config/testdata/conf.good.yml      |  6 ------
+ config/testdata/roundtrip.good.yml |  4 ----
+ discovery/install/install.go       |  1 -
+ discovery/xds/client.go            |  3 +++
+ discovery/xds/client_test.go       |  3 +++
+ discovery/xds/kuma.go              |  3 +++
+ discovery/xds/kuma_mads.pb.go      |  3 +++
+ discovery/xds/kuma_test.go         |  3 +++
+ discovery/xds/metrics.go           |  3 +++
+ discovery/xds/xds.go               |  3 +++
+ discovery/xds/xds_test.go          |  3 +++
+ plugins/plugins.go                 |  3 +--
+ 13 files changed, 25 insertions(+), 48 deletions(-)
+
+diff --git a/config/config_test.go b/config/config_test.go
+index 1e3a04f..5e7a9a1 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -55,7 +55,6 @@ import (
+ 	"github.com/prometheus/prometheus/discovery/triton"
+ 	"github.com/prometheus/prometheus/discovery/uyuni"
+ 	"github.com/prometheus/prometheus/discovery/vultr"
+-	"github.com/prometheus/prometheus/discovery/xds"
+ 	"github.com/prometheus/prometheus/discovery/zookeeper"
+ 	"github.com/prometheus/prometheus/model/labels"
+ 	"github.com/prometheus/prometheus/model/relabel"
+@@ -613,40 +612,6 @@ var expectedConf = &Config{
+ 				},
+ 			},
+ 		},
+-		{
+-			JobName: "service-kuma",
+-
+-			HonorTimestamps:                true,
+-			ScrapeInterval:                 model.Duration(15 * time.Second),
+-			ScrapeTimeout:                  DefaultGlobalConfig.ScrapeTimeout,
+-			EnableCompression:              true,
+-			BodySizeLimit:                  globBodySizeLimit,
+-			SampleLimit:                    globSampleLimit,
+-			TargetLimit:                    globTargetLimit,
+-			LabelLimit:                     globLabelLimit,
+-			LabelNameLengthLimit:           globLabelNameLengthLimit,
+-			LabelValueLengthLimit:          globLabelValueLengthLimit,
+-			ScrapeProtocols:                DefaultGlobalConfig.ScrapeProtocols,
+-			ScrapeFailureLogFile:           globScrapeFailureLogFile,
+-			MetricNameValidationScheme:     DefaultGlobalConfig.MetricNameValidationScheme,
+-			MetricNameEscapingScheme:       DefaultGlobalConfig.MetricNameEscapingScheme,
+-			AlwaysScrapeClassicHistograms:  boolPtr(false),
+-			ConvertClassicHistogramsToNHCB: boolPtr(false),
+-
+-			MetricsPath:      DefaultScrapeConfig.MetricsPath,
+-			Scheme:           DefaultScrapeConfig.Scheme,
+-			HTTPClientConfig: config.DefaultHTTPClientConfig,
+-
+-			ServiceDiscoveryConfigs: discovery.Configs{
+-				&xds.KumaSDConfig{
+-					Server:           "http://kuma-control-plane.kuma-system.svc:5676",
+-					ClientID:         "main-prometheus",
+-					HTTPClientConfig: config.DefaultHTTPClientConfig,
+-					RefreshInterval:  model.Duration(15 * time.Second),
+-					FetchTimeout:     model.Duration(2 * time.Minute),
+-				},
+-			},
+-		},
+ 		{
+ 			JobName: "service-marathon",
+ 
+diff --git a/config/testdata/conf.good.yml b/config/testdata/conf.good.yml
+index cbe8040..ed45df1 100644
+--- a/config/testdata/conf.good.yml
++++ b/config/testdata/conf.good.yml
+@@ -235,12 +235,6 @@ scrape_configs:
+       username: "myusername"
+       password_file: valid_password_file
+ 
+-  - job_name: service-kuma
+-
+-    kuma_sd_configs:
+-      - server: http://kuma-control-plane.kuma-system.svc:5676
+-        client_id: main-prometheus
+-
+   - job_name: service-marathon
+     marathon_sd_configs:
+       - servers:
+diff --git a/config/testdata/roundtrip.good.yml b/config/testdata/roundtrip.good.yml
+index 24ab7d2..51b59dd 100644
+--- a/config/testdata/roundtrip.good.yml
++++ b/config/testdata/roundtrip.good.yml
+@@ -106,10 +106,6 @@ scrape_configs:
+           username: username
+           password_file: valid_password_file
+ 
+-    kuma_sd_configs:
+-      - server: http://kuma-control-plane.kuma-system.svc:5676
+-        client_id: main-prometheus
+-
+     marathon_sd_configs:
+       - servers:
+           - https://marathon.example.com:443
+diff --git a/discovery/install/install.go b/discovery/install/install.go
+index 9c397f9..160abfa 100644
+--- a/discovery/install/install.go
++++ b/discovery/install/install.go
+@@ -40,6 +40,5 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/triton"       // register triton
+ 	_ "github.com/prometheus/prometheus/discovery/uyuni"        // register uyuni
+ 	_ "github.com/prometheus/prometheus/discovery/vultr"        // register vultr
+-	_ "github.com/prometheus/prometheus/discovery/xds"          // register xds
+ 	_ "github.com/prometheus/prometheus/discovery/zookeeper"    // register zookeeper
+ )
+diff --git a/discovery/xds/client.go b/discovery/xds/client.go
+index a27e060..4d62d26 100644
+--- a/discovery/xds/client.go
++++ b/discovery/xds/client.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/discovery/xds/client_test.go b/discovery/xds/client_test.go
+index bf0e53b..a64ed8d 100644
+--- a/discovery/xds/client_test.go
++++ b/discovery/xds/client_test.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/discovery/xds/kuma.go b/discovery/xds/kuma.go
+index 6208e61..0bdddb7 100644
+--- a/discovery/xds/kuma.go
++++ b/discovery/xds/kuma.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/discovery/xds/kuma_mads.pb.go b/discovery/xds/kuma_mads.pb.go
+index 210a534..fd91fa7 100644
+--- a/discovery/xds/kuma_mads.pb.go
++++ b/discovery/xds/kuma_mads.pb.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ // Code generated by protoc-gen-go. DO NOT EDIT.
+ // versions:
+ // 	protoc-gen-go v1.25.0
+diff --git a/discovery/xds/kuma_test.go b/discovery/xds/kuma_test.go
+index 23d754c..6f4380b 100644
+--- a/discovery/xds/kuma_test.go
++++ b/discovery/xds/kuma_test.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/discovery/xds/metrics.go b/discovery/xds/metrics.go
+index bdc9598..efa6325 100644
+--- a/discovery/xds/metrics.go
++++ b/discovery/xds/metrics.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/discovery/xds/xds.go b/discovery/xds/xds.go
+index db55a2b..ed3388d 100644
+--- a/discovery/xds/xds.go
++++ b/discovery/xds/xds.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/discovery/xds/xds_test.go b/discovery/xds/xds_test.go
+index af2784b..c376aa8 100644
+--- a/discovery/xds/xds_test.go
++++ b/discovery/xds/xds_test.go
+@@ -11,6 +11,9 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++//go:build ignore
++// +build ignore
++
+ package xds
+ 
+ import (
+diff --git a/plugins/plugins.go b/plugins/plugins.go
+index 90b1407..8b1a7cd 100644
+--- a/plugins/plugins.go
++++ b/plugins/plugins.go
+@@ -60,8 +60,7 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/uyuni"
+ 	// Register vultr plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/vultr"
+-	// Register xds plugin.
+-	_ "github.com/prometheus/prometheus/discovery/xds"
++
+ 	// Register zookeeper plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/zookeeper"
+ )

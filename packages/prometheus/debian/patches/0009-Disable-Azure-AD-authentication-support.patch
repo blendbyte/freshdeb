@@ -1,0 +1,144 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Fri, 14 Jul 2023 20:04:17 +0200
+Subject: Disable Azure AD authentication support
+
+Forwarded: not-needed
+Last-Update: 2023-07-14
+
+The packaged azure-sdk-for-go in Debian does not include support for
+Azure AD auth.
+---
+ config/config.go         | 17 ++++-------------
+ config/config_test.go    |  2 +-
+ storage/remote/client.go | 19 ++-----------------
+ storage/remote/write.go  |  3 +--
+ 4 files changed, 8 insertions(+), 33 deletions(-)
+
+diff --git a/config/config.go b/config/config.go
+index a60cfcb..f3d29f1 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -37,8 +37,7 @@ import (
+ 	"github.com/prometheus/prometheus/discovery"
+ 	"github.com/prometheus/prometheus/model/labels"
+ 	"github.com/prometheus/prometheus/model/relabel"
+-	"github.com/prometheus/prometheus/storage/remote/azuread"
+-	"github.com/prometheus/prometheus/storage/remote/googleiam"
++
+ )
+ 
+ var (
+@@ -1341,8 +1340,7 @@ type RemoteWriteConfig struct {
+ 	QueueConfig      QueueConfig             `yaml:"queue_config,omitempty"`
+ 	MetadataConfig   MetadataConfig          `yaml:"metadata_config,omitempty"`
+ 	SigV4Config      *sigv4.SigV4Config      `yaml:"sigv4,omitempty"`
+-	AzureADConfig    *azuread.AzureADConfig  `yaml:"azuread,omitempty"`
+-	GoogleIAMConfig  *googleiam.Config       `yaml:"google_iam,omitempty"`
++
+ }
+ 
+ // SetDirectory joins any relative file paths with dir.
+@@ -1383,7 +1381,6 @@ func (c *RemoteWriteConfig) UnmarshalYAML(unmarshal func(interface{}) error) err
+ 	return validateAuthConfigs(c)
+ }
+ 
+-// validateAuthConfigs validates that at most one of basic_auth, authorization, oauth2, sigv4, azuread or google_iam must be configured.
+ func validateAuthConfigs(c *RemoteWriteConfig) error {
+ 	var authConfigured []string
+ 	if c.HTTPClientConfig.BasicAuth != nil {
+@@ -1398,14 +1395,8 @@ func validateAuthConfigs(c *RemoteWriteConfig) error {
+ 	if c.SigV4Config != nil {
+ 		authConfigured = append(authConfigured, "sigv4")
+ 	}
+-	if c.AzureADConfig != nil {
+-		authConfigured = append(authConfigured, "azuread")
+-	}
+-	if c.GoogleIAMConfig != nil {
+-		authConfigured = append(authConfigured, "google_iam")
+-	}
+ 	if len(authConfigured) > 1 {
+-		return fmt.Errorf("at most one of basic_auth, authorization, oauth2, sigv4, azuread or google_iam must be configured. Currently configured: %v", authConfigured)
++		return fmt.Errorf("at most one of basic_auth, authorization, oauth2, or sigv4 must be configured. Currently configured: %v", authConfigured)
+ 	}
+ 	return nil
+ }
+@@ -1425,7 +1416,7 @@ func validateHeadersForTracing(headers map[string]string) error {
+ func validateHeaders(headers map[string]string) error {
+ 	for header := range headers {
+ 		if strings.ToLower(header) == "authorization" {
+-			return errors.New("authorization header must be changed via the basic_auth, authorization, oauth2, sigv4, azuread or google_iam parameter")
++			return errors.New("authorization header must be changed via the basic_auth, authorization, oauth2, or sigv4 parameter")
+ 		}
+ 		if _, ok := reservedHeaders[strings.ToLower(header)]; ok {
+ 			return fmt.Errorf("%s is a reserved header. It must not be changed", header)
+diff --git a/config/config_test.go b/config/config_test.go
+index 0e0f398..24df2ad 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -2111,7 +2111,7 @@ var expectedErrors = []struct {
+ 	},
+ 	{
+ 		filename: "remote_write_authorization_header.bad.yml",
+-		errMsg:   `authorization header must be changed via the basic_auth, authorization, oauth2, sigv4, azuread or google_iam parameter`,
++		errMsg:   `authorization header must be changed via the basic_auth, authorization, oauth2, or sigv4 parameter`,
+ 	},
+ 	{
+ 		filename: "remote_write_wrong_msg.bad.yml",
+diff --git a/storage/remote/client.go b/storage/remote/client.go
+index 68891f6..ed367dc 100644
+--- a/storage/remote/client.go
++++ b/storage/remote/client.go
+@@ -40,8 +40,6 @@ import (
+ 	"github.com/prometheus/prometheus/config"
+ 	"github.com/prometheus/prometheus/prompb"
+ 	"github.com/prometheus/prometheus/storage"
+-	"github.com/prometheus/prometheus/storage/remote/azuread"
+-	"github.com/prometheus/prometheus/storage/remote/googleiam"
+ 	"github.com/prometheus/prometheus/util/compression"
+ )
+ 
+@@ -129,8 +127,7 @@ type ClientConfig struct {
+ 	Timeout          model.Duration
+ 	HTTPClientConfig config_util.HTTPClientConfig
+ 	SigV4Config      *sigv4.SigV4Config
+-	AzureADConfig    *azuread.AzureADConfig
+-	GoogleIAMConfig  *googleiam.Config
++
+ 	Headers          map[string]string
+ 	RetryOnRateLimit bool
+ 	WriteProtoMsg    config.RemoteWriteProtoMsg
+@@ -192,19 +189,7 @@ func NewWriteClient(name string, conf *ClientConfig) (WriteClient, error) {
+ 		}
+ 	}
+ 
+-	if conf.AzureADConfig != nil {
+-		t, err = azuread.NewAzureADRoundTripper(conf.AzureADConfig, t)
+-		if err != nil {
+-			return nil, err
+-		}
+-	}
+-
+-	if conf.GoogleIAMConfig != nil {
+-		t, err = googleiam.NewRoundTripper(conf.GoogleIAMConfig, t)
+-		if err != nil {
+-			return nil, err
+-		}
+-	}
++	httpClient.Transport = otelhttp.NewTransport(t)
+ 
+ 	writeProtoMsg := config.RemoteWriteProtoMsgV1
+ 	if conf.WriteProtoMsg != "" {
+diff --git a/storage/remote/write.go b/storage/remote/write.go
+index 51daeed..e475a4d 100644
+--- a/storage/remote/write.go
++++ b/storage/remote/write.go
+@@ -170,8 +170,7 @@ func (rws *WriteStorage) ApplyConfig(conf *config.Config) error {
+ 			Timeout:          rwConf.RemoteTimeout,
+ 			HTTPClientConfig: rwConf.HTTPClientConfig,
+ 			SigV4Config:      rwConf.SigV4Config,
+-			AzureADConfig:    rwConf.AzureADConfig,
+-			GoogleIAMConfig:  rwConf.GoogleIAMConfig,
++
+ 			Headers:          rwConf.Headers,
+ 			RetryOnRateLimit: rwConf.QueueConfig.RetryOnRateLimit,
+ 			RoundRobinDNS:    rwConf.RoundRobinDNS,

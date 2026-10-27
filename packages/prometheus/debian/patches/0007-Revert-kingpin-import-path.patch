@@ -1,0 +1,69 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Fri, 14 Jul 2023 19:05:46 +0200
+Subject: Revert alecthomas/kingpin import path
+
+Forwarded: not-needed
+Last-Update: 2023-07-07
+
+Newer versions of alecthomas/kingpin use a different import path. This patch
+can be dropped once the golang-gopkg-alecthomas-kingpin.v2-dev package is
+updated and provides the new import path.
+---
+ cmd/prometheus/main.go      | 2 +-
+ cmd/prometheus/main_test.go | 2 +-
+ cmd/promtool/main.go        | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cmd/prometheus/main.go b/cmd/prometheus/main.go
+index 41de51d..1be30cb 100644
+--- a/cmd/prometheus/main.go
++++ b/cmd/prometheus/main.go
+@@ -38,7 +38,6 @@ import (
+ 	"time"
+ 
+ 	"github.com/KimMachineGun/automemlimit/memlimit"
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/alecthomas/units"
+ 	"github.com/grafana/regexp"
+ 	"github.com/mwitkow/go-conntrack"
+@@ -53,6 +52,7 @@ import (
+ 	toolkit_web "github.com/prometheus/exporter-toolkit/web"
+ 	"go.uber.org/atomic"
+ 	"go.uber.org/automaxprocs/maxprocs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 	"k8s.io/klog"
+ 	klogv2 "k8s.io/klog/v2"
+ 
+diff --git a/cmd/prometheus/main_test.go b/cmd/prometheus/main_test.go
+index e7e7ab1..c6f6f64 100644
+--- a/cmd/prometheus/main_test.go
++++ b/cmd/prometheus/main_test.go
+@@ -32,7 +32,7 @@ import (
+ 	"testing"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/common/expfmt"
+ 	"github.com/prometheus/common/model"
+diff --git a/cmd/promtool/main.go b/cmd/promtool/main.go
+index c6a5801..a9697b5 100644
+--- a/cmd/promtool/main.go
++++ b/cmd/promtool/main.go
+@@ -31,7 +31,6 @@ import (
+ 	"text/tabwriter"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/google/pprof/profile"
+ 	"github.com/prometheus/client_golang/api"
+ 	"github.com/prometheus/client_golang/prometheus"
+@@ -43,6 +42,7 @@ import (
+ 	"github.com/prometheus/common/promslog"
+ 	"github.com/prometheus/common/version"
+ 	"github.com/prometheus/exporter-toolkit/web"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 	"gopkg.in/yaml.v2"
+ 
+ 	"github.com/prometheus/prometheus/config"

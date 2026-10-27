@@ -1,0 +1,11 @@
+usr/share/fonts-glyphicons                              usr/share/prometheus/web/static/vendor/bootstrap4-glyphicons/fonts/glyphicons
+usr/share/javascript/bootstrap4                         usr/share/prometheus/web/static/bootstrap4
+usr/share/javascript/d3                                 usr/share/prometheus/web/static/d3
+usr/share/javascript/eonasdan-bootstrap-datetimepicker  usr/share/prometheus/web/static/eonasdan-bootstrap-datetimepicker
+usr/share/javascript/jquery                             usr/share/prometheus/web/static/jquery
+usr/share/javascript/jquery-hotkeys                     usr/share/prometheus/web/static/jquery-hotkeys
+usr/share/javascript/moment                             usr/share/prometheus/web/static/moment
+usr/share/javascript/moment-timezone                    usr/share/prometheus/web/static/moment-timezone
+usr/share/javascript/mustache                           usr/share/prometheus/web/static/mustache
+usr/share/javascript/popper.js                          usr/share/prometheus/web/static/popper.js
+usr/share/javascript/rickshaw                           usr/share/prometheus/web/static/rickshaw

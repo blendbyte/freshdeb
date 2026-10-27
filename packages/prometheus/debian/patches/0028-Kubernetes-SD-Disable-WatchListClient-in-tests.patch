@@ -1,0 +1,46 @@
+From: Ganesh Vernekar <ganesh.vernekar@reddit.com>
+Date: Mon, 9 Feb 2026 12:35:26 -0800
+Subject: Kubernetes SD: Disable WatchListClient in tests
+
+client-go v0.35.0+ enables the WatchListClient feature gate by default.
+The fake clientset used in the discovery/kubernetes tests does not send
+the initial-events-end bookmark, so informers never sync and the tests
+time out with "discoverer failed to sync". Debian's golang-k8s-client-go
+0.36.4 triggers this.
+
+Backported by Juan Manuel Méndez Rey <juan.mendezr@proton.me> without
+the unrelated NewSimpleClientset -> NewClientset change.
+
+Origin: backport, https://github.com/prometheus/prometheus/commit/847e474bf4ffe637f1e6c9317f81d78015e40b7a
+Bug-Debian: https://bugs.debian.org/1147746
+Applied-Upstream: 3.10.0
+Reviewed-by: Juan Manuel Méndez Rey <juan.mendezr@proton.me>
+Last-Update: 2026-09-14
+---
+Index: prometheus/discovery/kubernetes/kubernetes_test.go
+===================================================================
+--- prometheus.orig/discovery/kubernetes/kubernetes_test.go
++++ prometheus/discovery/kubernetes/kubernetes_test.go
+@@ -17,6 +17,7 @@ import (
+ 	"context"
+ 	"encoding/json"
+ 	"errors"
++	"os"
+ 	"testing"
+ 	"time"
+ 
+@@ -42,6 +43,14 @@ import (
+ )
+ 
+ func TestMain(m *testing.M) {
++	// Disable the WatchListClient feature gate that is enabled by default in
++	// client-go v0.35.0+. The WatchList flow requires the server to support
++	// SendInitialEvents and to send a bookmark event with the
++	// "k8s.io/initial-events-end" annotation. The fake clientset used in tests
++	// does not support this protocol, causing informers to hang indefinitely
++	// waiting for the bookmark. Disabling this feature restores the traditional
++	// List+Watch flow which is compatible with the fake clientset.
++	os.Setenv("KUBE_FEATURE_WatchListClient", "false")
+ 	testutil.TolerantVerifyLeak(m)
+ }
+ 

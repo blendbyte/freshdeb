@@ -1,0 +1,196 @@
+From: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Date: Wed, 17 Jun 2026 10:48:33 -0400
+Subject: Disable StackIT service discovery
+
+The golang-github-stackitcloud-stackit-sdk-go-core-dev package is
+not available in Debian.
+---
+ config/config_test.go            | 44 ----------------------------------------
+ config/testdata/conf.good.yml    |  6 ------
+ discovery/install/install.go     |  1 -
+ discovery/stackit/metrics.go     |  3 +++
+ discovery/stackit/mock_test.go   |  3 +++
+ discovery/stackit/server.go      |  3 +++
+ discovery/stackit/server_test.go |  3 +++
+ discovery/stackit/stackit.go     |  3 +++
+ discovery/stackit/types.go       |  3 +++
+ plugins/plugins.go               |  2 --
+ 10 files changed, 18 insertions(+), 53 deletions(-)
+
+diff --git a/config/config_test.go b/config/config_test.go
+index eb91328..fa6b4e2 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -46,7 +46,6 @@ import (
+ 	"github.com/prometheus/prometheus/discovery/ovhcloud"
+ 	"github.com/prometheus/prometheus/discovery/puppetdb"
+ 	"github.com/prometheus/prometheus/discovery/scaleway"
+-	"github.com/prometheus/prometheus/discovery/stackit"
+ 	"github.com/prometheus/prometheus/discovery/targetgroup"
+ 	"github.com/prometheus/prometheus/discovery/triton"
+ 	"github.com/prometheus/prometheus/discovery/uyuni"
+@@ -1258,45 +1257,6 @@ var expectedConf = &Config{
+ 				},
+ 			},
+ 		},
+-		{
+-			JobName:                        "stackit-servers",
+-			HonorTimestamps:                true,
+-			ScrapeInterval:                 model.Duration(15 * time.Second),
+-			ScrapeTimeout:                  DefaultGlobalConfig.ScrapeTimeout,
+-			EnableCompression:              true,
+-			BodySizeLimit:                  globBodySizeLimit,
+-			SampleLimit:                    globSampleLimit,
+-			TargetLimit:                    globTargetLimit,
+-			LabelLimit:                     globLabelLimit,
+-			LabelNameLengthLimit:           globLabelNameLengthLimit,
+-			LabelValueLengthLimit:          globLabelValueLengthLimit,
+-			ScrapeProtocols:                DefaultGlobalConfig.ScrapeProtocols,
+-			ScrapeFailureLogFile:           globScrapeFailureLogFile,
+-			MetricNameValidationScheme:     DefaultGlobalConfig.MetricNameValidationScheme,
+-			MetricNameEscapingScheme:       DefaultGlobalConfig.MetricNameEscapingScheme,
+-			AlwaysScrapeClassicHistograms:  boolPtr(false),
+-			ConvertClassicHistogramsToNHCB: boolPtr(false),
+-
+-			MetricsPath:      DefaultScrapeConfig.MetricsPath,
+-			Scheme:           DefaultScrapeConfig.Scheme,
+-			HTTPClientConfig: config.DefaultHTTPClientConfig,
+-			ServiceDiscoveryConfigs: discovery.Configs{
+-				&stackit.SDConfig{
+-					Project: "11111111-1111-1111-1111-111111111111",
+-					Region:  "eu01",
+-					HTTPClientConfig: config.HTTPClientConfig{
+-						Authorization: &config.Authorization{
+-							Type:        "Bearer",
+-							Credentials: "abcdef",
+-						},
+-						FollowRedirects: true,
+-						EnableHTTP2:     true,
+-					},
+-					Port:            80,
+-					RefreshInterval: model.Duration(60 * time.Second),
+-				},
+-			},
+-		},
+ 		{
+ 			JobName: "uyuni",
+ 
+@@ -2221,10 +2181,6 @@ var expectedErrors = []struct {
+ 		filename: "scrape_config_utf8_conflicting.bad.yml",
+ 		errMsg:   `utf8 metric names requested but validation scheme is not set to UTF8`,
+ 	},
+-	{
+-		filename: "stackit_endpoint.bad.yml",
+-		errMsg:   "invalid endpoint",
+-	},
+ }
+ 
+ func TestBadConfigs(t *testing.T) {
+diff --git a/config/testdata/conf.good.yml b/config/testdata/conf.good.yml
+index e2d9c0d..1a6200c 100644
+--- a/config/testdata/conf.good.yml
++++ b/config/testdata/conf.good.yml
+@@ -360,12 +360,6 @@ scrape_configs:
+       - authorization:
+           credentials: abcdef
+ 
+-  - job_name: stackit-servers
+-    stackit_sd_configs:
+-      - project: 11111111-1111-1111-1111-111111111111
+-        authorization:
+-          credentials: abcdef
+-
+   - job_name: uyuni
+     uyuni_sd_configs:
+       - server: https://localhost:1234
+diff --git a/discovery/install/install.go b/discovery/install/install.go
+index 9294bad..cfaf76b 100644
+--- a/discovery/install/install.go
++++ b/discovery/install/install.go
+@@ -32,7 +32,6 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/ovhcloud"     // register ovhcloud
+ 	_ "github.com/prometheus/prometheus/discovery/puppetdb"     // register puppetdb
+ 	_ "github.com/prometheus/prometheus/discovery/scaleway"     // register scaleway
+-	_ "github.com/prometheus/prometheus/discovery/stackit"      // register stackit
+ 	_ "github.com/prometheus/prometheus/discovery/triton"       // register triton
+ 	_ "github.com/prometheus/prometheus/discovery/uyuni"        // register uyuni
+ 	_ "github.com/prometheus/prometheus/discovery/vultr"        // register vultr
+diff --git a/discovery/stackit/metrics.go b/discovery/stackit/metrics.go
+index 4143b14..775b88c 100644
+--- a/discovery/stackit/metrics.go
++++ b/discovery/stackit/metrics.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2015 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/stackit/mock_test.go b/discovery/stackit/mock_test.go
+index 59641ce..49d8307 100644
+--- a/discovery/stackit/mock_test.go
++++ b/discovery/stackit/mock_test.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2020 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/stackit/server.go b/discovery/stackit/server.go
+index 1be834a..c66cdcf 100644
+--- a/discovery/stackit/server.go
++++ b/discovery/stackit/server.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2020 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/stackit/server_test.go b/discovery/stackit/server_test.go
+index 117fbdd..c035626 100644
+--- a/discovery/stackit/server_test.go
++++ b/discovery/stackit/server_test.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2020 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/stackit/stackit.go b/discovery/stackit/stackit.go
+index 030f2bd..0207e83 100644
+--- a/discovery/stackit/stackit.go
++++ b/discovery/stackit/stackit.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2020 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/discovery/stackit/types.go b/discovery/stackit/types.go
+index 66681c3..6892e1e 100644
+--- a/discovery/stackit/types.go
++++ b/discovery/stackit/types.go
+@@ -1,3 +1,6 @@
++//go:build ignore
++// +build ignore
++
+ // Copyright 2020 The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/plugins/plugins.go b/plugins/plugins.go
+index 6c675fc..9d98fc0 100644
+--- a/plugins/plugins.go
++++ b/plugins/plugins.go
+@@ -47,8 +47,6 @@ import (
+ 	_ "github.com/prometheus/prometheus/discovery/puppetdb"
+ 	// Register scaleway plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/scaleway"
+-	// Register stackit plugin.
+-	_ "github.com/prometheus/prometheus/discovery/stackit"
+ 	// Register triton plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/triton"
+ 	// Register uyuni plugin.

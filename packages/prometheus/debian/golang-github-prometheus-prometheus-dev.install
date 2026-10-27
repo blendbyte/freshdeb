@@ -1,0 +1,3 @@
+documentation/examples/prometheus-agent.yml usr/share/gocode/src/github.com/prometheus/prometheus/documentation/examples
+documentation/examples/prometheus.yml usr/share/gocode/src/github.com/prometheus/prometheus/documentation/examples
+usr/share

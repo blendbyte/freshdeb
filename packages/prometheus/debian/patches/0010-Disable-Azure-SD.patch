@@ -1,0 +1,223 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Sun, 9 Feb 2025 20:55:21 +0000
+Subject: Disable Azure SD
+
+The current golang-github-azure-azure-sdk-for-go-dev package is too
+outdated, and it does not include the newer APIs that Prometheus is
+using.
+---
+ config/config_test.go              | 66 +-------------------------------------
+ config/testdata/conf.good.yml      | 11 -------
+ config/testdata/roundtrip.good.yml |  9 ------
+ discovery/azure/azure.go           |  2 ++
+ discovery/azure/azure_test.go      |  2 ++
+ discovery/azure/metrics.go         |  2 ++
+ discovery/install/install.go       |  1 -
+ plugins/plugins.go                 |  3 +-
+ 8 files changed, 8 insertions(+), 88 deletions(-)
+
+diff --git a/config/config_test.go b/config/config_test.go
+index 24df2ad..be29511 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -32,7 +32,6 @@ import (
+ 
+ 	"github.com/prometheus/prometheus/discovery"
+ 	"github.com/prometheus/prometheus/discovery/aws"
+-	"github.com/prometheus/prometheus/discovery/azure"
+ 	"github.com/prometheus/prometheus/discovery/digitalocean"
+ 	"github.com/prometheus/prometheus/discovery/dns"
+ 	"github.com/prometheus/prometheus/discovery/eureka"
+@@ -674,45 +673,6 @@ var expectedConf = &Config{
+ 				},
+ 			},
+ 		},
+-		{
+-			JobName: "service-azure",
+-
+-			HonorTimestamps:                true,
+-			ScrapeInterval:                 model.Duration(15 * time.Second),
+-			ScrapeTimeout:                  DefaultGlobalConfig.ScrapeTimeout,
+-			EnableCompression:              true,
+-			BodySizeLimit:                  globBodySizeLimit,
+-			SampleLimit:                    globSampleLimit,
+-			TargetLimit:                    globTargetLimit,
+-			LabelLimit:                     globLabelLimit,
+-			LabelNameLengthLimit:           globLabelNameLengthLimit,
+-			LabelValueLengthLimit:          globLabelValueLengthLimit,
+-			ScrapeProtocols:                DefaultGlobalConfig.ScrapeProtocols,
+-			ScrapeFailureLogFile:           globScrapeFailureLogFile,
+-			MetricNameValidationScheme:     DefaultGlobalConfig.MetricNameValidationScheme,
+-			MetricNameEscapingScheme:       DefaultGlobalConfig.MetricNameEscapingScheme,
+-			AlwaysScrapeClassicHistograms:  boolPtr(false),
+-			ConvertClassicHistogramsToNHCB: boolPtr(false),
+-
+-			MetricsPath:      DefaultScrapeConfig.MetricsPath,
+-			Scheme:           DefaultScrapeConfig.Scheme,
+-			HTTPClientConfig: config.DefaultHTTPClientConfig,
+-
+-			ServiceDiscoveryConfigs: discovery.Configs{
+-				&azure.SDConfig{
+-					Environment:          "AzurePublicCloud",
+-					SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+-					ResourceGroup:        "my-resource-group",
+-					TenantID:             "BBBB222B-B2B2-2B22-B222-2BB2222BB2B2",
+-					ClientID:             "333333CC-3C33-3333-CCC3-33C3CCCCC33C",
+-					ClientSecret:         "mysecret",
+-					AuthenticationMethod: "OAuth",
+-					RefreshInterval:      model.Duration(5 * time.Minute),
+-					Port:                 9100,
+-					HTTPClientConfig:     config.DefaultHTTPClientConfig,
+-				},
+-			},
+-		},
+ 		{
+ 			JobName: "service-nerve",
+ 
+@@ -1826,7 +1786,7 @@ func TestElideSecrets(t *testing.T) {
+ 	yamlConfig := string(config)
+ 
+ 	matches := secretRe.FindAllStringIndex(yamlConfig, -1)
+-	require.Len(t, matches, 21, "wrong number of secret matches found")
++	require.Len(t, matches, 20, "wrong number of secret matches found")
+ 	require.NotContains(t, yamlConfig, "mysecret",
+ 		"yaml marshal reveals authentication credentials.")
+ }
+@@ -2145,30 +2105,6 @@ var expectedErrors = []struct {
+ 		filename: "section_key_dup.bad.yml",
+ 		errMsg:   "field scrape_configs already set in type config.plain",
+ 	},
+-	{
+-		filename: "azure_client_id_missing.bad.yml",
+-		errMsg:   "azure SD configuration requires a client_id",
+-	},
+-	{
+-		filename: "azure_client_secret_missing.bad.yml",
+-		errMsg:   "azure SD configuration requires a client_secret",
+-	},
+-	{
+-		filename: "azure_subscription_id_missing.bad.yml",
+-		errMsg:   "azure SD configuration requires a subscription_id",
+-	},
+-	{
+-		filename: "azure_tenant_id_missing.bad.yml",
+-		errMsg:   "azure SD configuration requires a tenant_id",
+-	},
+-	{
+-		filename: "azure_authentication_method.bad.yml",
+-		errMsg:   "unknown authentication_type \"invalid\". Supported types are \"OAuth\", \"ManagedIdentity\" or \"SDK\"",
+-	},
+-	{
+-		filename: "azure_bearertoken_basicauth.bad.yml",
+-		errMsg:   "at most one of basic_auth, oauth2, bearer_token & bearer_token_file must be configured",
+-	},
+ 	{
+ 		filename: "empty_scrape_config.bad.yml",
+ 		errMsg:   "empty or null scrape config section",
+diff --git a/config/testdata/conf.good.yml b/config/testdata/conf.good.yml
+index 323501f..48442c0 100644
+--- a/config/testdata/conf.good.yml
++++ b/config/testdata/conf.good.yml
+@@ -243,17 +243,6 @@ scrape_configs:
+         secret_key: mysecret
+         profile: profile
+ 
+-  - job_name: service-azure
+-    azure_sd_configs:
+-      - environment: AzurePublicCloud
+-        authentication_method: OAuth
+-        subscription_id: 11AAAA11-A11A-111A-A111-1111A1111A11
+-        resource_group: my-resource-group
+-        tenant_id: BBBB222B-B2B2-2B22-B222-2BB2222BB2B2
+-        client_id: 333333CC-3C33-3333-CCC3-33C3CCCCC33C
+-        client_secret: mysecret
+-        port: 9100
+-
+   - job_name: service-nerve
+     nerve_sd_configs:
+       - servers:
+diff --git a/config/testdata/roundtrip.good.yml b/config/testdata/roundtrip.good.yml
+index f560e8c..cf93fdb 100644
+--- a/config/testdata/roundtrip.good.yml
++++ b/config/testdata/roundtrip.good.yml
+@@ -28,15 +28,6 @@ scrape_configs:
+ 
+   - job_name: bar
+ 
+-    azure_sd_configs:
+-      - environment: AzurePublicCloud
+-        authentication_method: OAuth
+-        subscription_id: 11AAAA11-A11A-111A-A111-1111A1111A11
+-        tenant_id: BBBB222B-B2B2-2B22-B222-2BB2222BB2B2
+-        client_id: 333333CC-3C33-3333-CCC3-33C3CCCCC33C
+-        client_secret: <secret>
+-        port: 9100
+-
+     digitalocean_sd_configs:
+       - authorization:
+           credentials: <secret>
+diff --git a/discovery/azure/azure.go b/discovery/azure/azure.go
+index 670afb5..06edd25 100644
+--- a/discovery/azure/azure.go
++++ b/discovery/azure/azure.go
+@@ -11,6 +11,8 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++// +build ignore
++
+ package azure
+ 
+ import (
+diff --git a/discovery/azure/azure_test.go b/discovery/azure/azure_test.go
+index d714156..50ff6eb 100644
+--- a/discovery/azure/azure_test.go
++++ b/discovery/azure/azure_test.go
+@@ -11,6 +11,8 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++// +build ignore
++
+ package azure
+ 
+ import (
+diff --git a/discovery/azure/metrics.go b/discovery/azure/metrics.go
+index 3e3dbdb..c53fc05 100644
+--- a/discovery/azure/metrics.go
++++ b/discovery/azure/metrics.go
+@@ -11,6 +11,8 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++// +build ignore
++
+ package azure
+ 
+ import (
+diff --git a/discovery/install/install.go b/discovery/install/install.go
+index 11713d0..0bdfb4c 100644
+--- a/discovery/install/install.go
++++ b/discovery/install/install.go
+@@ -17,7 +17,6 @@ package install
+ 
+ import (
+ 	_ "github.com/prometheus/prometheus/discovery/aws"          // register aws
+-	_ "github.com/prometheus/prometheus/discovery/azure"        // register azure
+ 	_ "github.com/prometheus/prometheus/discovery/digitalocean" // register digitalocean
+ 	_ "github.com/prometheus/prometheus/discovery/dns"          // register dns
+ 	_ "github.com/prometheus/prometheus/discovery/eureka"       // register eureka
+diff --git a/plugins/plugins.go b/plugins/plugins.go
+index c1feff5..3aa4e9f 100644
+--- a/plugins/plugins.go
++++ b/plugins/plugins.go
+@@ -18,8 +18,7 @@ package plugins
+ import (
+ 	// Register aws plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/aws"
+-	// Register azure plugin.
+-	_ "github.com/prometheus/prometheus/discovery/azure"
++
+ 
+ 	// Register digitalocean plugin.
+ 	_ "github.com/prometheus/prometheus/discovery/digitalocean"

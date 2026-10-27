@@ -1,0 +1,8 @@
+Version: 5
+
+Source: https://github.com/prometheus/prometheus
+Matching-Pattern: refs/tags/v?@ANY_VERSION@
+DVersion-Mangle: s/\+ds\d*$//
+Repack-Suffix: +ds1
+Mode: git
+Pgp-Mode: none

@@ -1,0 +1,83 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Fri, 5 Jun 2020 15:36:25 -0300
+Subject: Fix prometheus invocations, paths for debian build system,
+ and avoid recompiling prometheus.
+
+Forwarded: not-needed
+Last-Update: Wed, 16 Mar 2022 05:48:22 +0000
+---
+ cmd/prometheus/main_test.go | 10 +++++-----
+ web/web_test.go             |  4 ++--
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/cmd/prometheus/main_test.go b/cmd/prometheus/main_test.go
+index e4262f1..e7e7ab1 100644
+--- a/cmd/prometheus/main_test.go
++++ b/cmd/prometheus/main_test.go
+@@ -116,7 +116,7 @@ func TestComputeExternalURL(t *testing.T) {
+ 	}
+ 
+ 	for _, test := range tests {
+-		_, err := computeExternalURL(test.input, "0.0.0.0:9090")
++		_, err := computeExternalURL(test.input, "0.0.0.0:9099")
+ 		if test.valid {
+ 			require.NoError(t, err)
+ 		} else {
+@@ -172,7 +172,7 @@ func TestSendAlerts(t *testing.T) {
+ 					Annotations:  labels.FromStrings("a2", "v2"),
+ 					StartsAt:     time.Unix(2, 0),
+ 					EndsAt:       time.Unix(3, 0),
+-					GeneratorURL: "http://localhost:9090/graph?g0.expr=up&g0.tab=1",
++					GeneratorURL: "http://localhost:9099/graph?g0.expr=up&g0.tab=1",
+ 				},
+ 			},
+ 		},
+@@ -192,7 +192,7 @@ func TestSendAlerts(t *testing.T) {
+ 					Annotations:  labels.FromStrings("a2", "v2"),
+ 					StartsAt:     time.Unix(2, 0),
+ 					EndsAt:       time.Unix(4, 0),
+-					GeneratorURL: "http://localhost:9090/graph?g0.expr=up&g0.tab=1",
++					GeneratorURL: "http://localhost:9099/graph?g0.expr=up&g0.tab=1",
+ 				},
+ 			},
+ 		},
+@@ -208,7 +208,7 @@ func TestSendAlerts(t *testing.T) {
+ 				require.NotEmpty(t, tc.in, "sender called with 0 alert")
+ 				require.Equal(t, tc.exp, alerts)
+ 			})
+-			rules.SendAlerts(senderFunc, "http://localhost:9090")(context.TODO(), "up", tc.in...)
++			rules.SendAlerts(senderFunc, "http://localhost:9099")(context.TODO(), "up", tc.in...)
+ 		})
+ 	}
+ }
+@@ -417,7 +417,7 @@ func getCurrentGaugeValuesFor(t *testing.T, reg prometheus.Gatherer, metricNames
+ func TestAgentSuccessfulStartup(t *testing.T) {
+ 	t.Parallel()
+ 
+-	prom := exec.Command(promPath, "-test.main", "--agent", "--web.listen-address=0.0.0.0:0", "--config.file="+agentConfig)
++	prom := exec.Command(promPath, "-test.main", "--agent", "--web.listen-address=0.0.0.0:0", "--config.file="+agentConfig, "--storage.agent.path="+filepath.Join(t.TempDir(), "data"))
+ 	require.NoError(t, prom.Start())
+ 
+ 	actualExitStatus := 0
+diff --git a/web/web_test.go b/web/web_test.go
+index ea7e099..2cb6d7b 100644
+--- a/web/web_test.go
++++ b/web/web_test.go
+@@ -302,7 +302,7 @@ func TestDebugHandler(t *testing.T) {
+ 			RoutePrefix:     tc.prefix,
+ 			ListenAddresses: []string{"somehost:9090"},
+ 			ExternalURL: &url.URL{
+-				Host:   "localhost.localdomain:9090",
++				Host:   "localhost.localdomain:9098",
+ 				Scheme: "http",
+ 			},
+ 		}
+@@ -327,7 +327,7 @@ func TestHTTPMetrics(t *testing.T) {
+ 		RoutePrefix:     "/",
+ 		ListenAddresses: []string{"somehost:9090"},
+ 		ExternalURL: &url.URL{
+-			Host:   "localhost.localdomain:9090",
++			Host:   "localhost.localdomain:9098",
+ 			Scheme: "http",
+ 		},
+ 	})

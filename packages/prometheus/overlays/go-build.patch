@@ -1,0 +1,393 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -7,79 +7,7 @@
+  Lucas Kanashiro <kanashiro@debian.org>,
+ Build-Depends:
+  debhelper-compat (= 13),
+- dh-sequence-golang,
+  dh-sequence-installsysusers,
+- gogoprotobuf,
+- golang-github-alecthomas-units-dev,
+- golang-github-aws-aws-sdk-go-dev,
+- golang-github-bboreham-go-loser-dev,
+- golang-github-cespare-xxhash-dev,
+- golang-github-dennwc-varint-dev,
+- golang-github-digitalocean-godo-dev,
+- golang-github-docker-docker-dev (>= 28.5),
+- golang-github-edsrzf-mmap-go-dev,
+- golang-github-facette-natsort-dev,
+- golang-github-fsnotify-fsnotify-dev,
+- golang-github-go-kit-log-dev,
+- golang-github-go-openapi-strfmt-dev,
+- golang-github-go-zookeeper-zk-dev,
+- golang-github-gogo-protobuf-dev,
+- golang-github-golang-snappy-dev,
+- golang-github-google-go-cmp-dev,
+- golang-github-google-pprof-dev,
+- golang-github-google-uuid-dev,
+- golang-github-gophercloud-gophercloud-dev (>= 0.19.0),
+- golang-github-grafana-regexp-dev,
+- golang-github-grpc-ecosystem-grpc-gateway-dev,
+- golang-github-hetznercloud-hcloud-go-dev (>= 2.0.0),
+- golang-github-ionos-cloud-sdk-go-dev,
+- golang-github-json-iterator-go-dev,
+- golang-github-kimmachinegun-automemlimit-dev,
+- golang-github-klauspost-compress-dev,
+- golang-github-kolo-xmlrpc-dev,
+- golang-github-linode-linodego-dev,
+- golang-github-miekg-dns-dev,
+- golang-github-munnerz-goautoneg-dev,
+- golang-github-mwitkow-go-conntrack-dev,
+- golang-github-oklog-run-dev,
+- golang-github-oklog-ulid-dev,
+- golang-github-opentracing-contrib-go-stdlib-dev,
+- golang-github-opentracing-opentracing-go-dev,
+- golang-github-ovh-go-ovh-dev (>= 1.9.0),
+- golang-github-prometheus-alertmanager-dev (>= 0.33.1-5~),
+- golang-github-prometheus-client-golang-dev (>= 1.19.0),
+- golang-github-prometheus-client-model-dev,
+- golang-github-prometheus-common-dev (>= 0.66.0),
+- golang-github-prometheus-exporter-toolkit-dev,
+- golang-github-scaleway-scaleway-sdk-go-dev,
+- golang-github-stretchr-testify-dev,
+- golang-github-vultr-govultr-dev,
+- golang-go,
+- golang-go.uber-atomic-dev,
+- golang-go.uber-multierr-dev,
+- golang-golang-x-exp-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-oauth2-google-dev,
+- golang-golang-x-sync-dev,
+- golang-golang-x-sys-dev,
+- golang-golang-x-time-dev,
+- golang-google-api-dev,
+- golang-google-genproto-dev,
+- golang-google-grpc-dev,
+- golang-google-protobuf-dev,
+- golang-gopkg-alecthomas-kingpin.v2-dev,
+- golang-gopkg-yaml.v2-dev,
+- golang-gopkg-yaml.v3-dev,
+- golang-grpc-gateway,
+- golang-k8s-api-dev,
+- golang-k8s-apimachinery-dev,
+- golang-k8s-client-go-dev (>= 0.33.0),
+- golang-k8s-kube-openapi-dev (>= 0.0~git20260721.d427ff9-1~),
+- golang-opentelemetry-contrib-dev (>= 0.56),
+- golang-opentelemetry-otel-dev (>= 1.46.0~),
+- golang-uber-automaxprocs-dev,
+- golang-uber-goleak-dev,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus.git
+@@ -95,7 +23,6 @@
+  promtool,
+  ${misc:Depends},
+  ${shlibs:Depends},
+-Static-Built-Using: ${misc:Static-Built-Using},
+ Recommends:
+  prometheus-node-exporter,
+ Description: monitoring system and time series database
+@@ -123,7 +50,6 @@
+ Depends:
+  ${misc:Depends},
+  ${shlibs:Depends},
+-Static-Built-Using: ${misc:Static-Built-Using},
+ Enhances:
+  prometheus,
+ Breaks:
+@@ -133,81 +59,3 @@
+ Description: tooling for the Prometheus monitoring system
+  promtool is a command-line utility for managing and interacting with a
+  Prometheus monitoring system and its configuration / rules.
+-
+-Package: golang-github-prometheus-prometheus-dev
+-Architecture: all
+-Multi-Arch: foreign
+-Depends:
+- golang-github-alecthomas-units-dev,
+- golang-github-aws-aws-sdk-go-dev,
+- golang-github-bboreham-go-loser-dev,
+- golang-github-cespare-xxhash-dev,
+- golang-github-dennwc-varint-dev,
+- golang-github-digitalocean-godo-dev,
+- golang-github-docker-docker-dev (>= 28.5),
+- golang-github-edsrzf-mmap-go-dev,
+- golang-github-facette-natsort-dev,
+- golang-github-fsnotify-fsnotify-dev,
+- golang-github-go-kit-log-dev,
+- golang-github-go-openapi-strfmt-dev,
+- golang-github-go-zookeeper-zk-dev,
+- golang-github-gogo-protobuf-dev,
+- golang-github-golang-snappy-dev,
+- golang-github-google-go-cmp-dev,
+- golang-github-google-pprof-dev,
+- golang-github-google-uuid-dev,
+- golang-github-gophercloud-gophercloud-dev (>= 0.19.0),
+- golang-github-grafana-regexp-dev,
+- golang-github-grpc-ecosystem-grpc-gateway-dev,
+- golang-github-hetznercloud-hcloud-go-dev (>= 2.0.0),
+- golang-github-ionos-cloud-sdk-go-dev,
+- golang-github-json-iterator-go-dev,
+- golang-github-kimmachinegun-automemlimit-dev,
+- golang-github-klauspost-compress-dev,
+- golang-github-kolo-xmlrpc-dev,
+- golang-github-linode-linodego-dev,
+- golang-github-miekg-dns-dev,
+- golang-github-munnerz-goautoneg-dev,
+- golang-github-mwitkow-go-conntrack-dev,
+- golang-github-oklog-run-dev,
+- golang-github-oklog-ulid-dev,
+- golang-github-opentracing-contrib-go-stdlib-dev,
+- golang-github-opentracing-opentracing-go-dev,
+- golang-github-ovh-go-ovh-dev (>= 1.9.0),
+- golang-github-prometheus-alertmanager-dev (>= 0.33.1-5~),
+- golang-github-prometheus-client-golang-dev (>= 1.19.0),
+- golang-github-prometheus-client-model-dev,
+- golang-github-prometheus-common-dev (>= 0.66.0),
+- golang-github-prometheus-exporter-toolkit-dev,
+- golang-github-scaleway-scaleway-sdk-go-dev,
+- golang-github-stretchr-testify-dev,
+- golang-github-vultr-govultr-dev,
+- golang-go.uber-atomic-dev,
+- golang-go.uber-multierr-dev,
+- golang-golang-x-exp-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-oauth2-google-dev,
+- golang-golang-x-sync-dev,
+- golang-golang-x-sys-dev,
+- golang-golang-x-time-dev,
+- golang-google-api-dev,
+- golang-google-genproto-dev,
+- golang-google-grpc-dev,
+- golang-google-protobuf-dev,
+- golang-gopkg-alecthomas-kingpin.v2-dev,
+- golang-gopkg-yaml.v2-dev,
+- golang-gopkg-yaml.v3-dev,
+- golang-grpc-gateway,
+- golang-k8s-api-dev,
+- golang-k8s-apimachinery-dev,
+- golang-k8s-client-go-dev (>= 0.33.0),
+- golang-k8s-kube-openapi-dev (>= 0.0~git20260721.d427ff9-1~),
+- golang-opentelemetry-contrib-dev (>= 0.56),
+- golang-opentelemetry-otel-dev (>= 1.46.0~),
+- golang-uber-automaxprocs-dev,
+- golang-uber-goleak-dev,
+- ${misc:Depends},
+-Description: Prometheus monitoring system and time series database (library)
+- This package contains the source code of the Prometheus monitoring system and
+- time series database, for applications which make use of its exported
+- functions such as the promql parser.
+diff -ruN a/debian/golang-github-prometheus-prometheus-dev.install b/debian/golang-github-prometheus-prometheus-dev.install
+--- a/debian/golang-github-prometheus-prometheus-dev.install
++++ b/debian/golang-github-prometheus-prometheus-dev.install
+@@ -1,3 +0,0 @@
+-documentation/examples/prometheus-agent.yml usr/share/gocode/src/github.com/prometheus/prometheus/documentation/examples
+-documentation/examples/prometheus.yml usr/share/gocode/src/github.com/prometheus/prometheus/documentation/examples
+-usr/share
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,14 +1,25 @@
+-prometheus (3.5.3+ds1-1) experimental; urgency=medium
++prometheus (3.0.0-1) unstable; urgency=medium
+ 
+-  * The Prometheus Web UI has been completely disabled in this package.
+-    Upstream removed the Classic UI in v2.34.0. The newer React and Mantine
+-    UIs cannot be shipped because they require complex, pre-compiled
+-    toolchains (node-vite and rust-rolldown) that are not yet packaged in
+-    Debian and cannot be built offline.
+-    The API and telemetry endpoints continue to work normally. Accessing the
+-    root web endpoint will now display a static "No UI" placeholder page.
++  freshdeb: this is Prometheus 3, a major upgrade from the 2.x versions
++  the distributions ship.
+ 
+- -- Reinhard Tartler <siretart@tauware.de>  Wed, 01 Jul 2026 03:57:00 -0400
++  Prometheus 3 reads the data Prometheus 2 wrote, and the default
++  configuration in /etc/prometheus/prometheus.yml works unchanged. Some
++  command-line flags, configuration settings and PromQL behaviours were
++  removed or changed, though: if you set flags in ARGS in
++  /etc/default/prometheus, changed the configuration or depend on
++  specific queries, check them against the migration guide:
++
++    https://prometheus.io/docs/prometheus/latest/migration/
++
++  Data written by Prometheus 3 can only be read by Prometheus 2.55 or
++  newer, so going back to the distribution's version afterwards isn't
++  possible.
++
++  Unlike Debian's own Prometheus 3 package, this one includes the web UI
++  (upstream's release build) and every service discovery mechanism.
++
++ -- freshdeb <packages@freshdeb.com>  Tue, 27 Oct 2026 12:00:00 +0000
+ 
+ prometheus (2.13.1+ds-1) unstable; urgency=medium
+ 
+diff -ruN a/debian/prometheus.dirs b/debian/prometheus.dirs
+--- a/debian/prometheus.dirs
++++ b/debian/prometheus.dirs
+@@ -1,4 +1,3 @@
+ etc/prometheus
+ etc/prometheus/console_libraries
+ etc/prometheus/consoles
+-usr/share/prometheus/web/static/vendor
+diff -ruN a/debian/prometheus.install b/debian/prometheus.install
+--- a/debian/prometheus.install
++++ b/debian/prometheus.install
+@@ -1,4 +1,2 @@
+-debian/index.html  usr/share/prometheus/web/no-ui
+-debian/install-ui.sh  usr/share/prometheus
+ debian/prometheus.yml  etc/prometheus
+ usr/bin/prometheus
+diff -ruN a/debian/prometheus.links b/debian/prometheus.links
+--- a/debian/prometheus.links
++++ b/debian/prometheus.links
+@@ -1,11 +0,0 @@
+-usr/share/fonts-glyphicons                              usr/share/prometheus/web/static/vendor/bootstrap4-glyphicons/fonts/glyphicons
+-usr/share/javascript/bootstrap4                         usr/share/prometheus/web/static/bootstrap4
+-usr/share/javascript/d3                                 usr/share/prometheus/web/static/d3
+-usr/share/javascript/eonasdan-bootstrap-datetimepicker  usr/share/prometheus/web/static/eonasdan-bootstrap-datetimepicker
+-usr/share/javascript/jquery                             usr/share/prometheus/web/static/jquery
+-usr/share/javascript/jquery-hotkeys                     usr/share/prometheus/web/static/jquery-hotkeys
+-usr/share/javascript/moment                             usr/share/prometheus/web/static/moment
+-usr/share/javascript/moment-timezone                    usr/share/prometheus/web/static/moment-timezone
+-usr/share/javascript/mustache                           usr/share/prometheus/web/static/mustache
+-usr/share/javascript/popper.js                          usr/share/prometheus/web/static/popper.js
+-usr/share/javascript/rickshaw                           usr/share/prometheus/web/static/rickshaw
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -2,83 +2,48 @@
+ # -*- Mode: makefile -*-
+ include /usr/share/dpkg/pkg-info.mk
+ 
+-# Uncomment this to turn on verbose mode.
+-#export DH_VERBOSE=1
+-
+-# Include test fixtures.
+-export DH_GOLANG_INSTALL_EXTRA := \
+-    cmd/prometheus/testdata \
+-    cmd/promtool/testdata \
+-    config/testdata \
+-    discovery/file/fixtures \
+-    discovery/http/fixtures \
+-    discovery/moby/testdata \
+-    discovery/puppetdb/fixtures \
+-    documentation/examples/prometheus-agent.yml \
+-    documentation/examples/prometheus.yml \
+-    model/rulefmt/testdata \
+-    promql/fuzz-data \
+-    rules/fixtures \
+-    scrape/testdata \
+-    tsdb/testdata \
+-    # EOL
+-
+-# Do not build examples
+-export DH_GOLANG_EXCLUDES := documentation storage/remote/azuread
+-# Disable OTLP Ingestion
+-export DH_GOLANG_EXCLUDES += storage/remote/otlptranslator
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have. That also brings back everything Debian has to
++# disable for lack of packaged libraries (xDS, Consul, Nomad, Azure,
++# OpenStack and StackIT service discovery, Azure AD, OTLP ingestion), and
++# the web UI: upstream's prebuilt release assets, pinned by sha256 in
++# package.yaml, embedded the way upstream's release build does. Same tags
++# and version stamps as upstream's binaries. The toolchain, offline mode
++# (GOFLAGS=-mod=vendor, GOPROXY=off) and caches come from the build
++# environment.
++export CGO_ENABLED := 0
+ 
+ BUILDDIR   := $(CURDIR)/.build
+-PKG        := github.com/prometheus/prometheus
+ METAPKG    := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
+ BUILD_DATE  = $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+     +%Y%m%d-%H:%M:%S)
+-GO_VERSION  = $(shell go version | sed 's/go version \(\S*\).*/\1/')
+-BUILDFLAGS  = -ldflags \
++GOFLAGS_BUILD = -tags netgo,builtinassets -ldflags \
+   " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+-
+-ifeq ($(DEB_HOST_ARCH_CPU),arm)
+-  # Tests in armel take way too long, and run out of memory in armhf.
+-  TESTFLAGS := -timeout 60m -short
+-else ifeq ($(DEB_HOST_ARCH_CPU),mips64el)
+-  # mips64el is also super slow
+-  TESTFLAGS := -timeout 60m -short
+-else ifeq ($(DEB_HOST_ARCH_CPU),riscv64)
+-  # Override gcflags to workaround https://github.com/golang/go/issues/63167
+-  TESTFLAGS := -timeout 60m -short -gcflags=all=-d=wrapglobalmapctl=1
+-else
+-  TESTFLAGS := -timeout 60m
+-endif
++    -X $(METAPKG)/version.Revision=$(REVISION)\
++    -X $(METAPKG)/version.Branch=HEAD\
++    -X $(METAPKG)/version.BuildUser=freshdeb\
++    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)"
+ 
+ %:
+-	dh $@ --buildsystem=golang --builddirectory=$(BUILDDIR)
+-
+-PROMPB := $(BUILDDIR)/src/$(PKG)/prompb
++	dh $@
+ 
+ override_dh_auto_configure:
+-	dh_auto_configure -- $(BUILDFLAGS)
+-	protoc --gogofast_out=plugins=grpc:$(PROMPB) \
+-            -I$(PROMPB) \
+-            -I$(BUILDDIR)/src/github.com/gogo/protobuf \
+-            $(PROMPB)/*.proto
+-	# Restore docker SD test fixture filename for older build-deps
+-	ln -s json.json \
+-        $(BUILDDIR)/src/$(PKG)/discovery/moby/testdata/dockerprom/containers/json_limit_0.json
+-	# Copy vendored packages
+-	cp -a debian/vendor $(BUILDDIR)/src/$(PKG)/
+ 
+-# Exclude package without non-test files.
+-override_dh_auto_build: DH_GOLANG_EXCLUDES += tsdb/test
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
++	go version
++	# Web UI: upstream's release tarball of the built UI (the same files
++	# upstream's own build embeds), compressed and embedded by upstream's
++	# script.
++	mkdir -p $(BUILDDIR)/web-ui
++	tar -xzf freshdeb-assets/web-ui.tar.gz -C $(BUILDDIR)/web-ui
++	test -f $(BUILDDIR)/web-ui/static/mantine-ui/index.html
++	PREBUILT_ASSETS_STATIC_DIR=$(BUILDDIR)/web-ui/static scripts/compress_assets.sh
++	go build $(GOFLAGS_BUILD) -o $(BUILDDIR)/bin/prometheus ./cmd/prometheus
++	go build $(GOFLAGS_BUILD) -o $(BUILDDIR)/bin/promtool ./cmd/promtool
+ 
+ MAN_WHATIS := "prometheus \\- The Prometheus monitoring server"
+ MAN_WHATIS_TOOL := "promtool \\- Tooling for the Prometheus monitoring system"
+@@ -100,5 +65,18 @@
+ 	# Remove default values, as they create unwieldy long lines.
+ 	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' $(BUILDDIR)/*.1
+ 
++# Upstream's test suite: Debian has to disable a dozen flaky or
++# resource-hungry tests to run it, and upstream's CI runs it on the same
++# code. freshdeb's smoke and upgrade tests run against the installed
++# packages instead.
+ override_dh_auto_test:
+-	dh_auto_test -- $(TESTFLAGS)
++
++override_dh_auto_install:
++	install -D -m 0755 $(BUILDDIR)/bin/prometheus debian/tmp/usr/bin/prometheus
++	install -D -m 0755 $(BUILDDIR)/bin/promtool debian/tmp/usr/bin/promtool
++
++# Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf $(BUILDDIR) web/ui/embed.go web/ui/static
