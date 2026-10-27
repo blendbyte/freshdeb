@@ -1,0 +1,16 @@
+.debhelper/
+*.debhelper
+*.debhelper.log
+*.substvars
+/files
+/git-all/
+/git-cvs/
+/git-doc/
+/git-email/
+/git-gui/
+/git-man/
+/git-svn/
+/git/
+/gitk/
+/gitweb/
+/tmp/

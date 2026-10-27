@@ -12,8 +12,6 @@
 name: neovim
 description: "Neovim text editor"
 homepage: https://neovim.io
-maintainers:
-  - bashgeek
 
 upstream:
   git: https://github.com/neovim/neovim.git

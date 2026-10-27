@@ -1,0 +1,33 @@
+# git: https://git-scm.com
+#
+# Packaging is Debian's (repo.or.cz/git/debian.git, branch debian-sid); debian/
+# is an unmodified import of the commit in packaging.ref. Debian's packaging
+# changes no upstream files, so it applies to new upstream releases as is.
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: git
+description: "git version control system"
+homepage: https://git-scm.com
+
+upstream:
+  git: https://github.com/git/git.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+  # Debian builds from the release tarball; it carries the generated
+  # configure and version files. Checksums match kernel.org's signed
+  # sha256sums.asc.
+  tarball: https://www.kernel.org/pub/software/scm/git/git-{version}.tar.xz
+
+packaging:
+  origin: https://repo.or.cz/git/debian.git
+  ref: 033fba3a4ed08d1fd437cdd486a8d0b93558fe37  # 1:2.55.0-1, unstable
+
+epoch: 1  # Debian's git versions carry one (1:2.39.5-…)
+
+tracks:
+  main:
+    tag: "v2.56.0"
+    commit: a018953688f1b10bddf91bff8747068f5f4746a4
+    sha256: 26c56c296b38c0695b26fa95f475f1d01704d2d38e73465ca30b0b2f5dc789d3
+    revision: 1

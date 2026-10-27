@@ -48,7 +48,6 @@ DEMO_YAML = """\
 name: demo
 description: "Demo package for release tests"
 homepage: https://example.invalid
-maintainers: [tester]
 upstream:
   git: https://example.invalid/demo.git
 packaging:

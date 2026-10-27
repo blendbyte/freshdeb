@@ -12,8 +12,6 @@
 name: memcached
 description: "memcached in-memory object cache"
 homepage: https://memcached.org
-maintainers:
-  - bashgeek
 
 upstream:
   git: https://github.com/memcached/memcached.git

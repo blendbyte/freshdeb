@@ -21,7 +21,6 @@ Nothing outside this directory needs to change to add a package. The builder ins
 name: valkey                    # = directory name = Source: in debian/control
 description: "One line"
 homepage: https://valkey.io
-maintainers: [github-handle]    # who reviews bumps and build failures
 
 upstream:
   git: https://github.com/valkey-io/valkey.git

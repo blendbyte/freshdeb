@@ -13,8 +13,6 @@
 name: valkey
 description: "Valkey key-value datastore (Redis fork)"
 homepage: https://valkey.io
-maintainers:
-  - bashgeek
 
 upstream:
   git: https://github.com/valkey-io/valkey.git

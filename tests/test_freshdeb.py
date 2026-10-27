@@ -217,6 +217,12 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(selected, {("valkey", "9.1"): True})
 
+    def test_metadata_change_needs_no_build(self):
+        self.edit("packages/valkey/package.yaml", 'homepage: https://valkey.io', 'homepage: https://valkey.io/\nmaintainers: [someone]')
+        self.commit()
+        selected, errors, aliases = self.plan()
+        self.assertEqual((selected, errors, aliases), ({}, [], False))
+
     def test_packaging_change_requires_bump(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
         self.commit()

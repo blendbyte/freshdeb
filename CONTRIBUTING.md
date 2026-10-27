@@ -20,7 +20,7 @@ To add one:
 1. Open a "New package" issue so we can agree it fits.
 2. Add `packages/<name>/` following [docs/packages.md](docs/packages.md), based on Debian's packaging.
 3. Build and verify it locally (`scripts/build.sh` + `scripts/verify.sh`, see [docs/packages.md](docs/packages.md#locally)). Pull requests only run checks; packages are built after merge. Maintainers can run the full build on a branch by dispatching `ci.yml` on it.
-4. List yourself under `maintainers`. We add the package to the list on [freshdeb.com](https://www.freshdeb.com) when it ships.
+4. We add the package to the list on [freshdeb.com](https://www.freshdeb.com) when it ships.
 
 "Please add X" issues without a maintainer get closed. Nothing personal, it's how a small project stays manageable.
 

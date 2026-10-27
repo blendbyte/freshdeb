@@ -13,8 +13,6 @@
 name: rclone
 description: "rclone, rsync for cloud storage"
 homepage: https://rclone.org
-maintainers:
-  - bashgeek
 
 upstream:
   git: https://github.com/rclone/rclone.git

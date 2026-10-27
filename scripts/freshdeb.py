@@ -341,8 +341,6 @@ def validate_package(pkg, config, today=None):
     check(data.get("name") == pkg.name, f"name field must equal the directory name ({pkg.name})")
     for key in ("description", "homepage"):
         check(isinstance(data.get(key), str) and data.get(key), f"missing {key}")
-    check(isinstance(data.get("maintainers"), list) and data.get("maintainers"),
-          "maintainers must list at least one GitHub handle")
     upstream = data.get("upstream") or {}
     check(isinstance(upstream.get("git"), str) and upstream.get("git", "").startswith("https://"),
           "upstream.git must be an https:// URL")
@@ -480,6 +478,9 @@ def cmd_validate(args):
 #   full    a release, or a manual rebuild: everything
 SCOPES = ("canary", "tests", "full")
 
+# package.yaml keys that never end up in a .deb: changing them needs no build.
+METADATA_KEYS = ("description", "homepage", "maintainers", "watch")
+
 INFRA_PREFIXES = ("builders/", "scripts/", ".github/workflows/ci.yml")
 NON_BUILD_SUFFIXES = (".md",)
 
@@ -571,7 +572,7 @@ def plan_changes(root, base, head, today=None, package_bases=None):
         packaging = [f for f in pkg_files if f != "package.yaml" and not f.startswith("tests/")
                      and not f.endswith(NON_BUILD_SUFFIXES)]
         if "package.yaml" in pkg_files and base_pkg:
-            strip = lambda d: {k: v for k, v in d.items() if k not in ("tracks", "aliases")}
+            strip = lambda d: {k: v for k, v in d.items() if k not in ("tracks", "aliases", *METADATA_KEYS)}
             if strip(pkg.data) != strip(base_pkg.data):
                 packaging.append("package.yaml")
             if pkg.aliases != base_pkg.aliases:
