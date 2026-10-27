@@ -1,0 +1,36 @@
+# restic: https://restic.net
+#
+# Packaging is Debian's (salsa.debian.org/go-team/packages/restic); debian/
+# is an unmodified import of the commit in packaging.ref. Debian builds
+# against ~28 Debian-packaged Go libraries that only exist in unstable, so
+# overlays/go-build.patch builds with a pinned Go toolchain and vendored,
+# checksum-verified modules instead. See README.md in this directory.
+#
+# Upstream supports only its latest release, so there is one rolling track
+# for 0.x (component v0); a 1.0 would become a new track.
+
+name: restic
+description: "restic backup program"
+homepage: https://restic.net
+maintainers:
+  - bashgeek
+
+upstream:
+  git: https://github.com/restic/restic.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/go-team/packages/restic.git
+  ref: f4e802a8a43f9c3facbb02c22bafa3f34b1831cd  # 0.19.1-1, unstable
+
+tracks:
+  "0":
+    tag: "v0.19.1"
+    commit: 6aa3a516ce654808a1f28f9fa21e9b7c8e6e90bf
+    revision: 1
+    go: "1.25.14"  # upstream's go.mod: toolchain go1.25.10; newest 1.25.x
+    patches: patches/0  # Debian's, without 0002-disable-azure.patch (we vendor the Azure SDK)
+
+overlays:
+  # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
+  - patch: overlays/go-build.patch

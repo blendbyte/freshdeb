@@ -1,0 +1,76 @@
+Source: restic
+Maintainer: Debian Go Packaging Team <pkg-go-maintainers@lists.alioth.debian.org>
+Uploaders: Félix Sipma <felix@debian.org>,
+           Michael Stapelberg <stapelberg@debian.org>
+Section: utils
+Build-Depends: debhelper-compat (= 13),
+ dh-golang,
+ dh-sequence-sphinxdoc,
+ golang-any,
+ golang-github-anacrolix-fuse-dev,
+ golang-github-backblaze-blazer-dev,
+ golang-github-cenkalti-backoff-v4-dev,
+ golang-github-cespare-xxhash-dev,
+ golang-github-elithrar-simple-scrypt-dev,
+ golang-github-google-go-cmp-dev,
+ golang-github-hashicorp-golang-lru-v2-dev,
+ golang-github-juju-ratelimit-dev,
+ golang-github-klauspost-compress-dev,
+ golang-github-mattn-go-isatty-dev,
+ golang-github-minio-minio-go-v7-dev,
+ golang-github-ncw-swift-v2-dev,
+ golang-github-peterbourgon-unixtransport-dev,
+ golang-github-pkg-errors-dev,
+ golang-github-pkg-sftp-dev (>= 1.13.2),
+ golang-github-pkg-xattr-dev,
+ golang-github-restic-chunker-dev (>= 0.2.0),
+ golang-github-spf13-cobra-dev (>= 1.2.1),
+ golang-github-spf13-pflag-dev,
+ golang-golang-x-crypto-dev,
+ golang-golang-x-net-dev,
+ golang-golang-x-oauth2-dev,
+ golang-golang-x-sys-dev,
+ golang-google-cloud-dev,
+ golang-google-api-dev,
+ golang-gopkg-tomb.v2-dev,
+ golang-uber-automaxprocs-dev,
+ sphinx-common,
+ sphinx-rtd-theme-common,
+ python3-all,
+ python3-sphinx,
+ python3-sphinx-rtd-theme
+Standards-Version: 4.7.4
+Homepage: https://github.com/restic/restic
+Vcs-Git: https://salsa.debian.org/go-team/packages/restic.git
+Vcs-Browser: https://salsa.debian.org/go-team/packages/restic
+XS-Go-Import-Path: github.com/restic/restic
+
+Package: restic
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: fuse, ${sphinxdoc:Depends}
+Built-Using: ${misc:Built-Using}
+Static-Built-Using: ${misc:Static-Built-Using}
+Description: backup program with multiple revisions, encryption and more
+ restic is a program that does backups right and was designed with the following
+ principles in mind:
+    - Easy: Doing backups should be a frictionless process, otherwise you might
+ be tempted to skip it.  Restic should be easy to configure and use, so
+ that, in the event of a data loss, you can just restore it. Likewise,
+ restoring data should not be complicated.
+    - Fast: Backing up your data with restic should only be limited by your
+ network or hard disk bandwidth so that you can backup your files every day.
+ Nobody does backups if it takes too much time. Restoring backups should
+ only transfer data that is needed for the files that are to be restored, so
+ that this process is also fast.
+    - Verifiable: Much more important than backup is restore, so restic enables
+ you to easily verify that all data can be restored.
+    - Secure: Restic uses cryptography to guarantee confidentiality and
+ integrity of your data. The location the backup data is stored is assumed
+ not to be a trusted environment (e.g. a shared space where others like
+ system administrators are able to access your backups). Restic is
+ built to secure your data against such attackers.
+    - Efficient: With the growth of data, additional snapshots should only take
+ the storage of the actual increment. Even more, duplicate data should be
+ de-duplicated before it is actually written to the storage back end to save
+ precious backup space.

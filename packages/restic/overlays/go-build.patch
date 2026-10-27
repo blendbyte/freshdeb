@@ -1,0 +1,115 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -4,36 +4,7 @@
+            Michael Stapelberg <stapelberg@debian.org>
+ Section: utils
+ Build-Depends: debhelper-compat (= 13),
+- dh-golang,
+  dh-sequence-sphinxdoc,
+- golang-any,
+- golang-github-anacrolix-fuse-dev,
+- golang-github-backblaze-blazer-dev,
+- golang-github-cenkalti-backoff-v4-dev,
+- golang-github-cespare-xxhash-dev,
+- golang-github-elithrar-simple-scrypt-dev,
+- golang-github-google-go-cmp-dev,
+- golang-github-hashicorp-golang-lru-v2-dev,
+- golang-github-juju-ratelimit-dev,
+- golang-github-klauspost-compress-dev,
+- golang-github-mattn-go-isatty-dev,
+- golang-github-minio-minio-go-v7-dev,
+- golang-github-ncw-swift-v2-dev,
+- golang-github-peterbourgon-unixtransport-dev,
+- golang-github-pkg-errors-dev,
+- golang-github-pkg-sftp-dev (>= 1.13.2),
+- golang-github-pkg-xattr-dev,
+- golang-github-restic-chunker-dev (>= 0.2.0),
+- golang-github-spf13-cobra-dev (>= 1.2.1),
+- golang-github-spf13-pflag-dev,
+- golang-golang-x-crypto-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-oauth2-dev,
+- golang-golang-x-sys-dev,
+- golang-google-cloud-dev,
+- golang-google-api-dev,
+- golang-gopkg-tomb.v2-dev,
+- golang-uber-automaxprocs-dev,
+  sphinx-common,
+  sphinx-rtd-theme-common,
+  python3-all,
+@@ -49,8 +20,6 @@
+ Architecture: any
+ Depends: ${shlibs:Depends}, ${misc:Depends}
+ Recommends: fuse, ${sphinxdoc:Depends}
+-Built-Using: ${misc:Built-Using}
+-Static-Built-Using: ${misc:Static-Built-Using}
+ Description: backup program with multiple revisions, encryption and more
+  restic is a program that does backups right and was designed with the following
+  principles in mind:
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -2,30 +2,36 @@
+ 
+ include /usr/share/dpkg/architecture.mk
+ 
+-export DH_OPTIONS
+-# Install everything, for testdata/ directories:
+-export DH_GOLANG_INSTALL_ALL := 1
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have in the versions restic needs. The toolchain, offline
++# mode (GOFLAGS=-mod=vendor, GOPROXY=off) and caches come from the build
++# environment. Same flags as upstream's release binaries: static, stripped.
++export CGO_ENABLED := 0
+ 
+-# Install only restic binary, other binaries are used to prepare release.
+-export DH_GOLANG_BUILDPKG := github.com/restic/restic/cmd/restic
+-
+-# FUSE doesn’t work within schroot
++# FUSE doesn't work in build containers
+ export RESTIC_TEST_FUSE := 0
+ 
+ %:
+-	dh $@ --buildsystem=golang --with=golang
++	dh $@
++
++override_dh_auto_configure:
+ 
+ # Prevent sphinx-build from accessing the internet during build.
+ override_dh_auto_build: export http_proxy=127.0.0.1:9
+ override_dh_auto_build: export https_proxy=127.0.0.1:9
+ override_dh_auto_build:
+-	dh_auto_build
++	go version
++	go build -trimpath -ldflags "-s -w" -o build/restic ./cmd/restic
+ 	PYTHONPATH=. python3 -m sphinx -N -bhtml doc/ -d debian/doctrees build/html
+ 
+-# Do not install the restic source code, there are no downstream consumers and
+-# it is not intended to be used as a library right now.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	go test ./...
++endif
++
+ override_dh_auto_install:
+-	dh_auto_install -- --no-source
++	install -D -m 0755 build/restic debian/restic/usr/bin/restic
+ ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+ 	install -d debian/restic/usr/share/bash-completion/completions
+ 	debian/restic/usr/bin/restic generate --bash-completion debian/restic/usr/share/bash-completion/completions/restic
+@@ -37,9 +43,11 @@
+ 	debian/restic/usr/bin/restic generate --man debian/restic/usr/share/man/man1
+ endif
+ 
++# Stripped Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
+ override_dh_compress:
+ 	dh_compress -X.ttf -X.svg -X.eot -X.woff
+ 
+ override_dh_auto_clean:
+-	dh_auto_clean
+-	rm -rf debian/doctrees
++	rm -rf build/restic debian/doctrees

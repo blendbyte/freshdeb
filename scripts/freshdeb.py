@@ -152,6 +152,7 @@ class Config:
     archive: dict
     distributions: dict[str, Distribution]
     architectures: dict[str, dict]
+    toolchains: dict = field(default_factory=dict)  # {"go": {"1.25.14": {"amd64": sha256, …}}}
 
     @property
     def primary_arch(self):
@@ -169,6 +170,7 @@ class Track:
     patches: str | None = None
     codenames: list[str] | None = None
     sha256: str | None = None  # release tarball checksum, for upstream.tarball packages
+    go: str | None = None      # Go toolchain version (config.yaml toolchains.go) for Go packages
 
     def active(self, today=None):
         return self.eol is None or self.eol >= (today or dt.date.today())
@@ -242,7 +244,9 @@ def load_config(root=ROOT):
         dists[codename] = Distribution(codename, entry["vendor"], str(entry["version"]), entry["image"])
     archs = data["architectures"]
     require(isinstance(archs, dict) and archs, "config.yaml: architectures must be a non-empty mapping")
-    return Config(data["archive"], dists, archs)
+    toolchains = {kind: {str(v): dict(sums) for v, sums in (versions or {}).items()}
+                  for kind, versions in (data.get("toolchains") or {}).items()}
+    return Config(data["archive"], dists, archs, toolchains)
 
 
 def parse_package(name, path, data):
@@ -256,7 +260,8 @@ def parse_package(name, path, data):
         tracks[key] = Track(key=key, tag=str(entry.get("tag", "")), commit=str(entry.get("commit", "")),
                             revision=entry.get("revision"), eol=eol, patches=entry.get("patches"),
                             codenames=entry.get("codenames"),
-                            sha256=str(entry["sha256"]) if entry.get("sha256") is not None else None)
+                            sha256=str(entry["sha256"]) if entry.get("sha256") is not None else None,
+                            go=str(entry["go"]) if entry.get("go") is not None else None)
     aliases = {}
     for key, target in (data.get("aliases") or {}).items():
         require(isinstance(key, str) and isinstance(target, str),
@@ -388,6 +393,12 @@ def validate_package(pkg, config, today=None):
                     check(version == key or version.startswith(key + "."),
                           f"{where}: tag {track.tag} does not belong to track {key}")
         check(COMMIT_RE.match(track.commit) is not None, f"{where}: commit must be a full 40-character SHA")
+        if track.go is not None:
+            sums = config.toolchains.get("go", {}).get(track.go)
+            check(sums is not None, f"{where}: Go {track.go} is not in config.yaml toolchains.go")
+            if sums is not None:
+                check(all(SHA256_RE.match(str(sums.get(arch, ""))) for arch in config.architectures),
+                      f"{where}: config.yaml toolchains.go {track.go} needs a sha256 for every architecture")
         if tarball is not None:
             check(SHA256_RE.match(track.sha256 or "") is not None,
                   f"{where}: sha256 of the release tarball is required (upstream.tarball is set)")
@@ -474,7 +485,7 @@ def changed_files(root, base, head):
 
 
 def track_fields(track):
-    return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256)
+    return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256, track.go)
 
 
 def newest_track(keys):
@@ -716,6 +727,50 @@ def fetch_tarball(pkg, track, orig, dest):
     require(any(dest.iterdir()), f"{pkg.name}: {url} unpacked to nothing")
 
 
+GO_DOWNLOAD = "https://go.dev/dl/go{version}.linux-{arch}.tar.gz"
+
+
+def install_go(config, version, arch, dest):
+    """Install the pinned Go toolchain into dest/go; returns its GOROOT."""
+    expected = config.toolchains["go"][version][arch]
+    dest.mkdir(parents=True, exist_ok=True)
+    archive = dest / f"go{version}.linux-{arch}.tar.gz"
+    digest = download(GO_DOWNLOAD.format(version=version, arch=arch), archive)
+    require(digest == expected, f"Go {version} for {arch} has sha256 {digest}, config.yaml pins {expected}")
+    run("tar", "-xzf", str(archive), "-C", str(dest))
+    archive.unlink()
+    goroot = dest / "go"
+    reported = run(str(goroot / "bin/go"), "env", "GOVERSION").strip()
+    require(reported == f"go{version}", f"installed Go reports {reported}, expected go{version}")
+    return goroot
+
+
+def go_env(goroot, cache, offline):
+    """Environment for the go tool: our toolchain only, caches under cache."""
+    env = {
+        "PATH": f"{goroot}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "GOTOOLCHAIN": "local",          # never let go.mod switch to a downloaded toolchain
+        "GOPATH": f"{cache}/gopath",
+        "GOMODCACHE": f"{cache}/gopath/pkg/mod",
+        "GOCACHE": f"{cache}/gocache",
+        "GOTELEMETRY": "off",
+    }
+    if offline:
+        env.update({"GOFLAGS": "-mod=vendor", "GOPROXY": "off"})
+    return env
+
+
+def vendor_go_modules(srcdir, env):
+    """Fetch dependencies, verify them against go.sum and the Go checksum
+    database (sum.golang.org), and vendor them so the build runs offline."""
+    require((srcdir / "go.mod").is_file(), f"{srcdir} has no go.mod")
+    full = {**os.environ, **env, "GOFLAGS": "-mod=mod"}
+    for command in (["go", "mod", "download"], ["go", "mod", "verify"], ["go", "mod", "vendor"]):
+        result = subprocess.run(command, cwd=srcdir, env=full, text=True, capture_output=True)
+        require(result.returncode == 0, f"{' '.join(command)} failed:\n{result.stdout}{result.stderr}")
+        print(f"  {' '.join(command)}: ok")
+
+
 def fetch_upstream(pkg, track, dest):
     url = pkg.upstream["git"]
     dest.mkdir(parents=True)
@@ -785,6 +840,8 @@ def changelog_entry(pkg, config, track, codename, version, when):
         f"    (commit {track.commit}).",
         *([f"  * Release tarball: {pkg.tarball_url(pkg.upstream_version(track.tag))}",
            f"    (sha256 {track.sha256})."] if track.sha256 else []),
+        *([f"  * Built with Go {track.go}, dependencies vendored and verified",
+           "    against go.sum and sum.golang.org."] if track.go else []),
         f"  * Packaging: {packaging['origin']} at {packaging['ref'][:12]},",
         f"    freshdeb revision {track.revision}.",
         "",
@@ -819,7 +876,13 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     if (srcdir / "debian").exists():
         print(f"  upstream ships a debian/ directory; replacing it with ours")
         shutil.rmtree(srcdir / "debian")
+    build_env = {}
+    if track.go:
+        goroot = install_go(config, track.go, arch, out / "toolchain")
+        vendor_go_modules(srcdir, go_env(goroot, out / "cache", offline=False))
+        build_env = go_env(goroot, out / "cache", offline=True)
     if not tarball:
+        # After vendoring, so the orig tarball holds everything the build used.
         make_orig_tarball(srcdir, out / f"{name}_{upstream_version}.orig.tar.gz", f"{name}-{upstream_version}", when)
 
     shutil.copytree(pkg.path / "debian", srcdir / "debian", symlinks=True)
@@ -854,6 +917,7 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         "build_options": build.get("options") or [],
         "build_profiles": build.get("profiles") or [],
         "build_arch_indep": arch == config.primary_arch,
+        "build_env": build_env,
         "overlays": applied,
         "publish": bool(publish),
         "skipped": False,
@@ -996,6 +1060,92 @@ class _VersionKey:
         return compare_versions(self.version, other.version) == 0
 
 
+GO_RELEASES = "https://go.dev/dl/?mode=json&include=all"
+
+
+def go_key(version):
+    return tuple(int(part) for part in version.split("."))
+
+
+def go_minor(version):
+    return ".".join(version.split(".")[:2])
+
+
+def go_releases(archs):
+    """{version: {arch: sha256}} for stable Go releases that have linux
+    archives for every architecture we build."""
+    request = urllib.request.Request(GO_RELEASES, headers={"User-Agent": "freshdeb"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        data = json.load(response)
+    releases = {}
+    for release in data:
+        if not release.get("stable") or not re.fullmatch(r"go\d+\.\d+\.\d+", release["version"]):
+            continue
+        sums = {f["arch"]: f["sha256"] for f in release["files"]
+                if f["os"] == "linux" and f["kind"] == "archive" and f["arch"] in archs}
+        if set(sums) == set(archs):
+            releases[release["version"][2:]] = sums
+    return releases
+
+
+def newest_go_patch(minor, releases):
+    patches = [v for v in releases if go_minor(v) == minor]
+    return max(patches, key=go_key) if patches else None
+
+
+def required_go_minor(url, tag):
+    """The Go minor a tag's go.mod asks for (toolchain line, else go line)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        run("git", "init", "-q", tmp)
+        run("git", "-C", tmp, "fetch", "-q", "--depth", "1", url, f"refs/tags/{tag}")
+        gomod = run("git", "-C", tmp, "show", "FETCH_HEAD:go.mod")
+    toolchain = re.search(r"^toolchain\s+go(\d+\.\d+)", gomod, re.M)
+    directive = re.search(r"^go\s+(\d+\.\d+)", gomod, re.M)
+    require(toolchain or directive, f"{url} {tag}: go.mod has neither a toolchain nor a go line")
+    return (toolchain or directive).group(1)
+
+
+def watch_go(pkg, changes, releases):
+    """Pick Go toolchains for a Go package's changes, and propose rebuilds
+    when Go has a newer patch release (those are mostly security fixes,
+    which a static binary only gets by being rebuilt)."""
+    bumped = set()
+    for change in changes:
+        if change["package"] != pkg.name:
+            continue
+        base = pkg.tracks.get(change["track"]) or pkg.tracks.get(change.get("based_on", ""))
+        if not base or not base.go:
+            continue
+        minor = go_minor(base.go)
+        needed = required_go_minor(pkg.upstream["git"], change["tag"])
+        if go_key(needed) > go_key(minor):
+            minor = needed
+        version = newest_go_patch(minor, releases)
+        require(version, f"{pkg.name} {change['track']}: no stable Go {minor} release on go.dev")
+        change["go"] = version
+        change["go_sha256"] = releases[version]
+        bumped.add(change["track"])
+    extra = []
+    for key, track in pkg.tracks.items():
+        if not track.go or not track.active() or key in bumped:
+            continue
+        version = newest_go_patch(go_minor(track.go), releases)
+        if version and go_key(version) > go_key(track.go):
+            extra.append({"package": pkg.name, "kind": "toolchain", "track": key, "from": track.go,
+                          "go": version, "go_sha256": releases[version]})
+    return extra
+
+
+def ensure_go_toolchain(root, version, sums):
+    """Add a Go release's checksums to config.yaml if they aren't there."""
+    if version in load_config(root).toolchains.get("go", {}):
+        return
+    path = root / "config.yaml"
+    run("yq", "-i", f".toolchains.go[{json.dumps(version)}] = {json.dumps(sums)}", str(path))
+    text = path.read_text()
+    path.write_text(re.sub(r'^(\s+)(\d+(?:\.\d+)+):', r'\1"\2":', text, flags=re.M))
+
+
 def yq_string(value):
     return json.dumps(value)
 
@@ -1005,6 +1155,13 @@ def apply_change(root, change):
     pkg = load_package(change["package"], root)
     path = pkg.path / "package.yaml"
     key = yq_string(change["track"])
+    if change.get("go"):
+        ensure_go_toolchain(root, change["go"], change["go_sha256"])
+    if change["kind"] == "toolchain":
+        revision = pkg.tracks[change["track"]].revision + 1
+        run("yq", "-i", f'.tracks[{key}].go = {yq_string(change["go"])} | .tracks[{key}].revision = {revision}',
+            str(path))
+        return
     sha256 = change.get("sha256")
     if sha256 is None and pkg.upstream.get("tarball"):
         # Pin the release tarball now; builds verify it against this.
@@ -1018,11 +1175,15 @@ def apply_change(root, change):
                 f'.tracks[{key}].revision = 1')
         if sha256:
             expr += f' | .tracks[{key}].sha256 = {yq_string(sha256)}'
+        if change.get("go"):
+            expr += f' | .tracks[{key}].go = {yq_string(change["go"])}'
     else:
         base = pkg.tracks[change["based_on"]]
         entry = {"tag": change["tag"], "commit": change["commit"], "revision": 1}
         if sha256:
             entry["sha256"] = sha256
+        if change.get("go"):
+            entry["go"] = change["go"]
         if base.patches:
             new_dir = f"patches/{change['track']}"
             src = pkg.path / base.patches
@@ -1043,14 +1204,22 @@ def apply_change(root, change):
 def cmd_watch(args):
     root = args.root
     names = args.packages or package_names(root)
+    config = load_config(root)
     changes = []
+    releases = None
     for name in names:
         pkg = load_package(name, root)
         if not pkg.data.get("watch", True):
             continue
-        changes.extend(watch_package(pkg, remote_tags(pkg.upstream["git"])))
+        found = watch_package(pkg, remote_tags(pkg.upstream["git"]))
+        if any(track.go for track in pkg.tracks.values()):
+            releases = releases if releases is not None else go_releases(list(config.architectures))
+            found += watch_go(pkg, found, releases)
+        changes.extend(found)
     if args.tracks:
         changes = [c for c in changes if c["track"] in args.tracks]
+    if args.kinds:
+        changes = [c for c in changes if c["kind"] in args.kinds]
     if args.apply:
         for change in changes:
             apply_change(root, change)
@@ -1159,6 +1328,7 @@ def main(argv=None):
     p = sub.add_parser("watch")
     p.add_argument("--packages", nargs="*")
     p.add_argument("--tracks", nargs="*", help="only changes for these tracks (with --apply: one PR each)")
+    p.add_argument("--kinds", nargs="*", help="only these kinds of change: bump, new-track, toolchain")
     p.add_argument("--apply", action="store_true")
     p.set_defaults(func=cmd_watch)
 

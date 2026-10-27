@@ -7,6 +7,7 @@ Run in tests/release.Dockerfile (needs git, dpkg and yq):
 import datetime as dt
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -252,7 +253,10 @@ class PlanTests(unittest.TestCase):
         self.commit()
         selected, _, _ = self.plan()
         # The newest track of every package, never published.
-        self.assertEqual(selected, {("valkey", "9.1"): False, ("memcached", "1.6"): False})
+        expected = {(pkg.name, freshdeb.newest_track([k for k, tr in pkg.tracks.items() if tr.active(TODAY)])): False
+                    for pkg in freshdeb.load_packages(self.repo)}
+        self.assertEqual(selected, expected)
+        self.assertIn(("valkey", "9.1"), expected)
 
     def test_alias_change_needs_release_but_no_build(self):
         self.edit("packages/valkey/package.yaml", '"8": "8.1"', '"8": "8.0"')
@@ -345,6 +349,98 @@ class TarballTests(unittest.TestCase):
         track = freshdeb.load_package("memcached", self.tmp).tracks["1.6"]
         self.assertEqual((track.tag, track.commit, track.sha256, track.revision),
                          ("1.6.99", "c" * 40, self.sha256, 1))
+
+
+class GoTests(unittest.TestCase):
+    """Go mode: pinned toolchains, and watch.yml keeping them current."""
+
+    RELEASES = {
+        "1.25.14": {"amd64": "a" * 64, "arm64": "b" * 64},
+        "1.25.15": {"amd64": "c" * 64, "arm64": "d" * 64},
+        "1.26.3": {"amd64": "e" * 64, "arm64": "f" * 64},
+    }
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.pkg = freshdeb.load_package("restic", self.tmp)
+        self.original = freshdeb.required_go_minor
+
+    def tearDown(self):
+        freshdeb.required_go_minor = self.original
+        shutil.rmtree(self.tmp)
+
+    def test_track_needs_a_pinned_toolchain(self):
+        y = self.tmp / "packages/restic/package.yaml"
+        y.write_text(y.read_text().replace('go: "1.25.14"', 'go: "1.25.99"'))
+        self.assertTrue(any("not in config.yaml toolchains.go" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+    def test_toolchain_needs_every_architecture(self):
+        c = self.tmp / "config.yaml"
+        c.write_text(re.sub(r"\n      arm64: [0-9a-f]{64}", "", c.read_text(), count=1))
+        self.assertTrue(any("sha256 for every architecture" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+    def test_go_patch_release_proposes_a_rebuild(self):
+        extra = freshdeb.watch_go(self.pkg, [], self.RELEASES)
+        self.assertEqual(extra, [{"package": "restic", "kind": "toolchain", "track": "0", "from": "1.25.14",
+                                  "go": "1.25.15", "go_sha256": self.RELEASES["1.25.15"]}])
+
+    def test_newest_patch_needs_no_rebuild(self):
+        releases = {k: v for k, v in self.RELEASES.items() if k != "1.25.15"}
+        self.assertEqual(freshdeb.watch_go(self.pkg, [], releases), [])
+
+    def test_bump_follows_the_go_minor_upstream_requires(self):
+        freshdeb.required_go_minor = lambda url, tag: "1.26"
+        change = {"package": "restic", "kind": "bump", "track": "0", "tag": "v0.20.0", "commit": "c" * 40}
+        self.assertEqual(freshdeb.watch_go(self.pkg, [change], self.RELEASES), [])
+        self.assertEqual(change["go"], "1.26.3")
+
+    def test_bump_keeps_the_minor_but_takes_its_newest_patch(self):
+        freshdeb.required_go_minor = lambda url, tag: "1.24"
+        change = {"package": "restic", "kind": "bump", "track": "0", "tag": "v0.19.2", "commit": "c" * 40}
+        freshdeb.watch_go(self.pkg, [change], self.RELEASES)
+        self.assertEqual(change["go"], "1.25.15")
+
+    def test_apply_toolchain_rebuild(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        freshdeb.apply_change(self.tmp, {"package": "restic", "kind": "toolchain", "track": "0",
+                                         "go": "1.25.15", "go_sha256": self.RELEASES["1.25.15"]})
+        track = freshdeb.load_package("restic", self.tmp).tracks["0"]
+        self.assertEqual((track.go, track.revision), ("1.25.15", 2))
+        config = freshdeb.load_config(self.tmp)
+        self.assertEqual(config.toolchains["go"]["1.25.15"], self.RELEASES["1.25.15"])
+        self.assertIn("1.25.14", config.toolchains["go"])
+        self.assertIn("# toolchains:", (self.tmp / "config.yaml").read_text())
+        self.assertEqual(freshdeb.validate_all(self.tmp, TODAY), [])
+
+    def test_install_verifies_the_toolchain(self):
+        tree = self.tmp / "dl/go/bin"
+        tree.mkdir(parents=True)
+        (tree / "go").write_text("#!/bin/sh\necho go1.25.99\n")
+        (tree / "go").chmod(0o755)
+        archive = self.tmp / "dl/go1.25.99.linux-amd64.tar.gz"
+        subprocess.run(["tar", "-czf", str(archive), "-C", str(self.tmp / "dl"), "go"], check=True)
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        config = freshdeb.load_config(self.tmp)
+        original = freshdeb.GO_DOWNLOAD
+        freshdeb.GO_DOWNLOAD = f"file://{self.tmp}/dl/go{{version}}.linux-{{arch}}.tar.gz"
+        try:
+            config.toolchains["go"]["1.25.99"] = {"amd64": "0" * 64}
+            with self.assertRaisesRegex(freshdeb.FreshdebError, "config.yaml pins"):
+                freshdeb.install_go(config, "1.25.99", "amd64", self.tmp / "bad")
+            config.toolchains["go"]["1.25.99"] = {"amd64": digest}
+            goroot = freshdeb.install_go(config, "1.25.99", "amd64", self.tmp / "good")
+            self.assertTrue((goroot / "bin/go").is_file())
+        finally:
+            freshdeb.GO_DOWNLOAD = original
+
+    def test_build_environment_is_offline(self):
+        env = freshdeb.go_env(Path("/opt/go"), Path("/build/cache"), offline=True)
+        self.assertEqual((env["GOFLAGS"], env["GOPROXY"], env["GOTOOLCHAIN"]), ("-mod=vendor", "off", "local"))
+        self.assertTrue(env["PATH"].startswith("/opt/go/bin:"))
+        self.assertNotIn("GOPROXY", freshdeb.go_env(Path("/opt/go"), Path("/c"), offline=False))
 
 
 class WatchTests(unittest.TestCase):

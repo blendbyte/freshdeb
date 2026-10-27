@@ -1,0 +1,471 @@
+restic (0.19.1-1) unstable; urgency=medium
+
+  * New upstream version 0.19.1
+  * Set Pgp-Mode to default in watch file
+
+ -- Félix Sipma <felix@debian.org>  Mon, 06 Jul 2026 15:37:07 +0200
+
+restic (0.19.0-1) unstable; urgency=medium
+
+  * New upstream version 0.19.0
+  * Rebase patches
+  * Add patch to replace python by python3 in tests; remove python3 and
+    python-is-python3 from B-D; add python3-all to B-D
+  * Update watch file to version 5
+  * Bump Standards-Version to 4.7.4: remove Priority field
+
+ -- Félix Sipma <felix@debian.org>  Sat, 13 Jun 2026 17:52:17 +0200
+
+restic (0.18.1-3) unstable; urgency=medium
+
+  [ Simon Josefsson ]
+  * Team upload
+  * Drop unused d/copyright Files-Excluded
+  * Drop repacksuffix from watch file
+
+  [ Nathan Pratta Teodosio ]
+  * d/tests: Add an autopkgtest (Closes: #1122293)
+
+ -- Simon Josefsson <simon@josefsson.org>  Wed, 17 Dec 2025 16:24:53 +0100
+
+restic (0.18.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Use B-D on golang-github-cenkalti-backoff-v4-dev
+
+ -- Simon Josefsson <simon@josefsson.org>  Thu, 11 Dec 2025 18:15:48 +0100
+
+restic (0.18.1-1) unstable; urgency=medium
+
+  * New upstream version 0.18.1
+  * rebase 0002-disable-azure.patch
+  * add Static-Built-Using: ${misc:Static-Built-Using} stanza
+  * bump Standards-Version to 4.7.2 (no change required)
+  * add Changelog, Documentation, Repository-Browse, Repository to upstream
+    metadata
+
+ -- Félix Sipma <felix@debian.org>  Sat, 01 Nov 2025 11:27:07 +0100
+
+restic (0.18.0-1) unstable; urgency=medium
+
+  * New upstream version 0.18.0
+  * rebase patches: 0002-disable-azure.patch, remove-self-update.patch
+  * remove golang-github-minio-sha256-simd-dev from B-D
+
+ -- Félix Sipma <felix@debian.org>  Sun, 30 Mar 2025 20:04:58 +0200
+
+restic (0.17.3-1) unstable; urgency=medium
+
+  * New upstream version 0.17.3
+
+ -- Félix Sipma <felix@debian.org>  Wed, 11 Dec 2024 18:51:53 +0100
+
+restic (0.17.2-1) unstable; urgency=medium
+
+  * New upstream version 0.17.2
+
+ -- Félix Sipma <felix@debian.org>  Mon, 04 Nov 2024 11:25:58 +0100
+
+restic (0.17.1-1) unstable; urgency=medium
+
+  * New upstream version 0.17.1
+  * rebase remove-self-update.patch
+
+ -- Félix Sipma <felix@debian.org>  Fri, 13 Sep 2024 14:25:43 +0200
+
+restic (0.17.0-1) unstable; urgency=medium
+
+  * New upstream version 0.17.0
+  * remove gitlab-ci.yml, use default pipeline
+  * remove privacy-breach patch (README.md is not converted to html)
+  * rebase patches
+  * add golang-github-peterbourgon-unixtransport-dev to B-D
+  * add python3 and python-is-python3 to B-D (needed for tests)
+
+ -- Félix Sipma <felix@debian.org>  Sat, 10 Aug 2024 21:21:07 +0200
+
+restic (0.16.4-2) unstable; urgency=medium
+
+  * add patch to remove self-update (Closes: #1062806)
+
+ -- Félix Sipma <felix@debian.org>  Fri, 09 Feb 2024 14:15:37 +0100
+
+restic (0.16.4-1) unstable; urgency=medium
+
+  * New upstream version 0.16.4
+
+ -- Félix Sipma <felix@debian.org>  Thu, 08 Feb 2024 19:30:36 +0100
+
+restic (0.16.3-1) unstable; urgency=medium
+
+  * New upstream version 0.16.3
+  * move ${sphinxdoc:Depends} from Depends to Recommends (Closes: #1056698)
+  * reformat patches' fields
+  * rebase patches
+
+ -- Félix Sipma <felix@debian.org>  Tue, 16 Jan 2024 15:00:34 +0100
+
+restic (0.16.2-1) unstable; urgency=medium
+
+  * New upstream version 0.16.2
+  * rebase patches
+  * add golang-uber-automaxprocs-dev to B-D
+  * add golang-github-minio-sha256-simd-dev to B-D
+  * replace golang-github-kurin-blazer-dev by
+    golang-github-backblaze-blazer-dev in B-D
+  * remove golang-github-azure-azure-sdk-for-go-dev from B-D (azure disabled)
+  * move ${sphinxdoc:Depends} to Depends:
+  * remove useless --with sphinxdoc in rules (replaced by dh-sequence-sphinxdoc)
+  * bump debhelper-compat to 13 (no change required)
+  * add clean file (Closes: #1048956)
+
+ -- Félix Sipma <felix@debian.org>  Mon, 20 Nov 2023 10:13:19 +0100
+
+restic (0.16.0-1) unstable; urgency=medium
+
+  [ Félix Sipma ]
+  * New upstream version 0.16.0 (Closes: #1031235, #1042659)
+  * add patch to disable azure: golang-github-azure-azure-sdk-for-go-dev has
+    been split in a lot of different modules upstream, and it does not work
+    well with the way go modules are packaged in Debian (one source package
+    for one module). Help needed in go-team!
+  * replace golang-github-hashicorp-golang-lru-dev by
+    golang-github-hashicorp-golang-lru-v2-dev in B-D
+  * replace golang-bazil-fuse-dev by
+    golang-github-anacrolix-fuse-dev in B-D
+  * add dh-sequence-sphinxdoc to B-D
+
+  [ Ilya Grigoriev ]
+  * Add fish completions to the package (Closes: #1042728)
+
+ -- Félix Sipma <felix@debian.org>  Wed, 01 Nov 2023 15:28:15 +0100
+
+restic (0.14.0-1) unstable; urgency=medium
+
+  * New upstream version 0.14.0 (Closes: #1018154)
+  * add golang-github-klauspost-compress-dev to B-D
+
+ -- Félix Sipma <felix@debian.org>  Sat, 27 Aug 2022 12:48:55 +0200
+
+restic (0.13.1-1) unstable; urgency=medium
+
+  * New upstream version 0.13.1 (Closes: #1012207)
+  * replace golang-github-ncw-swift-dev by golang-github-ncw-swift-v2-dev in B-D
+  * remove golang-siphash-dev from B-D
+  * rebase patches
+
+ -- Félix Sipma <felix@debian.org>  Sat, 18 Jun 2022 20:54:58 +0200
+
+restic (0.12.1-2) unstable; urgency=medium
+
+  * dgit push-source failed with previous version, new try
+
+ -- Félix Sipma <felix@debian.org>  Sun, 05 Sep 2021 12:03:00 +0200
+
+restic (0.12.1-1) unstable; urgency=medium
+
+  * New upstream version 0.12.1
+  * bump the minimum required version of golang-github-pkg-sftp-dev to 1.13.2
+  * bump minimum required version of golang-github-spf13-cobra-dev to 1.2.1
+  * update watch file
+
+ -- Félix Sipma <felix@debian.org>  Sun, 05 Sep 2021 11:54:22 +0200
+
+restic (0.12.0-2~exp2) experimental; urgency=medium
+
+  * remove useless patch
+
+ -- Félix Sipma <felix@debian.org>  Sun, 04 Jul 2021 16:58:36 +0200
+
+restic (0.12.0-2~exp1) experimental; urgency=medium
+
+  * fix sphinxdoc generation (Closes: #872206)
+  * update my email address
+
+ -- Félix Sipma <felix@debian.org>  Sun, 04 Jul 2021 16:39:55 +0200
+
+restic (0.12.0-1) experimental; urgency=medium
+
+  * Team upload.
+  * New upstream version 0.12.0
+    - debian/patches: refresh
+    - debian/control: require newer golang-github-cenkalti-backoff-dev
+
+ -- Reinhard Tartler <siretart@tauware.de>  Tue, 16 Feb 2021 18:39:16 -0500
+
+restic (0.11.0-1) unstable; urgency=medium
+
+  * New upstream version 0.11.0
+  * convert privacy breach patch for README.md
+  * add golang-google-cloud-dev to B-D
+  * add golang-github-minio-minio-go-v7-dev to B-D
+  * add patch to use golang-github-cenkalti-backoff v3
+
+ -- Félix Sipma <felix+debian@gueux.org>  Fri, 05 Feb 2021 09:29:13 +0100
+
+restic (0.10.0-2) unstable; urgency=medium
+
+  * add golang-github-hashicorp-golang-lru-dev to B-D (Closes: #973144)
+
+ -- Félix Sipma <felix+debian@gueux.org>  Wed, 28 Oct 2020 23:36:26 +0100
+
+restic (0.10.0-1) unstable; urgency=medium
+
+  [ Dmitry Smirnov ]
+  * Tightened Build-Depends.
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit.
+  * Update standards version to 4.4.1, no changes needed.
+
+  [ Félix Sipma ]
+  * New upstream version 0.10.0 (Closes: #970617)
+  * add golang-github-cespare-xxhash-dev and golang-siphash-dev to B-D
+  * avoid embedding sphinxdoc related files
+  * update privacy breach patch
+  * generate manpages at build time
+
+ -- Félix Sipma <felix+debian@gueux.org>  Sun, 20 Sep 2020 22:21:41 +0200
+
+restic (0.9.6+ds-2) unstable; urgency=medium
+
+  * dgit push-source failed with previous version, new try
+
+ -- Félix Sipma <felix+debian@gueux.org>  Sun, 24 Nov 2019 14:43:28 +0100
+
+restic (0.9.6+ds-1) unstable; urgency=medium
+
+  * New upstream version 0.9.6+ds
+  * rebase patch
+
+ -- Félix Sipma <felix+debian@gueux.org>  Sat, 23 Nov 2019 20:12:04 +0100
+
+restic (0.9.5+ds-1) unstable; urgency=medium
+
+  * New upstream version 0.9.5+ds
+  * rebase patches: remove fix-message-in-quiet-mode patch (applied upstream)
+  * bump Standards-Version to 4.4.0 (no change required)
+  * use debhelper-compat instead of compat file
+  * update upstream signing key (fixes public-upstream-key-not-minimal lintian
+    warning)
+  * remove golang-github-hashicorp-golang-lru-dev dependency (removed
+    upstream)
+
+ -- Félix Sipma <felix+debian@gueux.org>  Tue, 06 Aug 2019 15:18:40 +0200
+
+restic (0.9.4+ds-2) unstable; urgency=medium
+
+  * Team upload
+  * Bug fix: restic 0.9.4 `-q` outputs `open repository` (Closes: #921849)
+  * Add recommends on fuse (Closes: #905149)
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 09 Feb 2019 18:53:40 -0500
+
+restic (0.9.4+ds-1) unstable; urgency=medium
+
+  * add golang-github-spf13-pflag-dev as a build dependency
+  * setting the version manually is not needed anymore
+    (https://github.com/restic/restic/issues/1958#issuecomment-413972449)
+  * New upstream version 0.9.4+ds
+  * add golang-github-hashicorp-golang-lru-dev to build dependencies
+  * bump Standards-Version to 4.3.0 (no change required)
+
+ -- Félix Sipma <felix+debian@gueux.org>  Wed, 09 Jan 2019 15:32:39 +0100
+
+restic (0.9.3+ds-1) unstable; urgency=medium
+
+  * New upstream version 0.9.3+ds
+  * install restic binary only (ignore binaries used to prepare release)
+
+ -- Félix Sipma <felix+debian@gueux.org>  Mon, 22 Oct 2018 19:23:21 +0200
+
+restic (0.9.2+ds-2) unstable; urgency=medium
+
+  * add golang-github-mattn-go-isatty-dev build-dependency (Closes: #909414)
+  * bump Standards-Version to 4.2.1 (no change required)
+
+ -- Félix Sipma <felix+debian@gueux.org>  Mon, 24 Sep 2018 10:01:51 +0200
+
+restic (0.9.2+ds-1) unstable; urgency=medium
+
+  * watch file: use /releases instead of /tags (fails otherwise)
+  * New upstream version 0.9.2+ds
+  * rebase privacy-breach patch
+  * bump Standards-Version to 4.2.0 (no change required)
+
+ -- Félix Sipma <felix+debian@gueux.org>  Wed, 15 Aug 2018 17:22:46 +0200
+
+restic (0.9.1+ds-1) unstable; urgency=medium
+
+  * New upstream version 0.9.1+ds
+  * update privacy breach patch
+  * bump Standards-Version to 4.1.4 (no change required)
+  * add golang-gopkg-tomb.v2-dev build dependency
+  * add golang-github-google-go-cmp-dev build dependency
+  * bump golang-github-cenkalti-backoff-dev required version
+
+ -- Félix Sipma <felix+debian@gueux.org>  Sun, 10 Jun 2018 20:05:21 +0200
+
+restic (0.8.3+ds-1) unstable; urgency=medium
+
+  [ Michael Stapelberg ]
+  * update debian/gitlab-ci.yml (using salsa.debian.org/go-team/ci/cmd/ci)
+
+  [ Félix Sipma ]
+  * New upstream version 0.8.3+ds
+
+ -- Félix Sipma <felix+debian@gueux.org>  Tue, 27 Feb 2018 13:06:57 +0100
+
+restic (0.8.2+ds-1) unstable; urgency=medium
+
+  * New upstream version 0.8.2+ds
+  * add +ds suffix to version name
+  * bump compat to 11
+
+ -- Félix Sipma <felix+debian@gueux.org>  Mon, 19 Feb 2018 13:13:12 +0100
+
+restic (0.8.1-3) unstable; urgency=medium
+
+  * Team upload.
+  * Vcs-* urls: pkg-go-team -> go-team.
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 06 Feb 2018 00:16:02 -0500
+
+restic (0.8.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * point Vcs-* urls to salsa.d.o subproject
+
+ -- Alexandre Viau <aviau@debian.org>  Thu, 25 Jan 2018 16:55:55 -0500
+
+restic (0.8.1-1) unstable; urgency=medium
+
+  * New upstream version 0.8.1
+  * generate zsh completion (Closes: #883446)
+  * bump Standards-Version to 4.1.3 (no change required)
+  * move to salsa.debian.org
+
+ -- Félix Sipma <felix+debian@gueux.org>  Fri, 05 Jan 2018 11:47:08 +0100
+
+restic (0.8.0-1) unstable; urgency=medium
+
+  * New upstream version 0.8.0
+  * add golang-github-cenkalti-backoff-dev and
+    golang-github-juju-ratelimit-dev dependencies
+  * update minimum requirements of dependencies
+  * bump Standards-Version to 4.1.1 (no change required)
+  * update privacy-breach patch
+  * use new "generate --bash-completion" command to generate bash-completion
+  * put html doc in html/ dir
+
+ -- Félix Sipma <felix+debian@gueux.org>  Mon, 27 Nov 2017 18:05:14 +0100
+
+restic (0.7.3+debian0-2) unstable; urgency=medium
+
+  * avoid compression of fonts files (Closes: #872175)
+
+    Note: firefox does not like fonts in doc to be symlinked. B-D on
+    fonts-font-awesome results in errors in firefox console when opening
+    restic doc:
+
+    downloadable font: download failed (font-family: "FontAwesome"
+    style:normal weight:normal stretch:normal src index:2): bad URI or
+    cross-site access not allowed source:
+    file:///usr/share/doc/restic/_static/fonts/fontawesome-webfont.woff?v=4.6.3
+
+ -- Félix Sipma <felix+debian@gueux.org>  Tue, 26 Sep 2017 12:04:00 +0200
+
+restic (0.7.3+debian0-1) unstable; urgency=medium
+
+  * New upstream version 0.7.3
+  * repack 0.7.3 to exclude vendor files
+  * update build dependencies
+  * mangle version in watch file
+  * remove fix-imports patch (not needed anymore)
+  * remove sphinxdoc from dh --with options (build fails otherwise)
+  * avoid embedding jquery.js & underscore.js from sphinx
+  * install manpages (Closes: #872173)
+  * upgrade standard-version to 4.1.0
+    - convert deprecated "extra" priority to "optional"
+  * ignore all files in vendor/ dir
+  * Generate and install bash-completion file. (Closes: #872174). Thanks,
+    Michael Biebl.
+
+ -- Félix Sipma <felix+debian@gueux.org>  Tue, 26 Sep 2017 10:49:19 +0200
+
+restic (0.7.1-1) unstable; urgency=medium
+
+  * New upstream version 0.7.1
+  * drop 0001-Debianize-doc-Manual.md.patch (manual changed upstream)
+  * Drop 0002-Update-code-for-pkg-xattr-v0.2.0.patch (merged upstream)
+  * add new build-deps
+  * Disable FUSE tests
+  * refresh fix-imports.patch
+  * build restructuredtext docs using sphinx
+  * Add privacy-breach.patch, removing badge images from docs
+  * Add doc-base file
+  * bump standards-version (no changes necessary)
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Thu, 27 Jul 2017 08:55:09 +0200
+
+restic (0.5.0-2) unstable; urgency=medium
+
+  * Move package to pkg-go
+  * Experimental to unstable as the freeze is over
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Wed, 19 Jul 2017 08:53:18 +0200
+
+restic (0.5.0-1) experimental; urgency=medium
+
+  * New upstream version 0.5.0
+  * uscan: use signed archives
+  * build-depend on golang-github-pkg-xattr-dev
+  * rebase Manual.md patch
+  * Update code for pkg xattr v0.2.0 patch
+    (upstream patch)
+  * update watch regex
+
+ -- Félix Sipma <felix+debian@gueux.org>  Tue, 25 Apr 2017 17:50:16 +0200
+
+restic (0.4.0-1) experimental; urgency=medium
+
+  * New upstream version 0.4.0
+
+ -- Félix Sipma <felix+debian@gueux.org>  Thu, 02 Feb 2017 12:48:34 +0100
+
+restic (0.3.3-1) unstable; urgency=medium
+
+  * New upstream version 0.3.3
+  * binary should go to utils, not misc
+  * adapt copyright file to the removal of src/cmds/restic-server/
+
+ -- Félix Sipma <felix+debian@gueux.org>  Sun, 08 Jan 2017 22:06:16 +0100
+
+restic (0.3.2-2) unstable; urgency=medium
+
+  * update copyright
+
+ -- Félix Sipma <felix+debian@gueux.org>  Wed, 21 Dec 2016 14:56:23 +0100
+
+restic (0.3.2-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #846176)
+  * use "go build" instead of "go run build.go" to build
+    Thanks, Alexander Neumann
+  * remove useless patch: 0001-replace-vendor-src-by-usr-share-gocode-src.patch
+  * add debian watch file
+  * add initial debian rules file
+  * add debian compat file
+  * add debian source/format file
+  * add initial debian control file
+  * add debian copyright file
+  * replace vendor/src by /usr/share/gocode/src
+  * add build dependencies
+  * debianize doc/Manual.md
+  * add docs
+  * add build dependency constraint
+  * enable pristine-tar feature in gbp.conf
+  * use Files-Excluded feature of uscan
+  * New upstream version 0.3.2
+
+ -- Félix Sipma <felix+debian@gueux.org>  Mon, 19 Dec 2016 15:28:59 +0100

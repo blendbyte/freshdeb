@@ -1,0 +1,134 @@
+Description: remove self-update functionality
+Author: Félix Sipma <felix@debian.org>
+Forwarded: not-needed
+Last-Update: 2026-06-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/doc/manual_rest.rst
++++ b/doc/manual_rest.rst
+@@ -51,7 +51,6 @@ Usage help is available:
+     Additional Commands:
+       generate      Generate manual pages and auto-completion files (bash, fish, zsh, powershell)
+       help          Help about any command
+-      self-update   Update the restic binary
+       version       Print version information
+ 
+     Flags:
+--- a/doc/bash-completion.sh
++++ b/doc/bash-completion.sh
+@@ -3373,80 +3373,6 @@ _restic_rewrite()
+     noun_aliases=()
+ }
+ 
+-_restic_self-update()
+-{
+-    last_command="restic_self-update"
+-
+-    command_aliases=()
+-
+-    commands=()
+-
+-    flags=()
+-    two_word_flags=()
+-    local_nonpersistent_flags=()
+-    flags_with_completion=()
+-    flags_completion=()
+-
+-    flags+=("--help")
+-    flags+=("-h")
+-    local_nonpersistent_flags+=("--help")
+-    local_nonpersistent_flags+=("-h")
+-    flags+=("--output=")
+-    two_word_flags+=("--output")
+-    local_nonpersistent_flags+=("--output")
+-    local_nonpersistent_flags+=("--output=")
+-    flags+=("--cacert=")
+-    two_word_flags+=("--cacert")
+-    flags+=("--cache-dir=")
+-    two_word_flags+=("--cache-dir")
+-    flags+=("--cleanup-cache")
+-    flags+=("--compression=")
+-    two_word_flags+=("--compression")
+-    flags+=("--http-user-agent=")
+-    two_word_flags+=("--http-user-agent")
+-    flags+=("--insecure-no-password")
+-    flags+=("--insecure-tls")
+-    flags+=("--json")
+-    flags+=("--key-hint=")
+-    two_word_flags+=("--key-hint")
+-    flags+=("--limit-download=")
+-    two_word_flags+=("--limit-download")
+-    flags+=("--limit-upload=")
+-    two_word_flags+=("--limit-upload")
+-    flags+=("--no-cache")
+-    flags+=("--no-extra-verify")
+-    flags+=("--no-lock")
+-    flags+=("--option=")
+-    two_word_flags+=("--option")
+-    two_word_flags+=("-o")
+-    flags+=("--pack-size=")
+-    two_word_flags+=("--pack-size")
+-    flags+=("--password-command=")
+-    two_word_flags+=("--password-command")
+-    flags+=("--password-file=")
+-    two_word_flags+=("--password-file")
+-    two_word_flags+=("-p")
+-    flags+=("--quiet")
+-    flags+=("-q")
+-    flags+=("--repo=")
+-    two_word_flags+=("--repo")
+-    two_word_flags+=("-r")
+-    flags+=("--repository-file=")
+-    two_word_flags+=("--repository-file")
+-    flags+=("--retry-lock=")
+-    two_word_flags+=("--retry-lock")
+-    flags+=("--stuck-request-timeout=")
+-    two_word_flags+=("--stuck-request-timeout")
+-    flags+=("--tls-client-cert=")
+-    two_word_flags+=("--tls-client-cert")
+-    flags+=("--verbose")
+-    flags+=("-v")
+-
+-    must_have_one_flag=()
+-    must_have_one_noun=()
+-    noun_aliases=()
+-}
+-
+ _restic_snapshots()
+ {
+     last_command="restic_snapshots"
+@@ -3904,7 +3830,6 @@ _restic_root_command()
+     commands+=("repair")
+     commands+=("restore")
+     commands+=("rewrite")
+-    commands+=("self-update")
+     commands+=("snapshots")
+     commands+=("stats")
+     commands+=("tag")
+--- a/cmd/restic/main.go
++++ b/cmd/restic/main.go
+@@ -107,7 +107,6 @@ The full documentation can be found at h
+ 
+ 	registerDebugCommand(cmd, globalOptions)
+ 	registerMountCommand(cmd, globalOptions)
+-	registerSelfUpdateCommand(cmd, globalOptions)
+ 	global.RegisterProfiling(cmd, os.Stderr)
+ 
+ 	return cmd
+@@ -118,7 +117,7 @@ The full documentation can be found at h
+ // user for authentication).
+ func needsPassword(cmd string) bool {
+ 	switch cmd {
+-	case "cache", "generate", "help", "options", "self-update", "version", "__complete", "__completeNoDesc":
++	case "cache", "generate", "help", "options", "version", "__complete", "__completeNoDesc":
+ 		return false
+ 	default:
+ 		return true
+--- a/doc/man/restic.1
++++ b/doc/man/restic.1
+@@ -123,4 +123,4 @@ The full documentation can be found at h
+ 
+ 
+ .SH SEE ALSO
+-\fBrestic-backup(1)\fP, \fBrestic-cache(1)\fP, \fBrestic-cat(1)\fP, \fBrestic-check(1)\fP, \fBrestic-copy(1)\fP, \fBrestic-diff(1)\fP, \fBrestic-dump(1)\fP, \fBrestic-features(1)\fP, \fBrestic-find(1)\fP, \fBrestic-forget(1)\fP, \fBrestic-generate(1)\fP, \fBrestic-init(1)\fP, \fBrestic-key(1)\fP, \fBrestic-list(1)\fP, \fBrestic-ls(1)\fP, \fBrestic-migrate(1)\fP, \fBrestic-mount(1)\fP, \fBrestic-options(1)\fP, \fBrestic-prune(1)\fP, \fBrestic-recover(1)\fP, \fBrestic-repair(1)\fP, \fBrestic-restore(1)\fP, \fBrestic-rewrite(1)\fP, \fBrestic-self-update(1)\fP, \fBrestic-snapshots(1)\fP, \fBrestic-stats(1)\fP, \fBrestic-tag(1)\fP, \fBrestic-unlock(1)\fP, \fBrestic-version(1)\fP
++\fBrestic-backup(1)\fP, \fBrestic-cache(1)\fP, \fBrestic-cat(1)\fP, \fBrestic-check(1)\fP, \fBrestic-copy(1)\fP, \fBrestic-diff(1)\fP, \fBrestic-dump(1)\fP, \fBrestic-features(1)\fP, \fBrestic-find(1)\fP, \fBrestic-forget(1)\fP, \fBrestic-generate(1)\fP, \fBrestic-init(1)\fP, \fBrestic-key(1)\fP, \fBrestic-list(1)\fP, \fBrestic-ls(1)\fP, \fBrestic-migrate(1)\fP, \fBrestic-mount(1)\fP, \fBrestic-options(1)\fP, \fBrestic-prune(1)\fP, \fBrestic-recover(1)\fP, \fBrestic-repair(1)\fP, \fBrestic-restore(1)\fP, \fBrestic-rewrite(1)\fP, \fBrestic-snapshots(1)\fP, \fBrestic-stats(1)\fP, \fBrestic-tag(1)\fP, \fBrestic-unlock(1)\fP, \fBrestic-version(1)\fP

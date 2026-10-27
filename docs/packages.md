@@ -42,6 +42,7 @@ tracks:                         # one APT component per track: v<track> ("9.1" -
     tag: "9.1.3"
     commit: <full commit the tag points to>
     sha256: <tarball checksum>  # only with upstream.tarball; watch.yml fills it in
+    go: "1.25.14"               # only for Go programs: toolchain from config.yaml (see below)
     revision: 1                 # freshdeb packaging revision; back to 1 on a new tag
     eol: 2031-05-19             # optional; after this date the track isn't built anymore
     patches: patches/9.1        # optional; replaces debian/patches for this track
@@ -68,6 +69,16 @@ build:
 ### Git tag or release tarball
 
 By default the source is the git tag, checked out at the pinned commit. Set `upstream.tarball` when Debian builds from upstream's release tarball instead, typically because it contains generated files (`configure`, version stamps) that the git tag doesn't. The tarball becomes the orig tarball, verified against the track's `sha256` before anything is unpacked. The tag's commit is still checked, so a moved tag fails the build either way.
+
+### Go programs
+
+Debian builds Go programs against Debian-packaged Go libraries (`golang-*-dev`) and the distribution's Go compiler. Older releases have neither in the versions current upstreams need. Instead, Go packages build with a pinned toolchain:
+
+- **Toolchain:** the track's `go:` version must be listed under `toolchains.go` in `config.yaml`, with a sha256 per architecture. The builder downloads that exact release from go.dev and verifies it.
+- **Dependencies:** `go mod download` and `go mod verify` check every module against the project's `go.sum` and the Go checksum database (sum.golang.org). `go mod vendor` then puts them into the source tree.
+- **Build:** runs offline: `GOFLAGS=-mod=vendor`, `GOPROXY=off`, `GOTOOLCHAIN=local`, with the toolchain first on `PATH`.
+- **Packaging:** keep Debian's `debian/` and replace the dh-golang build with an overlay (see `packages/restic/overlays/go-build.patch`): drop the `golang-*` build-dependencies and build with `go build`.
+- **watch.yml:** on a new upstream release, it reads `go.mod` and moves the track to a newer Go minor if upstream requires one. When Go publishes a patch release of a track's minor, it opens a rebuild PR (new toolchain, `revision` + 1). Those releases are mostly security fixes, and a static binary only gets them by being rebuilt.
 
 ### Tracks
 

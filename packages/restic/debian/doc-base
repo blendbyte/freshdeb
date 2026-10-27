@@ -1,0 +1,9 @@
+Document: restic
+Title: Restic Documentation
+Author: restic authors
+Abstract: restic is a backup program that is fast, efficient and secure.
+Section: File Management
+
+Format: HTML
+Index: /usr/share/doc/restic/html/index.html
+Files: /usr/share/doc/restic/html/index.html

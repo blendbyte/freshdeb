@@ -1,0 +1,20 @@
+#!/bin/sh -ex
+#
+#Backup a tree and make sure it can be restored only after giving the correct
+#password, intact in structure as well as in its file contents.
+
+d="$(dirname "$0")/sample-tree"
+restoreTo=$(mktemp -d)
+RESTIC_REPOSITORY="$(mktemp -d)"
+export RESTIC_REPOSITORY
+export RESTIC_PASSWORD=123
+
+restic init
+restic backup "$d"
+
+export RESTIC_PASSWORD=incorrect
+restic restore --target "$restoreTo" latest && exit 1
+
+export RESTIC_PASSWORD=123
+restic restore --target "$restoreTo" latest
+diff -r "$restoreTo/$d" "$d"

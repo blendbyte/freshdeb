@@ -71,11 +71,16 @@ then
     build_type=all
 fi
 
+# Extra environment from prepare, e.g. a pinned Go toolchain in offline mode.
+mapfile -t build_env < <(python3 -c 'import json,sys
+for k, v in json.load(open(sys.argv[1])).get("build_env", {}).items(): print(f"{k}={v}")' "$WORK/build-info.json")
+
 echo "::group::Build ($build_type)"
 chown -R builder: "$WORK"
 runuser -u builder -- env \
     DEB_BUILD_OPTIONS="$options noautodbgsym noddebs parallel=$(nproc)" \
     ${profiles:+DEB_BUILD_PROFILES="$profiles"} \
+    "${build_env[@]}" \
     bash -c "cd '$SRC' && dpkg-buildpackage --build=$build_type -us -uc"
 echo "::endgroup::"
 

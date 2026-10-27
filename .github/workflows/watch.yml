@@ -7,6 +7,9 @@ name: watch
 #   new minor/major line      -> PR adding the track (patches copied from the
 #                                newest track) and moving aliases; needs a
 #                                human: set eol, check the patches
+#   Go patch release          -> for Go packages: PR rebuilding the track with
+#                                the new toolchain (revision + 1); Go patch
+#                                releases are mostly security fixes
 #
 # Pull requests opened with the default GITHUB_TOKEN do not trigger ci.yml.
 # Set the FRESHDEB_BOT_TOKEN secret (GitHub App or fine-grained PAT with
@@ -62,18 +65,25 @@ jobs:
             track="$(jq -r .track <<<"$change")"
             tag="$(jq -r .tag <<<"$change")"
             kind="$(jq -r .kind <<<"$change")"
+            go="$(jq -r '.go // empty' <<<"$change")"
             branch="watch/${package}-${track}"
+            [[ "$kind" == "toolchain" ]] && branch="watch/${package}-${track}-go"
             upstream="$(yq -r .upstream.git "packages/${package}/package.yaml")"
             notes="${upstream%.git}/releases/tag/${tag}"
 
             git checkout -q -B "$branch" "$base"
-            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --apply >/dev/null
-            git add -A "packages/${package}"
+            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --kinds "$kind" --apply >/dev/null
+            git add -A "packages/${package}" config.yaml
             if git diff --cached --quiet; then
               continue
             fi
 
-            if [[ "$kind" == "bump" ]]; then
+            if [[ "$kind" == "toolchain" ]]; then
+              title="${package} ${track}: rebuild with Go ${go}"
+              body="Go released [${go}](https://go.dev/doc/devel/release#go$(cut -d. -f1-2 <<<"$go")). Go patch releases are mostly security fixes, and ${package} is a static binary that only gets them by being rebuilt.
+
+          This pins Go ${go} (checksums from go.dev, added to config.yaml) for track \`${track}\` and bumps its revision. Merging builds, tests and publishes the rebuild."
+            elif [[ "$kind" == "bump" ]]; then
               title="${package} ${track}: update to ${tag}"
               body="Upstream released [${tag}](${notes}). This bumps track \`${track}\` and resets its revision to 1.
 

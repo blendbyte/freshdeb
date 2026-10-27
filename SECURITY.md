@@ -45,6 +45,7 @@ If the fingerprint doesn't match, don't use the key and open an issue.
 
 - Upstream sources are pinned to commit hashes in `package.yaml`. If a tag moves, the build fails instead of following it.
 - Packaging comes from Debian, imported unmodified. Every change we make is a visible patch in this repository.
+- Go programs are built with a Go toolchain pinned by sha256 in `config.yaml`. Their dependencies are verified against the project's `go.sum` and the Go checksum database before vendoring, and the build itself runs offline.
 - Builds run in fresh containers on GitHub-hosted runners, as an unprivileged user.
 - The signing key exists only as a secret of the `production` environment, used by the release job.
 - Releases never delete or replace published files. Each release keeps a backup of the previous repository state.

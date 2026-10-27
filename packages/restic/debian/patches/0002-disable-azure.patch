@@ -1,0 +1,45 @@
+Description: disable azure
+Author: Félix Sipma <felix@debian.org>
+Last-Update: 2026-06-13
+Forwarded: not-needed
+
+---
+--- a/go.mod
++++ b/go.mod
+@@ -10,9 +10,6 @@ godebug winsymlink=0
+ 
+ require (
+ 	cloud.google.com/go/storage v1.62.2
+-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
+-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
+-	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.7.0
+ 	github.com/Backblaze/blazer v0.7.2
+ 	github.com/Microsoft/go-winio v0.6.2
+ 	github.com/anacrolix/fuse v0.3.1
+@@ -53,8 +50,6 @@ require (
+ 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
+ 	cloud.google.com/go/iam v1.7.0 // indirect
+ 	cloud.google.com/go/monitoring v1.24.3 // indirect
+-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
+-	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.2 // indirect
+ 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.31.0 // indirect
+ 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.55.0 // indirect
+ 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.55.0 // indirect
+--- a/internal/backend/all/all.go
++++ b/internal/backend/all/all.go
+@@ -1,7 +1,6 @@
+ package all
+ 
+ import (
+-	"github.com/restic/restic/internal/backend/azure"
+ 	"github.com/restic/restic/internal/backend/b2"
+ 	"github.com/restic/restic/internal/backend/gs"
+ 	"github.com/restic/restic/internal/backend/local"
+@@ -15,7 +14,6 @@ import (
+ 
+ func Backends() *location.Registry {
+ 	backends := location.NewRegistry()
+-	backends.Register(azure.NewFactory())
+ 	backends.Register(b2.NewFactory())
+ 	backends.Register(gs.NewFactory())
+ 	backends.Register(local.NewFactory())
