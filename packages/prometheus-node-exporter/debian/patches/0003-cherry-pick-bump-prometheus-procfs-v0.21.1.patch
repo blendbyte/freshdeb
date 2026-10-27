@@ -1,0 +1,154 @@
+From 073b358458d0aa7f538bdd5f18897b8f7e4d6d40 Mon Sep 17 00:00:00 2001
+From: Shirly Radco <sradco@redhat.com>
+Date: Mon, 6 Jul 2026 14:48:34 +0300
+Subject: [PATCH] build(deps): bump prometheus/procfs to v0.21.1
+
+Update procfs to v0.21.1, along with transitive
+dependency bumps for golang.org/x/sys and
+golang.org/x/sync.
+
+This version changes the NVMe namespace directory
+regex from nvme\d+c\d+n to nvme\d+n. Rename the
+test fixture from nvme0c0n0 to nvme0n1 and update
+e2e expected output to match.
+
+Mdraid.Disks changed from uint64 to *uint64 (nil
+when unavailable, e.g. container/imsm/ddf arrays).
+Guard the dereference in mdadm_linux.go to prevent
+a nil pointer panic.
+
+Fixes: https://github.com/prometheus/node_exporter/issues/3691
+
+Signed-off-by: Shirly Radco <sradco@redhat.com>
+Co-authored-by: AI Assistant <noreply@cursor.com>
+---
+ collector/fixtures/e2e-64k-page-output.txt | 10 +++++-----
+ collector/fixtures/e2e-output.txt          | 10 +++++-----
+ collector/fixtures/sys.ttar                | 12 ++++++------
+ collector/mdadm_linux.go                   | 14 ++++++++------
+ go.mod                                     |  6 +++---
+ go.sum                                     | 12 ++++++------
+ 6 files changed, 33 insertions(+), 31 deletions(-)
+
+diff --git a/collector/fixtures/e2e-64k-page-output.txt b/collector/fixtures/e2e-64k-page-output.txt
+index 5131604dd1..6ab6493d3b 100644
+--- a/collector/fixtures/e2e-64k-page-output.txt
++++ b/collector/fixtures/e2e-64k-page-output.txt
+@@ -3427,19 +3427,19 @@ node_nfsd_server_threads 8
+ node_nvme_info{cntlid="1997",device="nvme0",firmware_revision="1B2QEXP7",model="Samsung SSD 970 PRO 512GB",serial="S680HF8N190894I",state="live"} 1
+ # HELP node_nvme_namespace_capacity_bytes Capacity of the NVMe namespace in bytes. Computed as namespace_size * namespace_logical_block_size
+ # TYPE node_nvme_namespace_capacity_bytes gauge
+-node_nvme_namespace_capacity_bytes{device="nvme0",nsid="0"} 1.6e+13
++node_nvme_namespace_capacity_bytes{device="nvme0",nsid="1"} 1.6e+13
+ # HELP node_nvme_namespace_info Information about NVMe namespaces. Value is always 1
+ # TYPE node_nvme_namespace_info gauge
+-node_nvme_namespace_info{ana_state="optimized",device="nvme0",nsid="0"} 1
++node_nvme_namespace_info{ana_state="optimized",device="nvme0",nsid="1"} 1
+ # HELP node_nvme_namespace_logical_block_size_bytes Logical block size of the NVMe namespace in bytes. Usually 4Kb. Available in /sys/class/nvme/<device>/<namespace>/queue/logical_block_size
+ # TYPE node_nvme_namespace_logical_block_size_bytes gauge
+-node_nvme_namespace_logical_block_size_bytes{device="nvme0",nsid="0"} 4096
++node_nvme_namespace_logical_block_size_bytes{device="nvme0",nsid="1"} 4096
+ # HELP node_nvme_namespace_size_bytes Size of the NVMe namespace in bytes. Available in /sys/class/nvme/<device>/<namespace>/size
+ # TYPE node_nvme_namespace_size_bytes gauge
+-node_nvme_namespace_size_bytes{device="nvme0",nsid="0"} 1.6e+13
++node_nvme_namespace_size_bytes{device="nvme0",nsid="1"} 1.6e+13
+ # HELP node_nvme_namespace_used_bytes Used space of the NVMe namespace in bytes. Available in /sys/class/nvme/<device>/<namespace>/nuse
+ # TYPE node_nvme_namespace_used_bytes gauge
+-node_nvme_namespace_used_bytes{device="nvme0",nsid="0"} 2e+12
++node_nvme_namespace_used_bytes{device="nvme0",nsid="1"} 2e+12
+ # HELP node_os_info A metric with a constant '1' value labeled by build_id, id, id_like, image_id, image_version, name, pretty_name, variant, variant_id, version, version_codename, version_id.
+ # TYPE node_os_info gauge
+ node_os_info{build_id="",id="ubuntu",id_like="debian",image_id="",image_version="",name="Ubuntu",pretty_name="Ubuntu 20.04.2 LTS",variant="",variant_id="",version="20.04.2 LTS (Focal Fossa)",version_codename="focal",version_id="20.04"} 1
+diff --git a/collector/fixtures/e2e-output.txt b/collector/fixtures/e2e-output.txt
+index b923b789e0..0fe21e2531 100644
+--- a/collector/fixtures/e2e-output.txt
++++ b/collector/fixtures/e2e-output.txt
+@@ -3459,19 +3459,19 @@ node_nfsd_server_threads 8
+ node_nvme_info{cntlid="1997",device="nvme0",firmware_revision="1B2QEXP7",model="Samsung SSD 970 PRO 512GB",serial="S680HF8N190894I",state="live"} 1
+ # HELP node_nvme_namespace_capacity_bytes Capacity of the NVMe namespace in bytes. Computed as namespace_size * namespace_logical_block_size
+ # TYPE node_nvme_namespace_capacity_bytes gauge
+-node_nvme_namespace_capacity_bytes{device="nvme0",nsid="0"} 1.6e+13
++node_nvme_namespace_capacity_bytes{device="nvme0",nsid="1"} 1.6e+13
+ # HELP node_nvme_namespace_info Information about NVMe namespaces. Value is always 1
+ # TYPE node_nvme_namespace_info gauge
+-node_nvme_namespace_info{ana_state="optimized",device="nvme0",nsid="0"} 1
++node_nvme_namespace_info{ana_state="optimized",device="nvme0",nsid="1"} 1
+ # HELP node_nvme_namespace_logical_block_size_bytes Logical block size of the NVMe namespace in bytes. Usually 4Kb. Available in /sys/class/nvme/<device>/<namespace>/queue/logical_block_size
+ # TYPE node_nvme_namespace_logical_block_size_bytes gauge
+-node_nvme_namespace_logical_block_size_bytes{device="nvme0",nsid="0"} 4096
++node_nvme_namespace_logical_block_size_bytes{device="nvme0",nsid="1"} 4096
+ # HELP node_nvme_namespace_size_bytes Size of the NVMe namespace in bytes. Available in /sys/class/nvme/<device>/<namespace>/size
+ # TYPE node_nvme_namespace_size_bytes gauge
+-node_nvme_namespace_size_bytes{device="nvme0",nsid="0"} 1.6e+13
++node_nvme_namespace_size_bytes{device="nvme0",nsid="1"} 1.6e+13
+ # HELP node_nvme_namespace_used_bytes Used space of the NVMe namespace in bytes. Available in /sys/class/nvme/<device>/<namespace>/nuse
+ # TYPE node_nvme_namespace_used_bytes gauge
+-node_nvme_namespace_used_bytes{device="nvme0",nsid="0"} 2e+12
++node_nvme_namespace_used_bytes{device="nvme0",nsid="1"} 2e+12
+ # HELP node_os_info A metric with a constant '1' value labeled by build_id, id, id_like, image_id, image_version, name, pretty_name, variant, variant_id, version, version_codename, version_id.
+ # TYPE node_os_info gauge
+ node_os_info{build_id="",id="ubuntu",id_like="debian",image_id="",image_version="",name="Ubuntu",pretty_name="Ubuntu 20.04.2 LTS",variant="",variant_id="",version="20.04.2 LTS (Focal Fossa)",version_codename="focal",version_id="20.04"} 1
+diff --git a/collector/fixtures/sys.ttar b/collector/fixtures/sys.ttar
+index bc8744cbe7..0b9b820ffa 100644
+--- a/collector/fixtures/sys.ttar
++++ b/collector/fixtures/sys.ttar
+@@ -2229,28 +2229,28 @@ Lines: 1
+ live
+ Mode: 444
+ # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-Directory: sys/class/nvme/nvme0/nvme0c0n0
++Directory: sys/class/nvme/nvme0/nvme0n1
+ Mode: 755
+ # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-Path: sys/class/nvme/nvme0/nvme0c0n0/ana_state
++Path: sys/class/nvme/nvme0/nvme0n1/ana_state
+ Lines: 1
+ optimized
+ Mode: 444
+ # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-Path: sys/class/nvme/nvme0/nvme0c0n0/size
++Path: sys/class/nvme/nvme0/nvme0n1/size
+ Lines: 1
+ 3906250000
+ Mode: 444
+ # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-Path: sys/class/nvme/nvme0/nvme0c0n0/nuse
++Path: sys/class/nvme/nvme0/nvme0n1/nuse
+ Lines: 1
+ 488281250
+ Mode: 444
+ # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-Directory: sys/class/nvme/nvme0/nvme0c0n0/queue
++Directory: sys/class/nvme/nvme0/nvme0n1/queue
+ Mode: 755
+ # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-Path: sys/class/nvme/nvme0/nvme0c0n0/queue/logical_block_size
++Path: sys/class/nvme/nvme0/nvme0n1/queue/logical_block_size
+ Lines: 1
+ 4096
+ Mode: 644
+diff --git a/collector/mdadm_linux.go b/collector/mdadm_linux.go
+index 14dc20887c..433e25c56b 100644
+--- a/collector/mdadm_linux.go
++++ b/collector/mdadm_linux.go
+@@ -230,12 +230,14 @@ func (c *mdadmCollector) Update(ch chan<- prometheus.Metric) error {
+ 	}
+ 
+ 	for _, mdraid := range mdraids {
+-		ch <- prometheus.MustNewConstMetric(
+-			mdraidDisks,
+-			prometheus.GaugeValue,
+-			float64(mdraid.Disks),
+-			mdraid.Device,
+-		)
++		if mdraid.Disks != nil {
++			ch <- prometheus.MustNewConstMetric(
++				mdraidDisks,
++				prometheus.GaugeValue,
++				float64(*mdraid.Disks),
++				mdraid.Device,
++			)
++		}
+ 		ch <- prometheus.MustNewConstMetric(
+ 			mdraidDegradedDisksDesc,
+ 			prometheus.GaugeValue,

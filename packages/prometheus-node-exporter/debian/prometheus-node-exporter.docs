@@ -1,0 +1,5 @@
+NOTICE
+README.md
+debian/README.textfile
+docs/*.md
+docs/*.yml

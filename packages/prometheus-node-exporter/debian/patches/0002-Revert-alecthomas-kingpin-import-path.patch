@@ -1,0 +1,657 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Mon, 13 Nov 2023 13:49:27 +0100
+Subject: Revert alecthomas/kingpin import path
+
+Forwarded: not-needed
+Last-Update: 2025-02-17
+
+Newer versions of alecthomas/kingpin use a different import path. This patch
+can be dropped once the golang-gopkg-alecthomas-kingpin.v2-dev package is
+updated and provides the new import path.
+---
+ collector/arp_linux.go             | 2 +-
+ collector/bcache_linux.go          | 2 +-
+ collector/collector.go             | 2 +-
+ collector/cpu_linux.go             | 2 +-
+ collector/diskstats_common.go      | 2 +-
+ collector/ethtool_linux.go         | 2 +-
+ collector/filesystem_common.go     | 2 +-
+ collector/filesystem_linux.go      | 2 +-
+ collector/filesystem_linux_test.go | 2 +-
+ collector/hwmon_linux.go           | 2 +-
+ collector/interrupts_common.go     | 2 +-
+ collector/ipvs_linux.go            | 2 +-
+ collector/ipvs_linux_test.go       | 2 +-
+ collector/netclass_linux.go        | 2 +-
+ collector/netclass_rtnl_linux.go   | 2 +-
+ collector/netdev_common.go         | 2 +-
+ collector/netdev_linux.go          | 2 +-
+ collector/netstat_linux.go         | 2 +-
+ collector/ntp.go                   | 2 +-
+ collector/paths.go                 | 2 +-
+ collector/paths_test.go            | 2 +-
+ collector/pcidevice_linux.go       | 2 +-
+ collector/pcidevice_linux_test.go  | 2 +-
+ collector/perf_linux.go            | 2 +-
+ collector/powersupplyclass.go      | 2 +-
+ collector/processes_linux_test.go  | 2 +-
+ collector/qdisc_linux.go           | 2 +-
+ collector/rapl_linux.go            | 2 +-
+ collector/runit.go                 | 2 +-
+ collector/slabinfo_linux.go        | 2 +-
+ collector/stat_linux.go            | 2 +-
+ collector/supervisord.go           | 2 +-
+ collector/sysctl_linux.go          | 2 +-
+ collector/systemd_linux.go         | 2 +-
+ collector/tapestats_linux.go       | 2 +-
+ collector/textfile.go              | 2 +-
+ collector/textfile_test.go         | 2 +-
+ collector/vmstat_linux.go          | 2 +-
+ collector/wifi_linux.go            | 2 +-
+ node_exporter.go                   | 2 +-
+ 40 files changed, 40 insertions(+), 40 deletions(-)
+
+diff --git a/collector/arp_linux.go b/collector/arp_linux.go
+index 84d8920..824ad51 100644
+--- a/collector/arp_linux.go
++++ b/collector/arp_linux.go
+@@ -19,11 +19,11 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/jsimonetti/rtnetlink/v2/rtnl"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs"
+ 	"golang.org/x/sys/unix"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/bcache_linux.go b/collector/bcache_linux.go
+index 90366cc..040432d 100644
+--- a/collector/bcache_linux.go
++++ b/collector/bcache_linux.go
+@@ -19,9 +19,9 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/bcache"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/collector.go b/collector/collector.go
+index 18ff738..5dd666a 100644
+--- a/collector/collector.go
++++ b/collector/collector.go
+@@ -21,8 +21,8 @@ import (
+ 	"sync"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ // Namespace defines the common namespace to be used by all metrics.
+diff --git a/collector/cpu_linux.go b/collector/cpu_linux.go
+index 30fe305..53c5c79 100644
+--- a/collector/cpu_linux.go
++++ b/collector/cpu_linux.go
+@@ -27,10 +27,10 @@ import (
+ 	"strconv"
+ 	"sync"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type cpuCollector struct {
+diff --git a/collector/diskstats_common.go b/collector/diskstats_common.go
+index 543d9ea..3c01fb3 100644
+--- a/collector/diskstats_common.go
++++ b/collector/diskstats_common.go
+@@ -19,8 +19,8 @@ import (
+ 	"errors"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/ethtool_linux.go b/collector/ethtool_linux.go
+index e4d86bc..eee6c0f 100644
+--- a/collector/ethtool_linux.go
++++ b/collector/ethtool_linux.go
+@@ -30,11 +30,11 @@ import (
+ 	"sync"
+ 	"syscall"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/sysfs"
+ 	"github.com/safchain/ethtool"
+ 	"golang.org/x/sys/unix"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/filesystem_common.go b/collector/filesystem_common.go
+index efcd26a..145ba98 100644
+--- a/collector/filesystem_common.go
++++ b/collector/filesystem_common.go
+@@ -20,8 +20,8 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ // Arch-dependent implementation must define:
+diff --git a/collector/filesystem_linux.go b/collector/filesystem_linux.go
+index 03b654b..8fd6cd6 100644
+--- a/collector/filesystem_linux.go
++++ b/collector/filesystem_linux.go
+@@ -27,8 +27,8 @@ import (
+ 	"sync"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"golang.org/x/sys/unix"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/procfs"
+ )
+diff --git a/collector/filesystem_linux_test.go b/collector/filesystem_linux_test.go
+index a838e93..3107c1d 100644
+--- a/collector/filesystem_linux_test.go
++++ b/collector/filesystem_linux_test.go
+@@ -20,7 +20,7 @@ import (
+ 	"log/slog"
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/procfs"
+ )
+diff --git a/collector/hwmon_linux.go b/collector/hwmon_linux.go
+index fe4ac81..cd1ee6a 100644
+--- a/collector/hwmon_linux.go
++++ b/collector/hwmon_linux.go
+@@ -26,9 +26,9 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"golang.org/x/sys/unix"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/interrupts_common.go b/collector/interrupts_common.go
+index 4e4bad6..7bbe12e 100644
+--- a/collector/interrupts_common.go
++++ b/collector/interrupts_common.go
+@@ -18,8 +18,8 @@ package collector
+ import (
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type interruptsCollector struct {
+diff --git a/collector/ipvs_linux.go b/collector/ipvs_linux.go
+index 2ad30e0..ee154ab 100644
+--- a/collector/ipvs_linux.go
++++ b/collector/ipvs_linux.go
+@@ -24,9 +24,9 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type ipvsCollector struct {
+diff --git a/collector/ipvs_linux_test.go b/collector/ipvs_linux_test.go
+index b6870d8..3812ed7 100644
+--- a/collector/ipvs_linux_test.go
++++ b/collector/ipvs_linux_test.go
+@@ -26,9 +26,9 @@ import (
+ 	"strings"
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/client_golang/prometheus/promhttp"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ func TestIPVSCollector(t *testing.T) {
+diff --git a/collector/netclass_linux.go b/collector/netclass_linux.go
+index 7f8373d..c1d80fd 100644
+--- a/collector/netclass_linux.go
++++ b/collector/netclass_linux.go
+@@ -24,9 +24,9 @@ import (
+ 	"regexp"
+ 	"sync"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/netclass_rtnl_linux.go b/collector/netclass_rtnl_linux.go
+index d3dde4c..04af00a 100644
+--- a/collector/netclass_rtnl_linux.go
++++ b/collector/netclass_rtnl_linux.go
+@@ -22,11 +22,11 @@ import (
+ 	"path/filepath"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/jsimonetti/rtnetlink/v2"
+ 	"github.com/mdlayher/ethtool"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/netdev_common.go b/collector/netdev_common.go
+index 6a4e81e..f964308 100644
+--- a/collector/netdev_common.go
++++ b/collector/netdev_common.go
+@@ -23,8 +23,8 @@ import (
+ 	"strconv"
+ 	"sync"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/netdev_linux.go b/collector/netdev_linux.go
+index 8f694c2..0ecec2e 100644
+--- a/collector/netdev_linux.go
++++ b/collector/netdev_linux.go
+@@ -19,10 +19,10 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/jsimonetti/rtnetlink/v2"
+ 	"github.com/prometheus/procfs"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/netstat_linux.go b/collector/netstat_linux.go
+index 5065a19..c6aaee2 100644
+--- a/collector/netstat_linux.go
++++ b/collector/netstat_linux.go
+@@ -27,8 +27,8 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/ntp.go b/collector/ntp.go
+index e1465f5..324806b 100644
+--- a/collector/ntp.go
++++ b/collector/ntp.go
+@@ -22,9 +22,9 @@ import (
+ 	"sync"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/beevik/ntp"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/paths.go b/collector/paths.go
+index 82c9418..e887043 100644
+--- a/collector/paths.go
++++ b/collector/paths.go
+@@ -17,8 +17,8 @@ import (
+ 	"path/filepath"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/paths_test.go b/collector/paths_test.go
+index 9426fa4..eca7b3a 100644
+--- a/collector/paths_test.go
++++ b/collector/paths_test.go
+@@ -16,8 +16,8 @@ package collector
+ import (
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ func TestDefaultProcPath(t *testing.T) {
+diff --git a/collector/pcidevice_linux.go b/collector/pcidevice_linux.go
+index 6f33db9..b9e11c8 100644
+--- a/collector/pcidevice_linux.go
++++ b/collector/pcidevice_linux.go
+@@ -23,9 +23,9 @@ import (
+ 	"os"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/pcidevice_linux_test.go b/collector/pcidevice_linux_test.go
+index aedc7c5..5b38e70 100644
+--- a/collector/pcidevice_linux_test.go
++++ b/collector/pcidevice_linux_test.go
+@@ -23,9 +23,9 @@ import (
+ 	"strings"
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/client_golang/prometheus/testutil"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ func TestPCICollectorWithNameResolution(t *testing.T) {
+diff --git a/collector/perf_linux.go b/collector/perf_linux.go
+index e4c4b81..b13ec44 100644
+--- a/collector/perf_linux.go
++++ b/collector/perf_linux.go
+@@ -22,10 +22,10 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/hodgesds/perf-utils"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"golang.org/x/sys/unix"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/powersupplyclass.go b/collector/powersupplyclass.go
+index 3314261..9e692ed 100644
+--- a/collector/powersupplyclass.go
++++ b/collector/powersupplyclass.go
+@@ -19,8 +19,8 @@ import (
+ 	"log/slog"
+ 	"regexp"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/processes_linux_test.go b/collector/processes_linux_test.go
+index 4b20ef8..befa5a7 100644
+--- a/collector/processes_linux_test.go
++++ b/collector/processes_linux_test.go
+@@ -20,8 +20,8 @@ import (
+ 	"log/slog"
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ func TestReadProcessStatus(t *testing.T) {
+diff --git a/collector/qdisc_linux.go b/collector/qdisc_linux.go
+index 9062da1..bc77520 100644
+--- a/collector/qdisc_linux.go
++++ b/collector/qdisc_linux.go
+@@ -22,9 +22,9 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/ema/qdisc"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type qdiscStatCollector struct {
+diff --git a/collector/rapl_linux.go b/collector/rapl_linux.go
+index 92c402d..7e3de16 100644
+--- a/collector/rapl_linux.go
++++ b/collector/rapl_linux.go
+@@ -22,9 +22,9 @@ import (
+ 	"os"
+ 	"strconv"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const raplCollectorSubsystem = "rapl"
+diff --git a/collector/runit.go b/collector/runit.go
+index 9fabd3f..75855dd 100644
+--- a/collector/runit.go
++++ b/collector/runit.go
+@@ -18,9 +18,9 @@ package collector
+ import (
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus-community/go-runit/runit"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var runitServiceDir = kingpin.Flag("collector.runit.servicedir", "Path to runit service directory.").Default("/etc/service").String()
+diff --git a/collector/slabinfo_linux.go b/collector/slabinfo_linux.go
+index 48bbf2a..c914a02 100644
+--- a/collector/slabinfo_linux.go
++++ b/collector/slabinfo_linux.go
+@@ -19,9 +19,9 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/stat_linux.go b/collector/stat_linux.go
+index e7efeef..539135f 100644
+--- a/collector/stat_linux.go
++++ b/collector/stat_linux.go
+@@ -19,9 +19,9 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type statCollector struct {
+diff --git a/collector/supervisord.go b/collector/supervisord.go
+index b3c4c3f..6048b77 100644
+--- a/collector/supervisord.go
++++ b/collector/supervisord.go
+@@ -24,9 +24,9 @@ import (
+ 	"net/url"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/mattn/go-xmlrpc"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/sysctl_linux.go b/collector/sysctl_linux.go
+index 0915b4e..5a6008c 100644
+--- a/collector/sysctl_linux.go
++++ b/collector/sysctl_linux.go
+@@ -19,9 +19,9 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/systemd_linux.go b/collector/systemd_linux.go
+index 53ca304..065d72d 100644
+--- a/collector/systemd_linux.go
++++ b/collector/systemd_linux.go
+@@ -26,9 +26,9 @@ import (
+ 	"sync"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/coreos/go-systemd/v22/dbus"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/tapestats_linux.go b/collector/tapestats_linux.go
+index e195ce1..f459e6e 100644
+--- a/collector/tapestats_linux.go
++++ b/collector/tapestats_linux.go
+@@ -21,9 +21,9 @@ import (
+ 	"os"
+ 	"regexp"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/procfs/sysfs"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/textfile.go b/collector/textfile.go
+index 7753940..7db1701 100644
+--- a/collector/textfile.go
++++ b/collector/textfile.go
+@@ -25,11 +25,11 @@ import (
+ 	"strings"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	dto "github.com/prometheus/client_model/go"
+ 	"github.com/prometheus/common/expfmt"
+ 	"github.com/prometheus/common/model"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/textfile_test.go b/collector/textfile_test.go
+index 2fb31fa..afa680a 100644
+--- a/collector/textfile_test.go
++++ b/collector/textfile_test.go
+@@ -24,11 +24,11 @@ import (
+ 	"os"
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/client_golang/prometheus/promhttp"
+ 	"github.com/prometheus/common/promslog"
+ 	"github.com/prometheus/common/promslog/flag"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type collectorAdapter struct {
+diff --git a/collector/vmstat_linux.go b/collector/vmstat_linux.go
+index 987aebe..da87992 100644
+--- a/collector/vmstat_linux.go
++++ b/collector/vmstat_linux.go
+@@ -24,8 +24,8 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (
+diff --git a/collector/wifi_linux.go b/collector/wifi_linux.go
+index 8f482c7..48b6fa0 100644
+--- a/collector/wifi_linux.go
++++ b/collector/wifi_linux.go
+@@ -23,9 +23,9 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/mdlayher/wifi"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ type wifiCollector struct {
+diff --git a/node_exporter.go b/node_exporter.go
+index 2c0e12c..efd607b 100644
+--- a/node_exporter.go
++++ b/node_exporter.go
+@@ -27,7 +27,6 @@ import (
+ 	"github.com/prometheus/common/promslog"
+ 	"github.com/prometheus/common/promslog/flag"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	promcollectors "github.com/prometheus/client_golang/prometheus/collectors"
+ 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
+@@ -37,6 +36,7 @@ import (
+ 	"github.com/prometheus/exporter-toolkit/web/kingpinflag"
+ 
+ 	"github.com/prometheus/node_exporter/collector"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ // handler wraps an unfiltered http.Handler but uses a filtered handler,

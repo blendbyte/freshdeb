@@ -1,0 +1,654 @@
+prometheus-node-exporter (1.11.1-3) unstable; urgency=medium
+
+  * Team upload
+
+  [ Guillem Jover ]
+  * Switch debian/gitlab-ci.yml to debian/salsa-ci.yml
+  * Namespace debhelper fragment files with binary package name
+
+  [ Mathias Gibbens ]
+  * Cherry-pick upstream fix for newer version of
+    golang-github-prometheus-procfs
+
+ -- Mathias Gibbens <gibmat@debian.org>  Tue, 07 Jul 2026 18:44:29 +0000
+
+prometheus-node-exporter (1.11.1-2) unstable; urgency=medium
+
+  * Bump Standards-Version to 4.7.4.
+  * Switch to debian/watch format version 5.
+  * Run wrap-and-sort -ast.
+  * Add myself to Uploaders.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 19 May 2026 00:32:23 +0200
+
+prometheus-node-exporter (1.11.1-1) unstable; urgency=medium
+
+  * New upstream (bugfix) release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 07 Apr 2026 18:07:47 +0000
+
+prometheus-node-exporter (1.11.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop unused golang-golang-x-exp-dev Build-Depends
+  * Bump Standards-Version to 4.7.3
+    - drop redundant Priority: optional
+    - drop redundant Rules-Requires-Root: no
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 06 Apr 2026 16:04:30 +0000
+
+prometheus-node-exporter (1.10.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop unused golang-github-josharian-native-dev Build-Depends
+  * Bump Build-Depends version constraints
+    - golang-github-prometheus-client-golang-dev (>= 1.23.2)
+    - golang-github-prometheus-common-dev (>= 0.67.1)
+    - golang-github-prometheus-procfs-dev (>= 0.19.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 31 Dec 2025 00:04:52 +0000
+
+prometheus-node-exporter (1.9.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh packaging according to latest dh-make-golang template
+  * Drop unused golang-github-pkg-errors-dev Build-Depends
+  * Bump Standards-Version to 4.7.2 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 12 Aug 2025 20:17:15 +0000
+
+prometheus-node-exporter (1.9.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete 0003-Backport-PR-3133.patch
+  * Drop obsolete Build-Depends golang-github-go-kit-log-dev
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint
+    (>= 0.13.0)
+  * Bump golang-github-prometheus-procfs-dev version constraint (>= 0.15.1)
+  * Drop redundant golang-golang-x-sys-dev version constraint
+  * debian/rules: add 'tools' to DH_GOLANG_EXCLUDES
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 17 Feb 2025 15:20:01 +0000
+
+prometheus-node-exporter (1.8.2-2) unstable; urgency=medium
+
+  * Don't override collector.netdev.device-exclude default (Closes: #1032329)
+  * Add new 0003-Backport-PR-3133.patch to fix slow performance of arp
+    collector on hosts with a large number of interfaces
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 13 Jan 2025 09:41:49 +0000
+
+prometheus-node-exporter (1.8.2-1) unstable; urgency=medium
+
+  * New upstream (bugfix) release
+  * Bump Standards-Version to 4.7.0 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Aug 2024 11:49:32 +0000
+
+prometheus-node-exporter (1.8.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 08 Jun 2024 12:59:15 +0000
+
+prometheus-node-exporter (1.8.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 0003-Support-prometheus-common-v0.50.0.patch (implemented
+    upstream)
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 24 Apr 2024 20:05:35 +0000
+
+prometheus-node-exporter (1.7.0-2) unstable; urgency=medium
+
+  * Add new 0003-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+  * debian/control: drop redundant / outdated version constraints
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 12 Mar 2024 13:00:34 +0000
+
+prometheus-node-exporter (1.7.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches and convert to gbp-pq format
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 13 Nov 2023 12:53:54 +0000
+
+prometheus-node-exporter (1.6.1-1) unstable; urgency=medium
+
+  * New upstream release (no code changes)
+  * debian/rules:
+    - Fix empty override_dh_auto_install
+    - Split off manpage generation from override_dh_auto_build
+    - Re-work manpage generation, with correct header & footer
+    - Phase out the use of DH_GOPKG
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 25 Jul 2023 11:55:01 +0000
+
+prometheus-node-exporter (1.6.0-2) unstable; urgency=medium
+
+  * Drop obsolete 03-Revert_go-runit_import_path.patch
+  * Replace golang-github-soundcloud-go-runit-dev build-dep with
+    golang-github-prometheus-community-go-runit-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 25 Jun 2023 19:53:20 +0000
+
+prometheus-node-exporter (1.6.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add new build-dep golang-golang-x-exp-dev
+  * Bump Standards-Version to 4.6.2 (no changes)
+  * Add new patches:
+    - 02-Revert_kingpin_import_path.patch
+    - 03-Revert_runit_import_path.patch
+  * Bump minimum required golang-github-prometheus-procfs-dev version to
+    0.10.0
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+    version to 0.10.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 16 Jun 2023 17:13:55 +0000
+
+prometheus-node-exporter (1.5.0-1) unstable; urgency=medium
+
+  * New upstream release (fixes CVE-2022-46146)
+  * Drop obsolete patches:
+    - 02-fix-tcpstat-collector-endianness.patch
+    - 03-fix-exporter-toolkit-api.patch
+  * Add new build-dep golang-github-mdlayher-ethtool-dev
+  * d/rules: extract udev test fixtures for dh_auto_test
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Dec 2022 08:33:07 +0000
+
+prometheus-node-exporter (1.4.1-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Add new 03-fix-exporter-toolkit-api.patch
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+    version to 0.8.0
+
+  [ Guillem Jover ]
+  * Remove --help output from default file (Closes: #1009216)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 30 Nov 2022 04:10:50 +0000
+
+prometheus-node-exporter (1.4.0-2) unstable; urgency=medium
+
+  * Add new 02-fix-tcpstat-collector-endianness.patch to fix test failure on
+    s390x
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 15 Oct 2022 01:09:17 +0000
+
+prometheus-node-exporter (1.4.0-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Refresh patches
+  * Add missing build-dep golang-github-mdlayher-netlink-dev
+  * Add new build-deps:
+    - golang-github-dennwc-btrfs-dev
+    - golang-github-opencontainers-selinux-dev
+  * Drop indirect / unused build-deps:
+    - golang-github-josharian-native-dev
+    - golang-go.uber-multierr-dev
+    - golang-golang-x-crypto-dev
+    - golang-gopkg-yaml.v2-dev
+  * Build-depend on newer golang-github-jsimonetti-rtnetlink (>= 1.2.2),
+    without which the netdev collector fails on kernel 5.19+
+  * Drop obsolete lintian-overrides
+  * Bump Standards-Version to 4.6.1 (no changes)
+
+  [ Martina Ferrari ]
+  * debian/default: Document how to negate boolean options (Closes: #1009049)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 14 Oct 2022 22:21:20 +0000
+
+prometheus-node-exporter (1.3.1-1) unstable; urgency=medium
+
+  [ Martina Ferrari ]
+  * Update my name and email address.
+
+  [ Benjamin Drung ]
+  * Update my email address to @debian.org
+  * Drop vendored libraries
+  * Build depend on libraries that were previously vendored
+
+ -- Benjamin Drung <bdrung@debian.org>  Sat, 15 Jan 2022 00:26:34 +0100
+
+prometheus-node-exporter (1.3.1~ds-1) unstable; urgency=medium
+
+  [ Aloïs Micard ]
+  * Update debian/gitlab-ci.yml (using pkg-go-tools/ci-config)
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+
+  [ Guillem Jover ]
+  * Update debian/watch file
+  * Do not install uninteresting documentation files
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 08 Dec 2021 14:35:17 +0000
+
+prometheus-node-exporter (1.3.0~ds-3) unstable; urgency=medium
+
+  * Team upload.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Remove DEB_BUILD_OPTIONS nocheck conditional from override_dh_auto_test.
+  * Update gbp configuration following Go Team new workflow.
+  * Add Repository-Browse field to upstream metadata field.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 27 Nov 2021 00:03:33 +0100
+
+prometheus-node-exporter (1.3.0~ds-2) unstable; urgency=medium
+
+  * Update default file with latest --help output from v1.3.0
+
+ -- Benjamin Drung <benjamin.drung@ionos.com>  Mon, 22 Nov 2021 14:02:47 +0100
+
+prometheus-node-exporter (1.3.0~ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop 5 vendored libraries and build depend on the packaged version instead
+  * Drop library downgrade patches and build depend on
+    golang-github-go-kit-log-dev and newer prometheus client library
+  * Drop patches that were accepted upstream and refresh default settings patch
+  * Add myself to uploaders
+  * Add patch to support perf-utils v0.5.1
+
+ -- Benjamin Drung <benjamin.drung@ionos.com>  Fri, 19 Nov 2021 16:45:52 +0100
+
+prometheus-node-exporter (1.2.2+ds-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Refresh 03-Default_settings.patch
+  * Add os release collector (will be part of the next upstream release)
+  * Revert "Use new client_golang collectors package."
+  * Downgrade to go-kit version 0.6
+  * Add golang-github-safchain-ethtool-dev to build dependencies
+  * Add new build dependency golang-github-hashicorp-go-envparse-dev
+  * Bump procfs dependency to >= 0.7.3
+  * Exclude node-mixin from docs
+  * Bump Standards-Version to 4.6.0
+  * Let override_dh_auto_test check DEB_BUILD_OPTIONS
+  * Bump minimum version for prometheus libraries
+
+ -- Benjamin Drung <benjamin.drung@ionos.com>  Thu, 28 Oct 2021 09:39:52 +0200
+
+prometheus-node-exporter (1.1.2+ds-2) unstable; urgency=medium
+
+  * Move README.textfile from /var/lib to /usr/share/doc
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 28 May 2021 00:59:42 +0200
+
+prometheus-node-exporter (1.1.2+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Gracefully handle errors from disabled PSI subsystem
+    - Sanitize strings from /sys/class/power_supply that could result in panic
+    - Silence missing netclass errors
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Fri, 05 Mar 2021 13:52:24 +0100
+
+prometheus-node-exporter (1.1.1+ds-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+    - Fix ineffassign issue
+    - Fix some noisy log lines
+  * Remove backwards compatibility options not present in Debian stable
+  * Update default file with latest --help output.
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 25 Feb 2021 23:39:38 +0100
+
+prometheus-node-exporter (1.1.0+ds-2) unstable; urgency=medium
+
+  * Team upload.
+  * Fix logic inversion when checking for dangling systemd symlinks
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 12 Feb 2021 22:40:06 +0100
+
+prometheus-node-exporter (1.1.0+ds-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+    - Refresh patches.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 09 Feb 2021 01:16:43 +0100
+
+prometheus-node-exporter (1.0.1+ds-3) unstable; urgency=medium
+
+  * Team upload.
+  * Switch to debian/watch format version 4
+  * Indent debian/watch file
+  * Update version.BuildUser to match the Maintainer address
+  * Cleanup systemd dangling symlinks for non-installed unit files moved out
+    (Closes: #954285)
+  * Update gitlab-ci.yml from the latest upstream version
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 29 Jan 2021 20:37:33 +0100
+
+prometheus-node-exporter (1.0.1+ds-2) unstable; urgency=medium
+
+  * Team upload.
+  * Use '' instead of `' in text
+  * Use $() instead of `` in init script
+  * Change systemd service Restart directive from always to on-failure
+  * Remove nocheck handling from override_dh_auto_test
+  * Switch to Standards-Version 4.5.1 (no changes needed)
+  * Remove error suppression from postinst
+  * Remove unnecessary error suppression from init script
+  * Run adduser unconditionally
+  * Remove $syslog dependency from init script
+  * Switch from /var/run to /run
+  * Add missing dependency on adduser
+  * Rewrite init script using start-stop-daemon
+  * Do not change pathname metadata if there are dpkg statoverrides in place
+  * Update gitignore entries
+  * Move note about license location on Debian systems into a Comment field
+  * Add support for reload action to sysvinit init script
+  * Update copyright claims
+  * Do not enable DH_VERBOSE by default
+  * Use $(BUILDDIR) uniformly instead of the literal build/
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 23 Jan 2021 03:53:11 +0100
+
+prometheus-node-exporter (1.0.1+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Update Standards-Version to 4.5.0 (rename systemd service file and init
+    script).
+  * Update debhelper-compat version to 13.
+  * Refresh patches, drop obsolete 04-procfs.patch.
+  * Update maintainer email addresses / names.
+  * Drop unused build-dep golang-github-kolo-xmlrpc-dev.
+  * Drop unused build-dep golang-goprotobuf-dev.
+  * Add new build-dep golang-golang-x-crypto-dev.
+  * Add new build-dep golang-gopkg-yaml.v2-dev.
+  * d/copyright: List vendoring copyright exceptions alphabetically
+  * d/copyright: Refresh / add missing vendoring copyright exception
+  * d/upstream/metadata: Add Repository field
+  * Refresh /etc/defaults
+
+  [ Debian Janitor ]
+  * Bump debhelper from old 11 to 12.
+  * Set debhelper-compat version in Build-Depends.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit.
+  * Rely on pre-initialized dpkg-architecture variables.
+  * Update standards version to 4.4.1, no changes needed.
+
+  [ Martina Ferrari ]
+  * Reformat defaults file. Closes: #953650
+  * Add Pre-Depends as requested by lintian.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 18 Jun 2020 22:00:01 +0000
+
+prometheus-node-exporter (0.18.1+ds-2) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Move bundled textfile collector example scripts and their associated
+    systemd services / timers to new prometheus-node-exporter-collectors
+    package.
+
+  [ Sven Hoexter ]
+  * Add 05-apt-label-parsing.patch, to handle spaces in repository
+    label correctly. Picked from the upstream repository. Closes: #935167
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Fri, 21 Feb 2020 05:56:03 +0000
+
+prometheus-node-exporter (0.18.1+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Also add myself to uploaders.
+  * Add new build dependency golang-go.uber-multierr-dev
+  * Add patch to allow building against procfs 0.0.2
+
+  [ Benjamin Drung ]
+  * Patch btrfs_stats script to use Python 3
+  * Bump Standards-Version to 4.4.0
+  * debian/copyright: Add missing MIT license paragraph
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Tue, 16 Jul 2019 11:18:46 +0200
+
+prometheus-node-exporter (0.17.0+ds-3) unstable; urgency=medium
+
+  [ Benjamin Drung ]
+  * Team upload
+  * Ship a systemd service for the mellanox_hca_temp collector
+  * Ship a systemd service for the ipmitool sensor collector
+  * Drop python from Recommends (All text collector script use Python 3 now)
+  * Bump Standards-Version to 4.3.0 (no changes required)
+
+  [ Martina Ferrari ]
+  * Set TMPDIR so textfiles are created atomically. Closes: #920827.
+  * Recommend dbus, as the systemd collector does not work without it.
+
+ -- Benjamin Drung <benjamin.drung@cloud.ionos.com>  Thu, 31 Jan 2019 18:33:42 +0100
+
+prometheus-node-exporter (0.17.0+ds-2) unstable; urgency=medium
+
+  * Use alternative solution for #916236, cherry-picked from upstream;
+    thanks to Andre Heider for the patch.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 14 Dec 2018 14:09:27 +0000
+
+prometheus-node-exporter (0.17.0+ds-1) unstable; urgency=medium
+
+  [ Philipp Kern ]
+  * Ship a systemd service for the apt text collector. apt is checked for
+    pending reboots and updated packages every 15 minutes.
+
+  [ Martina Ferrari ]
+  * New upstream release.
+  * Refresh patches.
+  * Update procfs dependency.
+  * Avoid waking up disks unnecessarily. Closes: #916055
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 13 Dec 2018 23:39:17 +0000
+
+prometheus-node-exporter (0.16.0+ds-2) unstable; urgency=medium
+
+  [ Philipp Kern ]
+  * Add a stricter dependency on golang-github-prometheus-client-golang-
+    dev.
+  * Ship the YAML-based example rules instead of the old-style ones.
+  * Install the text collector examples as scripts into /usr/share/$pkg.
+    Closes: #910865
+  * Ship a systemd service for the smartmon text collector. smartmon is
+    invoked using a systemd timer every 15 minutes, if smartmontools is
+    installed.
+  * Enable the systemd collector by default.
+  * Blacklist devices, slices, and targets by default in systemd
+    collector.
+
+  [ Martina Ferrari ]
+  * Ignore /mnt and /media by default. Closes: #908811
+  * debian/default: Update flag documentation.
+  * debian/control: Add python and python3 to Recommends, for collector
+    scripts.
+  * debian/rules: Check DEB_BUILD_OPTIONS before running tests.
+  * Update Standards-Version with no changes.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 15 Oct 2018 16:25:37 +0000
+
+prometheus-node-exporter (0.16.0+ds-1) unstable; urgency=medium
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Michael Stapelberg ]
+  * gbp.conf: set debian-branch
+
+  [ Martina Ferrari ]
+  * New upstream release. Closes: #900760.
+  * Refresh patches.
+  * Fix dependency version of x/sys (missing SOL_NETLINK).
+  * Instead of putting arguments in the default /etc/default file, set
+    them in the source. Closes: #886891.
+  * debian/NEWS: Announce beaking changes.
+  * debian/rules: Automatically generate man page.
+  * debian/rules: Remove reference to nonexistent fixture.
+  * debian/control: Depend on latest version of procfs.
+  * debian/default: Update available flags.
+  * debian/copyright: Add repackaging comment.
+  * debian/copyright: Add missing ttar attribution.
+  * debian/postinst: Stop changing permissions recursively.
+  * debian/docs: Add missing documentation.
+  * Update dh compat level to 11.
+  * Bump Standards-Version (no changes).
+  * debian/rules: Remove now unneeded workarounds.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 13 Jun 2018 19:00:23 +0000
+
+prometheus-node-exporter (0.15.2+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Update package name for client-golang.
+  * debian/control: Add XS-Go-Import-Path.
+  * debian/control: Add/update dependencies, update Standards-Version,
+    Priority and compat.
+  * Replace dpkg-parsechangelog with /usr/share/dpkg/pkg-info.mk
+  * Update defaults file.
+  * Update debian/copyright.
+  * Add debian/NEWS to warn of breaking changes.
+  * Refresh patches.
+  * Stop using pristine-tar.
+  * Remove unused lintian overrides.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 14 Dec 2017 15:26:08 +0000
+
+prometheus-node-exporter (0.14.0+ds-3) unstable; urgency=medium
+
+  * Fix problem introduced by the combination of two flags (nozfs and mips*).
+  * Fix test timing issue in slow arches.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 19 Aug 2017 11:34:09 +0000
+
+prometheus-node-exporter (0.14.0+ds-2) unstable; urgency=medium
+
+  * Add dh-systemd support. Closes: #866399.
+  * Only depend on daemon if systemd-sysv is not installed. Closes: #870083.
+  * Fix compilation on gccgo/mips*.
+  * Fix integration test (wrong path under gccgo).
+  * Disable the ZFS collector in 32-bit arches, until issue #629 is
+    solved upstream.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 18 Aug 2017 09:36:40 +0000
+
+prometheus-node-exporter (0.14.0+ds-1) unstable; urgency=medium
+
+  * New upstream version. Closes: #867908.
+  * Updated debian/copyright for vendored dependencies.
+  * Add missing tests.
+  * Update documentation, defaults file, examples.
+  * debian/control: Update Standards-Version (no changes).
+  * debian/control: Fix Vcs-* fields.
+  * debian/control: Mark package as autopkgtest-able.
+  * debian/control: Update dependency on procfs.
+  * debian/gbp.conf: Add builder defaults.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 12 Jul 2017 00:54:52 +0000
+
+prometheus-node-exporter (0.13.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Work around gccgo inability to handle vendor directory.
+  * Fix build for arches not contemplated upstream.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 14 Jan 2017 05:38:44 -0300
+
+prometheus-node-exporter (0.13.0~rc.2+ds-1) unstable; urgency=medium
+
+  [ Paul Tagliamonte ]
+  * Team upload.
+  * Use a secure transport for the Vcs-Git and Vcs-Browser URL
+
+  [ Martina Ferrari ]
+  * Actually use https for Vcs-Browser.
+  * Filter out /(sys|proc|dev|run) filesystems by default.
+  * debian/default: Add escapes in multiline variable. Closes: #840947.
+  * debian/watch: Update with latest upstream versioning fmt.
+  * New upstream release.
+  * Update available parameters.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 19 Nov 2016 17:28:35 +0000
+
+prometheus-node-exporter (0.12.0+ds+really0.12.0-2) unstable; urgency=medium
+
+  * debian/watch: Take into account RCs and current version hack.
+  * debian/control: Update dependencies and Vcs-* links.
+  * debian/rules: Simplify with new dh_golang features; add version info.
+  * Fix default configuration.
+  * Add systemd service file.
+  * Add logrotate script.
+  * Enable the textfile collector by default.
+  * Remove rotated logs and textfile directory on purge.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 30 Jun 2016 13:30:21 +0000
+
+prometheus-node-exporter (0.12.0+ds+really0.12.0-1) unstable; urgency=medium
+
+  * New upstream release, which is really 0.12.0. The previous version was
+    actually 0.12.0rc1, but I made a mistake, hence the weird version number
+    for this release. Closes: #814227.
+  * Stop ignoring some configuration values in initscript. Thanks to
+    contaminates@baconmail.net for the patch. Closes: #813544.
+  * Remove now unneeded patches.
+  * debian/control:
+    - Add new dependencies.
+    - Update Standards-Version with no changes.
+  * debian/rules: Fix gen-orig-tgz target.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 06 May 2016 19:02:38 +0000
+
+prometheus-node-exporter (0.12.0+ds-2) unstable; urgency=medium
+
+  * Fix builds on arm64.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 25 Jan 2016 16:58:35 -0300
+
+prometheus-node-exporter (0.12.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add new dependency on golang-github-kolo-xmlrpc-dev.
+  * Add new dependency on golang-github-prometheus-common-dev, and update
+    patches.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 11 Jan 2016 19:29:42 +0000
+
+prometheus-node-exporter (0.11.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 03 Sep 2015 15:35:33 +0300
+
+prometheus-node-exporter (0.10.0+ds-3) unstable; urgency=medium
+
+  * debian/postrm: Do remove log and pid files.
+  * debian/init: Fix description.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 07 Jul 2015 11:28:12 +0000
+
+prometheus-node-exporter (0.10.0+ds-2) unstable; urgency=medium
+
+  * debian/control: Update dependency name for prometheus/log.
+  * debian/postrm: Do not remove directories forcefully, as these are shared
+    with other prometheus tools.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 07 Jul 2015 07:30:20 +0000
+
+prometheus-node-exporter (0.10.0+ds-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #790748)
+  * The source has been repackaged to include two dependencies that do not
+    deserve separate packages at this time: github.com/beevik/ntp and
+    github.com/soundcloud/go-runit.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 06 Jul 2015 18:22:37 +0000

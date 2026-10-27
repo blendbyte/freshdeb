@@ -1,0 +1,26 @@
+Textfile Collector
+
+The textfile collector is similar to the Pushgateway, in that it allows
+exporting of statistics from batch jobs. It can also be used to export static
+metrics, such as what role a machine has. The Pushgateway should be used for
+service-level metrics. The textfile module is for metrics that are tied to a
+machine.
+
+To use it, create files in the /var/lib/prometheus/node-exporter directory
+that are readable by the prometheus user.  The collector will parse all files
+in matching the glob *.prom using the text format.
+
+To atomically push completion time for a cron job:
+
+echo my_batch_job_completion_time $(date +%s) > \
+    /var/lib/prometheus/node-exporter/my_batch_job.prom.$$
+mv /var/lib/prometheus/node-exporter/my_batch_job.prom.$$ \
+    /var/lib/prometheus/node-exporter/my_batch_job.prom
+
+To statically set roles for a machine using labels:
+
+echo 'role{role="application_server"} 1' > \
+    /var/lib/prometheus/node-exporter/role.prom.$$
+mv /var/lib/prometheus/node-exporter/role.prom.$$ \
+    /var/lib/prometheus/node-exporter/role.prom
+

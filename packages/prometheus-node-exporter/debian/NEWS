@@ -1,0 +1,57 @@
+prometheus-node-exporter (0.18.1+ds-2) unstable; urgency=medium
+
+  This release removes the bundled textfile collector example scripts, since
+  they have been moved to an alternate upstream git repository. The scripts
+  and their associated systemd services / timers have been moved to the new
+  Debian package, prometheus-node-exporter-collectors.
+
+  If you have apt configured to not install "Recommends" package dependencies,
+  you will need to install the new prometheus-node-exporter-collectors package
+  manually.
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Mon, 27 Jan 2020 11:28:47 +0100
+
+prometheus-node-exporter (0.16.0+ds-1) unstable; urgency=medium
+
+  Breaking changes
+
+  This release contains major breaking changes to metric names.  Many metrics
+  have new names, labels, and label values in order to conform to current
+  naming conventions.
+
+  * Linux node_cpu metrics now break out `guest` values into separate metrics.
+    See Issue #737
+  * Many counter metrics have been renamed to include `_total`.
+  * Many metrics have been renamed/modified to include base units, for example
+    `node_cpu` is now `node_cpu_seconds_total`.
+
+  In order to help with the transition check the upgrade guide at
+  /usr/share/docs/prometheus-node-exporter/V0_16_UPGRADE_GUIDE.md.
+
+  Other breaking changes:
+  * The megacli collector has been removed, is now replaced by the storcli.py
+    textfile helper.
+  * The gmond collector has been removed.
+  * The textfile collector will now treat timestamps as errors.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 13 Jun 2018 19:00:23 +0000
+
+prometheus-node-exporter (0.15.2+ds-1) unstable; urgency=medium
+
+  Breaking changes
+
+  This release contains major breaking changes to flag handling.
+  * The flag library has been changed, all flags now require double-dashs.
+    (`-foo` becomes `--foo`).
+  * The collector selection flag has been replaced by individual boolean
+    flags.
+  * The `-collector.procfs` and `-collector.sysfs` flags have been renamed to
+    `--path.procfs` and `--path.sysfs` respectively.
+
+  The `ntp` collector has been replaced with a new NTP-based check that is
+  designed to expose the state of a localhost NTP server rather than provide
+  the offset of the node to a remote NTP server.  By default the `ntp`
+  collector is now locked to localhost.  This is to avoid accidental spamming
+  of public internet NTP pools.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 24 Oct 2017 06:13:51 +0000

@@ -1,0 +1,5 @@
+Version: 5
+
+Template: GitHub
+Dist: https://github.com/prometheus/node_exporter
+UVersion-Mangle: s/(\d)[_\.\-\+]?(RC|rc|pre|dev|beta|alpha)[.]?(\d*)$/$1~$2$3/

@@ -1,0 +1,131 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -8,31 +8,6 @@
+  Guillem Jover <gjover@sipwise.com>,
+ Build-Depends:
+  debhelper-compat (= 13),
+- dh-sequence-golang,
+- golang-any,
+- golang-dbus-dev,
+- golang-github-beevik-ntp-dev,
+- golang-github-coreos-go-systemd-dev,
+- golang-github-dennwc-btrfs-dev,
+- golang-github-ema-qdisc-dev,
+- golang-github-hashicorp-go-envparse-dev,
+- golang-github-hodgesds-perf-utils-dev,
+- golang-github-jsimonetti-rtnetlink-dev,
+- golang-github-mattn-go-xmlrpc-dev,
+- golang-github-mdlayher-ethtool-dev,
+- golang-github-mdlayher-netlink-dev,
+- golang-github-mdlayher-wifi-dev,
+- golang-github-opencontainers-selinux-dev,
+- golang-github-prometheus-client-golang-dev (>= 1.23.2),
+- golang-github-prometheus-client-model-dev,
+- golang-github-prometheus-common-dev (>= 0.67.1),
+- golang-github-prometheus-community-go-runit-dev,
+- golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+- golang-github-prometheus-procfs-dev (>= 0.21.1),
+- golang-github-safchain-ethtool-dev (>= 0.0~git20201023.874930c),
+- golang-golang-x-sys-dev,
+- golang-gopkg-alecthomas-kingpin.v2-dev,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-node-exporter
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-node-exporter.git
+@@ -51,7 +26,6 @@
+ Recommends:
+  dbus,
+  prometheus-node-exporter-collectors,
+-Static-Built-Using: ${misc:Static-Built-Using}
+ Description: Prometheus exporter for machine metrics
+  Prometheus exporter for machine metrics, written in Go with pluggable metric
+  collectors.
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -1,30 +1,29 @@
+ #!/usr/bin/make -f
+ include /usr/share/dpkg/pkg-info.mk
+ 
+-# Uncomment this to enable verbose mode.
+-#export DH_VERBOSE = 1
+-
+-export DH_GOLANG_EXCLUDES := tools
+-export DH_GOLANG_INSTALL_EXTRA := collector/fixtures
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have, with the flags and version stamps of upstream's
++# release binaries. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment.
++export CGO_ENABLED := 0
+ 
+ METAPKG := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
+ BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+     +%Y%m%d-%H:%M:%S)
+-GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+ BUILDTAGS  :=
+ BUILDFLAGS  = -tags "$(BUILDTAGS)" -ldflags \
+   " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
++    -X $(METAPKG)/version.Revision=$(REVISION)\
++    -X $(METAPKG)/version.Branch=HEAD\
++    -X $(METAPKG)/version.BuildUser=freshdeb\
++    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)"
+ 
+ %:
+-	dh $@ --builddirectory=_build --buildsystem=golang
++	dh $@
+ 
+ # ZFS (or its tests) are not working in 32-bit arches.
+ include /usr/share/dpkg/architecture.mk
+@@ -34,17 +33,20 @@
+ 
+ BINNAME := $(DEB_SOURCE)
+ 
++override_dh_auto_configure:
++
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
+-	# Rename the binary to match the debian package.
+-	mv -v _build/bin/node_exporter _build/bin/$(BINNAME)
++	go version
++	go build $(BUILDFLAGS) -o _build/bin/$(BINNAME) .
+ 
++# Upstream's test suite, as upstream's "make test" runs it, with its
++# fixtures unpacked.
+ override_dh_auto_test:
+-	./ttar -C _build/src/github.com/prometheus/node_exporter/collector/fixtures \
+-      -x -f collector/fixtures/sys.ttar
+-	./ttar -C _build/src/github.com/prometheus/node_exporter/collector/fixtures \
+-      -x -f collector/fixtures/udev.ttar
+-	dh_auto_test -- $(BUILDFLAGS)
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	bash ./ttar -C collector/fixtures -x -f collector/fixtures/sys.ttar
++	bash ./ttar -C collector/fixtures -x -f collector/fixtures/udev.ttar
++	go test -short $(BUILDFLAGS) ./...
++endif
+ 
+ MAN_WHATIS := $(BINNAME) \\- Prometheus exporter for machine metrics
+ MAN_PROG := $(shell echo $(BINNAME) | tr [:lower:] [:upper:])
+@@ -63,4 +65,10 @@
+ 	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' _build/$(BINNAME).1
+ 
+ override_dh_auto_install:
+-	dh_auto_install -- --no-source
++	install -D -m 0755 _build/bin/$(BINNAME) debian/prometheus-node-exporter/usr/bin/$(BINNAME)
++
++# Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf _build collector/fixtures/sys collector/fixtures/udev

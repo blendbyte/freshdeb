@@ -1,0 +1,143 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Mon, 13 Nov 2023 13:49:27 +0100
+Subject: Set defaults that make sense for Debian systems
+
+Forwarded: not-needed
+
+We remove the deprecated options completely because they were introduced in
+1.0.0 and were never part of a stable release, and are causing issues with
+the default value setting as it then makes the code consider it a usage and
+errors out when the legacy option is used.
+
+This patch also enables the systemd collector by default.
+---
+ collector/filesystem_linux.go |  2 +-
+ collector/netdev_common.go    | 20 --------------------
+ collector/systemd_linux.go    | 23 ++---------------------
+ collector/textfile.go         |  2 +-
+ 4 files changed, 4 insertions(+), 43 deletions(-)
+
+diff --git a/collector/filesystem_linux.go b/collector/filesystem_linux.go
+index 3739f0f..03b654b 100644
+--- a/collector/filesystem_linux.go
++++ b/collector/filesystem_linux.go
+@@ -34,7 +34,7 @@ import (
+ )
+ 
+ const (
+-	defMountPointsExcluded = "^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($|/)"
++	defMountPointsExcluded = "^/(dev|proc|run|sys|mnt|media|var/lib/docker/.+|var/lib/containers/storage/.+)($|/)"
+ 	defFSTypesExcluded     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$"
+ )
+ 
+diff --git a/collector/netdev_common.go b/collector/netdev_common.go
+index f37a708..6a4e81e 100644
+--- a/collector/netdev_common.go
++++ b/collector/netdev_common.go
+@@ -29,9 +29,7 @@ import (
+ 
+ var (
+ 	netdevDeviceInclude    = kingpin.Flag("collector.netdev.device-include", "Regexp of net devices to include (mutually exclusive to device-exclude).").String()
+-	oldNetdevDeviceInclude = kingpin.Flag("collector.netdev.device-whitelist", "DEPRECATED: Use collector.netdev.device-include").Hidden().String()
+ 	netdevDeviceExclude    = kingpin.Flag("collector.netdev.device-exclude", "Regexp of net devices to exclude (mutually exclusive to device-include).").String()
+-	oldNetdevDeviceExclude = kingpin.Flag("collector.netdev.device-blacklist", "DEPRECATED: Use collector.netdev.device-exclude").Hidden().String()
+ 	netdevAddressInfo      = kingpin.Flag("collector.netdev.address-info", "Collect address-info for every device").Bool()
+ 	netdevDetailedMetrics  = kingpin.Flag("collector.netdev.enable-detailed-metrics", "Use (incompatible) metric names that provide more detailed stats on Linux").Bool()
+ )
+@@ -52,24 +50,6 @@ func init() {
+ 
+ // NewNetDevCollector returns a new Collector exposing network device stats.
+ func NewNetDevCollector(logger *slog.Logger) (Collector, error) {
+-	if *oldNetdevDeviceInclude != "" {
+-		if *netdevDeviceInclude == "" {
+-			logger.Warn("--collector.netdev.device-whitelist is DEPRECATED and will be removed in 2.0.0, use --collector.netdev.device-include")
+-			*netdevDeviceInclude = *oldNetdevDeviceInclude
+-		} else {
+-			return nil, errors.New("--collector.netdev.device-whitelist and --collector.netdev.device-include are mutually exclusive")
+-		}
+-	}
+-
+-	if *oldNetdevDeviceExclude != "" {
+-		if *netdevDeviceExclude == "" {
+-			logger.Warn("--collector.netdev.device-blacklist is DEPRECATED and will be removed in 2.0.0, use --collector.netdev.device-exclude")
+-			*netdevDeviceExclude = *oldNetdevDeviceExclude
+-		} else {
+-			return nil, errors.New("--collector.netdev.device-blacklist and --collector.netdev.device-exclude are mutually exclusive")
+-		}
+-	}
+-
+ 	if *netdevDeviceExclude != "" && *netdevDeviceInclude != "" {
+ 		return nil, errors.New("device-exclude & device-include are mutually exclusive")
+ 	}
+diff --git a/collector/systemd_linux.go b/collector/systemd_linux.go
+index 51b82c0..53ca304 100644
+--- a/collector/systemd_linux.go
++++ b/collector/systemd_linux.go
+@@ -17,7 +17,6 @@ package collector
+ 
+ import (
+ 	"context"
+-	"errors"
+ 	"fmt"
+ 	"log/slog"
+ 	"math"
+@@ -45,13 +44,11 @@ var (
+ 		systemdUnitIncludeSet = true
+ 		return nil
+ 	}).String()
+-	oldSystemdUnitInclude = kingpin.Flag("collector.systemd.unit-whitelist", "DEPRECATED: Use --collector.systemd.unit-include").Hidden().String()
+ 	systemdUnitExcludeSet bool
+-	systemdUnitExclude    = kingpin.Flag("collector.systemd.unit-exclude", "Regexp of systemd units to exclude. Units must both match include and not match exclude to be included.").Default(".+\\.(automount|device|mount|scope|slice)").PreAction(func(c *kingpin.ParseContext) error {
++	systemdUnitExclude    = kingpin.Flag("collector.systemd.unit-exclude", "Regexp of systemd units to exclude. Units must both match include and not match exclude to be included.").Default(".+\\.(automount|device|mount|scope|slice|target)").PreAction(func(c *kingpin.ParseContext) error {
+ 		systemdUnitExcludeSet = true
+ 		return nil
+ 	}).String()
+-	oldSystemdUnitExclude  = kingpin.Flag("collector.systemd.unit-blacklist", "DEPRECATED: Use collector.systemd.unit-exclude").Hidden().String()
+ 	systemdPrivate         = kingpin.Flag("collector.systemd.private", "Establish a private, direct connection to systemd without dbus (Strongly discouraged since it requires root. For testing purposes only).").Hidden().Bool()
+ 	enableTaskMetrics      = kingpin.Flag("collector.systemd.enable-task-metrics", "Enables service unit tasks metrics unit_tasks_current and unit_tasks_max").Bool()
+ 	enableRestartsMetrics  = kingpin.Flag("collector.systemd.enable-restarts-metrics", "Enables service unit metric service_restart_total").Bool()
+@@ -83,7 +80,7 @@ type systemdCollector struct {
+ var unitStatesName = []string{"active", "activating", "deactivating", "inactive", "failed"}
+ 
+ func init() {
+-	registerCollector("systemd", defaultDisabled, NewSystemdCollector)
++	registerCollector("systemd", defaultEnabled, NewSystemdCollector)
+ }
+ 
+ // NewSystemdCollector returns a new Collector exposing systemd statistics.
+@@ -136,22 +133,6 @@ func NewSystemdCollector(logger *slog.Logger) (Collector, error) {
+ 		prometheus.BuildFQName(namespace, subsystem, "virtualization_info"),
+ 		"Detected virtualization technology", []string{"virtualization_type"}, nil)
+ 
+-	if *oldSystemdUnitExclude != "" {
+-		if !systemdUnitExcludeSet {
+-			logger.Warn("--collector.systemd.unit-blacklist is DEPRECATED and will be removed in 2.0.0, use --collector.systemd.unit-exclude")
+-			*systemdUnitExclude = *oldSystemdUnitExclude
+-		} else {
+-			return nil, errors.New("--collector.systemd.unit-blacklist and --collector.systemd.unit-exclude are mutually exclusive")
+-		}
+-	}
+-	if *oldSystemdUnitInclude != "" {
+-		if !systemdUnitIncludeSet {
+-			logger.Warn("--collector.systemd.unit-whitelist is DEPRECATED and will be removed in 2.0.0, use --collector.systemd.unit-include")
+-			*systemdUnitInclude = *oldSystemdUnitInclude
+-		} else {
+-			return nil, errors.New("--collector.systemd.unit-whitelist and --collector.systemd.unit-include are mutually exclusive")
+-		}
+-	}
+ 	logger.Info("Parsed flag --collector.systemd.unit-include", "flag", *systemdUnitInclude)
+ 	systemdUnitIncludePattern := regexp.MustCompile(fmt.Sprintf("^(?:%s)$", *systemdUnitInclude))
+ 	logger.Info("Parsed flag --collector.systemd.unit-exclude", "flag", *systemdUnitExclude)
+diff --git a/collector/textfile.go b/collector/textfile.go
+index 17e4a60..7753940 100644
+--- a/collector/textfile.go
++++ b/collector/textfile.go
+@@ -33,7 +33,7 @@ import (
+ )
+ 
+ var (
+-	textFileDirectories = kingpin.Flag("collector.textfile.directory", "Directory to read text files with metrics from, supports glob matching. (repeatable)").Default("").Strings()
++	textFileDirectories = kingpin.Flag("collector.textfile.directory", "Directory to read text files with metrics from, supports glob matching. (repeatable)").Default("/var/lib/prometheus/node-exporter").Strings()
+ 	mtimeDesc           = prometheus.NewDesc(
+ 		"node_textfile_mtime_seconds",
+ 		"Unixtime mtime of textfiles successfully read.",

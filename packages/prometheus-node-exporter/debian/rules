@@ -1,0 +1,66 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/pkg-info.mk
+
+# Uncomment this to enable verbose mode.
+#export DH_VERBOSE = 1
+
+export DH_GOLANG_EXCLUDES := tools
+export DH_GOLANG_INSTALL_EXTRA := collector/fixtures
+
+METAPKG := github.com/prometheus/common
+
+BRANCH     := debian/sid
+USER       := team+pkg-go@tracker.debian.org
+BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+    +%Y%m%d-%H:%M:%S)
+GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+BUILDTAGS  :=
+BUILDFLAGS  = -tags "$(BUILDTAGS)" -ldflags \
+  " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Branch=$(BRANCH)\
+    -X $(METAPKG)/version.BuildUser=$(USER)\
+    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+
+%:
+	dh $@ --builddirectory=_build --buildsystem=golang
+
+# ZFS (or its tests) are not working in 32-bit arches.
+include /usr/share/dpkg/architecture.mk
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+BUILDTAGS += nozfs
+endif
+
+BINNAME := $(DEB_SOURCE)
+
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+	# Rename the binary to match the debian package.
+	mv -v _build/bin/node_exporter _build/bin/$(BINNAME)
+
+override_dh_auto_test:
+	./ttar -C _build/src/github.com/prometheus/node_exporter/collector/fixtures \
+      -x -f collector/fixtures/sys.ttar
+	./ttar -C _build/src/github.com/prometheus/node_exporter/collector/fixtures \
+      -x -f collector/fixtures/udev.ttar
+	dh_auto_test -- $(BUILDFLAGS)
+
+MAN_WHATIS := $(BINNAME) \\- Prometheus exporter for machine metrics
+MAN_PROG := $(shell echo $(BINNAME) | tr [:lower:] [:upper:])
+MAN_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' '+%B %Y')
+
+execute_before_dh_installman:
+	_build/bin/$(BINNAME) --help-man > _build/$(BINNAME).1
+	# Fix title header and footer.
+	sed -i '/^.TH .*/c.TH $(MAN_PROG) "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        _build/$(BINNAME).1
+	# Remove build user/build date/go version headers, which is ugly.
+	sed -i '/^  /d' _build/$(BINNAME).1
+	# Fix whatis entry.
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n$(MAN_WHATIS)' _build/$(BINNAME).1
+	# Remove default values, as they create unwieldy long lines.
+	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' _build/$(BINNAME).1
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source
