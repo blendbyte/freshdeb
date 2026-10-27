@@ -59,7 +59,9 @@ jobs:
       # Newer AWS CLIs add checksum headers by default that R2 may reject.
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-      BUCKET: ${{ secrets.PKG_S3_BUCKET_NAME }}
+      # A variable, not a secret: the name isn't sensitive, and GitHub masks
+      # every occurrence of a secret's value in logs ("freshdeb" -> ***).
+      BUCKET: ${{ vars.PKG_S3_BUCKET_NAME }}
       RUN_ID: ${{ inputs.run_id }}
       DRY_RUN: ${{ inputs.dry_run == true }}
       BOOTSTRAP: ${{ inputs.bootstrap == true }}
@@ -136,6 +138,7 @@ jobs:
           # registry so the next push to main plans everything since.
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
+          [[ -n "$BUCKET" ]] || { echo "::error::Environment variable PKG_S3_BUCKET_NAME is not set"; exit 1; }
           export GNUPGHOME="$RUNNER_TEMP/gnupg"
           args=(--artifacts artifacts --remote "s3://${BUCKET}" --key "$GPG_KEY_ID" --work release-work
                 --commit "$SOURCE_SHA")
