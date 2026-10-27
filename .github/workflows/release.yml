@@ -31,6 +31,13 @@ permissions:
   contents: read
   actions: read
 
+
+# Explicit bash makes GitHub run steps with -eo pipefail; the implicit
+# default is "bash -e" only, where "cmd | tee log" hides a failing cmd.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   publish:
     name: publish to deb.freshdeb.com

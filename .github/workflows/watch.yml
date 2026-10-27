@@ -10,7 +10,7 @@ name: watch
 #
 # Pull requests opened with the default GITHUB_TOKEN do not trigger ci.yml.
 # Set the FRESHDEB_BOT_TOKEN secret (GitHub App or fine-grained PAT with
-# contents + pull-requests write) so the PRs get built.
+# contents + pull-requests write) so the PRs get their checks and plan.
 
 on:
   schedule:
@@ -24,6 +24,13 @@ permissions:
 concurrency:
   group: watch
   cancel-in-progress: false
+
+
+# Explicit bash makes GitHub run steps with -eo pipefail; the implicit
+# default is "bash -e" only, where "cmd | tee log" hides a failing cmd.
+defaults:
+  run:
+    shell: bash
 
 jobs:
   watch:
@@ -70,7 +77,7 @@ jobs:
               title="${package} ${track}: update to ${tag}"
               body="Upstream released [${tag}](${notes}). This bumps track \`${track}\` and resets its revision to 1.
 
-          CI builds and tests every codename/arch. Merging publishes to \`${package}-${track}\` and any alias pointing at it."
+          Merging builds and tests every codename/arch, then publishes to \`${package}-${track}\` and any alias pointing at it. If a build fails, nothing is published."
             else
               title="${package}: add track ${track} (${tag})"
               body="Upstream started a new release line: [${tag}](${notes}).
@@ -85,7 +92,8 @@ jobs:
 
             git commit -q -m "$title"
             git push -q --force origin "$branch"
-            if gh pr view "$branch" --json state -q .state 2>/dev/null | grep -q OPEN; then
+            state="$(gh pr view "$branch" --json state -q .state 2>/dev/null || true)"
+            if [[ "$state" == "OPEN" ]]; then
               gh pr edit "$branch" --title "$title" --body "$body"
             else
               gh pr create --head "$branch" --base main --title "$title" --body "$body" --label "watch"

@@ -1,9 +1,15 @@
 name: ci
 
 # One workflow for pull requests, merges and manual rebuilds:
+#   checks   catalog validation, shellcheck, unit and release tests
 #   plan     work out which package/track/codename/arch combinations to build
 #   build    build + verify each one on a native runner (no emulation)
-#   release  publish to deb.freshdeb.com (main only, production approval)
+#   release  publish to deb.freshdeb.com (main only)
+#
+# Pull requests only run checks and plan: plan rejects packaging changes
+# without a version bump and lists what merging will build. Packages are
+# built once, after merge; a failed build publishes nothing. To build a
+# branch before merging, dispatch this workflow on it (publish stays off).
 #
 # What gets built is decided by scripts/freshdeb.py plan; see its docstring.
 
@@ -37,6 +43,13 @@ permissions:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+
+# Explicit bash makes GitHub run steps with -eo pipefail; the implicit
+# default is "bash -e" only, where "cmd | tee log" hides a failing cmd.
+defaults:
+  run:
+    shell: bash
 
 jobs:
   checks:
@@ -113,7 +126,13 @@ jobs:
           esac
           python3 scripts/freshdeb.py plan "${args[@]}" > plan.json
           {
-            echo "### Build plan"
+            if [[ "$EVENT" == "pull_request" ]]; then
+              echo "### Builds after merge"
+              echo
+              echo "Pull requests are not built. Merging builds and publishes these:"
+            else
+              echo "### Build plan"
+            fi
             echo
             echo "| package | track | codename | arch | version | publish |"
             echo "|---|---|---|---|---|---|"
@@ -123,7 +142,7 @@ jobs:
   build:
     name: ${{ matrix.package }} ${{ matrix.track }} ${{ matrix.codename }}/${{ matrix.arch }}
     needs: plan
-    if: needs.plan.outputs.count != '0'
+    if: github.event_name != 'pull_request' && needs.plan.outputs.count != '0'
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
