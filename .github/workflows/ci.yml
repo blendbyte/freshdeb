@@ -131,9 +131,9 @@ jobs:
               echo "### Build plan"
             fi
             echo
-            echo "| package | track | codename | arch | version | publish |"
-            echo "|---|---|---|---|---|---|"
-            jq -r '.matrix.include[] | "| \(.package) | \(.track) | \(.codename) | \(.arch) | `\(.version)` | \(.publish) |"' plan.json
+            echo "| package | track | codename | arch | version | publish | upstream tests |"
+            echo "|---|---|---|---|---|---|---|"
+            jq -r '.matrix.include[] | "| \(.package) | \(.track) | \(.codename) | \(.arch) | `\(.version)` | \(.publish) | \(if .nocheck then "skipped" else "run" end) |"' plan.json
           } >> "$GITHUB_STEP_SUMMARY"
 
   build:
@@ -165,6 +165,7 @@ jobs:
         env:
           BUILDER_IMAGE: freshdeb-builder:${{ matrix.codename }}-${{ matrix.arch }}
           PUBLISH: ${{ matrix.publish }}
+          NOCHECK: ${{ matrix.nocheck }}
         run: scripts/build.sh "${{ matrix.package }}" "${{ matrix.track }}" "${{ matrix.codename }}" "${{ matrix.arch }}" "$PWD/out"
 
       - name: Verify

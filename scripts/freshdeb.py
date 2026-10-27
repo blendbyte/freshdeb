@@ -470,6 +470,13 @@ def cmd_validate(args):
 
 # ─── plan ───────────────────────────────────────────────────────────────────
 
+# How much a planned track builds, weakest first:
+#   canary  build machinery changed: one job, no upstream test suite
+#   tests   only the package's own tests changed: every codename/arch, no
+#           upstream test suite (upstream's code didn't change)
+#   full    a release, or a manual rebuild: everything
+SCOPES = ("canary", "tests", "full")
+
 INFRA_PREFIXES = ("builders/", "scripts/", ".github/workflows/ci.yml")
 NON_BUILD_SUFFIXES = (".md",)
 
@@ -511,9 +518,11 @@ def plan_changes(root, base, head, today=None, package_bases=None):
         or package.yaml outside tracks/aliases)          -> all active tracks,
                                                             publish; each must
                                                             have a new version
-      * only tests/ or docs changed                      -> newest track, test only
+      * only tests/ changed                              -> newest track, test only,
+                                                            no upstream test suite
       * build infrastructure changed                     -> newest track of every
-                                                            package, test only
+                                                            package, one job each,
+                                                            no upstream test suite
       * codename added to config.yaml                    -> every active track
                                                             on it, publish
     """
@@ -531,10 +540,11 @@ def plan_changes(root, base, head, today=None, package_bases=None):
         base_dists = set((yaml.safe_load(base_config_text) or {}).get("distributions") or {})
         new_codenames = set(config.distributions) - base_dists
 
-    def select(name, key, publish, codenames=None):
-        entry = selected.setdefault((name, key), {"publish": False, "codenames": set()})
+    def select(name, key, publish, codenames=None, scope="full"):
+        entry = selected.setdefault((name, key), {"publish": False, "codenames": set(), "scope": scope})
         entry["publish"] |= publish
         entry["codenames"] |= set(codenames) if codenames else {"*"}
+        entry["scope"] = max(entry["scope"], scope, key=SCOPES.index)
 
     infra = any(f.startswith(INFRA_PREFIXES) for f in files)
     for pkg in load_packages(root):
@@ -576,10 +586,10 @@ def plan_changes(root, base, head, today=None, package_bases=None):
                     errors.append(f"{pkg.name} {key}: packaging changed ({', '.join(sorted(set(packaging)))}) "
                                   f"but tag and revision did not; bump revision so the version changes")
         elif any(f.startswith("tests/") for f in pkg_files):
-            select(pkg.name, newest, False)
+            select(pkg.name, newest, False, scope="tests")
 
         if infra:
-            select(pkg.name, newest, False)
+            select(pkg.name, newest, False, scope="canary")
         if new_codenames:
             for key in active:
                 select(pkg.name, key, True, new_codenames)
@@ -593,18 +603,23 @@ def expand_matrix(root, selected, codename_filter=None, today=None):
         pkg = load_package(name, root)
         track = pkg.tracks[key]
         arch_indep = all(a == "all" for a in control_binaries(pkg.path / "debian").values())
-        for codename in pkg.codenames(config, track):
+        scope = entry.get("scope", "full")
+        codenames = pkg.codenames(config, track)
+        if scope == "canary":
+            codenames = codenames[:1]  # the oldest Debian release, unless the package skips it
+        for codename in codenames:
             if "*" not in entry["codenames"] and codename not in entry["codenames"]:
                 continue
             if codename_filter and codename not in codename_filter:
                 continue
             for arch, arch_entry in config.architectures.items():
-                if arch_indep and arch != config.primary_arch:
+                if (arch_indep or scope == "canary") and arch != config.primary_arch:
                     continue
                 include.append({
                     "package": name, "track": key, "codename": codename, "arch": arch,
                     "runner": arch_entry["runner"], "image": config.distributions[codename].image,
                     "publish": entry["publish"],
+                    "nocheck": scope != "full",
                     "version": pkg.version(config, key, codename),
                 })
     require(len(include) <= MAX_MATRIX,
@@ -647,7 +662,7 @@ def cmd_plan(args):
                 require(not unknown, f"{name}: unknown or end-of-life track(s): {', '.join(sorted(unknown))}")
                 keys = args.tracks
             for key in keys:
-                selected[(name, key)] = {"publish": args.publish, "codenames": {"*"}}
+                selected[(name, key)] = {"publish": args.publish, "codenames": {"*"}, "scope": "full"}
         errors = []
     else:
         require(args.base, "--base is required unless --packages/--all is given")
@@ -660,7 +675,7 @@ def cmd_plan(args):
             for pkg in load_packages(root):
                 for key, track in pkg.tracks.items():
                     if track.active(today):
-                        selected[(pkg.name, key)] = {"publish": True, "codenames": {"*"}}
+                        selected[(pkg.name, key)] = {"publish": True, "codenames": {"*"}, "scope": "full"}
             errors = []
         else:
             selected, errors, alias_changes = plan_changes(root, base, args.head, today,

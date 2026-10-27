@@ -9,6 +9,7 @@
 # Env:     PACKAGE TRACK CODENAME ARCH  required
 #          PUBLISH                      "true" marks the result publishable
 #          SOURCE_DATE_EPOCH            changelog date (reproducibility)
+#          NOCHECK                      "true" skips upstream's test suite
 #
 # Runs as root for apt; the package itself builds as the "builder" user.
 
@@ -51,6 +52,13 @@ fi
 SRC="$WORK/$(info source_dir)"
 profiles="$(info_list build_profiles)"
 options="$(info_list build_options)"
+if [[ "${NOCHECK:-false}" == "true" ]]; then
+    # Canary and test-only builds: upstream's code didn't change, so skip its
+    # test suite (and the build-dependencies only it needs).
+    [[ " $options " == *" nocheck "* ]] || options="${options:+$options }nocheck"
+    [[ " $profiles " == *" nocheck "* ]] || profiles="${profiles:+$profiles }nocheck"
+    echo "Skipping upstream's test suite (NOCHECK)"
+fi
 
 echo "::group::Install build dependencies"
 profile_args=()

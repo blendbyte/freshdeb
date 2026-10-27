@@ -15,6 +15,7 @@
 # Env:
 #   BUILDER_IMAGE   use this image instead of building builders/Dockerfile
 #   PUBLISH         "true" marks the result publishable (CI sets this)
+#   NOCHECK         "true" skips upstream's test suite (canary/test-only builds)
 
 set -euo pipefail
 
@@ -58,5 +59,5 @@ docker run --rm \
     -v "$ROOT:/workspace:ro" \
     -v "$OUT:/out" \
     -e PACKAGE="$PACKAGE" -e TRACK="$TRACK" -e CODENAME="$CODENAME" -e ARCH="$ARCH" \
-    -e PUBLISH="${PUBLISH:-false}" -e SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
+    -e PUBLISH="${PUBLISH:-false}" -e NOCHECK="${NOCHECK:-false}" -e SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
     "$IMAGE" bash /workspace/scripts/container-build.sh

@@ -258,6 +258,33 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(selected, expected)
         self.assertIn(("valkey", "9.1"), expected)
 
+    def test_canary_is_one_job_per_package_without_upstream_tests(self):
+        self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
+        self.commit()
+        selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
+        matrix = freshdeb.expand_matrix(self.repo, selected, None, TODAY)
+        self.assertEqual(len(matrix), len(freshdeb.package_names(self.repo)))
+        self.assertTrue(all((j["codename"], j["arch"], j["nocheck"], j["publish"]) == ("bookworm", "amd64", True, False)
+                            for j in matrix))
+
+    def test_tests_only_change_covers_every_distro_without_upstream_tests(self):
+        self.edit("packages/valkey/tests/smoke.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
+        self.commit()
+        selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
+        matrix = freshdeb.expand_matrix(self.repo, selected, None, TODAY)
+        self.assertEqual(len(matrix), 5 * 2)
+        self.assertTrue(all(j["nocheck"] and not j["publish"] for j in matrix))
+
+    def test_releases_run_upstream_tests_even_with_a_canary(self):
+        self.edit("packages/valkey/package.yaml", "revision: 1\n    eol: 2031-05-19", "revision: 2\n    eol: 2031-05-19")
+        self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
+        self.commit()
+        selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
+        matrix = freshdeb.expand_matrix(self.repo, selected, None, TODAY)
+        valkey = [j for j in matrix if j["package"] == "valkey"]
+        self.assertEqual(len(valkey), 5 * 2)
+        self.assertTrue(all(j["publish"] and not j["nocheck"] for j in valkey))
+
     def test_alias_change_needs_release_but_no_build(self):
         self.edit("packages/valkey/package.yaml", '"8": "8.1"', '"8": "8.0"')
         self.commit()
