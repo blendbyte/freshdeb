@@ -1,0 +1,93 @@
+name: watch
+
+# Daily: look for new upstream releases and open one pull request per
+# change. Nothing is published from here; merging the PR does that.
+#
+#   patch release in a track  -> PR bumping tag/commit (revision back to 1)
+#   new minor/major line      -> PR adding the track (patches copied from the
+#                                newest track) and moving aliases; needs a
+#                                human: set eol, check the patches
+#
+# Pull requests opened with the default GITHUB_TOKEN do not trigger ci.yml.
+# Set the FRESHDEB_BOT_TOKEN secret (GitHub App or fine-grained PAT with
+# contents + pull-requests write) so the PRs get built.
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.FRESHDEB_BOT_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Install PyYAML
+        run: sudo apt-get install -y --no-install-recommends python3-yaml
+
+      - name: Find upstream releases
+        run: |
+          python3 scripts/freshdeb.py watch > changes.json
+          jq -r '.[] | "\(.package) \(.track): \(.kind) -> \(.tag)"' changes.json
+
+      - name: Open pull requests
+        env:
+          GH_TOKEN: ${{ secrets.FRESHDEB_BOT_TOKEN || github.token }}
+        run: |
+          git config user.name "freshdeb-bot"
+          git config user.email "packages@freshdeb.com"
+          base="$(git rev-parse HEAD)"
+          gh label create watch --color 0e8a16 --description "Opened by watch.yml" --force >/dev/null
+          jq -c '.[]' changes.json | while read -r change; do
+            package="$(jq -r .package <<<"$change")"
+            track="$(jq -r .track <<<"$change")"
+            tag="$(jq -r .tag <<<"$change")"
+            kind="$(jq -r .kind <<<"$change")"
+            branch="watch/${package}-${track}"
+            upstream="$(yq -r .upstream.git "packages/${package}/package.yaml")"
+            notes="${upstream%.git}/releases/tag/${tag}"
+
+            git checkout -q -B "$branch" "$base"
+            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --apply >/dev/null
+            git add -A "packages/${package}"
+            if git diff --cached --quiet; then
+              continue
+            fi
+
+            if [[ "$kind" == "bump" ]]; then
+              title="${package} ${track}: update to ${tag}"
+              body="Upstream released [${tag}](${notes}). This bumps track \`${track}\` and resets its revision to 1.
+
+          CI builds and tests every codename/arch. Merging publishes to \`${package}-${track}\` and any alias pointing at it."
+            else
+              title="${package}: add track ${track} (${tag})"
+              body="Upstream started a new release line: [${tag}](${notes}).
+
+          This adds track \`${track}\` with patches copied from the newest existing track, and moves aliases: \`$(jq -c .aliases <<<"$change")\`.
+
+          Before merging:
+          - [ ] Set \`eol\` for the new track from upstream's support policy
+          - [ ] Check \`packages/${package}/patches/${track}\` against Debian's packaging for this line
+          - [ ] Decide whether moving the aliases now is right (users of the alias get a minor/major upgrade)"
+            fi
+
+            git commit -q -m "$title"
+            git push -q --force origin "$branch"
+            if gh pr view "$branch" --json state -q .state 2>/dev/null | grep -q OPEN; then
+              gh pr edit "$branch" --title "$title" --body "$body"
+            else
+              gh pr create --head "$branch" --base main --title "$title" --body "$body" --label "watch"
+            fi
+          done

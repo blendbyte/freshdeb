@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+#DEBHELPER#
+
+if [ "$1" = "configure" ]
+then
+	find /etc/valkey -maxdepth 1 -type d -name 'valkey-server.*.d' -empty -delete
+fi
+
+exit 0

@@ -1,0 +1,190 @@
+name: ci
+
+# One workflow for pull requests, merges and manual rebuilds:
+#   plan     work out which package/track/codename/arch combinations to build
+#   build    build + verify each one on a native runner (no emulation)
+#   release  publish to deb.freshdeb.com (main only, production approval)
+#
+# What gets built is decided by scripts/freshdeb.py plan; see its docstring.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Packages to build, space separated, or "all"'
+        required: true
+        default: all
+      tracks:
+        description: 'Tracks to build (e.g. "9.1 9.0"), or "all" active tracks'
+        required: true
+        default: all
+      codenames:
+        description: 'Codenames to build, or "all"'
+        required: true
+        default: all
+      publish:
+        description: 'Publish the result (main only; versions already published are kept)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build test image
+        run: docker build -f tests/release.Dockerfile -t freshdeb-tests .
+
+      - name: Validate catalog
+        run: docker run --rm -v "$PWD:/workspace:ro" freshdeb-tests python3 scripts/freshdeb.py validate
+
+      - name: Shellcheck
+        run: |
+          docker run --rm -v "$PWD:/workspace:ro" freshdeb-tests \
+            bash -c 'shellcheck scripts/*.sh packages/*/tests/*.sh'
+
+      - name: Unit and release tests
+        run: docker run --rm -v "$PWD:/workspace:ro" freshdeb-tests
+
+  plan:
+    name: plan
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+      publish: ${{ steps.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install PyYAML
+        run: sudo apt-get install -y --no-install-recommends python3-yaml
+
+      - name: Plan builds
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          IN_PACKAGES: ${{ inputs.packages }}
+          IN_TRACKS: ${{ inputs.tracks }}
+          IN_CODENAMES: ${{ inputs.codenames }}
+          IN_PUBLISH: ${{ inputs.publish }}
+        run: |
+          args=()
+          case "$EVENT" in
+            pull_request)
+              args=(--base "$PR_BASE")
+              ;;
+            push)
+              # Plan from the last released commit, not just this push:
+              # pending runs on main can be cancelled by newer pushes.
+              base="$PUSH_BEFORE"
+              released="$(curl -fsS --max-time 20 https://deb.freshdeb.com/status.json | jq -r '.commit // empty' || true)"
+              if [[ -n "$released" ]] && git merge-base --is-ancestor "$released" HEAD 2>/dev/null; then
+                base="$released"
+              fi
+              echo "Planning changes since $base"
+              args=(--base "$base" --publish)
+              ;;
+            workflow_dispatch)
+              # shellcheck disable=SC2206
+              args=(--packages $IN_PACKAGES --tracks $IN_TRACKS --codenames $IN_CODENAMES)
+              if [[ "$IN_PUBLISH" == "true" ]]; then
+                [[ "$REF" == "refs/heads/main" ]] || { echo "::error::publishing is only allowed from main"; exit 1; }
+                args+=(--publish)
+              fi
+              ;;
+          esac
+          python3 scripts/freshdeb.py plan "${args[@]}" > plan.json
+          {
+            echo "### Build plan"
+            echo
+            echo "| package | track | codename | arch | version | publish |"
+            echo "|---|---|---|---|---|---|"
+            jq -r '.matrix.include[] | "| \(.package) | \(.track) | \(.codename) | \(.arch) | `\(.version)` | \(.publish) |"' plan.json
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: ${{ matrix.package }} ${{ matrix.track }} ${{ matrix.codename }}/${{ matrix.arch }}
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Builder image
+        uses: docker/build-push-action@v7
+        with:
+          context: builders
+          build-args: BASE_IMAGE=${{ matrix.image }}
+          tags: freshdeb-builder:${{ matrix.codename }}-${{ matrix.arch }}
+          load: true
+          cache-from: type=gha,scope=builder-${{ matrix.codename }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=builder-${{ matrix.codename }}-${{ matrix.arch }}
+          platforms: linux/${{ matrix.arch }}
+
+      - name: Build
+        env:
+          BUILDER_IMAGE: freshdeb-builder:${{ matrix.codename }}-${{ matrix.arch }}
+          PUBLISH: ${{ matrix.publish }}
+        run: scripts/build.sh "${{ matrix.package }}" "${{ matrix.track }}" "${{ matrix.codename }}" "${{ matrix.arch }}" "$PWD/out"
+
+      - name: Verify
+        run: scripts/verify.sh "$PWD/out"
+
+      - name: Summary
+        if: always()
+        run: |
+          [[ -f out/build-info.json ]] || exit 0
+          jq -r '"**\(.package) \(.version)** on \(.codename)/\(.arch): " +
+                 (if .skipped then "skipped (\(.skip_reason))" else "built \(.debs | join(", "))" end)' \
+            out/build-info.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-${{ matrix.package }}-${{ matrix.track }}-${{ matrix.codename }}-${{ matrix.arch }}
+          path: |
+            out/build-info.json
+            out/*.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: release
+    needs: [plan, build]
+    # Skipped builds (count 0) are fine: an alias-only change still releases.
+    if: |
+      always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      needs.plan.outputs.publish == 'true' &&
+      needs.plan.result == 'success' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/release.yml
+    with:
+      run_id: ${{ github.run_id }}
+    secrets: inherit

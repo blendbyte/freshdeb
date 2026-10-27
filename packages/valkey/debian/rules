@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+export BUILD_TLS = yes
+export CFLAGS CPPFLAGS LDFLAGS
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all optimize=+lto
+export DEB_CFLAGS_MAINT_APPEND = -I/usr/include/liblzf
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,-no-as-needed -ldl -latomic -llzf
+
+# Build jemelloc in parallel
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	MAKEFLAGS += -j$(NUMJOBS)
+	export MAKEFLAGS
+endif
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -f src/release.h debian/*.service
+
+override_dh_auto_build:
+	dh_auto_build -- V=1 USE_SYSTEM_JEMALLOC=yes USE_SYSTEMD=yes USE_JEMALLOC=yes
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	# Generate a root CA and server certificate for testing
+	./utils/gen-test-certs.sh
+	# Avoid race conditions in upstream testsuite
+	./runtest --clients 1 --verbose --dump-logs --tls || true
+	timeout 30m ./runtest-cluster --tls || true
+	./runtest-sentinel || true
+	# Clean up after gen-test-certs.sh
+	rm -rf tests/tls || true
+	# Other cleanup
+	find tests/tmp ! -name .gitignore -type f -exec rm -rfv {} +
+endif
+
+override_dh_auto_install:
+	debian/bin/generate-systemd-service-files
+
+override_dh_compress:
+	dh_compress -Xredis-trib.rb
+
+override_dh_installchangelogs:
+	dh_installchangelogs --keep 00-RELEASENOTES

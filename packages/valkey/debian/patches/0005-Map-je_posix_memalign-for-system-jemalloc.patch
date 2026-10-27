@@ -1,0 +1,20 @@
+Description: Map je_posix_memalign to posix_memalign for system jemalloc.
+ The cache-aligned allocator (valkey_malloc_cache_aligned) calls
+ je_posix_memalign(), a symbol that only exists in valkey's bundled jemalloc
+ due to the je_ symbol prefix. Map the prefixed name to the standard one for
+ USE_SYSTEM_JEMALLOC.
+Author: Lena Voytek <lena@debian.org>
+Forwarded: not-needed
+Last-Update: 2026-07-15
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/zmalloc.c
++++ b/src/zmalloc.c
+@@ -94,6 +94,7 @@
+ #define dallocx(ptr,flags) dallocx(ptr,flags)
+ #define je_sdallocx(ptr,size,flags) sdallocx(ptr,size,flags)
+ #define je_mallctl mallctl
++#define je_posix_memalign(ptr,alignment,size) posix_memalign(ptr,alignment,size)
+ #else
+ #define malloc(size) je_malloc(size)
+ #define calloc(count, size) je_calloc(count, size)

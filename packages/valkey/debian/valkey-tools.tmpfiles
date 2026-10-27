@@ -1,0 +1,3 @@
+d /var/log/valkey 2750 valkey adm
+d /var/lib/valkey 0750 valkey valkey
+d /etc/valkey 2770 valkey valkey

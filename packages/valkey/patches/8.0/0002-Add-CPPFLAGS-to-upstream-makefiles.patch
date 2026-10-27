@@ -1,0 +1,48 @@
+Description: Add CPPFLAGS to upstream makefiles
+Author: Chris Lamb <lamby@debian.org>
+Last-Update: 30-10-2015
+
+--- a/deps/fpconv/Makefile
++++ b/deps/fpconv/Makefile
+@@ -2,7 +2,7 @@
+ WARN= -Wall
+ OPT= -Os
+ 
+-R_CFLAGS= $(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS)
++R_CFLAGS= $(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS) $(CPPFLAGS)
+ R_LDFLAGS= $(LDFLAGS)
+ DEBUG= -g
+ 
+--- a/deps/hdr_histogram/Makefile
++++ b/deps/hdr_histogram/Makefile
+@@ -2,7 +2,7 @@
+ WARN= -Wall
+ OPT= -Os
+ 
+-R_CFLAGS= $(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS) -DHDR_MALLOC_INCLUDE=\"hdr_redis_malloc.h\"
++R_CFLAGS= $(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS) $(CPPFLAGS) -DHDR_MALLOC_INCLUDE=\"hdr_redis_malloc.h\"
+ R_LDFLAGS= $(LDFLAGS)
+ DEBUG= -g
+ 
+--- a/deps/linenoise/Makefile
++++ b/deps/linenoise/Makefile
+@@ -6,7 +6,7 @@
+ R_LDFLAGS= $(LDFLAGS)
+ DEBUG= -g
+ 
+-R_CC=$(CC) $(R_CFLAGS)
++R_CC=$(CC) $(R_CFLAGS) $(CPPFLAGS)
+ R_LD=$(CC) $(R_LDFLAGS)
+ 
+ linenoise.o: linenoise.h linenoise.c
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -392,7 +392,7 @@
+ 	MAYBE_UNINSTALL_REDIS_SYMLINK=
+ endif
+ 
+-SERVER_CC=$(QUIET_CC)$(CC) $(FINAL_CFLAGS)
++SERVER_CC=$(QUIET_CC)$(CC) $(FINAL_CFLAGS) $(CPPFLAGS)
+ SERVER_AR=$(QUIET_AR)$(AR)
+ SERVER_LD=$(QUIET_LINK)$(CC) $(FINAL_LDFLAGS)
+ ENGINE_INSTALL=$(QUIET_INSTALL)$(INSTALL)

@@ -1,0 +1,38 @@
+name: Bug report
+description: A package from deb.freshdeb.com doesn't install, upgrade or run correctly
+labels: ["bug"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      description: Output of `dpkg -l | grep <package>`
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Distribution and architecture
+      placeholder: "Debian 12 (bookworm), amd64"
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Component(s) in your sources list
+      placeholder: "valkey-9"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Commands you ran, what you expected, what you got. Include logs.
+    validations:
+      required: true
+  - type: checkboxes
+    id: upstream
+    attributes:
+      label: Is it ours?
+      options:
+        - label: The same problem does not happen with the upstream release built from source (if you checked)

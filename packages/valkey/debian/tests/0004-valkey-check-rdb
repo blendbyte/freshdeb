@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# Test valkey-check-rdb
+
+set -eu
+
+service valkey-server restart
+
+sleep 5
+
+# Perform a synchronous save to ensure .rdb file eixsts
+valkey-cli SAVE
+
+valkey-check-rdb /var/lib/valkey/dump.rdb

@@ -1,0 +1,62 @@
+# config.yaml: repository-wide settings for freshdeb
+#
+# Everything package-specific lives in packages/<name>/package.yaml.
+# See docs/packages.md for that schema.
+#
+# archive:
+#   url              Public APT URL; shown in docs and install snippets
+#   origin, label    Written into each dists/<codename>/Release file
+#   maintainer       Maintainer field of every package we build. Debian's
+#                    maintainers did not build our packages, so their name
+#                    must not end up in our control files.
+#   keyring          File name of the exported public keyring at the
+#                    repository root
+#
+# distributions:     Every codename we build for. Adding one here adds it to
+#                    every package (unless a package opts out) and to the
+#                    reprepro configuration.
+#   vendor           debian or ubuntu
+#   version          Numeric release; used in package versions
+#                    (…~deb12, …~ubuntu24.04) so that dist-upgrades always
+#                    move to the newer distribution's build. Codenames are
+#                    not used there because they don't sort (forky < trixie).
+#   image            Docker base image for building and testing
+#
+# architectures:     dpkg architectures to build for, each with the GitHub
+#                    runner that builds it natively (nothing is emulated).
+#                    The first one also builds Architecture: all packages.
+
+archive:
+  url: https://deb.freshdeb.com
+  origin: freshdeb
+  label: freshdeb
+  maintainer: "freshdeb <packages@freshdeb.com>"
+  keyring: freshdeb-archive-keyring.gpg
+
+distributions:
+  bookworm:
+    vendor: debian
+    version: "12"
+    image: debian:bookworm
+  trixie:
+    vendor: debian
+    version: "13"
+    image: debian:trixie
+  jammy:
+    vendor: ubuntu
+    version: "22.04"
+    image: ubuntu:jammy
+  noble:
+    vendor: ubuntu
+    version: "24.04"
+    image: ubuntu:noble
+  resolute:
+    vendor: ubuntu
+    version: "26.04"
+    image: ubuntu:resolute
+
+architectures:
+  amd64:
+    runner: ubuntu-24.04
+  arm64:
+    runner: ubuntu-24.04-arm

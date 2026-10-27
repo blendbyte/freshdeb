@@ -1,0 +1,8 @@
+include:
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
+
+piuparts:
+  allow_failure: true
+
+lintian:
+  allow_failure: true

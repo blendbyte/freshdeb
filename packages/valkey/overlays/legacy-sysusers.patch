@@ -1,0 +1,102 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -4,7 +4,6 @@
+ Uploaders: Lena Voytek <lena@debian.org>
+ Build-Depends:
+  debhelper-compat (= 13),
+- dh-sequence-installsysusers,
+  libjemalloc-dev [linux-any],
+  liblua5.1-dev,
+  liblzf-dev,
+@@ -54,6 +53,7 @@
+ Package: valkey-tools
+ Architecture: any
+ Depends:
++ adduser,
+  ${misc:Depends},
+  ${shlibs:Depends},
+ Suggests:
+diff -ruN a/debian/valkey-sentinel.postinst b/debian/valkey-sentinel.postinst
+--- a/debian/valkey-sentinel.postinst
++++ b/debian/valkey-sentinel.postinst
+@@ -2,6 +2,18 @@
+ 
+ set -eu
+ 
++if [ "$1" = "configure" ]
++then
++	# freshdeb: this release's debhelper only applies the tmpfiles rule
++	# that hands the config to valkey when systemd is running. Do it here,
++	# unless the admin set a dpkg-statoverride.
++	if ! dpkg-statoverride --list /etc/valkey/sentinel.conf >/dev/null 2>&1
++	then
++		chown valkey:valkey /etc/valkey/sentinel.conf
++		chmod 640 /etc/valkey/sentinel.conf
++	fi
++fi
++
+ #DEBHELPER#
+ 
+ if [ "$1" = "configure" ]
+diff -ruN a/debian/valkey-server.postinst b/debian/valkey-server.postinst
+--- a/debian/valkey-server.postinst
++++ b/debian/valkey-server.postinst
+@@ -2,6 +2,18 @@
+ 
+ set -eu
+ 
++if [ "$1" = "configure" ]
++then
++	# freshdeb: this release's debhelper only applies the tmpfiles rule
++	# that hands the config to valkey when systemd is running. Do it here,
++	# unless the admin set a dpkg-statoverride.
++	if ! dpkg-statoverride --list /etc/valkey/valkey.conf >/dev/null 2>&1
++	then
++		chown valkey:valkey /etc/valkey/valkey.conf
++		chmod 640 /etc/valkey/valkey.conf
++	fi
++fi
++
+ #DEBHELPER#
+ 
+ if [ "$1" = "configure" ]
+diff -ruN a/debian/valkey-tools.postinst b/debian/valkey-tools.postinst
+--- a/debian/valkey-tools.postinst
++++ b/debian/valkey-tools.postinst
+@@ -0,0 +1,35 @@
++#!/bin/sh
++
++set -eu
++
++# freshdeb: debhelper on this release has no dh_installsysusers, so the
++# system user and its directories are created here, as Debian did before
++# valkey 9.1. Directories with a dpkg-statoverride are left alone.
++
++Setup_dir () {
++	DIR="${1}"
++	MODE="${2}"
++	GROUP="${3}"
++
++	mkdir -p "${DIR}"
++
++	if ! dpkg-statoverride --list "${DIR}" >/dev/null 2>&1
++	then
++		chown "valkey:${GROUP}" "${DIR}"
++		chmod "${MODE}" "${DIR}"
++	fi
++}
++
++if [ "$1" = "configure" ]
++then
++	adduser --system --group --home /var/lib/valkey --no-create-home \
++		--quiet valkey || true
++
++	Setup_dir /var/log/valkey 2750 adm
++	Setup_dir /var/lib/valkey 750 valkey
++	Setup_dir /etc/valkey 2770 valkey
++fi
++
++#DEBHELPER#
++
++exit 0

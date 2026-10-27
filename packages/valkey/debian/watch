@@ -1,0 +1,6 @@
+Version: 5
+
+Template: GitHub
+Owner: valkey-io
+Project: valkey
+Uversion-Mangle: s/-rc/~rc/

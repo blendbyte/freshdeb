@@ -1,0 +1,166 @@
+name: release
+
+# Publishes the builds of one ci.yml run to deb.freshdeb.com.
+# Called by ci.yml after a successful build on main, or dispatched by hand
+# to re-publish a run (or bootstrap an empty repository once).
+
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'ci.yml run ID whose builds to publish'
+        required: true
+        type: string
+      bootstrap:
+        description: 'Create the repository from scratch (first release only)'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Prepare and validate, but do not upload'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  publish:
+    name: publish to deb.freshdeb.com
+    runs-on: ubuntu-24.04
+    environment: production
+    # Every production release shares one repository database. (Job level:
+    # workflow-level concurrency doesn't apply when called from ci.yml.)
+    concurrency:
+      group: apt-repository-production
+      cancel-in-progress: false
+    env:
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+      # Cloudflare R2 through its S3 API. The endpoint is
+      # https://<account-id>.r2.cloudflarestorage.com; R2's region is "auto".
+      AWS_ACCESS_KEY_ID: ${{ secrets.PKG_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PKG_S3_SECRET }}
+      AWS_ENDPOINT_URL: ${{ secrets.PKG_S3_ENDPOINT_URL }}
+      AWS_REGION: auto
+      # Newer AWS CLIs add checksum headers by default that R2 may reject.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      BUCKET: ${{ secrets.PKG_S3_BUCKET_NAME }}
+      RUN_ID: ${{ inputs.run_id }}
+      DRY_RUN: ${{ inputs.dry_run == true }}
+      BOOTSTRAP: ${{ inputs.bootstrap == true }}
+    steps:
+      - name: Validate source run
+        id: source
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const runId = process.env.RUN_ID;
+            if (!/^[0-9]+$/.test(runId)) throw new Error('run_id must be a numeric Actions run ID');
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner, repo: context.repo.repo, run_id: Number(runId),
+            });
+            if (run.path !== '.github/workflows/ci.yml' ||
+                run.head_repository?.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              throw new Error('Only ci.yml runs from this repository can be published');
+            }
+            if (run.head_branch !== 'main' || run.event === 'pull_request') {
+              throw new Error('Only runs on main can be published');
+            }
+            // When called from ci.yml the run is still in progress (this job
+            // is part of it). A dispatched re-publish needs a finished run
+            // whose checks, plan and builds all passed; its own release job
+            // may have failed (bootstrap, S3 outage), which is why we retry.
+            if (Number(runId) !== context.runId) {
+              if (run.status !== 'completed') throw new Error(`Run ${runId} is still ${run.status}`);
+              const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                owner: context.repo.owner, repo: context.repo.repo, run_id: Number(runId), filter: 'latest',
+              });
+              const bad = jobs.filter(job => !job.name.startsWith('release') &&
+                                             !['success', 'skipped'].includes(job.conclusion));
+              if (bad.length) {
+                throw new Error(`Run ${runId} has failed jobs: ${bad.map(job => job.name).join(', ')}`);
+              }
+            }
+            core.setOutput('sha', run.head_sha);
+
+      # The release must read package.yaml at the commit that was built:
+      # release.py refuses builds whose versions disagree with it.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+
+      - name: Install repository tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends reprepro gnupg python3-debian python3-yaml
+          aws --version
+
+      - name: Download builds
+        uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: build-*
+          path: ./artifacts
+
+      - name: Import signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          install -d -m 700 "$RUNNER_TEMP/gnupg"
+          umask 077
+          printf '%s\n' "$GPG_PRIVATE_KEY" > "$RUNNER_TEMP/gpg-key.asc"
+          GNUPGHOME="$RUNNER_TEMP/gnupg" gpg --batch --import "$RUNNER_TEMP/gpg-key.asc" 2>&1 | tail -3
+          shred -u "$RUNNER_TEMP/gpg-key.asc"
+
+      - name: Restore repository state
+        run: |
+          mkdir -p repo
+          bash scripts/sync-repo.sh pull repo "s3://${BUCKET}"
+          tar -czf repo-state-before.tar.gz -C repo .
+
+      - name: Keep pre-release state for recovery
+        uses: actions/upload-artifact@v7
+        with:
+          name: repo-state-before-${{ github.run_id }}-${{ github.run_attempt }}
+          path: repo-state-before.tar.gz
+          retention-days: 30
+
+      - name: Merge builds and validate
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          args=(repo artifacts --key "$GPG_KEY_ID" --pool-source "s3://${BUCKET}" --commit "$(git rev-parse HEAD)")
+          [[ "$BOOTSTRAP" == "true" ]] && args+=(--bootstrap)
+          python3 scripts/release.py "${args[@]}" | tee release.log
+          {
+            echo '### Release'
+            echo '```'
+            cat release.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Export public keyring
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          gpg --export --armor "$GPG_KEY_ID" > repo/freshdeb-archive-keyring.asc
+          gpg --export "$GPG_KEY_ID" > repo/freshdeb-archive-keyring.gpg
+
+      - name: Upload (dry run)
+        if: env.DRY_RUN == 'true'
+        run: bash scripts/sync-repo.sh push repo "s3://${BUCKET}" --dry-run
+
+      - name: Upload
+        if: env.DRY_RUN != 'true'
+        run: bash scripts/sync-repo.sh push repo "s3://${BUCKET}"
+
+      - name: Remove signing key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/gnupg" "$RUNNER_TEMP/gpg-key.asc"

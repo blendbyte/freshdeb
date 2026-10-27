@@ -1,0 +1,55 @@
+name: New package
+description: You want a package added and you're willing to maintain it. Both parts matter.
+labels: ["new-package"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We only add packages with a maintainer attached. See CONTRIBUTING.md before filling this out.
+
+  - type: input
+    id: package
+    attributes:
+      label: Package and upstream
+      placeholder: "foo -- https://github.com/someone/foo"
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it belongs here
+      description: |
+        Upstream has no APT repository of its own. Which versions do Debian/Ubuntu ship, and what's current upstream? Which release lines does upstream support?
+    validations:
+      required: true
+
+  - type: input
+    id: debian
+    attributes:
+      label: Debian packaging
+      description: Link to the package on salsa.debian.org (or Launchpad if only Ubuntu has it)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: commitment
+    attributes:
+      label: Maintainer commitment
+      options:
+        - label: I will review version bump PRs for this package within two weeks
+          required: true
+        - label: I will look at build failures for this package within one week
+          required: true
+        - label: I will make sure upstream security releases land within one week
+          required: true
+        - label: If I can no longer maintain it, I will open a PR to remove myself
+          required: true
+
+  - type: input
+    id: maintainer
+    attributes:
+      label: Your GitHub handle
+      placeholder: "@you"
+    validations:
+      required: true

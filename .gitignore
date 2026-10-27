@@ -1,0 +1,26 @@
+# Build outputs
+artifacts/
+out/
+*.deb
+*.ddeb
+*.changes
+*.buildinfo
+
+# Release work trees
+repo/
+repo-state-before.tar.gz
+
+# Python
+__pycache__/
+
+# Keys: never commit
+*.asc
+*.gpg
+secrets/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~

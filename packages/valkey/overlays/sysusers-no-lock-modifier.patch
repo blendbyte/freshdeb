@@ -1,0 +1,6 @@
+diff -ruN a/debian/valkey-tools.sysusers b/debian/valkey-tools.sysusers
+--- a/debian/valkey-tools.sysusers
++++ b/debian/valkey-tools.sysusers
+@@ -1 +1 @@
+-u! valkey - "Valkey" /var/lib/valkey /usr/sbin/nologin
++u valkey - "Valkey" /var/lib/valkey /usr/sbin/nologin
