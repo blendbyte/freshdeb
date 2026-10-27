@@ -1,0 +1,43 @@
+From: Guillaume Delacour <gui@iroqwa.org>
+Date: Fri, 6 Sep 2019 14:24:14 +0100
+Subject: Additions for service unit file
+
+Last-Update: 2017-09-13
+Forwarded: not-needed
+
+- Use wrapper script for /etc/memcached.conf
+- Document man page
+- Use a pidfile
+- Try to automatically restart the service when
+---
+ scripts/memcached.service | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/memcached.service b/scripts/memcached.service
+index 88a4b8a..41ff053 100644
+--- a/scripts/memcached.service
++++ b/scripts/memcached.service
+@@ -12,10 +12,10 @@
+ [Unit]
+ Description=memcached daemon
+ After=network.target
++Documentation=man:memcached(1)
+ 
+ [Service]
+-EnvironmentFile=/etc/sysconfig/memcached
+-ExecStart=/usr/bin/memcached -p ${PORT} -u ${USER} -m ${CACHESIZE} -c ${MAXCONN} $OPTIONS
++ExecStart=/usr/share/memcached/scripts/systemd-memcached-wrapper /etc/memcached.conf
+ 
+ # Set up a new file system namespace and mounts private /tmp and /var/tmp
+ # directories so this service cannot access the global directories and
+@@ -80,5 +80,10 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ # Takes away the ability to create or manage any kind of namespace
+ ##safer##RestrictNamespaces=true
+ 
++PIDFile=/run/memcached/memcached.pid
++
++# try to restart if errors encountered
++Restart=always
++
+ [Install]
+ WantedBy=multi-user.target

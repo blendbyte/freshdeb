@@ -1,0 +1,52 @@
+From: Chris Lamb <lamby@debian.org>
+Date: Mon, 27 Oct 2025 11:26:48 -0700
+Subject: Don't use embedded Lua.
+
+---
+ Makefile.am  | 11 -----------
+ configure.ac |  3 ++-
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index a7a11ad..4bb2be5 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -118,13 +118,6 @@ memcached_debug_DEPENDENCIES += memcached_debug_dtrace.o
+ CLEANFILES += memcached_dtrace.o memcached_debug_dtrace.o
+ endif
+ 
+-if ENABLE_PROXY
+-memcached_LDADD += vendor/lua/src/liblua.a
+-memcached_debug_LDADD += vendor/lua/src/liblua.a
+-memcached_LDFLAGS += -rdynamic
+-memcached_debug_LDFLAGS += -rdynamic
+-endif
+-
+ if ENABLE_PROXY_URING
+ memcached_LDADD += vendor/liburing/src/liburing.a
+ memcached_debug_LDADD += vendor/liburing/src/liburing.a
+@@ -159,10 +152,6 @@ EXTRA_DIST += vendor/lua/src/*.c vendor/lua/src/*.h vendor/lua/src/Makefile
+ EXTRA_DIST += vendor/mcmc/LICENSE vendor/mcmc/Makefile vendor/mcmc/README.md vendor/mcmc/*.c vendor/mcmc/*.h
+ EXTRA_DIST += vendor/routelib/*.h vendor/routelib/*.lua
+ 
+-if ENABLE_PROXY
+-SUBDIRS += vendor
+-endif
+-
+ MOSTLYCLEANFILES = *.gcov *.gcno *.gcda *.tcov
+ 
+ if ENABLE_TLS
+diff --git a/configure.ac b/configure.ac
+index 6f2ef97..8129830 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -248,7 +248,8 @@ fi
+ 
+ if test "x$enable_proxy" = "xyes"; then
+     AC_DEFINE([PROXY],1,[Set to nonzero if you want to enable proxy code])
+-    CPPFLAGS="-Ivendor/lua/src -Ivendor/liburing/src/include $CPPFLAGS"
++    CPPFLAGS="-I/usr/include/lua5.4 $CPPFLAGS"  
++    LIBS="$LIBS -llua5.4"
+     dnl lua needs math lib.
+     LIBS="$LIBS -lm -ldl"
+ fi

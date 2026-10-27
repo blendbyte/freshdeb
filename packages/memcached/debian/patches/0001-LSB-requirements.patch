@@ -1,0 +1,35 @@
+From: Peter Eisentraut <petere@debian.org>
+Date: Fri, 6 Sep 2019 14:24:14 +0100
+Subject: LSB requirements
+
+Origin: https://bugs.debian.org/528689, https://bugs.debian.org/709163
+Forwarded: not-needed
+Last-Update: 2016-03-20
+---
+ scripts/memcached-init | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/memcached-init b/scripts/memcached-init
+index 3f03ad5..b1102ad 100755
+--- a/scripts/memcached-init
++++ b/scripts/memcached-init
+@@ -1,8 +1,8 @@
+ #! /bin/bash
+ ### BEGIN INIT INFO
+ # Provides:          memcached
+-# Required-Start:    $syslog
+-# Required-Stop:     $syslog
++# Required-Start:    $remote_fs $syslog
++# Required-Stop:     $remote_fs $syslog
+ # Should-Start:        $local_fs
+ # Should-Stop:        $local_fs
+ # Default-Start:     2 3 4 5
+@@ -35,6 +35,8 @@ test -x $DAEMONBOOTSTRAP || exit 0
+ 
+ set -e
+ 
++. /lib/lsb/init-functions
++
+ FILES=(/etc/memcached_*.conf)
+ # check for alternative config schema
+ if [ -r "${FILES[0]}" ]; then

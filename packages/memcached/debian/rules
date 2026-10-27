@@ -1,0 +1,52 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	MAKEFLAGS += -j$(NUMJOBS)
+endif
+
+PKGBASE=debian/memcached/usr/share/memcached
+SCRIPTS=$(PKGBASE)/scripts
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-sasl --enable-tls --enable-proxy
+
+override_dh_auto_install:
+	dh_auto_install
+	install -m 644 $(CURDIR)/debian/memcached.conf \
+		$(CURDIR)/$(PKGBASE)/memcached.conf.default
+	install -m 744 $(CURDIR)/scripts/start-memcached $(SCRIPTS)
+	install -m 755 $(CURDIR)/debian/systemd-memcached-wrapper $(SCRIPTS)
+	install -m 744 $(CURDIR)/scripts/memcached-tool $(SCRIPTS)
+	install -m 755 $(CURDIR)/scripts/memcached-init \
+		$(CURDIR)/debian/memcached.init
+	install -m 755 $(CURDIR)/scripts/memcached.service \
+		$(CURDIR)/debian/memcached.service
+	# Check for LP: #1755460
+	if grep -i '##safer##' $(CURDIR)/scripts/memcached.service >/dev/null 2>&1; then echo "ERROR: debian/patches/restore-systemd-sandboxing is incomplete; please see LP: #1755460" >&2; exit 1; fi
+	install -m 755 $(CURDIR)/scripts/damemtop $(SCRIPTS)
+	install -m 644 $(CURDIR)/scripts/damemtop.yaml $(SCRIPTS)
+
+override_dh_auto_test:
+	# Don't run the whitespace tests; they fail if we are building with a
+	# .git directory (eg. on salsa)
+	rm -f t/whitespace.t
+
+	# Don't run the tests for the (experimental) proxy feature just yet.
+	rm -f t/proxy*
+
+ifeq (,$(filter $(DEB_BUILD_ARCH),armel armhf mips64el riscv64))
+	# SSL tests have a race condition and may hang
+	dh_auto_test --max-parallel=1
+endif
+
+override_dh_auto_clean:
+	dh_auto_clean
+	# Ensure we cannot build from the embedded Lua
+	rm -rf vendor/lua
+	rm --force $(CURDIR)/debian/memcached.init $(CURDIR)/debian/memcached.service
+
+%:
+	dh $@

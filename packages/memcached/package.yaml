@@ -1,0 +1,34 @@
+# memcached: https://memcached.org
+#
+# Packaging is Debian's (salsa.debian.org/lamby/pkg-memcached, Chris Lamb's
+# repository that Debian's uploads come from). debian/ is an unmodified
+# import of the commit in packaging.ref; see README.md in this directory.
+#
+# Upstream maintains a single release line (1.6.x). Builds use upstream's
+# release tarball, like Debian: the git tag has no configure script and
+# derives its version from "git describe".
+
+name: memcached
+description: "memcached in-memory object cache"
+homepage: https://memcached.org
+maintainers:
+  - bashgeek
+
+upstream:
+  git: https://github.com/memcached/memcached.git
+  tag_regex: '^(?P<version>\d+\.\d+\.\d+)$'
+  tarball: https://memcached.org/files/memcached-{version}.tar.gz
+
+packaging:
+  origin: https://salsa.debian.org/lamby/pkg-memcached.git
+  ref: b3d5bbdf34f3297045a8ccf042ebee798e121806  # 1.6.45-1, unstable
+
+tracks:
+  "1.6":
+    tag: "1.6.45"
+    commit: 2d51e364799bc9698bd4b11728ea978cea12da6e
+    sha256: d362c64e6d8d5287153501eabf7c85b4a761432fbf53f5d7b085d0bb1653c1dd
+    revision: 1
+
+aliases:
+  "1": "1.6"

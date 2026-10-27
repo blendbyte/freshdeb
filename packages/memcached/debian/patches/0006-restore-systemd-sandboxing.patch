@@ -1,0 +1,69 @@
+From: Robie Basak <robie.basak@canonical.com>
+Date: Thu, 26 Aug 2021 11:59:59 +0100
+Subject: Restore systemd sandboxing
+
+Bug: https://github.com/memcached/memcached/issues/359
+Bug-Ubuntu: https://bugs.launchpad.net/memcached/+bug/1755460
+Forwarded: not-needed
+Last-Update: 2018-03-13
+
+Upstream regressed systemd sandboxing for everyone by default because RHEL
+cannot support it. Put it back again to avoid this functional regression.
+---
+ scripts/memcached.service | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/scripts/memcached.service b/scripts/memcached.service
+index 41ff053..772a702 100644
+--- a/scripts/memcached.service
++++ b/scripts/memcached.service
+@@ -42,21 +42,16 @@ CapabilityBoundingSet=CAP_SETGID CAP_SETUID CAP_SYS_RESOURCE
+ # of this unit. Protects against vulnerabilities such as CVE-2016-8655
+ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ 
+-
+-# Some security features are not in the older versions of systemd used by
+-# e.g. RHEL7/CentOS 7. The below settings are automatically edited at package
+-# build time to uncomment them if the target platform supports them.
+-
+ # Attempts to create memory mappings that are writable and executable at
+ # the same time, or to change existing memory mappings to become executable
+ # are prohibited.
+-##safer##MemoryDenyWriteExecute=true
++MemoryDenyWriteExecute=true
+ 
+ # Explicit module loading will be denied. This allows to turn off module
+ # load and unload operations on modular kernels. It is recommended to turn
+ # this on for most services that do not need special file systems or extra
+ # kernel modules to work.
+-##safer##ProtectKernelModules=true
++ProtectKernelModules=true
+ 
+ # Kernel variables accessible through /proc/sys, /sys, /proc/sysrq-trigger,
+ # /proc/latency_stats, /proc/acpi, /proc/timer_stats, /proc/fs and /proc/irq
+@@ -64,21 +59,21 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ # kernel variables should only be written at boot-time, with the sysctl.d(5)
+ # mechanism. Almost no services need to write to these at runtime; it is hence
+ # recommended to turn this on for most services.
+-##safer##ProtectKernelTunables=true
++ProtectKernelTunables=true
+ 
+ # The Linux Control Groups (cgroups(7)) hierarchies accessible through
+ # /sys/fs/cgroup will be made read-only to all processes of the unit.
+ # Except for container managers no services should require write access
+ # to the control groups hierarchies; it is hence recommended to turn this
+ # on for most services
+-##safer##ProtectControlGroups=true
++ProtectControlGroups=true
+ 
+ # Any attempts to enable realtime scheduling in a process of the unit are
+ # refused.
+-##safer##RestrictRealtime=true
++RestrictRealtime=true
+ 
+ # Takes away the ability to create or manage any kind of namespace
+-##safer##RestrictNamespaces=true
++RestrictNamespaces=true
+ 
+ PIDFile=/run/memcached/memcached.pid
+ 

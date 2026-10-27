@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import email.utils
+import hashlib
 import json
 import os
 import re
@@ -30,6 +31,8 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
+import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -40,6 +43,8 @@ ROOT = Path(__file__).resolve().parents[1]
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9.+-]*$")
 TRACK_RE = re.compile(r"^[0-9a-z][0-9a-z.]*$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+TARBALL_SUFFIXES = (".tar.gz", ".tar.xz", ".tar.bz2")
 OPTION_RE = re.compile(r"^[a-z0-9][a-z0-9=_.,-]*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[0-9][A-Za-z0-9.+~]*$")
 VENDOR_PREFIX = {"debian": "deb", "ubuntu": "ubuntu"}
@@ -163,6 +168,7 @@ class Track:
     eol: dt.date | None = None
     patches: str | None = None
     codenames: list[str] | None = None
+    sha256: str | None = None  # release tarball checksum, for upstream.tarball packages
 
     def active(self, today=None):
         return self.eol is None or self.eol >= (today or dt.date.today())
@@ -188,6 +194,12 @@ class Package:
     @property
     def tag_regex(self):
         return re.compile(self.upstream.get("tag_regex", r"^v?(?P<version>\d+(?:\.\d+)*)$"))
+
+    def tarball_url(self, version):
+        """Release tarball URL for packages that build from upstream's
+        tarballs (generated configure scripts etc.), or None for git."""
+        template = self.upstream.get("tarball")
+        return template.format(version=version) if template else None
 
     def upstream_version(self, tag):
         match = self.tag_regex.match(tag)
@@ -243,7 +255,8 @@ def parse_package(name, path, data):
         require(eol is None or isinstance(eol, dt.date), f"{name}: track {key} eol must be a YYYY-MM-DD date")
         tracks[key] = Track(key=key, tag=str(entry.get("tag", "")), commit=str(entry.get("commit", "")),
                             revision=entry.get("revision"), eol=eol, patches=entry.get("patches"),
-                            codenames=entry.get("codenames"))
+                            codenames=entry.get("codenames"),
+                            sha256=str(entry["sha256"]) if entry.get("sha256") is not None else None)
     aliases = {}
     for key, target in (data.get("aliases") or {}).items():
         require(isinstance(key, str) and isinstance(target, str),
@@ -328,6 +341,12 @@ def validate_package(pkg, config, today=None):
     upstream = data.get("upstream") or {}
     check(isinstance(upstream.get("git"), str) and upstream.get("git", "").startswith("https://"),
           "upstream.git must be an https:// URL")
+    tarball = upstream.get("tarball")
+    if tarball is not None:
+        check(isinstance(tarball, str) and tarball.startswith("https://") and "{version}" in tarball
+              and tarball.endswith(TARBALL_SUFFIXES),
+              "upstream.tarball must be an https:// URL containing {version} and ending in "
+              + "/".join(TARBALL_SUFFIXES))
     try:
         regex = pkg.tag_regex
         check("version" in regex.groupindex, "upstream.tag_regex needs a (?P<version>…) group")
@@ -369,6 +388,11 @@ def validate_package(pkg, config, today=None):
                     check(version == key or version.startswith(key + "."),
                           f"{where}: tag {track.tag} does not belong to track {key}")
         check(COMMIT_RE.match(track.commit) is not None, f"{where}: commit must be a full 40-character SHA")
+        if tarball is not None:
+            check(SHA256_RE.match(track.sha256 or "") is not None,
+                  f"{where}: sha256 of the release tarball is required (upstream.tarball is set)")
+        else:
+            check(track.sha256 is None, f"{where}: sha256 is only used with upstream.tarball")
         check(isinstance(track.revision, int) and not isinstance(track.revision, bool) and track.revision >= 1,
               f"{where}: revision must be an integer >= 1")
         if track.patches is not None:
@@ -450,7 +474,7 @@ def changed_files(root, base, head):
 
 
 def track_fields(track):
-    return (track.tag, track.commit, track.revision, track.patches, track.codenames)
+    return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256)
 
 
 def newest_track(keys):
@@ -656,7 +680,8 @@ def cmd_plan(args):
 
 # ─── prepare ────────────────────────────────────────────────────────────────
 
-def fetch_upstream(pkg, track, dest):
+def check_tag(pkg, track):
+    """The release tag must still point to the pinned commit."""
     url = pkg.upstream["git"]
     refs = run("git", "ls-remote", url, f"refs/tags/{track.tag}", f"refs/tags/{track.tag}^{{}}")
     resolved = {}
@@ -668,6 +693,31 @@ def fetch_upstream(pkg, track, dest):
     require(commit == track.commit,
             f"{pkg.name}: tag {track.tag} now points to {commit}, package.yaml pins {track.commit}. "
             "Upstream moved the tag; investigate before updating the pin.")
+
+
+def download(url, dest):
+    """Download url to dest; returns its sha256."""
+    digest = hashlib.sha256()
+    request = urllib.request.Request(url, headers={"User-Agent": "freshdeb (+https://github.com/blendbyte/freshdeb)"})
+    with urllib.request.urlopen(request, timeout=120) as response, open(dest, "wb") as fh:
+        for chunk in iter(lambda: response.read(1 << 20), b""):
+            digest.update(chunk)
+            fh.write(chunk)
+    return digest.hexdigest()
+
+
+def fetch_tarball(pkg, track, orig, dest):
+    """Download the release tarball as the orig tarball, verify it, unpack it."""
+    url = pkg.tarball_url(pkg.upstream_version(track.tag))
+    digest = download(url, orig)
+    require(digest == track.sha256, f"{pkg.name}: {url} has sha256 {digest}, package.yaml pins {track.sha256}")
+    dest.mkdir(parents=True)
+    run("tar", "-xf", str(orig), "-C", str(dest), "--strip-components=1")
+    require(any(dest.iterdir()), f"{pkg.name}: {url} unpacked to nothing")
+
+
+def fetch_upstream(pkg, track, dest):
+    url = pkg.upstream["git"]
     dest.mkdir(parents=True)
     run("git", "init", "-q", str(dest))
     run("git", "-C", str(dest), "fetch", "-q", "--depth", "1", url, f"refs/tags/{track.tag}")
@@ -733,6 +783,8 @@ def changelog_entry(pkg, config, track, codename, version, when):
         f"  * freshdeb build of {pkg.name} {pkg.upstream_version(track.tag)} for {dist.title}.",
         f"  * Upstream: {pkg.upstream['git']} tag {track.tag}",
         f"    (commit {track.commit}).",
+        *([f"  * Release tarball: {pkg.tarball_url(pkg.upstream_version(track.tag))}",
+           f"    (sha256 {track.sha256})."] if track.sha256 else []),
         f"  * Packaging: {packaging['origin']} at {packaging['ref'][:12]},",
         f"    freshdeb revision {track.revision}.",
         "",
@@ -756,13 +808,19 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     out.mkdir(parents=True, exist_ok=True)
     srcdir = out / f"{name}-{upstream_version}"
     require(not srcdir.exists(), f"{srcdir} already exists")
-    fetch_upstream(pkg, track, srcdir)
-    shutil.rmtree(srcdir / ".git")
+    check_tag(pkg, track)
+    tarball = pkg.tarball_url(upstream_version)
+    if tarball:
+        suffix = next(s for s in TARBALL_SUFFIXES if tarball.endswith(s))
+        fetch_tarball(pkg, track, out / f"{name}_{upstream_version}.orig{suffix}", srcdir)
+    else:
+        fetch_upstream(pkg, track, srcdir)
+        shutil.rmtree(srcdir / ".git")
     if (srcdir / "debian").exists():
         print(f"  upstream ships a debian/ directory; replacing it with ours")
         shutil.rmtree(srcdir / "debian")
-
-    make_orig_tarball(srcdir, out / f"{name}_{upstream_version}.orig.tar.gz", f"{name}-{upstream_version}", when)
+    if not tarball:
+        make_orig_tarball(srcdir, out / f"{name}_{upstream_version}.orig.tar.gz", f"{name}-{upstream_version}", when)
 
     shutil.copytree(pkg.path / "debian", srcdir / "debian", symlinks=True)
     if track.patches:
@@ -947,13 +1005,24 @@ def apply_change(root, change):
     pkg = load_package(change["package"], root)
     path = pkg.path / "package.yaml"
     key = yq_string(change["track"])
+    sha256 = change.get("sha256")
+    if sha256 is None and pkg.upstream.get("tarball"):
+        # Pin the release tarball now; builds verify it against this.
+        url = pkg.tarball_url(pkg.upstream_version(change["tag"]))
+        with tempfile.TemporaryDirectory() as tmp:
+            sha256 = download(url, Path(tmp) / "release")
+        change["sha256"] = sha256
     if change["kind"] == "bump":
         expr = (f'.tracks[{key}].tag = {yq_string(change["tag"])} | '
                 f'.tracks[{key}].commit = {yq_string(change["commit"])} | '
                 f'.tracks[{key}].revision = 1')
+        if sha256:
+            expr += f' | .tracks[{key}].sha256 = {yq_string(sha256)}'
     else:
         base = pkg.tracks[change["based_on"]]
         entry = {"tag": change["tag"], "commit": change["commit"], "revision": 1}
+        if sha256:
+            entry["sha256"] = sha256
         if base.patches:
             new_dir = f"patches/{change['track']}"
             src = pkg.path / base.patches

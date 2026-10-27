@@ -1,0 +1,6 @@
+Version: 5
+
+Source: https://memcached.org/downloads
+Matching-Pattern: (?:|.*/)memcached(?:[_\-]v?|)(\d\S*)\.(?:tar\.xz|txz|tar\.bz2|tbz2|tar\.gz|tgz)
+Dversionmangle: s/\+dfsg//
+Oversionmangle: s/\+dfsg\d*$//

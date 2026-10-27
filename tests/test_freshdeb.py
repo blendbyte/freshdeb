@@ -5,6 +5,7 @@ Run in tests/release.Dockerfile (needs git, dpkg and yq):
 """
 
 import datetime as dt
+import hashlib
 import json
 import shutil
 import subprocess
@@ -114,6 +115,20 @@ class CatalogTests(unittest.TestCase):
     def test_missing_patches(self):
         self.replace("patches: patches/9.0", "patches: patches/nope")
         self.assertTrue(any("no series file" in e for e in self.errors()))
+
+    def test_tarball_tracks_need_sha256(self):
+        y = self.tmp / "packages/memcached/package.yaml"
+        y.write_text(y.read_text().replace("    sha256: d362", "    nosha: d362"))
+        self.assertTrue(any("sha256 of the release tarball is required" in e for e in self.errors()))
+
+    def test_sha256_without_tarball_is_rejected(self):
+        self.replace("    revision: 1\n    eol: 2031-05-19", "    revision: 1\n    sha256: " + "a" * 64 + "\n    eol: 2031-05-19")
+        self.assertTrue(any("only used with upstream.tarball" in e for e in self.errors()))
+
+    def test_tarball_url_needs_version_placeholder(self):
+        y = self.tmp / "packages/memcached/package.yaml"
+        y.write_text(y.read_text().replace("memcached-{version}.tar.gz", "memcached-latest.tar.gz"))
+        self.assertTrue(any("upstream.tarball must be" in e for e in self.errors()))
 
     def test_missing_overlay(self):
         self.replace("overlays/legacy-sysusers.patch", "overlays/missing.patch")
@@ -236,7 +251,8 @@ class PlanTests(unittest.TestCase):
         self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
         self.commit()
         selected, _, _ = self.plan()
-        self.assertEqual(selected, {("valkey", "9.1"): False})
+        # The newest track of every package, never published.
+        self.assertEqual(selected, {("valkey", "9.1"): False, ("memcached", "1.6"): False})
 
     def test_alias_change_needs_release_but_no_build(self):
         self.edit("packages/valkey/package.yaml", '"8": "8.1"', '"8": "8.0"')
@@ -249,10 +265,13 @@ class PlanTests(unittest.TestCase):
                                                   "    image: ubuntu:stonking\n  resolute:\n")
         self.commit()
         selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
-        self.assertEqual(len(selected), 4)
+        tracks = {(pkg.name, key) for pkg in freshdeb.load_packages(self.repo)
+                  for key, track in pkg.tracks.items() if track.active(TODAY)}
+        self.assertEqual(set(selected), tracks)
+        self.assertTrue(all(entry["publish"] for entry in selected.values()))
         matrix = freshdeb.expand_matrix(self.repo, selected, None, TODAY)
         self.assertEqual({job["codename"] for job in matrix}, {"stonking"})
-        self.assertEqual(len(matrix), 4 * 2)
+        self.assertEqual(len(matrix), len(tracks) * 2)
 
     def test_unreleased_changes_are_planned_again(self):
         # Commit 1 bumps 9.1 but its release failed; commit 2 only touches docs.
@@ -279,6 +298,53 @@ class PlanTests(unittest.TestCase):
                                         None, TODAY)
         self.assertEqual(len(matrix), 5 * 2)
         self.assertEqual({job["runner"] for job in matrix}, {"ubuntu-24.04", "ubuntu-24.04-arm"})
+
+
+class TarballTests(unittest.TestCase):
+    """Release-tarball sources, served from file:// so no network is needed."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        tree = self.tmp / "upstream/memcached-1.6.99"
+        tree.mkdir(parents=True)
+        (tree / "configure").write_text("#!/bin/sh\n")
+        self.tarball = self.tmp / "upstream/memcached-1.6.99.tar.gz"
+        subprocess.run(["tar", "-czf", str(self.tarball), "-C", str(tree.parent), tree.name], check=True)
+        self.sha256 = hashlib.sha256(self.tarball.read_bytes()).hexdigest()
+        y = self.tmp / "packages/memcached/package.yaml"
+        y.write_text(y.read_text().replace("https://memcached.org/files/", f"file://{self.tmp}/upstream/"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def package(self, sha256):
+        pkg = freshdeb.load_package("memcached", self.tmp)
+        pkg.tracks["1.6"].tag, pkg.tracks["1.6"].sha256 = "1.6.99", sha256
+        return pkg
+
+    def test_fetch_verifies_and_unpacks(self):
+        orig, dest = self.tmp / "orig.tar.gz", self.tmp / "src"
+        pkg = self.package(self.sha256)
+        freshdeb.fetch_tarball(pkg, pkg.tracks["1.6"], orig, dest)
+        self.assertTrue((dest / "configure").is_file())
+        self.assertEqual(orig.read_bytes(), self.tarball.read_bytes())
+
+    def test_fetch_refuses_wrong_checksum(self):
+        pkg = self.package("0" * 64)
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "package.yaml pins"):
+            freshdeb.fetch_tarball(pkg, pkg.tracks["1.6"], self.tmp / "orig.tar.gz", self.tmp / "src")
+        self.assertFalse((self.tmp / "src").exists())
+
+    def test_watch_pins_the_new_tarball(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        freshdeb.apply_change(self.tmp, {"package": "memcached", "kind": "bump", "track": "1.6",
+                                         "tag": "1.6.99", "commit": "c" * 40})
+        track = freshdeb.load_package("memcached", self.tmp).tracks["1.6"]
+        self.assertEqual((track.tag, track.commit, track.sha256, track.revision),
+                         ("1.6.99", "c" * 40, self.sha256, 1))
 
 
 class WatchTests(unittest.TestCase):

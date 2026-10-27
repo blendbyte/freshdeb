@@ -27,6 +27,9 @@ upstream:
   git: https://github.com/valkey-io/valkey.git
   tag_regex: '^(?P<version>\d+\.\d+\.\d+)$'   # release tags only; default '^v?(?P<version>\d+(\.\d+)*)$'
   submodules: false             # optional
+  tarball: https://memcached.org/files/memcached-{version}.tar.gz
+                                # optional; build from upstream's release tarball
+                                # instead of the git tag (see below)
 
 packaging:
   origin: https://salsa.debian.org/debian/valkey.git
@@ -38,6 +41,7 @@ tracks:                         # one APT component per track: v<track> ("9.1" -
   "9.1":                        # quote keys: YAML reads 9.1 as a number
     tag: "9.1.3"
     commit: <full commit the tag points to>
+    sha256: <tarball checksum>  # only with upstream.tarball; watch.yml fills it in
     revision: 1                 # freshdeb packaging revision; back to 1 on a new tag
     eol: 2031-05-19             # optional; after this date the track isn't built anymore
     patches: patches/9.1        # optional; replaces debian/patches for this track
@@ -60,6 +64,10 @@ build:
 ```
 
 `scripts/freshdeb.py validate` checks all of this. CI runs it on every change.
+
+### Git tag or release tarball
+
+By default the source is the git tag, checked out at the pinned commit. Set `upstream.tarball` when Debian builds from upstream's release tarball instead, typically because it contains generated files (`configure`, version stamps) that the git tag doesn't. The tarball becomes the orig tarball, verified against the track's `sha256` before anything is unpacked. The tag's commit is still checked, so a moved tag fails the build either way.
 
 ### Tracks
 

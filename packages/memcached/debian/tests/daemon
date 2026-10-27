@@ -1,0 +1,17 @@
+#!/bin/bash
+#------------------
+# Testing memcached
+#------------------
+set -e
+DAEMON=memcached
+
+service $DAEMON start
+
+sleep 5
+
+if pidof -x $DAEMON > /dev/null; then
+    echo "OK"
+else
+    echo "ERROR: ${DAEMON} IS NOT RUNNING"
+    exit 1
+fi
