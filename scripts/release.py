@@ -463,8 +463,11 @@ def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, al
             with tarfile.open(work / "state-before" / f"{name}.tar.gz", "w:gz") as tar:
                 tar.add(repo, arcname=name)
             if name in reset:
-                require(not (repo / "db").exists(), f"{name}: reset requested, but {remote}/{name}/ still has a "
-                                                    "repository database; delete that directory first")
+                # The database file, not the directory: "aws s3 sync" creates an
+                # empty local db/ even when nothing exists at the remote.
+                require(not (repo / "db/packages.db").exists(),
+                        f"{name}: reset requested, but {remote}/{name}/ still has a repository database; "
+                        "delete that directory first")
                 print(f"{name}: starting from scratch (reset)")
             new = name not in registry["projects"] or name in reset
             changed = release_project(project, repo, artifacts, key, new=new, pool_source=f"{remote}/{name}",

@@ -390,6 +390,8 @@ class ReleaseTests(unittest.TestCase):
         demo_before = self.indexes("demo")
         self.rename_valkey_tracks()
         shutil.rmtree(self.remote / "valkey")
+        # What "aws s3 sync" leaves behind for a deleted remote directory.
+        (self.remote / "valkey/db").mkdir(parents=True)
         self.assertEqual(self.publish_reset(self.artifacts(), ["valkey"]), {})
         records = self.indexes("valkey")
         self.assertEqual({key[1] for key in records}, {"main"})
