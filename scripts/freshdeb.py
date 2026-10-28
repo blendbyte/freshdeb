@@ -206,6 +206,7 @@ class Track:
     go: str | None = None      # Go toolchain version (config.yaml toolchains.go) for Go packages
     line: str | None = None    # version prefix a named track follows ("3.13" for "lts")
     assets: dict[str, str] | None = None  # {asset name: sha256} for upstream.assets
+    companions: dict[str, "CompanionPin"] = field(default_factory=dict)  # {companion name: its pin}
 
     def active(self, today=None):
         return self.eol is None or self.eol >= (today or dt.date.today())
@@ -225,6 +226,7 @@ class Package:
     tracks: dict[str, Track]
     aliases: dict[str, str]
     overlays: list[dict] = field(default_factory=list)
+    companions: dict[str, "Companion"] = field(default_factory=dict)
 
     @property
     def upstream(self):
@@ -294,12 +296,81 @@ class Package:
         return f"{epoch}{self.upstream_version(track.tag)}-{track.revision}+freshdeb~{dist.suffix}"
 
     def overlays_for(self, track_key, codename):
-        for overlay in self.overlays:
-            if overlay.get("tracks") and track_key not in overlay["tracks"]:
-                continue
-            if overlay.get("codenames") and codename not in overlay["codenames"]:
-                continue
-            yield overlay
+        yield from matching_overlays(self.overlays, track_key, codename)
+
+    def companions_for(self, track_key, codename):
+        """(Companion, CompanionPin) pairs a track builds on a codename."""
+        for name, pin in sorted(self.tracks[track_key].companions.items()):
+            companion = self.companions[name]
+            if companion.builds_on(codename):
+                yield companion, pin
+
+    def companion_version(self, config, track_key, codename, name):
+        """A companion's binaries are versioned <its upstream>+<package version>,
+        Debian's convention for extras tied to one build (ZNC's znc-push)."""
+        pin = self.tracks[track_key].companions[name]
+        upstream = self.companions[name].upstream_version(pin.tag)
+        return f"{upstream}+{self.version(config, track_key, codename)}"
+
+
+def matching_overlays(overlays, track_key, codename):
+    for overlay in overlays:
+        if overlay.get("tracks") and track_key not in overlay["tracks"]:
+            continue
+        if overlay.get("codenames") and codename not in overlay["codenames"]:
+            continue
+        yield overlay
+
+
+@dataclass
+class CompanionPin:
+    tag: str
+    commit: str
+    sha256: str | None = None   # release tarball checksum, for companions with upstream.tarball
+    patches: str | None = None  # replaces the companion's debian/patches, relative to the package
+
+
+@dataclass
+class Companion:
+    """Another source package that a package builds in the same job, against
+    its fresh build, and publishes in its repository: modules that need the
+    package's exact ABI (proftpd's proftpd-mod-*). Its debian/ is imported
+    to packages/<package>/companions/<name>/debian."""
+    name: str
+    path: Path
+    data: dict
+
+    @property
+    def upstream(self):
+        return self.data.get("upstream") or {}
+
+    @property
+    def packaging(self):
+        return self.data.get("packaging") or {}
+
+    @property
+    def source_name(self):
+        return self.packaging.get("source") or self.name
+
+    @property
+    def tag_regex(self):
+        return re.compile(self.upstream.get("tag_regex", r"^v?(?P<version>\d+(?:\.\d+)*)$"))
+
+    def tarball_url(self, version):
+        template = self.upstream.get("tarball")
+        return template.format(version=version) if template else None
+
+    def upstream_version(self, tag):
+        match = self.tag_regex.match(tag)
+        require(match, f"{self.name}: tag {tag!r} does not match its upstream.tag_regex")
+        return match.group("version")
+
+    def builds_on(self, codename):
+        codenames = self.data.get("codenames")
+        return codenames is None or codename in codenames
+
+    def overlays_for(self, track_key, codename):
+        yield from matching_overlays(self.data.get("overlays") or [], track_key, codename)
 
 
 def load_config(root=ROOT):
@@ -330,14 +401,34 @@ def parse_package(name, path, data):
                             go=str(entry["go"]) if entry.get("go") is not None else None,
                             line=str(entry["line"]) if entry.get("line") is not None else None,
                             assets=({str(k): str(v) for k, v in entry["assets"].items()}
-                                    if isinstance(entry.get("assets"), dict) else entry.get("assets")))
+                                    if isinstance(entry.get("assets"), dict) else entry.get("assets")),
+                            companions=parse_companion_pins(name, key, entry.get("companions")))
     aliases = {}
     for key, target in (data.get("aliases") or {}).items():
         require(isinstance(key, str) and isinstance(target, str),
                 f"{name}: alias {key!r} and its target must be quoted strings")
         aliases[key] = target
+    companions = data.get("companions") or {}
+    require(isinstance(companions, dict), f"{name}: companions must map source package names to settings")
     return Package(name=name, path=path, data=data, tracks=tracks, aliases=aliases,
-                   overlays=list(data.get("overlays") or []))
+                   overlays=list(data.get("overlays") or []),
+                   companions={str(c): Companion(str(c), path / "companions" / str(c),
+                                                 entry if isinstance(entry, dict) else {})
+                               for c, entry in companions.items()})
+
+
+def parse_companion_pins(name, key, pins):
+    if pins is None:
+        return {}
+    require(isinstance(pins, dict), f"{name}: track {key} companions must map companion names to pins")
+    parsed = {}
+    for companion, pin in pins.items():
+        require(isinstance(pin, dict), f"{name}: track {key} companion {companion} must be a mapping")
+        parsed[str(companion)] = CompanionPin(
+            tag=str(pin.get("tag", "")), commit=str(pin.get("commit", "")),
+            sha256=str(pin["sha256"]) if pin.get("sha256") is not None else None,
+            patches=pin.get("patches"))
+    return parsed
 
 
 def load_package(name, root=ROOT):
@@ -532,6 +623,8 @@ def validate_package(pkg, config, today=None):
             check(set(overlay.get("tracks") or []) <= set(pkg.tracks), f"{where}: unknown track")
             check(set(overlay.get("codenames") or []) <= set(config.distributions), f"{where}: unknown codename")
 
+    errors += validate_companions(pkg, config, check)
+
     build = data.get("build") or {}
     hook = build.get("prepare")
     if hook is not None:
@@ -565,6 +658,97 @@ def validate_package(pkg, config, today=None):
                   and all(isinstance(v, str) and SHA256_RE.match(v) for v in sums.values()),
                   "tests.upgrade_from.sha256 needs a sha256 for every architecture")
     return errors
+
+
+def validate_upstream(upstream, check, where):
+    """upstream.git, tarball and tag_regex; returns the compiled regex or None."""
+    check(isinstance(upstream.get("git"), str) and upstream.get("git", "").startswith("https://"),
+          f"{where}upstream.git must be an https:// URL")
+    tarball = upstream.get("tarball")
+    if tarball is not None:
+        check(isinstance(tarball, str) and tarball.startswith("https://") and "{version}" in tarball
+              and tarball.endswith(TARBALL_SUFFIXES),
+              f"{where}upstream.tarball must be an https:// URL containing {{version}} and ending in "
+              + "/".join(TARBALL_SUFFIXES))
+    try:
+        regex = re.compile(upstream.get("tag_regex", r"^v?(?P<version>\d+(?:\.\d+)*)$"))
+    except re.error as error:
+        check(False, f"{where}upstream.tag_regex is not a valid regex: {error}")
+        return None
+    check("version" in regex.groupindex, f"{where}upstream.tag_regex needs a (?P<version>…) group")
+    return regex if "version" in regex.groupindex else None
+
+
+def validate_companions(pkg, config, check):
+    """companions: (their settings, imported debian/) and the tracks' pins.
+    Returns no errors itself; check() collects them."""
+    data = pkg.data
+    if data.get("companions") is not None:
+        check(isinstance(data["companions"], dict) and data["companions"],
+              "companions must map source package names to their settings")
+        check(data.get("epoch") is None,
+              "a package with companions can't have an epoch (their versions end in +<package version>)")
+    debian = pkg.path / "debian"
+    seen = set(control_binaries(debian)) if (debian / "control").is_file() else set()
+    for name, companion in pkg.companions.items():
+        where = f"companion {name}: "
+        check(NAME_RE.match(name) is not None and name != pkg.name, f"{where}invalid source package name")
+        check(set(companion.data) <= {"upstream", "packaging", "codenames", "overlays"},
+              f"{where}takes upstream, packaging, codenames and overlays")
+        validate_upstream(companion.upstream, check, where)
+        packaging = companion.packaging
+        check(isinstance(packaging.get("origin"), str) and packaging.get("origin") != OWN_PACKAGING,
+              f"{where}packaging.origin is required (where debian/ came from)")
+        ref = str(packaging.get("ref", ""))
+        check(COMMIT_RE.match(ref) is not None or re.fullmatch(r"sha256:[0-9a-f]{64}", ref) is not None,
+              f"{where}packaging.ref must be the full commit debian/ was imported from")
+        cdebian = companion.path / "debian"
+        if (cdebian / "control").is_file():
+            check(control_source(cdebian) == companion.source_name,
+                  f"{where}debian/control Source must be {companion.source_name}")
+            binaries = set(control_binaries(cdebian))
+            check(binaries, f"{where}debian/control declares no binary packages")
+            check(not binaries & seen, f"{where}binary packages {sorted(binaries & seen)} are built twice")
+            seen |= binaries
+        else:
+            check(False, f"{where}companions/{name}/debian/control is missing")
+        for file in ("rules", "changelog", "source/format"):
+            check((cdebian / file).is_file(), f"{where}companions/{name}/debian/{file} is missing")
+        codenames = companion.data.get("codenames")
+        check(codenames is None or set(codenames) <= set(config.distributions), f"{where}unknown codename")
+        for index, overlay in enumerate(companion.data.get("overlays") or []):
+            ok = isinstance(overlay, dict) and isinstance(overlay.get("patch"), str)
+            check(ok, f"{where}overlay #{index + 1}: patch is required")
+            if ok:
+                check((pkg.path / overlay["patch"]).is_file(), f"{where}{overlay['patch']} does not exist")
+                check(set(overlay.get("tracks") or []) <= set(pkg.tracks), f"{where}overlay: unknown track")
+                check(set(overlay.get("codenames") or []) <= set(config.distributions),
+                      f"{where}overlay: unknown codename")
+    for key, track in pkg.tracks.items():
+        # Not building one means apt keeps the package back for its users;
+        # limit it with codenames instead, where it can't build.
+        unpinned = sorted(set(pkg.companions) - set(track.companions))
+        check(not unpinned, f"track {key}: companions needs a pin for every companion ({', '.join(unpinned)})")
+        for name, pin in track.companions.items():
+            where = f"track {key} companion {name}: "
+            companion = pkg.companions.get(name)
+            check(companion is not None, f"{where}not declared under companions")
+            if companion is None:
+                continue
+            regex = validate_upstream(companion.upstream, lambda *_: None, "")
+            match = regex.match(pin.tag) if regex else None
+            check(match is not None, f"{where}tag {pin.tag!r} does not match its upstream.tag_regex")
+            if match:
+                check(UPSTREAM_VERSION_RE.match(match.group("version")) is not None,
+                      f"{where}upstream version {match.group('version')!r} is not a valid Debian upstream version")
+            check(COMMIT_RE.match(pin.commit) is not None, f"{where}commit must be a full 40-character SHA")
+            if companion.upstream.get("tarball"):
+                check(SHA256_RE.match(pin.sha256 or "") is not None, f"{where}sha256 of the release tarball is required")
+            else:
+                check(pin.sha256 is None, f"{where}sha256 is only used with upstream.tarball")
+            if pin.patches is not None:
+                check((pkg.path / pin.patches / "series").is_file(), f"{where}{pin.patches} has no series file")
+    return []
 
 
 def validate_all(root=ROOT, today=None):
@@ -622,7 +806,8 @@ def changed_files(root, base, head):
 
 def track_fields(track):
     return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256, track.go,
-            track.line, sorted((track.assets or {}).items()))
+            track.line, sorted((track.assets or {}).items()),
+            sorted((name, pin.tag, pin.commit, pin.sha256, pin.patches) for name, pin in track.companions.items()))
 
 
 def newest_track(keys):
@@ -838,16 +1023,19 @@ def cmd_plan(args):
 
 def check_tag(pkg, track):
     """The release tag must still point to the pinned commit."""
-    url = pkg.upstream["git"]
-    refs = run_network("git", "ls-remote", url, f"refs/tags/{track.tag}", f"refs/tags/{track.tag}^{{}}")
+    check_tag_pin(pkg.name, pkg.upstream["git"], track.tag, track.commit)
+
+
+def check_tag_pin(label, url, tag, pinned):
+    refs = run_network("git", "ls-remote", url, f"refs/tags/{tag}", f"refs/tags/{tag}^{{}}")
     resolved = {}
     for line in refs.splitlines():
         sha, ref = line.split("\t")
         resolved[ref] = sha
-    commit = resolved.get(f"refs/tags/{track.tag}^{{}}") or resolved.get(f"refs/tags/{track.tag}")
-    require(commit, f"{pkg.name}: tag {track.tag} not found at {url}")
-    require(commit == track.commit,
-            f"{pkg.name}: tag {track.tag} now points to {commit}, package.yaml pins {track.commit}. "
+    commit = resolved.get(f"refs/tags/{tag}^{{}}") or resolved.get(f"refs/tags/{tag}")
+    require(commit, f"{label}: tag {tag} not found at {url}")
+    require(commit == pinned,
+            f"{label}: tag {tag} now points to {commit}, package.yaml pins {pinned}. "
             "Upstream moved the tag; investigate before updating the pin.")
 
 
@@ -873,12 +1061,15 @@ def download(url, dest):
 
 def fetch_tarball(pkg, track, orig, dest):
     """Download the release tarball as the orig tarball, verify it, unpack it."""
-    url = pkg.tarball_url(pkg.upstream_version(track.tag))
+    fetch_release_tarball(pkg.name, pkg.tarball_url(pkg.upstream_version(track.tag)), track.sha256, orig, dest)
+
+
+def fetch_release_tarball(label, url, sha256, orig, dest):
     digest = download(url, orig)
-    require(digest == track.sha256, f"{pkg.name}: {url} has sha256 {digest}, package.yaml pins {track.sha256}")
+    require(digest == sha256, f"{label}: {url} has sha256 {digest}, package.yaml pins {sha256}")
     dest.mkdir(parents=True)
     run("tar", "-xf", str(orig), "-C", str(dest), "--strip-components=1")
-    require(any(dest.iterdir()), f"{pkg.name}: {url} unpacked to nothing")
+    require(any(dest.iterdir()), f"{label}: {url} unpacked to nothing")
 
 
 def fetch_assets(pkg, track, srcdir):
@@ -972,14 +1163,17 @@ def run_prepare_hook(pkg, track, srcdir, hook):
 
 
 def fetch_upstream(pkg, track, dest):
-    url = pkg.upstream["git"]
+    fetch_git(pkg.name, pkg.upstream["git"], track.tag, track.commit, dest, pkg.upstream.get("submodules"))
+
+
+def fetch_git(label, url, tag, commit, dest, submodules=False):
     dest.mkdir(parents=True)
     run("git", "init", "-q", str(dest))
-    run_network("git", "-C", str(dest), "fetch", "-q", "--depth", "1", url, f"refs/tags/{track.tag}")
+    run_network("git", "-C", str(dest), "fetch", "-q", "--depth", "1", url, f"refs/tags/{tag}")
     head = run("git", "-C", str(dest), "rev-parse", "FETCH_HEAD^{commit}").strip()
-    require(head == track.commit, f"{pkg.name}: fetched {head}, expected {track.commit}")
+    require(head == commit, f"{label}: fetched {head}, expected {commit}")
     run("git", "-C", str(dest), "-c", "advice.detachedHead=false", "checkout", "-q", head)
-    if pkg.upstream.get("submodules"):
+    if submodules:
         run_network("git", "-C", str(dest), "submodule", "update", "-q", "--init", "--recursive", "--depth", "1")
 
 
@@ -1063,6 +1257,74 @@ def changelog_entry(pkg, config, track, codename, version, when):
     return "\n".join(lines) + "\n"
 
 
+def companion_changelog_entry(pkg, config, companion, pin, codename, version, package_version, when):
+    dist = config.distributions[codename]
+    packaging = companion.packaging
+    lines = [
+        f"{companion.name} ({version}) {codename}; urgency=medium",
+        "",
+        f"  * freshdeb build of {companion.name} {companion.upstream_version(pin.tag)} for {dist.title},",
+        f"    against {pkg.name} {package_version}.",
+        f"  * Upstream: {companion.upstream['git']} tag {pin.tag}",
+        f"    (commit {pin.commit}).",
+        *([f"  * Release tarball: {companion.tarball_url(companion.upstream_version(pin.tag))}",
+           f"    (sha256 {pin.sha256})."] if pin.sha256 else []),
+        f"  * Packaging: {packaging['origin']} at {str(packaging['ref']).removeprefix('sha256:')[:12]}.",
+        "",
+        f" -- {config.archive['maintainer']}  {email.utils.formatdate(when).replace('-0000', '+0000')}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def prepare_companions(pkg, config, key, codename, version, out, when):
+    """Source trees of the companions a track builds on a codename, under
+    out/companions/; container-build.sh builds them after the package."""
+    prepared = []
+    for companion, pin in pkg.companions_for(key, codename):
+        label = f"{pkg.name} companion {companion.name}"
+        upstream = companion.upstream_version(pin.tag)
+        cversion = pkg.companion_version(config, key, codename, companion.name)
+        orig_version = cversion.rsplit("-", 1)[0]  # dpkg's upstream part: <companion>+<package upstream>
+        cdir = out / "companions"
+        cdir.mkdir(exist_ok=True)
+        srcdir = cdir / f"{companion.name}-{orig_version}"
+        require(not srcdir.exists(), f"{srcdir} already exists")
+        check_tag_pin(label, companion.upstream["git"], pin.tag, pin.commit)
+        tarball = companion.tarball_url(upstream)
+        if tarball:
+            suffix = next(s for s in TARBALL_SUFFIXES if tarball.endswith(s))
+            fetch_release_tarball(label, tarball, pin.sha256, cdir / f"{companion.name}_{orig_version}.orig{suffix}",
+                                  srcdir)
+        else:
+            fetch_git(label, companion.upstream["git"], pin.tag, pin.commit, srcdir,
+                      companion.upstream.get("submodules"))
+            shutil.rmtree(srcdir / ".git")
+            make_orig_tarball(srcdir, cdir / f"{companion.name}_{orig_version}.orig.tar.gz",
+                              f"{companion.name}-{orig_version}", when)
+        if (srcdir / "debian").exists():
+            shutil.rmtree(srcdir / "debian")
+        shutil.copytree(companion.path / "debian", srcdir / "debian", symlinks=True)
+        if pin.patches:
+            shutil.rmtree(srcdir / "debian/patches", ignore_errors=True)
+            shutil.copytree(pkg.path / pin.patches, srcdir / "debian/patches", symlinks=True)
+        applied = []
+        for overlay in companion.overlays_for(key, codename):
+            patch = (pkg.path / overlay["patch"]).resolve()
+            run("patch", "-p1", "--forward", "--no-backup-if-mismatch", "--fuzz=0", "-i", str(patch), cwd=srcdir)
+            applied.append(overlay["patch"])
+        rewrite_control(srcdir / "debian", config.archive["maintainer"], source_name=companion.name)
+        changelog = srcdir / "debian/changelog"
+        changelog.write_text(companion_changelog_entry(pkg, config, companion, pin, codename, cversion, version, when)
+                             + "\n" + changelog.read_text())
+        prepared.append({
+            "name": companion.name, "version": cversion, "upstream_version": upstream, "tag": pin.tag,
+            "commit": pin.commit, "source_dir": f"companions/{srcdir.name}",
+            "binaries": control_binaries(srcdir / "debian"), "overlays": applied,
+        })
+        print(f"Prepared companion {companion.name} {cversion}")
+    return prepared
+
+
 def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     config = load_config(root)
     pkg = load_package(name, root)
@@ -1121,6 +1383,11 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     changelog.write_text(changelog_entry(pkg, config, track, codename, version, when) + "\n" + changelog.read_text())
 
     binaries = control_binaries(srcdir / "debian")
+    binary_versions = {binary: version for binary in binaries}
+    companions = prepare_companions(pkg, config, key, codename, version, out, when)
+    for companion in companions:
+        binaries.update(companion["binaries"])
+        binary_versions.update({binary: companion["version"] for binary in companion["binaries"]})
     build = pkg.data.get("build") or {}
     info = {
         "package": name,
@@ -1135,6 +1402,8 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         "image": config.distributions[codename].image,
         "source_dir": srcdir.name,
         "binaries": binaries,
+        "binary_versions": binary_versions,
+        "companions": companions,
         "build_options": build.get("options") or [],
         "build_profiles": build.get("profiles") or [],
         "build_env": build_env,
@@ -1188,9 +1457,10 @@ def cmd_guard(args):
     or a newer version; publishing it would downgrade or shadow users."""
     info_path = args.info
     info = json.loads(info_path.read_text())
-    ours = info["version"]
     blockers = []
     for binary in info["binaries"]:
+        # Companions' binaries carry their own (derived) versions.
+        ours = info.get("binary_versions", {}).get(binary, info["version"])
         versions = distro_versions(binary)
         if not versions:
             continue
@@ -1202,14 +1472,13 @@ def cmd_guard(args):
             require(newer == (compare_versions(ours, theirs) > 0),
                     f"version comparison disagrees with dpkg for {ours} vs {theirs}")
         if compare_versions(ours, theirs) <= 0:
-            blockers.append(f"{binary} {theirs}")
+            blockers.append(f"{binary} {theirs} (ours {ours})")
     if blockers:
         info["skipped"] = True
-        info["skip_reason"] = (f"{info['codename']} already ships {', '.join(blockers)}, "
-                               f"not older than {ours}")
+        info["skip_reason"] = f"{info['codename']} already ships the same or newer: {', '.join(blockers)}"
         print(f"SKIP: {info['skip_reason']}")
     else:
-        print(f"OK: {ours} is newer than anything {info['codename']} ships")
+        print(f"OK: {info['version']} is newer than anything {info['codename']} ships")
     info_path.write_text(json.dumps(info, indent=2) + "\n")
     return 0
 
@@ -1289,6 +1558,55 @@ def watch_package(pkg, tags, today=None):
                 change["aliases"][LATEST_ALIAS] = line
             changes.append(change)
     return changes
+
+
+def companion_releases(companion, tags):
+    """{version: (tag, commit)} for a companion's tags."""
+    releases = {}
+    for tag, sha in tags.items():
+        match = companion.tag_regex.match(tag)
+        if match:
+            releases[match.group("version")] = (tag, sha)
+    return releases
+
+
+def watch_companions(pkg, companion_tags, today=None):
+    """Changes for companions with a newer upstream release, per track that
+    pins them. Their binaries' versions are <companion>+<package version>,
+    so a new companion release needs no revision bump."""
+    changes = []
+    for key, track in pkg.tracks.items():
+        if not track.active(today):
+            continue
+        for name, pin in sorted(track.companions.items()):
+            companion = pkg.companions[name]
+            releases = companion_releases(companion, companion_tags.get(name, {}))
+            if not releases:
+                continue
+            newest = max(releases, key=_VersionKey)
+            if compare_versions(newest, companion.upstream_version(pin.tag)) > 0:
+                tag, sha = releases[newest]
+                changes.append({"package": pkg.name, "kind": "companion", "track": key, "companion": name,
+                                "from": pin.tag, "tag": tag, "commit": sha})
+    return changes
+
+
+def companion_report(pkg, companion_tags, changes, today=None):
+    lines = []
+    for key, track in pkg.tracks.items():
+        if not track.active(today):
+            continue
+        for name, pin in sorted(track.companions.items()):
+            companion = pkg.companions[name]
+            releases = companion_releases(companion, companion_tags.get(name, {}))
+            newest = max(releases, key=_VersionKey) if releases else None
+            change = next((c for c in changes if c["kind"] == "companion" and c["track"] == key
+                           and c["companion"] == name), None)
+            decision = (f"update to {change['tag']}" if change else
+                        "up to date" if newest else "no upstream release matches tag_regex")
+            lines.append(f"  {pkg.name} {key}: companion {name} ours {companion.upstream_version(pin.tag)}, "
+                         f"upstream {newest or '-'} -> {decision}")
+    return lines
 
 
 class _VersionKey:
@@ -1459,6 +1777,21 @@ def apply_change(root, change):
     key = yq_string(change["track"])
     if change.get("go"):
         ensure_go_toolchain(root, change["go"], change["go_sha256"])
+    if change["kind"] == "companion":
+        name = yq_string(change["companion"])
+        companion = pkg.companions[change["companion"]]
+        expr = (f'.tracks[{key}].companions[{name}].tag = {yq_string(change["tag"])} | '
+                f'.tracks[{key}].companions[{name}].commit = {yq_string(change["commit"])}')
+        if companion.upstream.get("tarball"):
+            url = companion.tarball_url(companion.upstream_version(change["tag"]))
+            sha256 = change.get("sha256")
+            if sha256 is None:
+                with tempfile.TemporaryDirectory() as tmp:
+                    sha256 = download(url, Path(tmp) / "release")
+                change["sha256"] = sha256
+            expr += f' | .tracks[{key}].companions[{name}].sha256 = {yq_string(sha256)}'
+        run("yq", "-i", expr, str(path))
+        return
     if change["kind"] == "toolchain":
         revision = pkg.tracks[change["track"]].revision + 1
         run("yq", "-i", f'.tracks[{key}].go = {yq_string(change["go"])} | .tracks[{key}].revision = {revision}',
@@ -1534,13 +1867,18 @@ def cmd_watch(args):
         if pkg.go_mode == "modules" and any(track.go for track in pkg.tracks.values()):
             releases = releases if releases is not None else go_releases(list(config.architectures))
             found += watch_go(pkg, found, releases)
+        companion_tags = {name: remote_tags(companion.upstream["git"]) for name, companion in pkg.companions.items()}
+        found += watch_companions(pkg, companion_tags)
         # The report goes to stderr: stdout is the JSON the workflow reads.
-        print("\n".join(watch_report(pkg, tags, found, releases)), file=sys.stderr)
+        print("\n".join(watch_report(pkg, tags, found, releases)
+                        + companion_report(pkg, companion_tags, found)), file=sys.stderr)
         changes.extend(found)
     if args.tracks:
         changes = [c for c in changes if c["track"] in args.tracks]
     if args.kinds:
         changes = [c for c in changes if c["kind"] in args.kinds]
+    if args.companions:
+        changes = [c for c in changes if c.get("companion") in args.companions]
     if args.apply:
         for change in changes:
             apply_change(root, change)
@@ -1649,7 +1987,8 @@ def main(argv=None):
     p = sub.add_parser("watch")
     p.add_argument("--packages", nargs="*")
     p.add_argument("--tracks", nargs="*", help="only changes for these tracks (with --apply: one PR each)")
-    p.add_argument("--kinds", nargs="*", help="only these kinds of change: bump, new-track, toolchain")
+    p.add_argument("--kinds", nargs="*", help="only these kinds of change: bump, new-track, toolchain, companion")
+    p.add_argument("--companions", nargs="*", help="only changes for these companions (with --apply: one PR each)")
     p.add_argument("--apply", action="store_true")
     p.set_defaults(func=cmd_watch)
 

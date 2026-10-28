@@ -75,13 +75,18 @@ jobs:
             kind="$(jq -r .kind <<<"$change")"
             go="$(jq -r '.go // empty' <<<"$change")"
             reason="$(jq -r '.reason // empty' <<<"$change")"
+            companion="$(jq -r '.companion // empty' <<<"$change")"
             branch="watch/${package}-${track}"
             [[ "$kind" == "toolchain" ]] && branch="watch/${package}-${track}-go"
+            [[ "$kind" == "companion" ]] && branch="watch/${package}-${track}-${companion}"
             upstream="$(yq -r .upstream.git "packages/${package}/package.yaml")"
+            [[ "$kind" == "companion" ]] && upstream="$(yq -r ".companions[\"${companion}\"].upstream.git" "packages/${package}/package.yaml")"
             notes="${upstream%.git}/releases/tag/${tag}"
 
             git checkout -q -B "$branch" "$base"
-            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --kinds "$kind" --apply >/dev/null
+            only=()
+            [[ "$kind" == "companion" ]] && only=(--companions "$companion")
+            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --kinds "$kind" "${only[@]}" --apply >/dev/null
             git add -A "packages/${package}" config.yaml
             if git diff --cached --quiet; then
               continue
@@ -96,6 +101,11 @@ jobs:
 
           This pins Go ${go} (checksums from go.dev, added to config.yaml) for track \`${track}\` and bumps its revision. Merging builds, tests and publishes the rebuild."
               fi
+            elif [[ "$kind" == "companion" ]]; then
+              title="${package} ${track}: update ${companion} to ${tag}"
+              body="${companion} released [${tag}](${notes}). This pins it for track \`${track}\` of ${package}; its packages are built against ${package} in the same job, versioned <${companion} version>+<${package} version>, so no revision bump is needed.
+
+          Merging builds and tests every codename/arch, then publishes to the ${package} repository. If a build fails, nothing is published."
             elif [[ "$kind" == "bump" ]]; then
               title="${package} ${track}: update to ${tag}"
               body="Upstream released [${tag}](${notes}). This bumps track \`${track}\` and resets its revision to 1.

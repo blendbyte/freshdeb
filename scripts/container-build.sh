@@ -97,6 +97,31 @@ echo "::endgroup::"
 shopt -s nullglob
 debs=("$WORK"/*.deb)
 (( ${#debs[@]} )) || { echo "ERROR: build produced no .deb files" >&2; exit 1; }
+
+# Companions (package.yaml companions, e.g. proftpd's modules): built against
+# the packages just built, which go in first; their debs join the output.
+mapfile -t companions < <(python3 -c 'import json,sys
+for c in json.load(open(sys.argv[1])).get("companions", []): print(c["source_dir"])' "$WORK/build-info.json")
+if (( ${#companions[@]} )); then
+    echo "::group::Install the build for its companions"
+    # Maintainer scripts must not start services in the build container.
+    printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d
+    chmod 0755 /usr/sbin/policy-rc.d
+    apt-get install -y --no-install-recommends "${debs[@]}"
+    echo "::endgroup::"
+    for companion in "${companions[@]}"; do
+        csrc="$WORK/$companion"
+        echo "::group::Build companion $(basename "$csrc")"
+        apt-get build-dep -y --no-install-recommends "${profile_args[@]}" "$csrc"
+        chown -R builder: "$WORK/companions"
+        runuser -u builder -- env \
+            DEB_BUILD_OPTIONS="$options noautodbgsym noddebs parallel=$(nproc)" \
+            ${profiles:+DEB_BUILD_PROFILES="$profiles"} \
+            bash -c "cd '$csrc' && dpkg-buildpackage --build=any,all -us -uc"
+        echo "::endgroup::"
+    done
+    debs+=("$WORK"/companions/*.deb)
+fi
 cp "${debs[@]}" "$OUT/"
 if [[ -d "$SRC/debian/tests" ]]; then
     mkdir -p "$OUT/debian-tests/debian"

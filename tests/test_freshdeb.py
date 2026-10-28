@@ -4,8 +4,10 @@ Run in tests/release.Dockerfile (needs git, dpkg and yq):
     docker run --rm -v "$PWD:/workspace:ro" freshdeb-tests python3 -m unittest tests.test_freshdeb
 """
 
+import contextlib
 import datetime as dt
 import hashlib
+import io
 import json
 import re
 import shutil
@@ -14,6 +16,8 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -985,6 +989,187 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(pkg.aliases["9"], "9.2")
         self.assertEqual(freshdeb.validate_all(tmp, TODAY), [], text)
         shutil.rmtree(tmp)
+
+
+class CompanionTests(unittest.TestCase):
+    """Companion source packages: proftpd's modules, built against it."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.yaml = self.tmp / "packages/proftpd/package.yaml"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def replace(self, path, old, new):
+        text = path.read_text()
+        self.assertIn(old, text)
+        path.write_text(text.replace(old, new, 1))
+
+    def errors(self):
+        return [e for e in freshdeb.validate_all(self.tmp, TODAY) if e.startswith("proftpd")]
+
+    def test_versions_fold_in_the_package_version(self):
+        config = freshdeb.load_config(ROOT)
+        pkg = freshdeb.load_package("proftpd", ROOT)
+        version = pkg.version(config, "main", "trixie")
+        vroot = pkg.companion_version(config, "main", "trixie", "proftpd-mod-vroot")
+        self.assertEqual(vroot, f"0.9.12+{version}")
+        self.assertTrue(vroot.endswith(f"+{version}"))
+        # Above the distributions' module packages, rc versions included.
+        self.assertGreater(freshdeb.compare_versions(vroot, "0.9.12-2"), 0)
+        clamav = pkg.companion_version(config, "main", "trixie", "proftpd-mod-clamav")
+        self.assertGreater(freshdeb.compare_versions(clamav, "0.14~rc2-5"), 0)
+
+    def test_every_companion_is_pinned_and_builds_everywhere(self):
+        pkg = freshdeb.load_package("proftpd", ROOT)
+        self.assertEqual(set(pkg.tracks["main"].companions), set(pkg.companions))
+        names = [c.name for c, _ in pkg.companions_for("main", "jammy")]
+        self.assertEqual(names, sorted(pkg.companions))
+
+    def test_codenames_limit_where_a_companion_builds(self):
+        self.replace(self.yaml, "  proftpd-mod-vroot:\n    upstream:", "  proftpd-mod-vroot:\n    codenames: [trixie]\n    upstream:")
+        pkg = freshdeb.load_package("proftpd", self.tmp)
+        self.assertIn("proftpd-mod-vroot", [c.name for c, _ in pkg.companions_for("main", "trixie")])
+        self.assertNotIn("proftpd-mod-vroot", [c.name for c, _ in pkg.companions_for("main", "jammy")])
+        self.assertEqual(self.errors(), [])
+
+    def test_pin_without_companion(self):
+        self.replace(self.yaml, "      proftpd-mod-vroot: {tag:", "      proftpd-mod-nope: {tag: \"v1.0\", commit: " + "a" * 40 + "}\n      proftpd-mod-vroot: {tag:")
+        self.assertTrue(any("proftpd-mod-nope: not declared under companions" in e for e in self.errors()))
+
+    def test_companion_without_pin(self):
+        self.replace(self.yaml, "      proftpd-mod-vroot: {tag:", "      # proftpd-mod-vroot: {tag:")
+        self.assertTrue(any("needs a pin for every companion (proftpd-mod-vroot)" in e for e in self.errors()))
+
+    def test_tag_must_match(self):
+        self.replace(self.yaml, '{tag: "v0.9.12"', '{tag: "0.9.12"')
+        self.assertTrue(any("does not match its upstream.tag_regex" in e for e in self.errors()))
+
+    def test_missing_debian(self):
+        shutil.rmtree(self.tmp / "packages/proftpd/companions/proftpd-mod-vroot/debian")
+        self.assertTrue(any("companions/proftpd-mod-vroot/debian/control is missing" in e for e in self.errors()))
+
+    def test_binaries_built_twice(self):
+        control = self.tmp / "packages/proftpd/companions/proftpd-mod-vroot/debian/control"
+        self.replace(control, "Package: proftpd-mod-vroot", "Package: proftpd-mod-case")
+        self.assertTrue(any("built twice" in e for e in self.errors()))
+
+    def test_no_epoch(self):
+        self.replace(self.yaml, "\ntracks:", "\nepoch: 1\n\ntracks:")
+        self.assertTrue(any("can't have an epoch" in e for e in self.errors()))
+
+    def test_tarball_pins_need_sha256(self):
+        self.replace(self.yaml, "      git: https://github.com/Castaglia/proftpd-mod_vroot.git\n",
+                     "      git: https://github.com/Castaglia/proftpd-mod_vroot.git\n"
+                     "      tarball: https://example.org/vroot-{version}.tar.gz\n")
+        self.assertTrue(any("proftpd-mod-vroot: sha256 of the release tarball is required" in e for e in self.errors()))
+
+    def test_guard_compares_each_binary(self):
+        info_path = self.tmp / "build-info.json"
+        info = {"codename": "trixie", "version": "1.3.9e-1+freshdeb~deb13",
+                "binaries": {"proftpd-core": "arm64", "proftpd-mod-vroot": "arm64"},
+                "binary_versions": {"proftpd-mod-vroot": "0.9.12+1.3.9e-1+freshdeb~deb13"}}
+        distro = {"proftpd-core": ["1.3.8.c+dfsg-4+deb13u3"], "proftpd-mod-vroot": ["0.9.12-2"]}
+        for vroot, skipped in (("0.9.12-2", False), ("0.9.13-1", True)):
+            distro["proftpd-mod-vroot"] = [vroot]
+            info_path.write_text(json.dumps(info))
+            with mock.patch.object(freshdeb, "distro_versions", lambda binary: distro.get(binary, [])), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                freshdeb.cmd_guard(SimpleNamespace(info=info_path))
+            result = json.loads(info_path.read_text())
+            self.assertEqual(result.get("skipped", False), skipped, vroot)
+        self.assertIn("proftpd-mod-vroot 0.9.13-1 (ours 0.9.12+1.3.9e-1+freshdeb~deb13)", result["skip_reason"])
+
+    def test_watch_proposes_companion_releases(self):
+        pkg = freshdeb.load_package("proftpd", ROOT)
+        tags = {name: {pin.tag: pin.commit} for name, pin in pkg.tracks["main"].companions.items()}
+        self.assertEqual(freshdeb.watch_companions(pkg, tags, TODAY), [])
+        tags["proftpd-mod-vroot"].update({"v0.9.13": "d" * 40, "v0.9.14rc1": "e" * 40, "v1.0.0-beta": "f" * 40})
+        changes = freshdeb.watch_companions(pkg, tags, TODAY)
+        self.assertEqual(changes, [{"package": "proftpd", "kind": "companion", "track": "main",
+                                    "companion": "proftpd-mod-vroot", "from": "v0.9.12", "tag": "v0.9.13",
+                                    "commit": "d" * 40}])
+        report = freshdeb.companion_report(pkg, tags, changes, TODAY)
+        self.assertIn("  proftpd main: companion proftpd-mod-vroot ours 0.9.12, upstream 0.9.13 -> update to v0.9.13",
+                      report)
+        self.assertIn("  proftpd main: companion proftpd-mod-case ours 0.9.1, upstream 0.9.1 -> up to date", report)
+
+    def test_clamav_follows_release_candidates(self):
+        pkg = freshdeb.load_package("proftpd", ROOT)
+        pin = pkg.tracks["main"].companions["proftpd-mod-clamav"]
+        tags = {"proftpd-mod-clamav": {pin.tag: pin.commit, "v0.14rc3": "a" * 40}}
+        changes = freshdeb.watch_companions(pkg, tags, TODAY)
+        self.assertEqual([c["tag"] for c in changes], ["v0.14rc3"])
+
+    def test_prepare_builds_the_source_tree(self):
+        if not shutil.which("patch"):
+            self.skipTest("patch not available")
+        upstream = self.tmp / "upstream"
+        upstream.mkdir()
+        (upstream / "mod_procfs.c").write_text("/* mod_procfs */\n")
+        git(upstream, "init", "-q", "-b", "main")
+        git(upstream, "-c", "user.name=t", "-c", "user.email=t@t", "add", "-A")
+        git(upstream, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "release")
+        git(upstream, "tag", "v0.3")
+        commit = git(upstream, "rev-parse", "HEAD").strip()
+        config = freshdeb.load_config(self.tmp)
+        pkg = freshdeb.load_package("proftpd", self.tmp)
+        companion = pkg.companions["proftpd-mod-procfs"]
+        companion.data["upstream"]["git"] = f"file://{upstream}"
+        pkg.companions = {"proftpd-mod-procfs": companion}
+        pkg.tracks["main"].companions = {"proftpd-mod-procfs": freshdeb.CompanionPin("v0.3", commit)}
+        out = self.tmp / "out"
+        out.mkdir()
+        version = pkg.version(config, "main", "jammy")
+        with contextlib.redirect_stdout(io.StringIO()):
+            prepared = freshdeb.prepare_companions(pkg, config, "main", "jammy", version, out, 0)
+        cversion = f"0.3+{version}"
+        self.assertEqual(prepared, [{
+            "name": "proftpd-mod-procfs", "version": cversion, "upstream_version": "0.3", "tag": "v0.3",
+            "commit": commit, "source_dir": f"companions/proftpd-mod-procfs-{cversion.rsplit('-', 1)[0]}",
+            "binaries": {"proftpd-mod-procfs": "any"}, "overlays": ["overlays/procfs-debhelper-13.patch"]}])
+        src = out / prepared[0]["source_dir"]
+        self.assertEqual((src / "mod_procfs.c").read_text(), "/* mod_procfs */\n")
+        self.assertTrue((out / f"companions/proftpd-mod-procfs_{cversion.rsplit('-', 1)[0]}.orig.tar.gz").is_file())
+        self.assertTrue((src / "debian/changelog").read_text().startswith(f"proftpd-mod-procfs ({cversion}) "))
+        self.assertIn("debhelper-compat (= 13)", (src / "debian/control").read_text())
+
+    def test_apply_pins_the_companion(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        freshdeb.apply_change(self.tmp, {"package": "proftpd", "kind": "companion", "track": "main",
+                                         "companion": "proftpd-mod-vroot", "from": "v0.9.12", "tag": "v0.9.13",
+                                         "commit": "d" * 40})
+        pkg = freshdeb.load_package("proftpd", self.tmp)
+        pin = pkg.tracks["main"].companions["proftpd-mod-vroot"]
+        self.assertEqual((pin.tag, pin.commit), ("v0.9.13", "d" * 40))
+        self.assertEqual(pkg.tracks["main"].revision, freshdeb.load_package("proftpd", ROOT).tracks["main"].revision)
+        self.assertIn("# The distributions' module packages", self.yaml.read_text())
+        self.assertEqual(self.errors(), [])
+
+
+class CompanionPlanTests(unittest.TestCase):
+    """Plan: companion pins select their track; their packaging needs a bump."""
+
+    setUp, tearDown, commit, edit, plan = (PlanTests.setUp, PlanTests.tearDown, PlanTests.commit,
+                                           PlanTests.edit, PlanTests.plan)
+
+    def test_companion_pin_selects_the_track(self):
+        self.edit("packages/proftpd/package.yaml", '{tag: "v0.9.12", commit: abcc817f322e1fa670b469ef0bc09419336b1d56}',
+                  '{tag: "v0.9.13", commit: ' + "d" * 40 + "}")
+        self.commit()
+        selected, errors, _ = self.plan()
+        self.assertEqual((selected, errors), ({("proftpd", "main"): True}, []))
+
+    def test_companion_packaging_requires_bump(self):
+        self.edit("packages/proftpd/companions/proftpd-mod-vroot/debian/rules", "%:", "# changed\n%:")
+        self.commit()
+        selected, errors, _ = self.plan()
+        self.assertEqual(set(selected), {("proftpd", "main")})
+        self.assertTrue(errors and "bump revision" in errors[0], errors)
 
 
 if __name__ == "__main__":

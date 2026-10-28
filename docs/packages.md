@@ -124,6 +124,38 @@ Some projects build their own copies of libraries that older releases lack or ha
 
 Every binary carries the package's version, with one exception from Debian's conventions: bundled extras versioned from it, e.g. ZNC's `znc-push` as `1.0.0+git20190521.78d0385+<znc version>`. The release and the install test accept a binary version that equals the package version or ends in `+<package version>`, and nothing else.
 
+### Companion packages
+
+Some packages only work together with other source packages built against their exact ABI: the distributions' `proftpd-mod-*` modules depend on `proftpd-abi-<version>`, so a newer proftpd without them gets kept back by apt for anyone using one. `companions` builds such sources in the same job, after the package and against it, and publishes them in the package's repository:
+
+```yaml
+companions:
+  proftpd-mod-vroot:            # Debian's source name; debian/ in companions/<name>/debian
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_vroot.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+      tarball: …                # optional, as for the package (then pins need sha256)
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-vroot.git
+      ref: <full commit>
+      source: …                 # optional, Debian's source name when it differs
+    codenames: [trixie]         # optional; when it doesn't build everywhere
+    overlays:                   # optional; paths relative to the package
+      - patch: overlays/vroot-debhelper-13.patch
+
+tracks:
+  main:
+    tag: "v1.3.9e"
+    companions:                 # every companion, pinned per track
+      proftpd-mod-vroot: {tag: "v0.9.12", commit: <full commit>}
+                                # optional: sha256 (tarball), patches (replaces its debian/patches)
+```
+
+- **Versions:** `<companion version>-<revision>+freshdeb~<suffix>` with the package's version folded in: `0.9.12+1.3.9e-1+freshdeb~deb13`. That ends in `+<package version>` (see derived versions above) and sorts above the distributions' own `0.9.12-2`.
+- **Build:** the builder installs the package's fresh debs, then builds each companion with its own build-dependencies; its debs are part of the build's output, tested and published with it. The version guard checks every binary on its own.
+- **watch.yml:** a new companion release opens its own PR (`watch/<package>-<track>-<companion>`), pinning the tag. No revision bump: the companion's version changes, the package's binaries stay as published. A new package release rebuilds every companion against it.
+- **Changes to a companion's `debian/` or overlays** are packaging changes of the package: bump the track's `revision`.
+
 ### Architecture: all packages
 
 Every build job also builds the package's `Architecture: all` binaries, so each job's packages install and test on their own (`neovim` needs `neovim-runtime`). The release publishes them only from the first architecture in `config.yaml`.
