@@ -21,6 +21,7 @@ Binary package: `memcached`, with the same paths, `memcache` user, `/etc/memcach
 ## Notes
 
 - **Source:** upstream's release tarball (`upstream.tarball`), like Debian. The git tag has no `configure` script and takes its version from `git describe`.
-- **Build:** Debian's packaging is used unchanged on every distribution, with TLS, SASL and the proxy enabled. Upstream's test suite runs during the build, as in Debian. That takes about 8 minutes, because Debian runs it serially (the TLS tests are racy in parallel).
+- **Build:** Debian's packaging on every distribution, with TLS, SASL and the proxy enabled. One change (`overlays/bundled-lua.patch` and `patches/main/`, which is Debian's patch set without `0006-Don-t-use-embedded-Lua.patch`): the proxy is built with the Lua that upstream ships in the release tarball (`vendor/lua`), as upstream builds it, instead of the distribution's `lua5.4`. Upstream's test suite runs during the build, as in Debian. That takes about 8 minutes, because Debian runs it serially (the TLS tests are racy in parallel).
+- **Tests:** the smoke test also runs the proxy: a backend memcached, and a proxy in front of it with a configuration in upstream's style; a value set through the proxy is on the backend.
 - **Upgrades:** `postinst` only creates `/etc/memcached.conf` when it's missing, so an existing configuration is kept. The upgrade test checks this.
 - `memcached-tool` needs `liburi-perl`, which Debian only lists under `Suggests`.

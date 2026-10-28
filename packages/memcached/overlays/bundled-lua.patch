@@ -1,0 +1,23 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -6,7 +6,6 @@
+  debhelper-compat (= 13),
+  libevent-dev,
+  libio-socket-ssl-perl <!nocheck>,
+- liblua5.4-dev,
+  libsasl2-dev,
+  libssl-dev,
+  liburing-dev,
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -44,8 +44,6 @@
+ 
+ override_dh_auto_clean:
+ 	dh_auto_clean
+-	# Ensure we cannot build from the embedded Lua
+-	rm -rf vendor/lua
+ 	rm --force $(CURDIR)/debian/memcached.init $(CURDIR)/debian/memcached.service
+ 
+ %:

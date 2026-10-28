@@ -1,0 +1,25 @@
+From: Chris Lamb <lamby@debian.org>
+Date: Fri, 6 Sep 2019 14:40:03 +0100
+Subject: Source /etc/default/memcached in /etc/init.d/memcached. (Closes:
+ #934542)
+
+Forwarded: not-needed
+---
+ scripts/memcached-init | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/scripts/memcached-init b/scripts/memcached-init
+index 9bbb6fb..5341742 100755
+--- a/scripts/memcached-init
++++ b/scripts/memcached-init
+@@ -35,6 +35,10 @@ test -x $DAEMONBOOTSTRAP || exit 0
+ 
+ set -e
+ 
++if [ -f /etc/default/memcached ] ; then
++    . /etc/default/memcached
++fi
++
+ . /lib/lsb/init-functions
+ 
+ FILES=(/etc/memcached_*.conf)

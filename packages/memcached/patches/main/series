@@ -1,0 +1,8 @@
+# Debian's patches (init script, service unit, systemd sandboxing), without
+# 0006-Don-t-use-embedded-Lua.patch: the proxy is built with the Lua upstream
+# ships in vendor/lua, as upstream builds it.
+0001-LSB-requirements.patch
+0002-Additions-for-service-unit-file.patch
+0003-Uses-retry-to-wait-up-to-5-seconds-for-the-killed-pr.patch
+0005-Source-etc-default-memcached-in-etc-init.d-memcached.patch
+0006-restore-systemd-sandboxing.patch
