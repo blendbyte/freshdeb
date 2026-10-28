@@ -26,7 +26,7 @@ tracks:
   main:
     tag: "v0.31.0"
     commit: 181b59e7748732516e761b27c308794f2470d4bc
-    revision: 1
+    revision: 2
     go: "1.27.3"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
     patches: patches/main  # Debian's 0001 (default config path), refreshed; 0002 (kingpin import path) dropped
 
@@ -35,3 +35,6 @@ overlays:
   # generator linked to libsnmp, and the init script's log directory (all
   # releases).
   - patch: overlays/go-build.patch
+  # Debian's init script (systems without systemd): reload matched the
+  # daemon by a name longer than start-stop-daemon can (all releases).
+  - patch: overlays/init-script.patch

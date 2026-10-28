@@ -1,0 +1,13 @@
+diff -ruN a/debian/init b/debian/init
+--- a/debian/init
++++ b/debian/init
+@@ -18,6 +18,9 @@
+ 
+ DESC="Prometheus exporter for SNMP metrics"
+ NAME=prometheus-snmp-exporter
++# freshdeb: the pid file and the binary identify the daemon; its name is
++# longer than the 15 characters start-stop-daemon can match, so reload failed.
++COMMAND_NAME=none
+ USER=prometheus
+ GROUP=$USER
+ DAEMON=/usr/bin/$NAME

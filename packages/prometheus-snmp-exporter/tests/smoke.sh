@@ -49,6 +49,18 @@ metrics="$(curl -fsS http://127.0.0.1:9116/metrics)"
 echo "configuration reloads"
 curl -fsS -X POST http://127.0.0.1:9116/-/reload
 expect_agent_metrics
+
+echo "service reload (SIGHUP) reloads the configuration"
+log=/var/log/prometheus/prometheus-snmp-exporter.log
+loaded="$(grep -c 'Loaded config file' "$log" || true)"
+service prometheus-snmp-exporter reload
+for _ in $(seq 1 50); do
+    (( $(grep -c 'Loaded config file' "$log" || true) > loaded )) && break
+    sleep 0.2
+done
+(( $(grep -c 'Loaded config file' "$log" || true) > loaded )) \
+    || { echo "service reload did not reload the configuration" >&2; tail -n 20 "$log" >&2; exit 1; }
+expect_agent_metrics
 stop_exporter
 stop_snmpd
 
