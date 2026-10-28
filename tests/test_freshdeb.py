@@ -135,6 +135,15 @@ class CatalogTests(unittest.TestCase):
         self.replace("overlays/legacy-sysusers.patch", "overlays/missing.patch")
         self.assertTrue(any("does not exist" in e for e in self.errors()))
 
+    def test_test_capabilities(self):
+        text = self.yaml.read_text()
+        self.yaml.write_text(text + "\ntests:\n  capabilities: [NET_ADMIN]\n")
+        self.assertEqual([e for e in self.errors() if e.startswith("valkey:")], [])
+        self.yaml.write_text(text + "\ntests:\n  capabilities: [SYS_ADMIN]\n")
+        self.assertTrue(any("tests.capabilities must be a list of" in e for e in self.errors()))
+        self.yaml.write_text(text + "\ntests:\n  privileged: true\n")
+        self.assertTrue(any("tests only takes capabilities" in e for e in self.errors()))
+
 
 class ControlTests(unittest.TestCase):
     CONTROL = (
@@ -158,6 +167,13 @@ class ControlTests(unittest.TestCase):
         self.assertIn("Description: demo\n long text\n .\n more\n", text)
         self.assertEqual(freshdeb.control_binaries(tmp), {"demo-bin": "any", "demo-doc": "all"})
         self.assertIn("Source: demo\nPriority: optional\n", text)
+        shutil.rmtree(tmp)
+
+    def test_rewrite_renames_the_source(self):
+        tmp = Path(tempfile.mkdtemp())
+        (tmp / "control").write_text(self.CONTROL.replace("Source: demo", "Source: demo-1.2"))
+        freshdeb.rewrite_control(tmp, "freshdeb <packages@freshdeb.com>", source_name="demo")
+        self.assertEqual(freshdeb.control_source(tmp), "demo")
         shutil.rmtree(tmp)
 
     def test_rewrite_keeps_existing_priority(self):
@@ -427,6 +443,116 @@ class PrepareHookTests(unittest.TestCase):
         y = self.pkg.path / "package.yaml"
         y.write_text(y.read_text().replace("hooks/prefetch-deps.py", "hooks/nope.py"))
         self.assertTrue(any("build.prepare" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
+
+
+class GoBootstrapTests(unittest.TestCase):
+    """build.go: bootstrap (Go itself) and packaging.source (Debian's per-minor
+    source names), on a copy of restic."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.yaml = self.tmp / "packages/restic/package.yaml"
+        self.yaml.write_text(self.yaml.read_text() + "\nbuild:\n  go: bootstrap\n")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self):
+        return [e for e in freshdeb.validate_all(self.tmp, TODAY) if e.startswith("restic:")]
+
+    def test_bootstrap_package_is_valid(self):
+        self.assertEqual(self.errors(), [])
+        self.assertEqual(freshdeb.load_package("restic", self.tmp).go_mode, "bootstrap")
+
+    def test_bootstrap_needs_a_toolchain(self):
+        self.yaml.write_text(re.sub(r'\n    go: "[^"]+"[^\n]*', "", self.yaml.read_text()))
+        self.assertTrue(any("needs a go: toolchain" in e for e in self.errors()))
+
+    def test_unknown_go_mode(self):
+        self.yaml.write_text(self.yaml.read_text().replace("go: bootstrap", "go: magic"))
+        self.assertTrue(any("build.go must be" in e for e in self.errors()))
+
+    def test_bootstrap_environment(self):
+        env = freshdeb.go_bootstrap_env(Path("/opt/go"))
+        self.assertEqual(env["GOROOT_BOOTSTRAP"], "/opt/go")
+        self.assertEqual((env["GOTOOLCHAIN"], env["GOPROXY"]), ("local", "off"))
+        self.assertNotIn("GOFLAGS", env)  # nothing vendored
+
+    def test_changelog_says_bootstrapped(self):
+        pkg = freshdeb.load_package("restic", self.tmp)
+        config = freshdeb.load_config(self.tmp)
+        track = pkg.tracks["main"]
+        entry = freshdeb.changelog_entry(pkg, config, track, "trixie", "1-1", 0)
+        self.assertIn(f"Bootstrapped with Go {track.go} from go.dev.", entry)
+        self.assertNotIn("vendored", entry)
+
+    def test_watch_keeps_the_bootstrap_toolchain(self):
+        pkg = freshdeb.load_package("restic", self.tmp)
+        tags = {t.tag: t.commit for t in pkg.tracks.values()}
+        go = {self.next_patch(pkg.tracks["main"].go): {"amd64": "a" * 64, "arm64": "b" * 64}}
+        lines = freshdeb.watch_report(pkg, tags, [], go, TODAY)
+        self.assertIn(f"  restic main: bootstrap Go {pkg.tracks['main'].go} -> pinned (Go rebuilds itself with it)",
+                      lines)
+        self.assertFalse(any("rebuild with" in line for line in lines))
+
+    @staticmethod
+    def next_patch(version):
+        *head, last = version.split(".")
+        return ".".join(head + [str(int(last) + 1)])
+
+    def test_source_name_override(self):
+        control = self.tmp / "packages/restic/debian/control"
+        control.write_text(control.read_text().replace("Source: restic", "Source: restic-0.19", 1))
+        self.assertTrue(any("Source must equal the package name" in e for e in self.errors()))
+        self.yaml.write_text(self.yaml.read_text().replace("packaging:\n", "packaging:\n  source: restic-0.19\n", 1))
+        self.assertEqual(self.errors(), [])
+        self.assertEqual(freshdeb.load_package("restic", self.tmp).source_name, "restic-0.19")
+        self.yaml.write_text(self.yaml.read_text().replace("source: restic-0.19", "source: restic-0.18"))
+        self.assertTrue(any("Source must equal packaging.source (restic-0.18)" in e for e in self.errors()))
+
+    def test_source_name_must_differ(self):
+        self.yaml.write_text(self.yaml.read_text().replace("packaging:\n", "packaging:\n  source: restic\n", 1))
+        self.assertTrue(any("packaging.source must be" in e for e in self.errors()))
+
+
+class OwnPackagingTests(unittest.TestCase):
+    """packaging.origin: freshdeb, debian/ maintained here (frp), on a copy of
+    restic."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.yaml = self.tmp / "packages/restic/package.yaml"
+        text = self.yaml.read_text()
+        self.imported = text
+        self.yaml.write_text(re.sub(r"\npackaging:\n(  .*\n)+", "\npackaging:\n  origin: freshdeb\n", text))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self):
+        return [e for e in freshdeb.validate_all(self.tmp, TODAY) if e.startswith("restic:")]
+
+    def test_own_packaging_needs_no_ref(self):
+        self.assertEqual(self.errors(), [])
+
+    def test_ref_is_only_for_imports(self):
+        self.yaml.write_text(self.yaml.read_text().replace("  origin: freshdeb\n",
+                                                           "  origin: freshdeb\n  ref: " + "a" * 40 + "\n"))
+        self.assertTrue(any("packaging.ref is only for imported packaging" in e for e in self.errors()))
+
+    def test_imported_packaging_still_needs_a_ref(self):
+        self.yaml.write_text(re.sub(r"\n  ref: [^\n]*", "", self.imported))
+        self.assertTrue(any("packaging.ref must be" in e for e in self.errors()))
+
+    def test_changelog_says_maintained_here(self):
+        pkg = freshdeb.load_package("restic", self.tmp)
+        config = freshdeb.load_config(self.tmp)
+        entry = freshdeb.changelog_entry(pkg, config, pkg.tracks["main"], "trixie", "1-1", 0)
+        self.assertIn("Packaging: maintained in freshdeb (packages/restic/debian),", entry)
 
 
 class GoTests(unittest.TestCase):

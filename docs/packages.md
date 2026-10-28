@@ -18,7 +18,7 @@ Nothing outside this directory needs to change to add a package. The builder ins
 ## package.yaml
 
 ```yaml
-name: valkey                    # = directory name = Source: in debian/control
+name: valkey                    # = directory name = Source: in debian/control (or packaging.source)
 description: "One line"
 homepage: https://valkey.io
 
@@ -34,9 +34,13 @@ upstream:
 
 packaging:
   origin: https://salsa.debian.org/debian/valkey.git
+                                # or "freshdeb": debian/ is our own (see
+                                # "Own packaging"), without ref or source
   ref: <full commit>            # the commit debian/ was imported from, or
                                 # sha256:<checksum> of the .debian.tar.* when
                                 # Debian keeps the packaging without a VCS
+  source: golang-1.27           # optional; Debian's source name when it differs
+                                # from the package name (see Go itself)
 
 epoch: 5                        # optional; only if the distro packages carry an epoch
 
@@ -69,6 +73,10 @@ build:
   options: [nocheck]            # DEB_BUILD_OPTIONS
   profiles: []                  # DEB_BUILD_PROFILES
   prepare: hooks/prefetch.py    # optional; fetches extra pinned sources (see below)
+  go: bootstrap                 # optional; modules (default) or bootstrap (see Go itself)
+
+tests:
+  capabilities: [NET_ADMIN]     # optional; added to the test containers (see Tests)
 ```
 
 `scripts/freshdeb.py validate` checks all of this. CI runs it on every change.
@@ -90,6 +98,16 @@ Debian builds Go programs against Debian-packaged Go libraries (`golang-*-dev`) 
 - **Build:** runs offline: `GOFLAGS=-mod=vendor`, `GOPROXY=off`, `GOTOOLCHAIN=local`, with the toolchain first on `PATH`.
 - **Packaging:** keep Debian's `debian/` and replace the dh-golang build with an overlay (see `packages/restic/overlays/go-build.patch`): drop the `golang-*` build-dependencies and build with `go build`.
 - **watch.yml:** on a new upstream release, it reads `go.mod` and moves the track to a newer Go minor if upstream requires one. When Go publishes a patch release of a track's minor, it opens a rebuild PR (new toolchain, `revision` + 1). Those releases are mostly security fixes, and a static binary only gets them by being rebuilt.
+
+### Go itself (bootstrap toolchain)
+
+`packages/golang` builds the Go toolchain, which needs an existing Go to compile itself. With `build.go: bootstrap`, a track's `go:` toolchain is only that bootstrap compiler:
+
+- **Build:** the pinned toolchain is installed and verified as for Go programs, but nothing is vendored (Go's own repository has no `go.mod` at its root). The build gets it as `GOROOT_BOOTSTRAP`, with `GOTOOLCHAIN=local` and `GOPROXY=off`; debian/rules has to use that instead of looking for a distribution's `/usr/lib/go-*`.
+- **Version:** it must be at least what the Go release asks for (`minBootstrap` in `src/cmd/dist/buildtool.go`, go1.24.6 for Go 1.26 and 1.27). Nothing checks this automatically; the build fails if it's too old.
+- **watch.yml:** doesn't read `go.mod` and doesn't propose rebuilds when Go has a patch release: Go rebuilds itself with the bootstrap compiler, which doesn't end up in the result. Upstream's own releases are bumped as usual; a new track copies the bootstrap toolchain from the one it's based on.
+
+Debian packages each Go minor as its own source (`golang-1.27`). `packaging.source` names it, validation checks the imported `debian/control` against it, and the build renames `Source:` to the package name, so one package (and repository) carries every minor as a track.
 
 ### Bundled dependencies (prepare hooks)
 
@@ -147,6 +165,15 @@ Every build is versioned `[epoch:]<upstream>-<revision>+freshdeb~<deb12|deb13|ub
 
 Refreshing `debian/` from a newer Debian upload means re-importing it, updating `packaging.ref`, checking every overlay and patch set still applies, and bumping `revision` on every track.
 
+## Own packaging, when Debian has none
+
+Some projects have no packaging in Debian or Ubuntu to import (frp). Then `debian/` is ours: `packaging.origin: freshdeb`, no `ref`. The changelog entry says the packaging is maintained here.
+
+- Write it the way Debian would: debhelper (compat 13, which jammy has), Debian's paths and naming, conffiles in `/etc`, a system user created in `postinst` with `adduser`, a `debian/copyright`. Look at how comparable Debian packages do it.
+- Stay close to upstream: its build flags, its configuration files and defaults, its service files if it has (or had) any. Every difference needs a reason in a comment and in the package's README, as for overlays.
+- Edit `debian/` directly; overlays are only for differences between codenames. Patches to upstream's source go in `patches/<track>/`.
+- Start `debian/changelog` with one entry for the first version; the build adds ours on top.
+
 ## Tests
 
 CI installs the built packages in a bare container of the target distribution (no systemd, but init scripts work via `service`):
@@ -157,6 +184,8 @@ CI installs the built packages in a bare container of the target distribution (n
 | upgrade | `apt install` the distro's own version (if it has one), `tests/upgrade.sh seed`, `apt install` our debs, `tests/upgrade.sh check`, `tests/smoke.sh` |
 
 Tests run as root under `bash -euo pipefail` and get `FRESHDEB_VERSION` and `FRESHDEB_UPSTREAM_VERSION`. Check real behaviour: the service starts as the right user, data survives the upgrade, the advertised features are compiled in.
+
+Test containers get `SYS_PTRACE` (init scripts need it to find daemons running as another user) and nothing else. A package whose tests need more lists it in `tests.capabilities`: `NET_ADMIN` (keepalived adds its virtual IPs) or `NET_RAW`. Ask for as little as the tests need.
 
 Autopkgtests run without the autopkgtest tool. Tests needing `isolation-machine` or a reboot are reported as skipped. Tests that need the source tree aren't supported.
 

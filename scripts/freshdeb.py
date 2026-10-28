@@ -48,9 +48,15 @@ TARBALL_SUFFIXES = (".tar.gz", ".tar.xz", ".tar.bz2")
 ASSET_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 NUMERIC_RE = re.compile(r"^\d+(\.\d+)*$")
 ASSETS_DIR = "freshdeb-assets"
+# packaging.origin for packages whose debian/ is written and kept here
+# (when Debian has none to import).
+OWN_PACKAGING = "freshdeb"
 OPTION_RE = re.compile(r"^[a-z0-9][a-z0-9=_.,-]*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[0-9][A-Za-z0-9.+~]*$")
 VENDOR_PREFIX = {"debian": "deb", "ubuntu": "ubuntu"}
+# Capabilities a package's tests may add to their containers (tests.capabilities),
+# e.g. NET_ADMIN for keepalived to add its virtual IPs.
+TEST_CAPABILITIES = ("NET_ADMIN", "NET_RAW")
 
 # GitHub Actions refuses matrices with more than 256 jobs.
 MAX_MATRIX = 256
@@ -203,6 +209,20 @@ class Package:
     @property
     def epoch(self):
         return self.data.get("epoch")
+
+    @property
+    def go_mode(self):
+        """How a track's go: toolchain is used: "modules" builds a Go program
+        (vendored modules, offline Go build), "bootstrap" only provides the
+        compiler that builds Go itself (GOROOT_BOOTSTRAP)."""
+        return (self.data.get("build") or {}).get("go", "modules")
+
+    @property
+    def source_name(self):
+        """Source: in the imported debian/control. Usually the package name;
+        packaging.source when Debian's differs (golang-1.27 for golang). The
+        build renames it to the package name."""
+        return (self.data.get("packaging") or {}).get("source") or self.name
 
     @property
     def tag_regex(self):
@@ -395,15 +415,27 @@ def validate_package(pkg, config, today=None):
     packaging = data.get("packaging") or {}
     check(isinstance(packaging.get("origin"), str), "packaging.origin is required (where debian/ came from)")
     ref = str(packaging.get("ref", ""))
-    check(COMMIT_RE.match(ref) is not None or re.fullmatch(r"sha256:[0-9a-f]{64}", ref) is not None,
-          "packaging.ref must be the full commit debian/ was imported from, or sha256:<checksum> of the "
-          "Debian source package's .debian.tar.* when its packaging isn't kept in a VCS")
+    if packaging.get("origin") == OWN_PACKAGING:
+        # debian/ is maintained here: nothing upstream of it to point at.
+        check("ref" not in packaging, "packaging.ref is only for imported packaging (origin is freshdeb)")
+        check("source" not in packaging, "packaging.source is only for imported packaging (origin is freshdeb)")
+    else:
+        check(COMMIT_RE.match(ref) is not None or re.fullmatch(r"sha256:[0-9a-f]{64}", ref) is not None,
+              "packaging.ref must be the full commit debian/ was imported from, or sha256:<checksum> of the "
+              "Debian source package's .debian.tar.* when its packaging isn't kept in a VCS")
+    source = packaging.get("source")
+    check(source is None or (isinstance(source, str) and NAME_RE.match(source) is not None and source != pkg.name),
+          "packaging.source must be Debian's source name, when it differs from the package name")
     epoch = data.get("epoch")
     check(epoch is None or (isinstance(epoch, int) and epoch > 0), "epoch must be a positive integer")
 
     debian = pkg.path / "debian"
     if (debian / "control").is_file():
-        check(control_source(debian) == pkg.name, "debian/control Source must equal the package name")
+        if pkg.source_name == pkg.name:
+            check(control_source(debian) == pkg.name, "debian/control Source must equal the package name")
+        else:
+            check(control_source(debian) == pkg.source_name,
+                  f"debian/control Source must equal packaging.source ({pkg.source_name})")
         check(control_binaries(debian), "debian/control declares no binary packages")
     else:
         check(False, "debian/control is missing")
@@ -480,6 +512,10 @@ def validate_package(pkg, config, today=None):
     hook = build.get("prepare")
     if hook is not None:
         check(isinstance(hook, str) and (pkg.path / hook).is_file(), f"build.prepare: {hook} does not exist")
+    check(pkg.go_mode in ("modules", "bootstrap"), "build.go must be modules or bootstrap")
+    if pkg.go_mode == "bootstrap":
+        check(all(track.go for track in pkg.tracks.values()),
+              "build.go bootstrap: every track needs a go: toolchain to bootstrap with")
     for key in ("options", "profiles"):
         values = build.get(key) or []
         check(isinstance(values, list) and all(isinstance(v, str) and OPTION_RE.match(v) for v in values),
@@ -487,6 +523,12 @@ def validate_package(pkg, config, today=None):
 
     tests = pkg.path / "tests"
     check((tests / "smoke.sh").is_file(), "tests/smoke.sh is required")
+    test_config = data.get("tests") or {}
+    check(isinstance(test_config, dict) and set(test_config) <= {"capabilities"},
+          "tests only takes capabilities")
+    capabilities = test_config.get("capabilities") or [] if isinstance(test_config, dict) else []
+    check(isinstance(capabilities, list) and set(capabilities) <= set(TEST_CAPABILITIES),
+          f"tests.capabilities must be a list of {', '.join(TEST_CAPABILITIES)}")
     return errors
 
 
@@ -849,6 +891,17 @@ def go_env(goroot, cache, offline):
     return env
 
 
+def go_bootstrap_env(goroot):
+    """Environment for building Go itself: the pinned toolchain as
+    GOROOT_BOOTSTRAP, never a downloaded one, no module proxy."""
+    return {
+        "GOROOT_BOOTSTRAP": str(goroot),
+        "GOTOOLCHAIN": "local",
+        "GOPROXY": "off",
+        "GOTELEMETRY": "off",
+    }
+
+
 def vendor_go_modules(srcdir, env):
     """Fetch dependencies, verify them against go.sum and the Go checksum
     database (sum.golang.org), and vendor them so the build runs offline."""
@@ -903,13 +956,17 @@ def make_orig_tarball(src, tarball, prefix, mtime):
             tar.add(path, arcname=f"{prefix}/{rel}", recursive=False, filter=normalize)
 
 
-def rewrite_control(debian_dir, maintainer):
+def rewrite_control(debian_dir, maintainer, source_name=None):
     """Make us the maintainer of the source package and drop Debian's VCS
     pointers: bugs in our builds must come to us, not to Debian.
 
     Also default Priority to optional. Current Debian packaging may omit it
     (dpkg >= 1.22 fills it in), but older dpkg then builds .debs without a
-    Priority, and reprepro refuses those."""
+    Priority, and reprepro refuses those.
+
+    With source_name, Source becomes that name: the package name, when
+    Debian's differs (packaging.source), so control and our changelog entry
+    agree."""
     path = debian_dir / "control"
     paragraphs = control_paragraphs(path.read_text())
     source = paragraphs[0]
@@ -918,6 +975,9 @@ def rewrite_control(debian_dir, maintainer):
     kept = []
     for key, value in source:
         if key in dropped:
+            continue
+        if key == "Source" and source_name:
+            kept.append(["Source", source_name])
             continue
         if key == "Maintainer":
             kept.append(["Maintainer", maintainer])
@@ -947,8 +1007,11 @@ def changelog_entry(pkg, config, track, codename, version, when):
           for line in (f"  * Release asset {name}: {template.format(version=pkg.upstream_version(track.tag))}",
                        f"    (sha256 {track.assets[name]}).")],
         *([f"  * Built with Go {track.go}, dependencies vendored and verified",
-           "    against go.sum and sum.golang.org."] if track.go else []),
-        f"  * Packaging: {packaging['origin']} at {packaging['ref'].removeprefix('sha256:')[:12]},",
+           "    against go.sum and sum.golang.org."] if track.go and pkg.go_mode == "modules" else []),
+        *([f"  * Bootstrapped with Go {track.go} from go.dev."] if track.go and pkg.go_mode == "bootstrap" else []),
+        (f"  * Packaging: maintained in freshdeb (packages/{pkg.name}/debian),"
+         if packaging["origin"] == OWN_PACKAGING else
+         f"  * Packaging: {packaging['origin']} at {packaging['ref'].removeprefix('sha256:')[:12]},"),
         f"    freshdeb revision {track.revision}.",
         "",
         f" -- {config.archive['maintainer']}  {email.utils.formatdate(when).replace('-0000', '+0000')}",
@@ -989,8 +1052,12 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     build_env = {}
     if track.go:
         goroot = install_go(config, track.go, arch, out / "toolchain")
-        vendor_go_modules(srcdir, go_env(goroot, out / "cache", offline=False))
-        build_env = go_env(goroot, out / "cache", offline=True)
+        if pkg.go_mode == "bootstrap":
+            # Go itself: nothing to vendor, the toolchain only bootstraps it.
+            build_env = go_bootstrap_env(goroot)
+        else:
+            vendor_go_modules(srcdir, go_env(goroot, out / "cache", offline=False))
+            build_env = go_env(goroot, out / "cache", offline=True)
     if not tarball:
         # After vendoring, so the orig tarball holds everything the build used.
         make_orig_tarball(srcdir, out / f"{name}_{upstream_version}.orig.tar.gz", f"{name}-{upstream_version}", when)
@@ -1005,7 +1072,7 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         run("patch", "-p1", "--forward", "--no-backup-if-mismatch", "--fuzz=0", "-i", str(patch), cwd=srcdir)
         applied.append(overlay["patch"])
 
-    rewrite_control(srcdir / "debian", config.archive["maintainer"])
+    rewrite_control(srcdir / "debian", config.archive["maintainer"], source_name=name)
     changelog = srcdir / "debian/changelog"
     changelog.write_text(changelog_entry(pkg, config, track, codename, version, when) + "\n" + changelog.read_text())
 
@@ -1027,6 +1094,7 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         "build_options": build.get("options") or [],
         "build_profiles": build.get("profiles") or [],
         "build_env": build_env,
+        "test_capabilities": (pkg.data.get("tests") or {}).get("capabilities") or [],
         "assets": assets,
         "overlays": applied,
         "publish": bool(publish),
@@ -1276,7 +1344,9 @@ def watch_report(pkg, tags, changes, go=None, today=None):
         else:
             decision = "up to date"
         lines.append(f"  {label}: ours {ours}, upstream {found or '-'} -> {decision}")
-        if track.go and not bump:
+        if track.go and pkg.go_mode == "bootstrap":
+            lines.append(f"  {label}: bootstrap Go {track.go} -> pinned (Go rebuilds itself with it)")
+        elif track.go and not bump:
             rebuild = next((c for c in changes if c["kind"] == "toolchain" and c["track"] == key), None)
             newest_go = newest_go_patch(go_minor(track.go), go) if go else None
             if rebuild:
@@ -1353,6 +1423,8 @@ def apply_change(root, change):
             entry["sha256"] = sha256
         if change.get("go"):
             entry["go"] = change["go"]
+        elif base.go and pkg.go_mode == "bootstrap":
+            entry["go"] = base.go
         if assets:
             entry["assets"] = assets
         if base.patches:
@@ -1385,7 +1457,7 @@ def cmd_watch(args):
             continue
         tags = remote_tags(pkg.upstream["git"])
         found = watch_package(pkg, tags)
-        if any(track.go for track in pkg.tracks.values()):
+        if pkg.go_mode == "modules" and any(track.go for track in pkg.tracks.values()):
             releases = releases if releases is not None else go_releases(list(config.architectures))
             found += watch_go(pkg, found, releases)
         # The report goes to stderr: stdout is the JSON the workflow reads.

@@ -32,6 +32,13 @@ fi
 PACKAGE="$(field package)"
 ARCH="$(field arch)"
 IMAGE="$(field image)"
+# Capabilities the package's tests need (package.yaml tests.capabilities),
+# e.g. NET_ADMIN to add addresses. Older build-info.json files have none.
+caps=()
+for cap in $(python3 -c 'import json,sys; print(" ".join(json.load(open(sys.argv[1])).get("test_capabilities", [])))' \
+        "$DIR/build-info.json"); do
+    caps+=(--cap-add "$cap")
+done
 
 for mode in $MODES; do
     echo "=== verify $PACKAGE $(field version) on $IMAGE/$ARCH: $mode"
@@ -41,6 +48,7 @@ for mode in $MODES; do
     docker run --rm \
         --platform "linux/$ARCH" \
         --cap-add SYS_PTRACE \
+        ${caps[@]+"${caps[@]}"} \
         -v "$DIR:/debs:ro" \
         -v "$ROOT/packages/$PACKAGE/tests:/tests:ro" \
         -v "$ROOT/scripts/container-verify.sh:/usr/local/bin/container-verify.sh:ro" \
