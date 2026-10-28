@@ -593,6 +593,11 @@ class GoTests(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
         shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        # Known values, whatever restic currently pins: these tests are about
+        # the mechanics, with RELEASES above.
+        y = self.tmp / "packages/restic/package.yaml"
+        text = re.sub(r'^(    go: )"[^"]+"', r'\1"1.25.14"', y.read_text(), count=1, flags=re.M)
+        y.write_text(re.sub(r"^(    revision: )\d+", r"\g<1>1", text, count=1, flags=re.M))
         self.pkg = freshdeb.load_package("restic", self.tmp)
         self.original = freshdeb.required_go_minor
 
@@ -618,6 +623,17 @@ class GoTests(unittest.TestCase):
     def test_newest_patch_needs_no_rebuild(self):
         releases = {k: v for k, v in self.RELEASES.items() if k != "1.25.15"}
         self.assertEqual(freshdeb.watch_go(self.pkg, [], releases), [])
+
+    def test_unsupported_go_minor_moves_to_the_oldest_supported(self):
+        releases = {**self.RELEASES, "1.27.1": {"amd64": "1" * 64, "arm64": "2" * 64}}
+        extra = freshdeb.watch_go(self.pkg, [], releases)
+        self.assertEqual(len(extra), 1)
+        self.assertEqual((extra[0]["kind"], extra[0]["from"], extra[0]["go"]), ("toolchain", "1.25.14", "1.26.3"))
+        self.assertIn("no longer supported", extra[0]["reason"])
+
+    def test_supported_go_minors_are_the_two_newest(self):
+        releases = {v: {} for v in ("1.24.9", "1.25.14", "1.26.3", "1.27.1")}
+        self.assertEqual(freshdeb.supported_go_minors(releases), {"1.26", "1.27"})
 
     def test_bump_follows_the_go_minor_upstream_requires(self):
         freshdeb.required_go_minor = lambda url, tag: "1.26"
@@ -761,15 +777,18 @@ class AssetTests(unittest.TestCase):
 
     def test_assets_without_upstream_assets_are_rejected(self):
         y = self.tmp / "packages/restic/package.yaml"
-        y.write_text(y.read_text().replace("    revision: 1\n", "    revision: 1\n    assets: {web-ui: " + "a" * 64 + "}\n"))
+        y.write_text(re.sub(r"^(    revision: \d+\n)", r"\1    assets: {web-ui: " + "a" * 64 + "}\n",
+                            y.read_text(), count=1, flags=re.M))
         self.assertTrue(any("only used with upstream.assets" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
 
     def test_changelog_records_the_asset(self):
         config = freshdeb.load_config(self.tmp)
         pkg = freshdeb.load_package("prometheus", self.tmp)
-        entry = freshdeb.changelog_entry(pkg, config, pkg.tracks["main"], "trixie", "3.15.1-1+freshdeb~deb13", 0)
-        self.assertIn(f"Release asset web-ui: file://{self.tmp}/releases/prometheus-web-ui-3.15.1.tar.gz", entry)
-        self.assertIn("(commit bae3eced0a5369e050e83ea73bc381d7c4b1a719).", entry)
+        track = pkg.tracks["main"]
+        version = pkg.upstream_version(track.tag)
+        entry = freshdeb.changelog_entry(pkg, config, track, "trixie", f"{version}-1+freshdeb~deb13", 0)
+        self.assertIn(f"Release asset web-ui: file://{self.tmp}/releases/prometheus-web-ui-{version}.tar.gz", entry)
+        self.assertIn(f"(commit {track.commit}).", entry)
 
     def test_watch_pins_the_new_assets(self):
         if not shutil.which("yq"):
@@ -783,6 +802,50 @@ class AssetTests(unittest.TestCase):
         # Apart from this test's file:// URL.
         errors = [e for e in freshdeb.validate_all(self.tmp, TODAY) if "must be an https:// URL" not in e]
         self.assertEqual(errors, [])
+
+
+class NetworkRetryTests(unittest.TestCase):
+    """Upstream servers fail now and then (a git host's HTTP 502)."""
+
+    def setUp(self):
+        self.original = (freshdeb.run, freshdeb.NETWORK_RETRY_DELAY, freshdeb.urllib.request.urlopen)
+        freshdeb.NETWORK_RETRY_DELAY = 0
+
+    def tearDown(self):
+        freshdeb.run, freshdeb.NETWORK_RETRY_DELAY, freshdeb.urllib.request.urlopen = self.original
+
+    def test_git_is_retried(self):
+        calls = []
+
+        def flaky(*args, cwd=None, check=True):
+            calls.append(args)
+            if len(calls) < 3:
+                raise freshdeb.FreshdebError("command failed (128): git ls-remote\nHTTP 502")
+            return "ok"
+
+        freshdeb.run = flaky
+        self.assertEqual(freshdeb.run_network("git", "ls-remote", "https://example.invalid/x.git"), "ok")
+        self.assertEqual(len(calls), 3)
+
+    def test_git_gives_up(self):
+        def broken(*args, cwd=None, check=True):
+            raise freshdeb.FreshdebError("command failed (128): git ls-remote")
+
+        freshdeb.run = broken
+        with self.assertRaises(freshdeb.FreshdebError):
+            freshdeb.run_network("git", "ls-remote", "https://example.invalid/x.git")
+
+    def test_download_does_not_retry_a_404(self):
+        calls = []
+
+        def not_found(request, timeout):
+            calls.append(request)
+            raise freshdeb.urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+
+        freshdeb.urllib.request.urlopen = not_found
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(freshdeb.urllib.error.HTTPError):
+            freshdeb.download("https://example.invalid/x.tar.gz", Path(tmp) / "x")
+        self.assertEqual(len(calls), 1)
 
 
 class WatchReportTests(unittest.TestCase):

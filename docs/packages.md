@@ -102,6 +102,7 @@ Debian builds Go programs against Debian-packaged Go libraries (`golang-*-dev`) 
 - **Build:** runs offline: `GOFLAGS=-mod=vendor`, `GOPROXY=off`, `GOTOOLCHAIN=local`, with the toolchain first on `PATH`.
 - **Packaging:** keep Debian's `debian/` and replace the dh-golang build with an overlay (see `packages/restic/overlays/go-build.patch`): drop the `golang-*` build-dependencies and build with `go build`.
 - **watch.yml:** on a new upstream release, it reads `go.mod` and moves the track to a newer Go minor if upstream requires one. When Go publishes a patch release of a track's minor, it opens a rebuild PR (new toolchain, `revision` + 1). Those releases are mostly security fixes, and a static binary only gets them by being rebuilt.
+- **Supported Go only:** Go supports its two newest minors. When a track's minor drops out of support, watch.yml opens a rebuild PR that moves it to the oldest supported minor (pick upstream's release Go when adding a package, unless that one is out of support already).
 
 ### Go itself (bootstrap toolchain)
 

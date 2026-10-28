@@ -32,6 +32,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -80,6 +82,25 @@ def run(*args, cwd=None, check=True):
         raise FreshdebError(f"command failed ({result.returncode}): {' '.join(map(str, args))}\n"
                             f"{result.stdout}{result.stderr}")
     return result.stdout
+
+
+# Network failures upstream (a git server's HTTP 502) shouldn't fail a
+# build or a watch run: retry them a few times.
+NETWORK_ATTEMPTS = 3
+NETWORK_RETRY_DELAY = 10
+
+
+def run_network(*args, cwd=None):
+    """run() for commands that talk to upstream (git ls-remote, git fetch)."""
+    for attempt in range(1, NETWORK_ATTEMPTS + 1):
+        try:
+            return run(*args, cwd=cwd)
+        except FreshdebError as error:
+            if attempt == NETWORK_ATTEMPTS:
+                raise
+            print(f"retrying ({attempt}/{NETWORK_ATTEMPTS - 1}) after: {str(error).splitlines()[0]}", file=sys.stderr)
+            time.sleep(NETWORK_RETRY_DELAY * attempt)
+
 
 
 # ─── Debian version comparison ──────────────────────────────────────────────
@@ -818,7 +839,7 @@ def cmd_plan(args):
 def check_tag(pkg, track):
     """The release tag must still point to the pinned commit."""
     url = pkg.upstream["git"]
-    refs = run("git", "ls-remote", url, f"refs/tags/{track.tag}", f"refs/tags/{track.tag}^{{}}")
+    refs = run_network("git", "ls-remote", url, f"refs/tags/{track.tag}", f"refs/tags/{track.tag}^{{}}")
     resolved = {}
     for line in refs.splitlines():
         sha, ref = line.split("\t")
@@ -831,14 +852,23 @@ def check_tag(pkg, track):
 
 
 def download(url, dest):
-    """Download url to dest; returns its sha256."""
-    digest = hashlib.sha256()
+    """Download url to dest; returns its sha256. Retries server errors and
+    dropped connections; a 404 fails right away."""
     request = urllib.request.Request(url, headers={"User-Agent": "freshdeb (+https://github.com/blendbyte/freshdeb)"})
-    with urllib.request.urlopen(request, timeout=120) as response, open(dest, "wb") as fh:
-        for chunk in iter(lambda: response.read(1 << 20), b""):
-            digest.update(chunk)
-            fh.write(chunk)
-    return digest.hexdigest()
+    for attempt in range(1, NETWORK_ATTEMPTS + 1):
+        digest = hashlib.sha256()
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response, open(dest, "wb") as fh:
+                for chunk in iter(lambda: response.read(1 << 20), b""):
+                    digest.update(chunk)
+                    fh.write(chunk)
+            return digest.hexdigest()
+        except (urllib.error.URLError, OSError) as error:
+            client_error = isinstance(error, urllib.error.HTTPError) and error.code < 500
+            if client_error or attempt == NETWORK_ATTEMPTS:
+                raise
+            print(f"retrying ({attempt}/{NETWORK_ATTEMPTS - 1}) {url} after: {error}", file=sys.stderr)
+            time.sleep(NETWORK_RETRY_DELAY * attempt)
 
 
 def fetch_tarball(pkg, track, orig, dest):
@@ -945,12 +975,12 @@ def fetch_upstream(pkg, track, dest):
     url = pkg.upstream["git"]
     dest.mkdir(parents=True)
     run("git", "init", "-q", str(dest))
-    run("git", "-C", str(dest), "fetch", "-q", "--depth", "1", url, f"refs/tags/{track.tag}")
+    run_network("git", "-C", str(dest), "fetch", "-q", "--depth", "1", url, f"refs/tags/{track.tag}")
     head = run("git", "-C", str(dest), "rev-parse", "FETCH_HEAD^{commit}").strip()
     require(head == track.commit, f"{pkg.name}: fetched {head}, expected {track.commit}")
     run("git", "-C", str(dest), "-c", "advice.detachedHead=false", "checkout", "-q", head)
     if pkg.upstream.get("submodules"):
-        run("git", "-C", str(dest), "submodule", "update", "-q", "--init", "--recursive", "--depth", "1")
+        run_network("git", "-C", str(dest), "submodule", "update", "-q", "--init", "--recursive", "--depth", "1")
 
 
 def make_orig_tarball(src, tarball, prefix, mtime):
@@ -1188,7 +1218,7 @@ def cmd_guard(args):
 
 def remote_tags(url):
     tags = {}
-    for line in run("git", "ls-remote", "--tags", url).splitlines():
+    for line in run_network("git", "ls-remote", "--tags", url).splitlines():
         sha, ref = line.split("\t")
         name = ref[len("refs/tags/"):]
         if name.endswith("^{}"):
@@ -1300,6 +1330,13 @@ def go_releases(archs):
     return releases
 
 
+def supported_go_minors(releases):
+    """The Go minors that still get fixes: the two newest
+    (https://go.dev/doc/devel/release#policy)."""
+    minors = sorted({go_minor(v) for v in releases}, key=go_key)
+    return set(minors[-2:])
+
+
 def newest_go_patch(minor, releases):
     patches = [v for v in releases if go_minor(v) == minor]
     return max(patches, key=go_key) if patches else None
@@ -1309,7 +1346,7 @@ def required_go_minor(url, tag):
     """The Go minor a tag's go.mod asks for (toolchain line, else go line)."""
     with tempfile.TemporaryDirectory() as tmp:
         run("git", "init", "-q", tmp)
-        run("git", "-C", tmp, "fetch", "-q", "--depth", "1", url, f"refs/tags/{tag}")
+        run_network("git", "-C", tmp, "fetch", "-q", "--depth", "1", url, f"refs/tags/{tag}")
         gomod = run("git", "-C", tmp, "show", "FETCH_HEAD:go.mod")
     toolchain = re.search(r"^toolchain\s+go(\d+\.\d+)", gomod, re.M)
     directive = re.search(r"^go\s+(\d+\.\d+)", gomod, re.M)
@@ -1338,8 +1375,17 @@ def watch_go(pkg, changes, releases):
         change["go_sha256"] = releases[version]
         bumped.add(change["track"])
     extra = []
+    supported = supported_go_minors(releases)
     for key, track in pkg.tracks.items():
         if not track.go or not track.active() or key in bumped:
+            continue
+        if supported and go_minor(track.go) not in supported:
+            # Go supports its two newest minors; an older one gets no more
+            # security fixes. Move to the oldest supported one.
+            version = newest_go_patch(min(supported, key=go_key), releases)
+            extra.append({"package": pkg.name, "kind": "toolchain", "track": key, "from": track.go,
+                          "go": version, "go_sha256": releases[version],
+                          "reason": f"Go {go_minor(track.go)} is no longer supported"})
             continue
         version = newest_go_patch(go_minor(track.go), releases)
         if version and go_key(version) > go_key(track.go):
@@ -1378,7 +1424,7 @@ def watch_report(pkg, tags, changes, go=None, today=None):
             rebuild = next((c for c in changes if c["kind"] == "toolchain" and c["track"] == key), None)
             newest_go = newest_go_patch(go_minor(track.go), go) if go else None
             if rebuild:
-                go_decision = f"rebuild with Go {rebuild['go']}"
+                go_decision = f"rebuild with Go {rebuild['go']}" + (f" ({rebuild['reason']})" if rebuild.get("reason") else "")
             elif go is None:
                 go_decision = "not checked"
             else:
