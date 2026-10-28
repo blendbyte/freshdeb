@@ -1,14 +1,4 @@
-# Prometheus blackbox_exporter: https://github.com/prometheus/blackbox_exporter
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/
-# prometheus-blackbox-exporter); debian/ is an unmodified import of the commit
-# in packaging.ref. Debian builds against Debian-packaged Go libraries that
-# only exist in unstable; overlays/go-build.patch builds with a pinned Go
-# toolchain and vendored, checksum-verified modules instead, like upstream's
-# release binaries. See README.md.
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# Prometheus blackbox_exporter, Debian's packaging (go-team), built like upstream's binaries.
 
 name: prometheus-blackbox-exporter
 description: "Prometheus exporter for probing endpoints over HTTP, TCP, DNS, ICMP and gRPC (blackbox_exporter)"
@@ -33,7 +23,5 @@ tracks:
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
   - patch: overlays/go-build.patch
-  # Init script fixes (all releases): it checked the configuration with
-  # promtool, which only knows Prometheus configurations, so start failed;
-  # reload matched the daemon by a name longer than start-stop-daemon can.
+  # Init script: check the config with the exporter itself (not promtool), reload by pid file.
   - patch: overlays/init-script.patch

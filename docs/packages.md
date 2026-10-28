@@ -8,10 +8,12 @@ packages/<name>/
 ├── debian/             Debian's packaging, imported unmodified
 ├── patches/<track>/    optional: quilt patch set per track (replaces debian/patches)
 ├── overlays/*.patch    optional: our changes to debian/, per codename or track
+├── hooks/              optional: prepare hooks (see Bundled dependencies)
 ├── tests/smoke.sh      required: runs after a fresh install and after an upgrade
-├── tests/upgrade.sh    optional: "seed" on the distro's version, "check" after upgrading
-└── README.md           packaging notes: where things came from, quirks
+└── tests/upgrade.sh    optional: "seed" on the distro's version, "check" after upgrading
 ```
+
+There's no README: a one-line comment in package.yaml says why each overlay, patch set, track or toolchain choice exists. What users need to know at upgrade time goes into a NEWS entry in `debian/` (apt-listchanges shows it).
 
 Nothing outside this directory needs to change to add a package. The builder installs build-dependencies from `debian/control`, CI picks the package up from the diff, and the first release creates its own repository at `deb.freshdeb.com/<name>`.
 
@@ -177,7 +179,7 @@ Refreshing `debian/` from a newer Debian upload means re-importing it, updating 
 Some projects have no packaging in Debian or Ubuntu to import (frp). Then `debian/` is ours: `packaging.origin: freshdeb`, no `ref`. The changelog entry says the packaging is maintained here.
 
 - Write it the way Debian would: debhelper (compat 13, which jammy has), Debian's paths and naming, conffiles in `/etc`, a system user created in `postinst` with `adduser`, a `debian/copyright`. Look at how comparable Debian packages do it.
-- Stay close to upstream: its build flags, its configuration files and defaults, its service files if it has (or had) any. Every difference needs a reason in a comment and in the package's README, as for overlays.
+- Stay close to upstream: its build flags, its configuration files and defaults, its service files if it has (or had) any. Every difference needs a one-line reason, in package.yaml or next to the change.
 - Edit `debian/` directly; overlays are only for differences between codenames. Patches to upstream's source go in `patches/<track>/`.
 - Start `debian/changelog` with one entry for the first version; the build adds ours on top.
 
@@ -191,6 +193,8 @@ CI installs the built packages in a bare container of the target distribution (n
 | upgrade | `apt install` the distro's own version (if it has one, else the upstream package in `tests.upgrade_from`), `tests/upgrade.sh seed`, `apt install` our debs, `tests/upgrade.sh check`, `tests/smoke.sh` |
 
 Tests run as root under `bash -euo pipefail` and get `FRESHDEB_VERSION` and `FRESHDEB_UPSTREAM_VERSION`. Check real behaviour: the service starts as the right user, data survives the upgrade, the advertised features are compiled in.
+
+We test the packaging; upstream tests its code. Keep upstream's test suite in the build only when it's quick, otherwise set `build.options: [nocheck]` (git, memcached, valkey).
 
 When no distribution ships the package but upstream publishes its own `.deb`, `tests.upgrade_from` names it: a URL with an `{arch}` placeholder (the dpkg architecture) and a sha256 per architecture. `verify.sh` downloads it on the host, checks the checksum and the upgrade step starts from it, which is the path users of upstream's package take. Pin a release of the previous line, and move it along when the tracks move.
 

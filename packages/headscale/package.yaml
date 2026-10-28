@@ -1,19 +1,4 @@
-# headscale, an open source Tailscale control server:
-# https://github.com/juanfont/headscale
-#
-# Neither Debian nor Ubuntu ship headscale. Upstream publishes its own .deb
-# with each release (nfpm, see its .goreleaser.yml and packaging/), but no
-# APT repository. debian/ is our own (docs/packages.md, "Own packaging"),
-# laid out like upstream's .deb: same paths, conffile, user, systemd unit,
-# started on install. Built like upstream's release binaries with the pinned
-# Go toolchain and vendored, checksum-verified modules. See README.md.
-#
-# headscale upgrades one minor version at a time (0.28 -> 0.29 -> 0.30) and
-# refuses to start on a database from an older or newer minor. One track per
-# minor (component v0.29), older ones stay published as stepping stones;
-# "latest" follows the newest, watch.yml moves it with each new minor.
-# Upstream supports only its latest release: set eol on a track when the
-# next minor is out.
+# headscale (https://github.com/juanfont/headscale), our own packaging, laid out like upstream's .deb.
 
 name: headscale
 description: "headscale, an open source Tailscale control server"
@@ -26,6 +11,8 @@ upstream:
 packaging:
   origin: freshdeb
 
+# A track per minor: headscale upgrades one minor at a time, so older tracks stay as stepping stones;
+# latest follows the newest. Upstream supports only its latest release: set eol when the next minor is out.
 tracks:
   "0.29":
     tag: "v0.29.6"

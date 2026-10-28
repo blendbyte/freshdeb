@@ -1,14 +1,4 @@
-# Prometheus Valkey/Redis exporter: https://github.com/oliver006/redis_exporter
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/
-# prometheus-redis-exporter); debian/ is an unmodified import of the commit
-# in packaging.ref. Debian builds against Debian-packaged Go libraries that
-# only exist in unstable; overlays/go-build.patch builds with a pinned Go
-# toolchain and vendored, checksum-verified modules instead, like upstream's
-# release binaries. See README.md.
-#
-# Upstream supports only its latest release (about one a week), so there is
-# one track, "main", that follows every release (component main).
+# Prometheus Valkey/Redis exporter (oliver006/redis_exporter), Debian's packaging (go-team), built like upstream's binaries.
 
 name: prometheus-redis-exporter
 description: "Prometheus exporter for Valkey and Redis metrics (redis_exporter)"

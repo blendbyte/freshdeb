@@ -1,17 +1,4 @@
-# Prometheus: https://prometheus.io
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/prometheus);
-# debian/ is an unmodified import of the commit in packaging.ref. Debian
-# builds against ~70 Debian-packaged Go libraries and has to disable the web
-# UI, several service discovery mechanisms, Azure AD and OTLP ingestion;
-# overlays/go-build.patch builds with a pinned Go toolchain and vendored,
-# checksum-verified modules instead, and embeds upstream's prebuilt web UI
-# (upstream.assets), like upstream's release binaries. See README.md.
-#
-# Upstream releases a minor every six weeks and supports it until the next
-# one, plus one long-term support line for a year. Two tracks: "main"
-# follows every release, "lts" stays on the current LTS line (component
-# lts). When upstream names the next LTS, move lts.line to it in a PR.
+# Prometheus (https://prometheus.io), Debian's packaging (go-team), built like upstream's binaries with its prebuilt web UI.
 
 name: prometheus
 description: "Prometheus monitoring system and time series database"
@@ -28,6 +15,8 @@ packaging:
   origin: https://salsa.debian.org/go-team/packages/prometheus.git
   ref: d4e0c93be747a2c8e6dc6a4d6baf322b02960bb9  # 3.5.3+ds1-6, unstable
 
+# main follows every release, lts the current LTS line. When upstream names the next LTS, move lts.line,
+# tag, commit, go and the asset checksum to it in a PR (https://prometheus.io/docs/introduction/release-cycle/).
 tracks:
   main:
     tag: "v3.15.1"

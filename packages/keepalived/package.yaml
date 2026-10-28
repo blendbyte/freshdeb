@@ -1,14 +1,4 @@
-# keepalived: https://www.keepalived.org
-#
-# Packaging is Debian's (salsa.debian.org/debian/pkg-keepalived); debian/ is
-# an unmodified import of the commit in packaging.ref, see README.md. Debian
-# patches nothing and builds upstream's release tarball, so do we; the only
-# overlay adds a NEWS entry.
-#
-# Upstream maintains only its latest release, so there is one track, "main",
-# that follows every release (component main). Upstream publishes tarballs
-# on keepalived.org (with MD5 sums only) and no GitHub releases; watch.yml
-# pins each tarball's sha256.
+# keepalived (https://www.keepalived.org), Debian's packaging, unchanged apart from a NEWS entry.
 
 name: keepalived
 description: "keepalived VRRP and health checking for Linux Virtual Server"
@@ -26,6 +16,7 @@ packaging:
 # Debian's versions carry it.
 epoch: 1
 
+# keepalived.org only publishes MD5 sums; watch.yml pins each tarball's sha256.
 tracks:
   main:
     tag: "v2.4.3"

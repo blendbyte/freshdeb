@@ -368,7 +368,7 @@ class PlanTests(unittest.TestCase):
         self.bump_valkey("9.1")
         self.commit()
         previous = git(self.repo, "rev-parse", "HEAD").strip()
-        self.edit("packages/valkey/README.md", "# valkey", "# valkey\n")
+        (self.repo / "packages/valkey/NOTES.md").write_text("Docs only.\n")
         self.commit()
         selected, _, _ = freshdeb.plan_changes(self.repo, previous, "HEAD", TODAY)
         self.assertEqual(selected, {})
@@ -974,7 +974,9 @@ class WatchTests(unittest.TestCase):
         freshdeb.apply_change(tmp, {"package": "valkey", "kind": "new-track", "track": "9.2", "tag": "9.2.0",
                                     "commit": "b" * 40, "based_on": "9.1", "aliases": {"9": "9.2"}})
         text = (tmp / "packages/valkey/package.yaml").read_text()
-        self.assertIn("# Valkey: https://valkey.io", text)
+        header = (ROOT / "packages/valkey/package.yaml").read_text().splitlines()[0]
+        self.assertTrue(header.startswith("#"))
+        self.assertIn(header, text)
         pkg = freshdeb.load_package("valkey", tmp)
         self.assertEqual(list(pkg.tracks)[:2], ["9.2", "9.1"])
         self.assertEqual((pkg.tracks["9.1"].tag, pkg.tracks["9.1"].revision), ("9.1.4", 1))

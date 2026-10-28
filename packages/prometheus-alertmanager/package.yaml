@@ -1,15 +1,4 @@
-# Prometheus Alertmanager: https://github.com/prometheus/alertmanager
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/
-# prometheus-alertmanager); debian/ is an unmodified import of the commit in
-# packaging.ref. Debian builds against Debian-packaged Go libraries that only
-# exist in unstable and can't ship the web UI (it needs an Elm toolchain);
-# overlays/go-build.patch builds with a pinned Go toolchain and vendored,
-# checksum-verified modules instead, and embeds upstream's prebuilt web UI
-# (upstream.assets), like upstream's release binaries. See README.md.
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# Prometheus Alertmanager, Debian's packaging (go-team), built like upstream's binaries with its prebuilt web UI.
 
 name: prometheus-alertmanager
 description: "Prometheus Alertmanager: routes, groups and silences alerts"

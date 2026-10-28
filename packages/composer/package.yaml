@@ -1,17 +1,4 @@
-# Composer: https://getcomposer.org
-#
-# Packaging is Debian's (salsa.debian.org/php-team/pear/composer); debian/ is
-# an unmodified import of the commit in packaging.ref. Debian installs
-# Composer's sources against ~20 Debian-packaged PHP libraries, which older
-# releases don't have in the versions Composer needs. overlays/phar-build.patch
-# builds composer.phar from the release's source the way upstream does
-# (bin/compile) instead, with the dependencies in upstream's composer.lock,
-# each fetched by its locked git commit (hooks/vendor-deps.py). See README.md.
-#
-# Upstream supports its latest release; the 2.2 LTS line is only for PHP
-# older than 7.2.5, which none of the distributions have. One track, "main",
-# follows every release (component main); the tag regex skips release
-# candidates.
+# Composer (https://getcomposer.org), Debian's packaging, composer.phar built from source as upstream's bin/compile does.
 
 name: composer
 description: "Composer, the dependency manager for PHP"
@@ -30,6 +17,7 @@ build:
   # git commit, and the release's commit date, so the build runs offline.
   prepare: hooks/vendor-deps.py
 
+# One track: the 2.2 LTS line is only for PHP < 7.2.5, which no distribution has.
 tracks:
   main:
     tag: "2.10.3"

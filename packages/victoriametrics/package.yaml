@@ -1,18 +1,4 @@
-# VictoriaMetrics: https://github.com/VictoriaMetrics/VictoriaMetrics
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/victoriametrics);
-# debian/ is an unmodified import of the commit in packaging.ref. Debian
-# builds against ~60 Debian-packaged Go libraries and removes the web UI
-# (vmui) from its source; overlays/go-build.patch builds with a pinned Go
-# toolchain and vendored, checksum-verified modules instead, the way
-# upstream builds its release binaries, with the web UI that upstream
-# commits built into the tree. See README.md.
-#
-# Upstream releases about every two weeks and supports only its latest
-# release for the open-source version (its LTS lines are for the enterprise
-# version), so there is one track, "main", that follows every release
-# (component main). The tag regex skips the -cluster, -enterprise and
-# VictoriaLogs tags.
+# VictoriaMetrics single-node (https://victoriametrics.com), Debian's packaging (go-team), built like upstream's binaries with its web UI.
 
 name: victoriametrics
 description: "VictoriaMetrics time series database, vmagent, vmalert and tools"
@@ -26,6 +12,7 @@ packaging:
   origin: https://salsa.debian.org/go-team/packages/victoriametrics.git
   ref: 8edbfc8eb7cecee204646b9d5cb8c6fadf2ab173  # 1.145.0+ds1-2, unstable
 
+# One track: the LTS lines are for the enterprise version only.
 tracks:
   main:
     tag: "v1.155.0"

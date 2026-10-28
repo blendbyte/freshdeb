@@ -1,6 +1,6 @@
 # freshdeb
 
-Current upstream releases as Debian and Ubuntu packages, for software that doesn't run its own APT repository and relies on the distributions, which lag behind. Built from Debian's own packaging, so packages install and upgrade exactly like the distribution's. Supports Debian 12/13 and Ubuntu 22.04/24.04/26.04 on amd64 and arm64.
+Current upstream releases as Debian and Ubuntu packages, for software that doesn't run its own APT repository and relies on the distributions, which lag behind. Built from Debian's own packaging where Debian has one, so packages install and upgrade like the distribution's. Supports Debian 12/13 and Ubuntu 22.04/24.04/26.04 on amd64 and arm64.
 
 Available packages, release lines, and install instructions: [freshdeb.com](https://www.freshdeb.com)
 
@@ -8,7 +8,7 @@ Available packages, release lines, and install instructions: [freshdeb.com](http
 
 PRs are welcome. Bug fixes, packaging fixes, build improvements, version bumps, and docs are all fair game. Open an issue first if you're unsure.
 
-**Adding a package** comes with a deal: you maintain it. See [CONTRIBUTING.md](CONTRIBUTING.md) for what that means and [docs/packages.md](docs/packages.md) for the package format.
+**Adding a package:** see [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/packages.md](docs/packages.md) for the package format.
 
 ## Security
 
@@ -16,7 +16,7 @@ Found something? Report it privately through [GitHub's vulnerability reporting f
 
 ## License
 
-Build scripts, CI, and docs in this repo are [BSD-2-Clause](LICENSE). Packaging in `packages/*/debian` comes from Debian and keeps its license, as does the packaged software. See each package's `debian/copyright`.
+Build scripts, CI, and docs in this repo are [BSD-2-Clause](LICENSE). Packaging imported from Debian into `packages/*/debian` keeps its license, as does the packaged software. See each package's `debian/copyright`.
 
 ## Maintained by Blendbyte
 

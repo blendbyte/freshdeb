@@ -1,18 +1,4 @@
-# Go: https://go.dev
-#
-# Packaging is Debian's (salsa.debian.org/go-team/compiler/golang), one source
-# package per Go minor (golang-1.27); debian/ is an unmodified import of the
-# commit in packaging.ref, and the build renames its source to "golang"
-# (packaging.source). Built from upstream's release tarball with upstream's
-# make.bash, bootstrapped with a pinned Go from go.dev (build.go: bootstrap,
-# see docs/packages.md). overlays/default-go.patch adds the packages Debian
-# builds from golang-defaults (golang-go and friends: /usr/bin/go), so each
-# track makes its Go the default. See README.md.
-#
-# Upstream supports the two newest minors; a minor gets patch releases until
-# the second one after it is out (new minors come in February and August).
-# One track per minor (components v1.27, v1.26) and "latest", the newest.
-# watch.yml bumps patch releases; a new minor is a manual PR (README.md).
+# Go (https://go.dev), Debian's packaging (a source per minor, renamed to golang), bootstrapped with a pinned Go.
 
 name: golang
 description: "Go programming language compiler and tools"
@@ -37,6 +23,8 @@ build:
   # The track's go: toolchain only bootstraps the build; Go rebuilds itself.
   go: bootstrap
 
+# A track per supported minor; watch.yml bumps patch releases. A new minor is a manual PR: re-import
+# debian/ from Debian's golang-1.XX branch, make the older track a rename overlay, set real eol dates.
 tracks:
   "1.27":
     tag: "go1.27.3"

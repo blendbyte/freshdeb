@@ -1,14 +1,4 @@
-# Valkey: https://valkey.io
-#
-# Packaging is Debian's (salsa.debian.org/debian/valkey). debian/ is an
-# unmodified import of the commit in packaging.ref; everything we change
-# lives in patches/ and overlays/. See README.md in this directory.
-#
-# Valkey patches every supported minor line in parallel, so each minor is a
-# track with its own APT component (v9.1, v9.0, …) in the valkey repository
-# (deb.freshdeb.com/valkey). The aliases v9 and v8 follow the newest minor
-# of their major.
-# Support dates: https://valkey.io/topics/releases/
+# Valkey (https://valkey.io), Debian's packaging.
 
 name: valkey
 description: "Valkey key-value datastore (Redis fork)"
@@ -23,6 +13,8 @@ packaging:
   origin: https://salsa.debian.org/debian/valkey.git
   ref: d625d60ff17b73fa5d7eb4d1cfabc1ee2716d9c2  # 9.1.2-1, unstable
 
+# A track per supported minor (dates: https://valkey.io/topics/releases/); v9 and v8 follow their newest minor.
+# New minor: watch.yml copies the newest patch set; check Debian's packaging for the line and set eol before merging.
 tracks:
   "9.1":
     tag: "9.1.3"
@@ -61,14 +53,10 @@ overlays:
   # directories in postinst, the way Debian did before 9.1.
   - patch: overlays/legacy-sysusers.patch
     codenames: [jammy]
-  # The "u!" (fully locked account) sysusers modifier needs systemd 256;
-  # bookworm has 252 and noble 255. Plain "u" accounts are still created
-  # without a usable password.
+  # sysusers' "u!" modifier needs systemd 256 (bookworm 252, noble 255); "u" has no password either.
   - patch: overlays/sysusers-no-lock-modifier.patch
     codenames: [bookworm, noble]
 
 build:
-  # Debian runs the upstream suite with "|| true" (it never gates the
-  # build) and it takes 40+ minutes. Our gate is tests/ plus Debian's
-  # autopkgtests, run against the installed packages.
+  # Upstream's suite takes 40+ min and never gated Debian's build; tests/ and the autopkgtests are our gate.
   options: [nocheck]

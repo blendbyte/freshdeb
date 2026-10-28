@@ -1,11 +1,4 @@
-# git: https://git-scm.com
-#
-# Packaging is Debian's (repo.or.cz/git/debian.git, branch debian-sid); debian/
-# is an unmodified import of the commit in packaging.ref. Debian's packaging
-# changes no upstream files, so it applies to new upstream releases as is.
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# git (https://git-scm.com), Debian's packaging (repo.or.cz/git/debian.git), which changes no upstream files.
 
 name: git
 description: "git version control system"
@@ -14,9 +7,7 @@ homepage: https://git-scm.com
 upstream:
   git: https://github.com/git/git.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-  # Debian builds from the release tarball; it carries the generated
-  # configure and version files. Checksums match kernel.org's signed
-  # sha256sums.asc.
+  # The release tarball, as Debian (generated configure); matches kernel.org's signed sha256sums.asc.
   tarball: https://www.kernel.org/pub/software/scm/git/git-{version}.tar.xz
 
 packaging:
@@ -33,7 +24,5 @@ tracks:
     revision: 2
 
 build:
-  # git's own test suite (about 1,000 scripts) is upstream's job; it adds
-  # 5 to 15 minutes to every build. Our gate is tests/ plus Debian's
-  # autopkgtests, run against the installed packages.
+  # git's test suite is upstream's job (5-15 min per build); tests/ and the autopkgtests are our gate.
   options: [nocheck]

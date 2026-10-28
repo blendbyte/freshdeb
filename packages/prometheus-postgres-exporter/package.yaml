@@ -1,14 +1,4 @@
-# Prometheus postgres_exporter: https://github.com/prometheus-community/postgres_exporter
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/
-# prometheus-postgres-exporter); debian/ is an unmodified import of the commit
-# in packaging.ref. Debian builds against Debian-packaged Go libraries that
-# only exist in unstable; overlays/go-build.patch builds with a pinned Go
-# toolchain and vendored, checksum-verified modules instead, like upstream's
-# release binaries. See README.md.
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# Prometheus postgres_exporter, Debian's packaging (go-team), built like upstream's binaries.
 
 name: prometheus-postgres-exporter
 description: "Prometheus exporter for PostgreSQL server metrics (postgres_exporter)"
@@ -31,9 +21,7 @@ tracks:
     patches: patches/main  # empty: Debian's only patch (kingpin import path) isn't needed with vendored modules
 
 overlays:
-  # Pinned Go toolchain and vendored modules instead of dh-golang (all
-  # releases), and a NEWS entry for the changes since the distributions'
-  # versions.
+  # Pinned Go and vendored modules instead of dh-golang, plus a NEWS entry for the upgrade.
   - patch: overlays/go-build.patch
   # The init script didn't export /etc/default's settings, so without
   # systemd the exporter never got DATA_SOURCE_NAME (all releases).

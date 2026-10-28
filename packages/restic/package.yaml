@@ -1,13 +1,4 @@
-# restic: https://restic.net
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/restic); debian/
-# is an unmodified import of the commit in packaging.ref. Debian builds
-# against ~28 Debian-packaged Go libraries that only exist in unstable, so
-# overlays/go-build.patch builds with a pinned Go toolchain and vendored,
-# checksum-verified modules instead. See README.md in this directory.
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# restic (https://restic.net), Debian's packaging (go-team), built with a pinned Go.
 
 name: restic
 description: "restic backup program"

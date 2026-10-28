@@ -1,14 +1,4 @@
-# ZNC: https://znc.in
-#
-# Packaging is Debian's (source package znc 1.10.3-1, maintained without a
-# public VCS); debian/ is an unmodified import of its .debian.tar.xz, which
-# packaging.ref identifies. It patches nothing upstream and builds unchanged
-# on every release. Besides ZNC itself it builds the third-party znc-push
-# and znc-backlog modules, kept in debian/contrib, with versions derived
-# from ZNC's (1.0.0+git…+<znc version>).
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# ZNC (https://znc.in), Debian's packaging (its .debian.tar.xz, no public VCS), plus the znc-push and znc-backlog modules.
 
 name: znc
 description: "ZNC IRC bouncer"

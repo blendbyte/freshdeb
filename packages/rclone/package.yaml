@@ -1,14 +1,4 @@
-# rclone: https://rclone.org
-#
-# Packaging is Debian's (salsa.debian.org/go-team/packages/rclone); debian/
-# is an unmodified import of the commit in packaging.ref. Debian builds
-# against ~170 Debian-packaged Go libraries and has to exclude every backend
-# and command whose libraries aren't packaged; overlays/go-build.patch builds
-# with a pinned Go toolchain and vendored, checksum-verified modules instead,
-# which gives the full feature set of upstream's binaries. See README.md.
-#
-# Upstream supports only its latest release, so there is one track, "main",
-# that follows every release (component main).
+# rclone (https://rclone.org), Debian's packaging (go-team), built like upstream's binaries with every backend.
 
 name: rclone
 description: "rclone, rsync for cloud storage"
