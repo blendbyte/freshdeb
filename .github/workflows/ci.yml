@@ -8,8 +8,9 @@ name: ci
 #
 # Pull requests only run checks and plan: plan rejects packaging changes
 # without a version bump and lists what merging will build. Packages are
-# built once, after merge; a failed build publishes nothing. To build a
-# branch before merging, dispatch this workflow on it (publish stays off).
+# built once, after merge; a failed check or build publishes nothing. To
+# build a branch before merging, dispatch this workflow on it (publish stays
+# off).
 #
 # What gets built is decided by scripts/freshdeb.py plan; see its docstring.
 
@@ -191,11 +192,14 @@ jobs:
 
   release:
     name: release
-    needs: [plan, build]
+    # checks too: builds run alongside them, but nothing is published from a
+    # commit that fails validation, shellcheck or the unit tests.
+    needs: [checks, plan, build]
     # Skipped builds (count 0) are fine: an alias-only change still releases.
     if: |
       always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
       needs.plan.outputs.publish == 'true' &&
+      needs.checks.result == 'success' &&
       needs.plan.result == 'success' &&
       (needs.build.result == 'success' || needs.build.result == 'skipped')
     permissions:
