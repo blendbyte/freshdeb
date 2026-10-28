@@ -26,9 +26,9 @@ tracks:
   main:
     tag: "v1.75.2"
     commit: be8d6044eacb843b74d335db0c5fbe09222031fe
-    revision: 2
+    revision: 3
     go: "1.26.10"  # upstream's go.mod: go 1.26.0; newest 1.26.x
-    patches: patches/main  # from Debian's: 0004 (manpage) and 0013 (version), none of the backend exclusions; ours: 0101 (no selfupdate page)
+    patches: patches/main  # from Debian's: 0004 (manpage), none of the backend exclusions; ours: 0101 (no selfupdate page)
 
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
