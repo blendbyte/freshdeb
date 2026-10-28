@@ -1,0 +1,21 @@
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -0,0 +1,17 @@
++keepalived (1:2.4.0-1) unstable; urgency=medium
++
++  freshdeb: keepalived 2.4 since the distributions' versions. Configurations
++  keep working; what to know:
++
++   * 2.4.0 fixes buffer overflows in the HTTP checker and the configuration
++     parser and hardens the parsing of kernel and other untrusted input.
++   * Notify scripts and the notify FIFO: keepalived now validates the target
++     of symlinks to them and runs them in a hardened environment (2.4.0).
++   * DBus: keepalived's methods are denied by default (2.4.0).
++   * auth_hmac (new in 2.4.0) authenticates VRRP adverts. Its signed format
++     changed in 2.4.2, so every node of a virtual router that uses it must
++     run the same version; upgrade them together.
++
++  Release notes: https://www.keepalived.org/release-notes/
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000

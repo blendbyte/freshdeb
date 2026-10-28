@@ -1,0 +1,43 @@
+# keepalived: https://www.keepalived.org
+#
+# Packaging is Debian's (salsa.debian.org/debian/pkg-keepalived); debian/ is
+# an unmodified import of the commit in packaging.ref, see README.md. Debian
+# patches nothing and builds upstream's release tarball, so do we; the only
+# overlay adds a NEWS entry.
+#
+# Upstream maintains only its latest release, so there is one track, "main",
+# that follows every release (component main). Upstream publishes tarballs
+# on keepalived.org (with MD5 sums only) and no GitHub releases; watch.yml
+# pins each tarball's sha256.
+
+name: keepalived
+description: "keepalived VRRP and health checking for Linux Virtual Server"
+homepage: https://www.keepalived.org
+
+upstream:
+  git: https://github.com/acassen/keepalived.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+  tarball: https://www.keepalived.org/software/keepalived-{version}.tar.gz
+
+packaging:
+  origin: https://salsa.debian.org/debian/pkg-keepalived.git
+  ref: 94681b5d20478ce5435cf955d14c384e33c4a637  # 1:2.3.4-1, unstable
+
+# Debian's versions carry it.
+epoch: 1
+
+tracks:
+  main:
+    tag: "v2.4.3"
+    commit: 53701f5648fb457fce5c3417fd309f286fbd1335
+    sha256: a0faef8e401c143487b131b526df7541c1e33d9b8814642fa9dfe8bb250a9632
+    revision: 1
+
+overlays:
+  # NEWS entry for the changes since the distributions' versions (all
+  # releases).
+  - patch: overlays/news.patch
+
+tests:
+  # The VRRP test adds its virtual IP to an interface.
+  capabilities: [NET_ADMIN]
