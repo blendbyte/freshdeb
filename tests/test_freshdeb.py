@@ -308,7 +308,10 @@ class PlanTests(unittest.TestCase):
         self.assertTrue(all(entry["publish"] for entry in selected.values()))
         matrix = freshdeb.expand_matrix(self.repo, selected, None, TODAY)
         self.assertEqual({job["codename"] for job in matrix}, {"stonking"})
-        self.assertEqual(len(matrix), len(tracks) * 2)
+        # Architecture: all packages (composer) build once, on the first architecture.
+        arch_indep = {pkg.name for pkg in freshdeb.load_packages(self.repo)
+                      if all(a == "all" for a in freshdeb.control_binaries(pkg.path / "debian").values())}
+        self.assertEqual(len(matrix), sum(1 if name in arch_indep else 2 for name, _ in tracks))
 
     def test_unreleased_changes_are_planned_again(self):
         # Commit 1 bumps 9.1 but its release failed; commit 2 only touches docs.
