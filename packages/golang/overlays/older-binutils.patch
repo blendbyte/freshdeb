@@ -1,0 +1,21 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -13,7 +13,7 @@
+ Section: golang
+ Build-Depends:
+  debhelper-compat (= 13),
+- binutils-gold [arm64],
++ binutils-gold [arm64] | binutils (<< 2.44~) [arm64],
+  netbase,
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/compiler/golang/tree/golang-1.27
+@@ -23,7 +23,7 @@
+ Package: golang-1.27-go
+ Architecture: amd64 arm64 armhf i386 loong64 ppc64el riscv64 s390x
+ Depends:
+- binutils-gold [arm64],
++ binutils-gold [arm64] | binutils (<< 2.44~) [arm64],
+  golang-1.27-src (>= ${source:Version}),
+  ${misc:Depends},
+  ${perl:Depends},

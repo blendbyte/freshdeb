@@ -1,0 +1,37 @@
+unpack-message-for-orig
+elf-error
+unpack-message-for-source
+very-long-line-length-in-source-file
+
+#source-contains-prebuilt-binary [src/crypto/internal/boring/syso/goboringcrypto_linux_amd64.syso]
+#source-contains-prebuilt-binary [src/crypto/internal/boring/syso/goboringcrypto_linux_arm64.syso]
+#source-contains-prebuilt-javascript-object [src/cmd/trace/static/webcomponents.min.js]
+
+# Testdata
+binary-with-bad-dynamic-table [src/debug/elf/testdata/*]
+source-contains-prebuilt-binary [src/debug/dwarf/testdata/*]
+source-contains-prebuilt-binary [src/debug/elf/testdata/*]
+source-contains-prebuilt-binary [src/runtime/pprof/testdata/*]
+source-contains-prebuilt-binary [src/runtime/race/*]
+source-contains-prebuilt-windows-binary [src/debug/dwarf/testdata/*]
+source-contains-prebuilt-windows-binary [src/debug/pe/testdata/*]
+
+# Source is src/debug/dwarf/testdata/*.c
+source-is-missing [src/debug/dwarf/testdata/*]
+# Source is src/debug/elf/testdata/*.c
+source-is-missing [src/debug/elf/testdata/*]
+# Source is in src/runtime/pprof/testdata/README
+source-is-missing [src/runtime/pprof/testdata/*]
+
+source-is-missing [src/internal/trace/traceviewer/static/trace_viewer_full.html]
+source-is-missing [src/internal/trace/traceviewer/static/webcomponents.min.js]
+source-is-missing [src/crypto/internal/boring/syso/goboringcrypto_linux_amd64.syso]
+source-is-missing [src/crypto/internal/boring/syso/goboringcrypto_linux_arm64.syso]
+source-is-missing [src/runtime/race/internal/amd64v1/race_freebsd.syso]
+source-is-missing [src/runtime/race/internal/amd64v1/race_linux.syso]
+source-is-missing [src/runtime/race/internal/amd64v1/race_netbsd.syso]
+source-is-missing [src/runtime/race/internal/amd64v1/race_openbsd.syso]
+source-is-missing [src/runtime/race/internal/amd64v3/race_linux.syso]
+source-is-missing [src/runtime/race/race_linux_arm64.syso]
+source-is-missing [src/runtime/race/race_linux_ppc64le.syso]
+source-is-missing [src/runtime/race/race_linux_s390x.syso]

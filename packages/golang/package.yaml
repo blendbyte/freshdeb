@@ -1,0 +1,73 @@
+# Go: https://go.dev
+#
+# Packaging is Debian's (salsa.debian.org/go-team/compiler/golang), one source
+# package per Go minor (golang-1.27); debian/ is an unmodified import of the
+# commit in packaging.ref, and the build renames its source to "golang"
+# (packaging.source). Built from upstream's release tarball with upstream's
+# make.bash, bootstrapped with a pinned Go from go.dev (build.go: bootstrap,
+# see docs/packages.md). overlays/default-go.patch adds the packages Debian
+# builds from golang-defaults (golang-go and friends: /usr/bin/go), so each
+# track makes its Go the default. See README.md.
+#
+# Upstream supports the two newest minors; a minor gets patch releases until
+# the second one after it is out (new minors come in February and August).
+# One track per minor (components v1.27, v1.26) and "latest", the newest.
+# watch.yml bumps patch releases; a new minor is a manual PR (README.md).
+
+name: golang
+description: "Go programming language compiler and tools"
+homepage: https://go.dev
+
+upstream:
+  git: https://go.googlesource.com/go
+  tag_regex: '^go(?P<version>\d+\.\d+\.\d+)$'
+  # Upstream's source release, as Debian builds it; go.dev publishes its sha256.
+  tarball: https://go.dev/dl/go{version}.src.tar.gz
+
+packaging:
+  origin: https://salsa.debian.org/go-team/compiler/golang.git
+  ref: 8f81a73a53a6e996b2c6c04746ae4ee7bbd8ddf3  # 1.27.3-1, unstable
+  source: golang-1.27
+
+# golang-defaults' packages (golang-go, …) carry epoch 2; ours must too, or
+# they'd sort below the distributions' (2:1.19~1 < 1.27.3-1).
+epoch: 2
+
+build:
+  # The track's go: toolchain only bootstraps the build; Go rebuilds itself.
+  go: bootstrap
+
+tracks:
+  "1.27":
+    tag: "go1.27.3"
+    commit: 2aae1000ea1d4b28923b96db28acf4e3b99d6aff
+    sha256: 6e7749035cf360f06b2575d162ea79df9fda8ef671889e5c375f8e50777f26bb
+    revision: 1
+    go: "1.26.10"  # bootstrap; Go 1.27 needs go1.24.6 or newer (src/cmd/dist/buildtool.go minBootstrap)
+    patches: patches/1.27  # none of Debian's (test skips for architectures we don't build)
+    eol: 2027-08-31  # estimate: until Go 1.29 is out (August 2027); set the real date then
+  "1.26":
+    tag: "go1.26.10"
+    commit: 4e8c85f5319d999bfd7617fdc191631e5634e3c5
+    sha256: fd63e883ba2f2bfca93c1646b31ebef63e2b1e4d2b317c9789d976a68d81f36f
+    revision: 1
+    go: "1.26.10"  # bootstrap; Go 1.26 needs go1.24.6 or newer
+    patches: patches/1.26
+    eol: 2027-02-28  # estimate: until Go 1.28 is out (February 2027); set the real date then
+
+aliases:
+  latest: "1.27"
+
+overlays:
+  # Bootstrapped with the pinned toolchain instead of a distribution's Go, no
+  # test suite in the build, autopkgtest without the source tree (all).
+  - patch: overlays/bootstrap-build.patch
+  # golang-go, golang-src, golang-doc, golang and golang-any from Debian's
+  # golang-defaults: this track's Go as /usr/bin/go (all).
+  - patch: overlays/default-go.patch
+  # binutils-gold is its own package only since binutils 2.44 (trixie,
+  # resolute); older releases have gold in binutils (all).
+  - patch: overlays/older-binutils.patch
+  # The 1.26 track: Debian's packaging is the same, with golang-1.26 names.
+  - patch: overlays/golang-1.26.patch
+    tracks: ["1.26"]

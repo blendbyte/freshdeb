@@ -1,0 +1,3 @@
+# None of Debian's patches: they only skip tests on mips64le, s390x and
+# riscv64, which aren't built here, and the test suite doesn't run in the
+# build. golang-1.27-src ships upstream's sources unchanged.

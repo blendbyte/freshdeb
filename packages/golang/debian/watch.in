@@ -1,0 +1,6 @@
+Version: 5
+
+Source: https://go.dev/dl/
+Matching-Pattern: .*/go(X.Y\S*)\.src\.tar\.gz
+Pgpmode: auto
+Uversionmangle: auto

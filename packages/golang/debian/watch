@@ -1,0 +1,9 @@
+#
+# WARNING: "debian/watch" is generated via "debian/rules gencontrol" (sourced from "debian/watch.in")
+#
+Version: 5
+
+Source: https://go.dev/dl/
+Matching-Pattern: .*/go(1.27\S*)\.src\.tar\.gz
+Pgpmode: auto
+Uversionmangle: auto

@@ -1,0 +1,73 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -1,7 +1,7 @@
+ #
+ # WARNING: "debian/control" is generated via "debian/rules gencontrol" (sourced from "debian/control.in")
+ #
+-Source: golang-1.27
++Source: golang-1.26
+ Maintainer: Debian Go Compiler Team <team+go-compiler@tracker.debian.org>
+ Uploaders:
+  Michael Stapelberg <stapelberg@debian.org>,
+@@ -16,15 +16,15 @@
+  binutils-gold [arm64] | binutils (<< 2.44~) [arm64],
+  netbase,
+ Standards-Version: 4.7.4
+-Vcs-Browser: https://salsa.debian.org/go-team/compiler/golang/tree/golang-1.27
+-Vcs-Git: https://salsa.debian.org/go-team/compiler/golang.git -b golang-1.27
++Vcs-Browser: https://salsa.debian.org/go-team/compiler/golang/tree/golang-1.26
++Vcs-Git: https://salsa.debian.org/go-team/compiler/golang.git -b golang-1.26
+ Homepage: https://go.dev/
+ 
+-Package: golang-1.27-go
++Package: golang-1.26-go
+ Architecture: amd64 arm64 armhf i386 loong64 ppc64el riscv64 s390x
+ Depends:
+  binutils-gold [arm64] | binutils (<< 2.44~) [arm64],
+- golang-1.27-src (>= ${source:Version}),
++ golang-1.26-src (>= ${source:Version}),
+  ${misc:Depends},
+  ${perl:Depends},
+  ${shlibs:Depends},
+@@ -53,13 +53,13 @@
+  for the Go programming language.
+  .
+  To use this version, instead of the default one provided by golang-go package,
+- add /usr/lib/go-1.27/bin/ to PATH, or invoke /usr/lib/go-1.27/bin/go directly.
++ add /usr/lib/go-1.26/bin/ to PATH, or invoke /usr/lib/go-1.26/bin/go directly.
+ 
+-Package: golang-1.27
++Package: golang-1.26
+ Depends:
+- golang-1.27-doc (>= ${source:Version}),
+- golang-1.27-go (>= ${source:Version}),
+- golang-1.27-src (>= ${source:Version}),
++ golang-1.26-doc (>= ${source:Version}),
++ golang-1.26-go (>= ${source:Version}),
++ golang-1.26-src (>= ${source:Version}),
+  ${misc:Depends},
+ Architecture: all
+ Description: Go programming language compiler - metapackage
+@@ -77,10 +77,10 @@
+  that (most of) a full Go development environment is installed.
+  .
+  To use this version, instead of the default one provided by golang-go
+- package, add /usr/lib/go-1.27/bin/ to PATH, or invoke /usr/lib/go-1.27/bin/go
++ package, add /usr/lib/go-1.26/bin/ to PATH, or invoke /usr/lib/go-1.26/bin/go
+  directly.
+ 
+-Package: golang-1.27-doc
++Package: golang-1.26-doc
+ Depends:
+  ${misc:Depends},
+ Architecture: all
+@@ -100,7 +100,7 @@
+  This package provides the documentation for the Go programming
+  language.
+ 
+-Package: golang-1.27-src
++Package: golang-1.26-src
+ Architecture: all
+ Multi-Arch: foreign
+ Depends:

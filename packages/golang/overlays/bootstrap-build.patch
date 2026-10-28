@@ -1,0 +1,98 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -14,7 +14,6 @@
+ Build-Depends:
+  debhelper-compat (= 13),
+  binutils-gold [arm64],
+- golang-1.27-go:native | golang-1.26-go:native | golang-1.25-go:native | golang-1.24-go:native,
+  netbase,
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/compiler/golang/tree/golang-1.27
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -12,7 +12,14 @@
+ 
+ export GOROOT := $(CURDIR)
+ export GOROOT_FINAL := /usr/lib/go-$(GOVER)
+-export GOROOT_BOOTSTRAP := $(shell ls -d -1 /usr/lib/go-1.* | sort -n | tail -n1)
++# freshdeb: bootstrapped with the pinned Go toolchain the build environment
++# provides (package.yaml go:, from go.dev and checked against config.yaml),
++# not a distribution's /usr/lib/go-1.*: the older releases don't have one new
++# enough. Go rebuilds itself with it, so it doesn't end up in the packages.
++ifeq (,$(GOROOT_BOOTSTRAP))
++$(error GOROOT_BOOTSTRAP is not set; freshdeb's build environment provides it)
++endif
++export GOROOT_BOOTSTRAP
+ 
+ export GOPATH := $(CURDIR)/gopath/
+ # Go 1.12 needs a build cache, otherwise the build fails.
+@@ -126,23 +133,10 @@
+ 		rm -rf pkg/$${GOHOSTOS}_$${GOHOSTARCH} pkg/tool/$${GOHOSTOS}_$${GOHOSTARCH}/
+ endif
+ 
++# freshdeb: upstream's test suite (run.bash) doesn't run here: it takes much
++# longer than the build, and upstream runs it for every release. The smoke
++# and upgrade tests check the installed packages instead.
+ override_dh_auto_test-arch:
+-	set -ex; \
+-		cd src; \
+-		export PATH="$(GOROOT)/bin:$$PATH"; \
+-		export GO_TEST_TIMEOUT_SCALE=10; \
+-		eval "$$(go tool dist env)"; \
+-		bash run.bash -k -no-rebuild;
+-	# -k           keep going even when error occurred
+-	# -no-rebuild  don't rebuild std and cmd packages
+-
+-	# On linux/amd64 run.bash installs some race enabled standard library
+-	# packages. Delete them again to avoid accidentally including them in
+-	# the package.
+-	set -ex; \
+-		export PATH="$(GOROOT)/bin:$$PATH"; \
+-		eval "$$(go tool dist env)"; \
+-		rm -rf "$(GOROOT)/pkg/$${GOOS}_$${GOARCH}_race/"
+ 
+ opt_no_act :=
+ ifneq (,$(findstring n,$(firstword -$(MAKEFLAGS))))
+diff -ruN a/debian/tests/control b/debian/tests/control
+--- a/debian/tests/control
++++ b/debian/tests/control
+@@ -4,10 +4,3 @@
+ Depends:
+  build-essential,
+  @,
+-
+-Tests:
+- regression-test
+-Restrictions: allow-stderr,needs-root
+-Depends:
+- build-essential,
+- @,
+diff -ruN a/debian/tests/hello-world b/debian/tests/hello-world
+--- a/debian/tests/hello-world
++++ b/debian/tests/hello-world
+@@ -2,7 +2,9 @@
+ 
+ set -ex
+ 
+-GO="/usr/lib/go-$(dpkg-parsechangelog -SSource | sed 's/golang-//')/bin/go"
++# freshdeb: the source is "golang" now, and the test runs without the source
++# tree; golang-go (part of this source) provides the default go.
++GO=/usr/bin/go
+ 
+ WORKDIR=$(mktemp -d)
+ trap "rm -rf $WORKDIR" 0 INT QUIT ABRT PIPE TERM
+diff -ruN a/debian/tests/regression-test b/debian/tests/regression-test
+--- a/debian/tests/regression-test
++++ b/debian/tests/regression-test
+@@ -1,9 +0,0 @@
+-#!/bin/sh
+-
+-set -ex
+-
+-export GO_TEST_TIMEOUT_SCALE=10
+-
+-GO="/usr/lib/go-$(dpkg-parsechangelog -SSource | sed 's/golang-//')/bin/go"
+-
+-$GO test -v --parallel=1 -timeout=2h cmd/internal/testdir
