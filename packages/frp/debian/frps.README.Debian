@@ -1,0 +1,25 @@
+frps for Debian
+---------------
+
+The frps service is installed but not enabled or started: with
+upstream's example configuration it would accept any client. Set a token
+(and anything else you need) in /etc/frp/frps.toml first, e.g.
+
+  bindPort = 7000
+  auth.token = "a long random string"
+
+then check it and start the service:
+
+  frps verify -c /etc/frp/frps.toml
+  systemctl enable --now frps
+
+frps runs as the frp user, which can bind ports below 1024
+(vhostHTTPPort = 80, vhostHTTPSPort = 443). For more than one server,
+frps@<name>.service reads /etc/frp/<name>.toml.
+
+The dashboard needs webServer.port (and webServer.user and
+webServer.password) in the configuration. frps logs to the journal unless
+log.to names a file; files in /var/log/frp are writable for the service.
+
+The full configuration reference is
+/usr/share/doc/frps/frps_full_example.toml.

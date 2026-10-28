@@ -1,0 +1,38 @@
+[Unit]
+Description=frp client
+Documentation=https://github.com/fatedier/frp
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=frp
+Group=frp
+ExecStart=/usr/bin/frpc -c /etc/frp/frpc.toml
+# Needs frpc's admin API (webServer.port) in the configuration.
+ExecReload=/usr/bin/frpc reload -c /etc/frp/frpc.toml
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=1048576
+# Log files (log.to), if configured, go here.
+LogsDirectory=frp
+CapabilityBoundingSet=
+NoNewPrivileges=yes
+ProtectSystem=strict
+# Plugins such as static_file serve local files: home read-only; and
+# no private /tmp, for local services' sockets there.
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

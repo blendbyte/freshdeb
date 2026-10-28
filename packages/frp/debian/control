@@ -1,0 +1,36 @@
+Source: frp
+Section: net
+Priority: optional
+Maintainer: freshdeb <packages@freshdeb.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ help2man,
+Standards-Version: 4.7.0
+Homepage: https://github.com/fatedier/frp
+Rules-Requires-Root: no
+
+Package: frps
+Architecture: any
+Depends:
+ adduser,
+ ${misc:Depends},
+Description: fast reverse proxy to expose local servers behind NAT (server)
+ frp exposes local servers behind a NAT or firewall to the internet: frpc
+ connects out to frps, and frps forwards connections to it (TCP, UDP, HTTP
+ and HTTPS with virtual hosts, STCP/XTCP between clients, and more).
+ .
+ This package contains frps, the server, with its web dashboard. The
+ service is installed but not enabled: configure /etc/frp/frps.toml first.
+
+Package: frpc
+Architecture: any
+Depends:
+ adduser,
+ ${misc:Depends},
+Description: fast reverse proxy to expose local servers behind NAT (client)
+ frp exposes local servers behind a NAT or firewall to the internet: frpc
+ connects out to frps, and frps forwards connections to it (TCP, UDP, HTTP
+ and HTTPS with virtual hosts, STCP/XTCP between clients, and more).
+ .
+ This package contains frpc, the client, with its admin web UI. The
+ service is installed but not enabled: configure /etc/frp/frpc.toml first.

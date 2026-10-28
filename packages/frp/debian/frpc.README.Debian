@@ -1,0 +1,21 @@
+frpc for Debian
+---------------
+
+The frpc service is installed but not enabled or started: upstream's
+example configuration points at a server on localhost. Set serverAddr,
+auth.token and your proxies in /etc/frp/frpc.toml first, then check it and
+start the service:
+
+  frpc verify -c /etc/frp/frpc.toml
+  systemctl enable --now frpc
+
+frpc runs as the frp user. For more than one client configuration,
+frpc@<name>.service reads /etc/frp/<name>.toml.
+
+"systemctl reload frpc" (frpc reload) and the admin web UI need frpc's
+admin API: webServer.addr and webServer.port (and user and password) in
+the configuration. frpc logs to the journal unless log.to names a file;
+files in /var/log/frp are writable for the service.
+
+The full configuration reference is
+/usr/share/doc/frpc/frpc_full_example.toml.

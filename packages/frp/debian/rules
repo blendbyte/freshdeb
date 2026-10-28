@@ -1,0 +1,63 @@
+#!/usr/bin/make -f
+
+# Built like upstream's release binaries (its Makefile): CGO_ENABLED=0,
+# -trimpath, upstream's LDFLAGS, build tags frps and frpc, the dashboards
+# embedded. The pinned Go toolchain, offline mode (GOFLAGS=-mod=vendor,
+# GOPROXY=off) and caches come from the build environment; the dashboards
+# from the prepare hook (hooks/build-web.py in packages/frp).
+include /usr/share/dpkg/pkg-info.mk
+
+export CGO_ENABLED := 0
+LDFLAGS := -s -w
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	go version
+	# Without the dashboards upstream's Makefile would build -tags noweb.
+	test -f web/frps/dist/index.html
+	test -f web/frpc/dist/index.html
+	go build -trimpath -ldflags "$(LDFLAGS)" -tags frps -o _build/frps ./cmd/frps
+	go build -trimpath -ldflags "$(LDFLAGS)" -tags frpc -o _build/frpc ./cmd/frpc
+
+# Upstream's unit tests, as its "make test" runs them (not the e2e suite,
+# which needs network setups and a long time).
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	go test ./assets/... ./cmd/... ./client/... ./server/... ./pkg/...
+endif
+
+override_dh_auto_install:
+	install -D -m 0755 _build/frps debian/frps/usr/bin/frps
+	install -D -m 0755 _build/frpc debian/frpc/usr/bin/frpc
+	# Man pages from --help (upstream has none), shell completions from the
+	# binaries' own completion command.
+	set -e; for binary in frps frpc; do \
+	    case $$binary in frps) what=server ;; frpc) what=client ;; esac; \
+	    mkdir -p debian/$$binary/usr/share/man/man1; \
+	    help2man --no-info --no-discard-stderr --version-string=$(DEB_VERSION_UPSTREAM) \
+	        --name="fast reverse proxy $$what" _build/$$binary \
+	        > debian/$$binary/usr/share/man/man1/$$binary.1; \
+	    install -d debian/$$binary/usr/share/bash-completion/completions \
+	        debian/$$binary/usr/share/zsh/vendor-completions \
+	        debian/$$binary/usr/share/fish/vendor_completions.d; \
+	    _build/$$binary completion bash > debian/$$binary/usr/share/bash-completion/completions/$$binary; \
+	    _build/$$binary completion zsh > debian/$$binary/usr/share/zsh/vendor-completions/_$$binary; \
+	    _build/$$binary completion fish > debian/$$binary/usr/share/fish/vendor_completions.d/$$binary.fish; \
+	done
+
+# The services forward connections to and from the internet: a config has to
+# be written (and a token set) before they run, so they aren't enabled
+# (README.Debian). deb-systemd-invoke doesn't start disabled units; enabled
+# ones restart after upgrades.
+override_dh_installsystemd:
+	dh_installsystemd --no-enable
+
+# Go binaries: nothing for dwz to compress.
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf _build

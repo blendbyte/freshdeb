@@ -1,0 +1,6 @@
+frp (0.71.1-1) unstable; urgency=medium
+
+  * Initial packaging for freshdeb: frps and frpc with their web dashboards,
+    systemd units installed but not enabled.
+
+ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000

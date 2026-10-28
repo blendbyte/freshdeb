@@ -1,0 +1,34 @@
+# frp, a fast reverse proxy: https://github.com/fatedier/frp
+#
+# Neither Debian nor Ubuntu ship frp (a Debian ITP from 2023 never got past
+# a draft), so debian/ is our own, written in Debian's style
+# (docs/packages.md, "Own packaging"). Built like upstream's release
+# binaries: pinned Go toolchain, vendored and checksum-verified modules,
+# and the web dashboards embedded, built from source by the prepare hook
+# (hooks/build-web.py) with a pinned Node and npm packages verified against
+# upstream's package-lock.json. See README.md.
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: frp
+description: "frp fast reverse proxy: expose local servers behind NAT (frps, frpc)"
+homepage: https://github.com/fatedier/frp
+
+upstream:
+  git: https://github.com/fatedier/frp.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: freshdeb
+
+build:
+  # Builds the dashboards (web/frps/dist, web/frpc/dist) the binaries embed.
+  prepare: hooks/build-web.py
+
+tracks:
+  main:
+    tag: "v0.71.1"
+    commit: d8cf1800dc1abd7fda1828cab105d7a6b5a50eb1
+    revision: 1
+    go: "1.26.10"  # what upstream's release workflow uses (Go 1.26); go.mod: go 1.26.0
