@@ -210,7 +210,7 @@ diff -ruN a/debian/control b/debian/control
 diff -ruN a/debian/rules b/debian/rules
 --- a/debian/rules
 +++ b/debian/rules
-@@ -1,98 +1,54 @@
+@@ -1,98 +1,57 @@
  #!/usr/bin/make -f
  
 -# Disable backends/servers that depend on packages not (yet) in Debian.
@@ -299,7 +299,10 @@ diff -ruN a/debian/rules b/debian/rules
 -	fi
 +override_dh_auto_build:
 +	go version
-+	go build -trimpath -ldflags "-s -X github.com/rclone/rclone/fs.Version=v$(DEB_VERSION_UPSTREAM)" \
++	# noselfupdate: upstream's tag for packaged builds. "rclone selfupdate"
++	# would replace the packaged binary (or install upstream's .deb over it).
++	go build -trimpath -tags noselfupdate \
++		-ldflags "-s -X github.com/rclone/rclone/fs.Version=v$(DEB_VERSION_UPSTREAM)" \
 +		-o build/bin/rclone .
 +	# Docs as in Debian: regenerate MANUAL.md (without installation
 +	# instructions, see 0004) and build the man page and HTML from it.

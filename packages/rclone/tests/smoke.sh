@@ -17,6 +17,12 @@ echo "binary reports the expected version"
 version="$(rclone version)"
 [[ "$version" == "rclone v${expected}"$'\n'* ]] || { echo "$version" >&2; exit 1; }
 
+echo "no selfupdate: apt updates rclone"
+[[ "$version" == *"go/tags: noselfupdate"* ]] || { echo "$version" >&2; exit 1; }
+if rclone selfupdate --check >/dev/null 2>&1; then
+    echo "rclone selfupdate exists" >&2; exit 1
+fi
+
 echo "static binary"
 # Captured first throughout: "cmd | grep -q" trips pipefail when grep exits early.
 linkage="$(ldd /usr/bin/rclone 2>&1 || true)"
