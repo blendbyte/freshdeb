@@ -1,0 +1,22 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <david@tilapin.org>
+Date: Wed, 18 Nov 2015 17:54:41 -0400
+Subject: Adapt LICENSE path
+
+Forwarded: not needed
+---
+ src/Composer/Autoload/AutoloadGenerator.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Composer/Autoload/AutoloadGenerator.php b/src/Composer/Autoload/AutoloadGenerator.php
+index 1653dd3..dd008c4 100644
+--- a/src/Composer/Autoload/AutoloadGenerator.php
++++ b/src/Composer/Autoload/AutoloadGenerator.php
+@@ -470,7 +470,7 @@ EOF;
+         $filesystem->filePutContentsIfModified($targetDir.'/autoload_real.php', $this->getAutoloadRealFile(true, (bool) $includePathFileContents, $targetDirLoader, (bool) $includeFilesFileContents, $vendorPathCode, $appBaseDirCode, $suffix, $useGlobalIncludePath, $prependAutoloader, $checkPlatform));
+ 
+         $filesystem->safeCopy(__DIR__.'/ClassLoader.php', $targetDir.'/ClassLoader.php');
+-        $filesystem->safeCopy(__DIR__.'/../../../LICENSE', $targetDir.'/LICENSE');
++        $filesystem->safeCopy(__DIR__.'/../../data/Composer/LICENSE', $targetDir.'/LICENSE');
+ 
+         if ($this->runScripts) {
+             $this->eventDispatcher->dispatchScript(ScriptEvents::POST_AUTOLOAD_DUMP, $this->devMode, [], [

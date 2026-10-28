@@ -1,0 +1,6 @@
+LICENSE			usr/share/php/data/Composer
+bin/composer		usr/bin
+debian/autoloaders	usr/share/pkg-php-tools
+debian/overrides	usr/share/pkg-php-tools
+res			usr/share/php/data/Composer
+src/Composer		usr/share/php

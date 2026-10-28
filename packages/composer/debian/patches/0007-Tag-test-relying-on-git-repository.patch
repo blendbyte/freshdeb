@@ -1,0 +1,49 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Sun, 6 Aug 2017 15:07:15 -0400
+Subject: Tag test relying on git repository
+
+---
+ tests/Composer/Test/AllFunctionalTest.php       | 2 ++
+ tests/Composer/Test/Command/InitCommandTest.php | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/tests/Composer/Test/AllFunctionalTest.php b/tests/Composer/Test/AllFunctionalTest.php
+index 05954e9..0b50516 100644
+--- a/tests/Composer/Test/AllFunctionalTest.php
++++ b/tests/Composer/Test/AllFunctionalTest.php
+@@ -15,6 +15,7 @@ namespace Composer\Test;
+ use Composer\Pcre\Preg;
+ use Composer\Util\Filesystem;
+ use Composer\Util\Platform;
++use PHPUnit\Framework\Attributes\Group;
+ use Symfony\Component\Finder\Finder;
+ use Symfony\Component\Process\Process;
+ 
+@@ -64,6 +65,7 @@ class AllFunctionalTest extends TestCase
+         $fs->removeDirectory(dirname(self::$pharPath));
+     }
+ 
++    #[Group('git')]
+     public function testBuildPhar(): void
+     {
+         if (defined('HHVM_VERSION')) {
+diff --git a/tests/Composer/Test/Command/InitCommandTest.php b/tests/Composer/Test/Command/InitCommandTest.php
+index 61ff3d3..6bb8d5b 100644
+--- a/tests/Composer/Test/Command/InitCommandTest.php
++++ b/tests/Composer/Test/Command/InitCommandTest.php
+@@ -16,6 +16,7 @@ use Composer\Command\InitCommand;
+ use Composer\Json\JsonFile;
+ use Composer\Test\TestCase;
+ use InvalidArgumentException;
++use PHPUnit\Framework\Attributes\Group;
+ 
+ class InitCommandTest extends TestCase
+ {
+@@ -480,6 +481,7 @@ class InitCommandTest extends TestCase
+         self::assertEquals(['name' => 'John Smith'], $authors[0]);
+     }
+ 
++    #[Group('git')]
+     public function testGetGitConfig(): void
+     {
+         $command = new DummyInitCommand;

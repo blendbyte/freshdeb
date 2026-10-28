@@ -1,0 +1,24 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <david@tilapin.org>
+Date: Sun, 15 Feb 2015 23:40:39 -0400
+Subject: Adapt res/ path
+
+Forwarded: not-needed
+---
+ src/Composer/Json/JsonFile.php | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/Composer/Json/JsonFile.php b/src/Composer/Json/JsonFile.php
+index 205f222..e3e780d 100644
+--- a/src/Composer/Json/JsonFile.php
++++ b/src/Composer/Json/JsonFile.php
+@@ -41,8 +41,8 @@ class JsonFile
+     /** @deprecated Use \JSON_UNESCAPED_UNICODE */
+     public const JSON_UNESCAPED_UNICODE = 256;
+ 
+-    public const COMPOSER_SCHEMA_PATH = __DIR__ . '/../../../res/composer-schema.json';
+-    public const LOCK_SCHEMA_PATH = __DIR__ . '/../../../res/composer-lock-schema.json';
++    public const COMPOSER_SCHEMA_PATH = __DIR__ . '/../../data/Composer/res/composer-schema.json';
++    public const LOCK_SCHEMA_PATH = __DIR__ . '/../../../data/Composer/res/composer-lock-schema.json';
+ 
+     public const INDENT_DEFAULT = '    ';
+ 

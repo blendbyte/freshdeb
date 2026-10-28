@@ -1,0 +1,13 @@
+Test-Command: mkdir -p vendor build/vendor && phpabtpl --require composer/composer > debian/autoload.tests.php.tpl && phpab --tolerant -o build/vendor/autoload.php -t debian/autoload.tests.php.tpl -e tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_removed_include_paths_and_autolad_files.php -e tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_include_paths.php -e tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_include_paths.php -e tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_removed_include_paths_and_autolad_files.php -e tests/Composer/Test/Autoload/Fixtures/pcrebacktracelimit/StripNoise.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-a/PluginA.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/a/PluginA.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-b/PluginB.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/b/PluginB.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/Hooks.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/InstalledVersions.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/ClassLoader.php -e tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-a/PluginA.php -e tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-b/PluginB.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v9/Installer/Plugin.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v9/Installer/Plugin.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v2/Installer/Plugin2.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v3/Installer/Plugin2.php tests/Composer/Test && phpunit --exclude-group remote --exclude-group git
+Restrictions: allow-stderr
+Depends: git,
+         mercurial,
+         php-curl,
+         php-intl,
+         php-mbstring,
+         php-zip,
+         phpab,
+         phpunit,
+         pkg-php-tools,
+         xz-utils,
+         @

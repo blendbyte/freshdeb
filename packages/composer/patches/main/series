@@ -1,0 +1,5 @@
+# Ours: the phar builds from the release's source without git, and doesn't
+# replace itself (self-update). Debian's patches adapt Composer to its
+# unbundled layout in /usr/share/php and its test setup; none apply to a phar.
+0001-Compile-the-phar-without-a-git-checkout.patch
+0002-No-self-update.patch

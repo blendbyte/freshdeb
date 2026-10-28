@@ -1,0 +1,130 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Wed, 22 Jan 2025 13:57:16 +0100
+Subject: Revert "Fix regression from #12233 in InstalledVersions when reload
+ is used, fixes #12235"
+
+This reverts commit ee6dc33fd10f550237da9fa2518f0741ca2c7698.
+
+Origin: vendor, https://github.com/composer/composer/commit/ee6dc33fd10f550237da9fa2518f0741ca2c7698
+---
+ src/Composer/InstalledVersions.php            | 20 ++------------------
+ tests/Composer/Test/InstalledVersionsTest.php | 27 ---------------------------
+ tests/bootstrap.php                           |  6 +++++-
+ 3 files changed, 7 insertions(+), 46 deletions(-)
+
+diff --git a/src/Composer/InstalledVersions.php b/src/Composer/InstalledVersions.php
+index 2052022..87766a2 100644
+--- a/src/Composer/InstalledVersions.php
++++ b/src/Composer/InstalledVersions.php
+@@ -38,11 +38,6 @@ class InstalledVersions
+      */
+     private static $installed;
+ 
+-    /**
+-     * @var bool
+-     */
+-    private static $installedIsLocalDir;
+-
+     /**
+      * @var bool|null
+      */
+@@ -320,12 +315,6 @@ class InstalledVersions
+     {
+         self::$installed = $data;
+         self::$installedByVendor = array();
+-
+-        // when using reload, we disable the duplicate protection to ensure that self::$installed data is
+-        // always returned, but we cannot know whether it comes from the installed.php in __DIR__ or not,
+-        // so we have to assume it does not, and that may result in duplicate data being returned when listing
+-        // all installed packages for example
+-        self::$installedIsLocalDir = false;
+     }
+ 
+     /**
+@@ -354,9 +343,7 @@ class InstalledVersions
+         $copiedLocalDir = false;
+ 
+         if (self::$canGetVendors) {
+-            $selfDir = self::getSelfDir();
+             foreach (ClassLoader::getRegisteredLoaders() as $vendorDir => $loader) {
+-                $vendorDir = strtr($vendorDir, '\\', '/');
+                 if (isset(self::$installedByVendor[$vendorDir])) {
+                     $installed[] = self::$installedByVendor[$vendorDir];
+                 } elseif (is_file($vendorDir.'/composer/installed.php')) {
+@@ -364,14 +351,11 @@ class InstalledVersions
+                     $required = require $vendorDir.'/composer/installed.php';
+                     self::$installedByVendor[$vendorDir] = $required;
+                     $installed[] = $required;
+-                    if (self::$installed === null && $vendorDir.'/composer' === $selfDir) {
++                    if (strtr($vendorDir.'/composer', '\\', '/') === strtr(__DIR__, '\\', '/')) {
+                         self::$installed = $required;
+-                        self::$installedIsLocalDir = true;
++                        $copiedLocalDir = true;
+                     }
+                 }
+-                if (self::$installedIsLocalDir && $vendorDir.'/composer' === $selfDir) {
+-                    $copiedLocalDir = true;
+-                }
+             }
+         }
+ 
+diff --git a/tests/Composer/Test/InstalledVersionsTest.php b/tests/Composer/Test/InstalledVersionsTest.php
+index 175a233..b0aef19 100644
+--- a/tests/Composer/Test/InstalledVersionsTest.php
++++ b/tests/Composer/Test/InstalledVersionsTest.php
+@@ -266,31 +266,4 @@ class InstalledVersionsTest extends TestCase
+         self::assertSame('/foo/bar/vendor/c/c', InstalledVersions::getInstallPath('c/c'));
+         self::assertNull(InstalledVersions::getInstallPath('foo/impl'));
+     }
+-
+-    public function testWithClassLoaderLoaded(): void
+-    {
+-        // disable multiple-ClassLoader-based checks of InstalledVersions by making it seem like no
+-        // class loaders are registered
+-        $prop = new \ReflectionProperty(ClassLoader::class, 'registeredLoaders');
+-        (\PHP_VERSION_ID < 80100) and $prop->setAccessible(true);
+-        $prop->setValue(null, array_slice(self::$previousRegisteredLoaders, 0, 1, true));
+-
+-        $prop2 = new \ReflectionProperty(InstalledVersions::class, 'installedIsLocalDir');
+-        (\PHP_VERSION_ID < 80100) and $prop2->setAccessible(true);
+-        $prop2->setValue(null, true);
+-
+-        self::assertFalse(InstalledVersions::isInstalled('foo/bar'));
+-        InstalledVersions::reload([
+-            'root' => InstalledVersions::getRootPackage(),
+-            'versions' => [
+-                'foo/bar' => [
+-                    'version' => '1.0.0',
+-                    'dev_requirement' => false,
+-                ],
+-            ],
+-        ]);
+-        self::assertTrue(InstalledVersions::isInstalled('foo/bar'));
+-
+-        $prop->setValue(null, []);
+-    }
+ }
+diff --git a/tests/bootstrap.php b/tests/bootstrap.php
+index 7c4f88d..5018f7a 100644
+--- a/tests/bootstrap.php
++++ b/tests/bootstrap.php
+@@ -10,6 +10,7 @@
+  * file that was distributed with this source code.
+  */
+ 
++use Composer\InstalledVersions;
+ use Composer\Util\Platform;
+ 
+ error_reporting(E_ALL);
+@@ -19,7 +20,10 @@ if (function_exists('date_default_timezone_set') && function_exists('date_defaul
+ }
+ 
+ require __DIR__.'/../src/bootstrap.php';
+-require __DIR__.'/../vendor/composer/InstalledVersions.php';
++
++if (!class_exists(InstalledVersions::class, false)) {
++    require __DIR__.'/../src/Composer/InstalledVersions.php';
++}
+ 
+ Platform::putEnv('COMPOSER_TESTS_ARE_RUNNING', '1');
+ 

@@ -1,0 +1,23 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Tue, 12 Mar 2024 08:37:49 +0100
+Subject: Skip incompatible test with Debian installed version
+
+---
+ tests/Composer/Test/Console/ApplicationTest.php | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/tests/Composer/Test/Console/ApplicationTest.php b/tests/Composer/Test/Console/ApplicationTest.php
+index a1c3ef3..884f5af 100644
+--- a/tests/Composer/Test/Console/ApplicationTest.php
++++ b/tests/Composer/Test/Console/ApplicationTest.php
+@@ -63,9 +63,7 @@ class ApplicationTest extends TestCase
+      */
+     public function testDevWarningSuppressedForSelfUpdate(): void
+     {
+-        if (Platform::isWindows()) {
+-            $this->markTestSkipped('Does not run on windows');
+-        }
++        $this->markTestSkipped('Does not comply with Debian installed version');
+ 
+         $application = new Application;
+         // Compatibility layer for symfony/console <7.4

@@ -1,0 +1,4 @@
+Starting with 1.8.5, we are merging the unsigned upstream tags as
+upstream, instead of using the tarball that doesn’t ship tests.
+
+gbp import-orig --uscan

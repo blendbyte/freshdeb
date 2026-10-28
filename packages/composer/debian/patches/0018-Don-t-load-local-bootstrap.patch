@@ -1,0 +1,21 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Sun, 5 Jul 2026 08:01:53 +0200
+Subject: =?utf-8?q?Don=E2=80=99t_load_local_bootstrap?=
+
+---
+ tests/bootstrap.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/bootstrap.php b/tests/bootstrap.php
+index 5018f7a..0d12f75 100644
+--- a/tests/bootstrap.php
++++ b/tests/bootstrap.php
+@@ -19,7 +19,7 @@ if (function_exists('date_default_timezone_set') && function_exists('date_defaul
+     date_default_timezone_set(@date_default_timezone_get());
+ }
+ 
+-require __DIR__.'/../src/bootstrap.php';
++require __DIR__.'/../build/vendor/autoload.php';
+ 
+ if (!class_exists(InstalledVersions::class, false)) {
+     require __DIR__.'/../src/Composer/InstalledVersions.php';

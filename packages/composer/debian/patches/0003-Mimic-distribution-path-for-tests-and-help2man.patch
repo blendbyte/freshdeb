@@ -1,0 +1,28 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <david@tilapin.org>
+Date: Sun, 15 Feb 2015 23:44:33 -0400
+Subject: Mimic distribution path for tests and help2man
+
+Forwarded: not-needed
+---
+ doc/composer/copyright | 1 +
+ src/data/Composer      | 1 +
+ 2 files changed, 2 insertions(+)
+ create mode 120000 doc/composer/copyright
+ create mode 120000 src/data/Composer
+
+diff --git a/doc/composer/copyright b/doc/composer/copyright
+new file mode 120000
+index 0000000..30cff74
+--- /dev/null
++++ b/doc/composer/copyright
+@@ -0,0 +1 @@
++../../LICENSE
+\ No newline at end of file
+diff --git a/src/data/Composer b/src/data/Composer
+new file mode 120000
+index 0000000..c25bddb
+--- /dev/null
++++ b/src/data/Composer
+@@ -0,0 +1 @@
++../..
+\ No newline at end of file

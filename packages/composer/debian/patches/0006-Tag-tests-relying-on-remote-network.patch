@@ -1,0 +1,249 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Fri, 11 Dec 2020 11:49:36 -0400
+Subject: Tag tests relying on remote network
+
+---
+ tests/Composer/Test/Command/AuditCommandTest.php      | 2 ++
+ tests/Composer/Test/Command/DiagnoseCommandTest.php   | 3 +++
+ tests/Composer/Test/Command/InstallCommandTest.php    | 4 ++++
+ tests/Composer/Test/Command/RemoveCommandTest.php     | 3 +++
+ tests/Composer/Test/Command/RequireCommandTest.php    | 2 ++
+ tests/Composer/Test/Command/SelfUpdateCommandTest.php | 3 +++
+ tests/Composer/Test/Command/ShowCommandTest.php       | 2 ++
+ tests/Composer/Test/Command/StatusCommandTest.php     | 2 ++
+ tests/Composer/Test/CompletionFunctionalTest.php      | 2 ++
+ tests/Composer/Test/Util/RemoteFilesystemTest.php     | 2 ++
+ 10 files changed, 25 insertions(+)
+
+diff --git a/tests/Composer/Test/Command/AuditCommandTest.php b/tests/Composer/Test/Command/AuditCommandTest.php
+index 9aa5262..02fb0ae 100644
+--- a/tests/Composer/Test/Command/AuditCommandTest.php
++++ b/tests/Composer/Test/Command/AuditCommandTest.php
+@@ -15,6 +15,7 @@ namespace Composer\Test\Command;
+ use Composer\Advisory\Auditor;
+ use Composer\Policy\ListPolicyConfig;
+ use Composer\Test\TestCase;
++use PHPUnit\Framework\Attributes\Group;
+ use UnexpectedValueException;
+ 
+ class AuditCommandTest extends TestCase
+@@ -44,6 +45,7 @@ class AuditCommandTest extends TestCase
+         $appTester->run(['command' => 'audit', '--locked' => true]);
+     }
+ 
++    #[Group('remote')]
+     public function testAuditPackageWithNoSecurityVulnerabilities(): void
+     {
+         $this->initTempComposer();
+diff --git a/tests/Composer/Test/Command/DiagnoseCommandTest.php b/tests/Composer/Test/Command/DiagnoseCommandTest.php
+index ef241c9..ae2420f 100644
+--- a/tests/Composer/Test/Command/DiagnoseCommandTest.php
++++ b/tests/Composer/Test/Command/DiagnoseCommandTest.php
+@@ -14,9 +14,11 @@ namespace Composer\Test\Command;
+ 
+ use Composer\Test\TestCase;
+ use Composer\Util\Platform;
++use PHPUnit\Framework\Attributes\Group;
+ 
+ class DiagnoseCommandTest extends TestCase
+ {
++    #[Group('remote')]
+     public function testCmdFail(): void
+     {
+         $this->initTempComposer(['name' => 'foo/bar', 'description' => 'test pkg']);
+@@ -39,6 +41,7 @@ Checking https connectivity to packagist: OK
+ Checking github.com rate limit: ', $output);
+     }
+ 
++    #[Group('remote')]
+     public function testCmdSuccess(): void
+     {
+         $this->initTempComposer(['name' => 'foo/bar', 'description' => 'test pkg', 'license' => 'MIT']);
+diff --git a/tests/Composer/Test/Command/InstallCommandTest.php b/tests/Composer/Test/Command/InstallCommandTest.php
+index ebaf15c..c2fe2a3 100644
+--- a/tests/Composer/Test/Command/InstallCommandTest.php
++++ b/tests/Composer/Test/Command/InstallCommandTest.php
+@@ -14,6 +14,7 @@ namespace Composer\Test\Command;
+ 
+ use Composer\Test\TestCase;
+ use Generator;
++use PHPUnit\Framework\Attributes\Group;
+ 
+ class InstallCommandTest extends TestCase
+ {
+@@ -96,6 +97,7 @@ OUTPUT
+         ];
+     }
+ 
++    #[Group('remote')]
+     public function testInstallFromEmptyVendor(): void
+     {
+         $this->initTempComposer([
+@@ -126,6 +128,7 @@ Package operations: 2 installs, 0 updates, 0 removals
+ Generating autoload files', trim($appTester->getDisplay(true)));
+     }
+ 
++    #[Group('remote')]
+     public function testInstallFromEmptyVendorNoDev(): void
+     {
+         $this->initTempComposer([
+@@ -155,6 +158,7 @@ Package operations: 1 install, 0 updates, 0 removals
+ Generating autoload files', trim($appTester->getDisplay(true)));
+     }
+ 
++    #[Group('remote')]
+     public function testInstallNewPackagesWithExistingPartialVendor(): void
+     {
+         $this->initTempComposer([
+diff --git a/tests/Composer/Test/Command/RemoveCommandTest.php b/tests/Composer/Test/Command/RemoveCommandTest.php
+index acaa63a..23a5207 100644
+--- a/tests/Composer/Test/Command/RemoveCommandTest.php
++++ b/tests/Composer/Test/Command/RemoveCommandTest.php
+@@ -17,6 +17,7 @@ use Composer\Package\Link;
+ use Composer\Semver\Constraint\MatchAllConstraint;
+ use Composer\Test\TestCase;
+ use InvalidArgumentException;
++use PHPUnit\Framework\Attributes\Group;
+ use Symfony\Component\Console\Command\Command;
+ use UnexpectedValueException;
+ 
+@@ -42,6 +43,7 @@ class RemoveCommandTest extends TestCase
+         self::assertEquals(Command::FAILURE, $appTester->run(['command' => 'remove', '--unused' => true]));
+     }
+ 
++    #[Group('remote')]
+     public function testWarningWhenRemovingNonExistentPackage(): void
+     {
+         $this->initTempComposer();
+@@ -391,6 +393,7 @@ Lock file operations: 0 installs, 0 updates, 2 removals
+         self::assertEquals(['require' => ['root/req' => '1.*', 'root/another' => '1.*', 'another/req' => '1.*']], (new JsonFile('./composer.json'))->read());
+     }
+ 
++    #[Group('remote')]
+     public function testPackageStillPresentErrorWhenNoInstallFlagUsed(): void
+     {
+         $this->initTempComposer([
+diff --git a/tests/Composer/Test/Command/RequireCommandTest.php b/tests/Composer/Test/Command/RequireCommandTest.php
+index 9dfb7ed..ddac9dc 100644
+--- a/tests/Composer/Test/Command/RequireCommandTest.php
++++ b/tests/Composer/Test/Command/RequireCommandTest.php
+@@ -15,9 +15,11 @@ namespace Composer\Test\Command;
+ use Composer\Json\JsonFile;
+ use Composer\Test\TestCase;
+ use InvalidArgumentException;
++use PHPUnit\Framework\Attributes\Group;
+ 
+ class RequireCommandTest extends TestCase
+ {
++    #[Group('remote')]
+     public function testRequireThrowsIfNoneMatches(): void
+     {
+         $this->expectException(InvalidArgumentException::class);
+diff --git a/tests/Composer/Test/Command/SelfUpdateCommandTest.php b/tests/Composer/Test/Command/SelfUpdateCommandTest.php
+index 8abc8e7..f25462f 100644
+--- a/tests/Composer/Test/Command/SelfUpdateCommandTest.php
++++ b/tests/Composer/Test/Command/SelfUpdateCommandTest.php
+@@ -15,6 +15,7 @@ namespace Composer\Test\Command;
+ use Composer\Command\SelfUpdateCommand;
+ use Composer\Composer;
+ use Composer\Test\TestCase;
++use PHPUnit\Framework\Attributes\Group;
+ use Symfony\Component\Process\Process;
+ 
+ /**
+@@ -118,6 +119,7 @@ class SelfUpdateCommandTest extends TestCase
+         ];
+     }
+ 
++    #[Group('remote')]
+     public function testRollbackRefusesTamperedTaggedBackup(): void
+     {
+         if (!extension_loaded('openssl')) {
+@@ -140,6 +142,7 @@ class SelfUpdateCommandTest extends TestCase
+         self::assertStringContainsString('The phar signature did not match', $output);
+     }
+ 
++    #[Group('remote')]
+     public function testRollbackToSnapshotBackupWarnsButProceeds(): void
+     {
+         // Snapshot/dev backups (7-char commit sha) have no published signature, so verification is skipped
+diff --git a/tests/Composer/Test/Command/ShowCommandTest.php b/tests/Composer/Test/Command/ShowCommandTest.php
+index 67fc7f1..6857446 100644
+--- a/tests/Composer/Test/Command/ShowCommandTest.php
++++ b/tests/Composer/Test/Command/ShowCommandTest.php
+@@ -19,6 +19,7 @@ use Composer\Repository\PlatformRepository;
+ use Composer\Test\TestCase;
+ use DateTimeImmutable;
+ use InvalidArgumentException;
++use PHPUnit\Framework\Attributes\Group;
+ 
+ class ShowCommandTest extends TestCase
+ {
+@@ -737,6 +738,7 @@ OUTPUT;
+      * @dataProvider provideNotExistingPackage
+      * @param array<string, mixed> $options
+      */
++    #[Group('remote')]
+     public function testNotExistingPackage(string $package, array $options, string $expected): void
+     {
+         $dir = $this->initTempComposer([
+diff --git a/tests/Composer/Test/Command/StatusCommandTest.php b/tests/Composer/Test/Command/StatusCommandTest.php
+index 191d89e..ec370ab 100644
+--- a/tests/Composer/Test/Command/StatusCommandTest.php
++++ b/tests/Composer/Test/Command/StatusCommandTest.php
+@@ -14,6 +14,7 @@ namespace Composer\Test\Command;
+ 
+ use Composer\Test\TestCase;
+ use Generator;
++use PHPUnit\Framework\Attributes\Group;
+ 
+ class StatusCommandTest extends TestCase
+ {
+@@ -39,6 +40,7 @@ class StatusCommandTest extends TestCase
+      * @param array<mixed> $commandFlags
+      * @param array<mixed> $packageData
+      */
++    #[Group('remote')]
+     public function testLocallyModifiedPackages(
+         array $composerJson,
+         array $commandFlags,
+diff --git a/tests/Composer/Test/CompletionFunctionalTest.php b/tests/Composer/Test/CompletionFunctionalTest.php
+index 1a691af..a6dd619 100644
+--- a/tests/Composer/Test/CompletionFunctionalTest.php
++++ b/tests/Composer/Test/CompletionFunctionalTest.php
+@@ -13,6 +13,7 @@
+ namespace Composer\Test;
+ 
+ use Composer\Console\Application;
++use PHPUnit\Framework\Attributes\Group;
+ use Symfony\Component\Console\Tester\CommandCompletionTester;
+ 
+ /**
+@@ -126,6 +127,7 @@ class CompletionFunctionalTest extends TestCase
+      * @param string $input The command that is typed
+      * @param string[]|null $expectedSuggestions Sample expected suggestions. Null if nothing is expected.
+      */
++    #[Group('remote')]
+     public function testComplete(string $input, ?array $expectedSuggestions): void
+     {
+         $input = explode(' ', $input);
+diff --git a/tests/Composer/Test/Util/RemoteFilesystemTest.php b/tests/Composer/Test/Util/RemoteFilesystemTest.php
+index 4a387b7..b6faaee 100644
+--- a/tests/Composer/Test/Util/RemoteFilesystemTest.php
++++ b/tests/Composer/Test/Util/RemoteFilesystemTest.php
+@@ -17,6 +17,7 @@ use Composer\IO\IOInterface;
+ use Composer\Util\AuthHelper;
+ use Composer\Util\RemoteFilesystem;
+ use Composer\Test\TestCase;
++use PHPUnit\Framework\Attributes\Group;
+ use PHPUnit\Framework\MockObject\MockObject;
+ use ReflectionMethod;
+ use ReflectionProperty;
+@@ -311,6 +312,7 @@ class RemoteFilesystemTest extends TestCase
+      * @param non-empty-string $url
+      * @requires PHP 7.4.17
+      */
++    #[Group('remote')]
+     public function testBitBucketPublicDownload(string $url, string $contents): void
+     {
+         $io = $this

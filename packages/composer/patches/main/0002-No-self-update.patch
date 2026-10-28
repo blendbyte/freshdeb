@@ -1,0 +1,34 @@
+From: freshdeb <packages@freshdeb.com>
+Subject: No self-update
+
+Composer comes from the package and apt updates it. self-update and
+diagnose behave as upstream's do for an installation that isn't a phar
+("installed as a system package"); diagnose then skips the self-update
+signature keys and the newest-version check.
+
+Forwarded: not-needed
+---
+--- a/src/Composer/Command/DiagnoseCommand.php
++++ b/src/Composer/Command/DiagnoseCommand.php
+@@ -101,7 +101,8 @@
+ 
+         $this->httpDownloader = Factory::createHttpDownloader($io, $config);
+ 
+-        if (strpos(__FILE__, 'phar:') === 0) {
++        // freshdeb: no self-update (system package), as when not a phar.
++        if (false) {
+             $io->write('Checking pubkeys: ', false);
+             $this->outputResult($this->checkPubKeys($config));
+ 
+--- a/src/Composer/Command/SelfUpdateCommand.php
++++ b/src/Composer/Command/SelfUpdateCommand.php
+@@ -79,7 +79,8 @@
+      */
+     protected function execute(InputInterface $input, OutputInterface $output): int
+     {
+-        if (strpos(__FILE__, 'phar:') !== 0) {
++        // freshdeb: a system package, updated by apt; as when not a phar.
++        if (true) {
+             if (str_contains(strtr(__DIR__, '\\', '/'), 'vendor/composer/composer')) {
+                 $projDir = dirname(__DIR__, 6);
+                 $output->writeln('<error>This instance of Composer does not have the self-update command.</error>');

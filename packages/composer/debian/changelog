@@ -1,0 +1,2049 @@
+composer (2.10.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix forgejo driver to handle empty repos better (#12968)
+  * Mask URL credentials anywhere in a string, not just at its start (#13044)
+  * Update changelog
+  * Release 2.10.3
+    + Security: Validate package bin paths against path traversal
+      using symlinks (GHSA-96h3-5x6v-m776) [CVE-2026-59944]
+    + Security: Fixed command injection via malicious Perforce url
+      (GHSA-rvx4-ffvw-m9q3)
+
+  [ Brad Jorsch ]
+  * Avoid a race condition in `ensureDirectoryExists` (#12977)
+
+  [ Stephan ]
+  * Policies: show which source blocked a package version as part of
+    the filter list pool filter (#12993)
+
+  [ Lazizbek Ergashev ]
+  * Replace deprecated spl_object_hash with spl_object_id, fixes #13027 (#13028)
+
+  [ Eyüp Can Akman ]
+  * Fix `Url::getOrigin` prefix-matching a host against `gitlab-domains`
+    (#12988)
+
+  [ Pascal CESCON ]
+  * Do not use a conflicted content-hash as the autoloader suffix (#13048)
+
+  [ Eirik Stanghelle Morland ]
+  * Make it possible to pass transport options to FilterListApiClient (#13040)
+
+  [ David Prévot ]
+  * Use debhelper-compat 14
+
+ -- David Prévot <taffit@debian.org>  Thu, 27 Aug 2026 21:09:25 +0200
+
+composer (2.10.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Avoid deeply nested multi constraints when matching security
+    advisories / malware (#12935)
+  * Add warnings in self-update when using soon to be deprecated versions,
+    or when the php version is outdated (#12920)
+  * Only follow http(s) redirects in HTTP transports (#12947)
+  * Prevent phar metadata unserialization on unsafe php versions (#12945)
+  * Sanitize JSON parse errors in Http\Response to avoid leaking response
+    bodies (#12960)
+  * Validate resolved packages before locking (GHSA-499r-g7pc-vmp9)
+  * Validate package bin paths against path traversal (GHSA-gjfg-22fp-rrxx)
+  * Sanitize URL-embedded usernames/tokens in verbose output
+    (GHSA-g6xq-892h-64w3)
+  * Release 2.10.2
+
+  [ Eyüp Can Akman ]
+  * Avoid writing backspaces to non-decorated output (#12925)
+  * Don't hide a suggestion provided by the suggesting package itself (#12933)
+
+  [ Keerthana ]
+  * Fix audit output to use stdout for summary messages (#12904)
+
+  [ Dimas Febri ]
+  * Retry downloads failing with HTTP 400 on a fresh connection (#12962)
+
+  [ David Prévot ]
+  * Use relative path in autoload.php
+  * Use build/vendor instead of vendor for homemade autoload.php
+
+ -- David Prévot <taffit@debian.org>  Sat, 04 Jul 2026 20:10:04 +0200
+
+composer (2.10.1-2) unstable; urgency=medium
+
+  * Skip test failing with PHPUnit 13.2
+
+ -- David Prévot <taffit@debian.org>  Thu, 11 Jun 2026 01:11:56 +0200
+
+composer (2.10.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fixed `source-fallback` option applying to source->dist fallbacks as well
+    (#12888)
+  * Avoid duplicate output when a 400/500 request outputs a warning json
+    response (#12907)
+  * Verify backup signature on self-update --rollback (#12918)
+  * Update changelog
+  * Release 2.10.1
+
+  [ Trevor Jacob Mathews ]
+  * Fix shell escaping in config --editor (#12903)
+
+  [ Aleksei Kankov ]
+  * Avoid prompting for a GitHub token multiple times on parallel auth failures
+    (#12913)
+
+  [ Eyüp Can Akman ]
+  * Check for local changes when switching a package from source to dist
+    (#12912)
+
+ -- David Prévot <taffit@debian.org>  Fri, 05 Jun 2026 13:38:06 +0200
+
+composer (2.10.0-1) unstable; urgency=medium
+
+  * Upload release to unstable
+
+  [ Jordi Boggiano ]
+  * Sanitize urls everywhere in output (#12882)
+  * Disable source-fallback by default, mark it deprecated and remove
+    env/flags to override
+  * Fix issues checking URLs with uppercase URL schemes
+  * Relax token validation on input, and hide more things on output (#12886)
+  * Update changelog
+  * Release 2.10.0
+
+  [ PrinsFrank ]
+  * Return non-zero exit code for "composer audit" when audit couldn't be
+    performed due to missing required packages (#12880)
+
+ -- David Prévot <taffit@debian.org>  Mon, 01 Jun 2026 10:33:28 +0200
+
+composer (2.10.0~rc2-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.10.0-RC2
+
+  [ David Prévot ]
+  * Document CVE in previouss changelog entry
+  * Use full version with RequiresPhpunit
+
+ -- David Prévot <taffit@debian.org>  Sun, 24 May 2026 08:49:12 +0200
+
+composer (2.10.0~rc1-3) experimental; urgency=medium
+
+  * Fix GITHUB_TOKEN disclosure in GitHub Actions logs (GHSA-f9f8-rm49-7jv2)
+    [CVE-2026-45793]
+
+ -- David Prévot <taffit@debian.org>  Wed, 13 May 2026 19:05:53 +0200
+
+composer (2.10.0~rc1-2) experimental; urgency=medium
+
+  * Fix command injection via malicious Perforce repository definition
+    [CVE-2026-40261]
+  * Fix command injection via malicious Perforce source reference/url
+    [CVE-2026-40176]
+
+ -- David Prévot <taffit@debian.org>  Sun, 19 Apr 2026 13:13:52 +0200
+
+composer (2.10.0~rc1-1) experimental; urgency=medium
+
+  * Upload RC to experimental
+
+  [ Jordi Boggiano ]
+  * Update docs for COMPOSER_NO_SECURITY_BLOCKING to include that it is
+    supported in install command
+  * Fix inconsistent treatment of SingleCommandApplication script commands
+    (#12758)
+  * Fix usage of insecure 3DES cipher suites when curl is disabled
+  * Optimize plugin autoloading by avoiding regenerating classmaps and co for
+    every package (#12696)
+  * Release 2.10.0-RC1
+
+  [ Yanick Witschi ]
+  * Parse HTML in extension info when not on CLI (#12735)
+  * Reduce PoolOptimizer memory usage in identical dependency grouping (#12783)
+
+  [ Denis ]
+  * Relay GitHub API error messages to the user on auth failures (#12737)
+
+  [ mamazu ]
+  * Improving the error message when package version can't be parsed (#12743)
+
+  [ Jorg Adam Sowa ]
+  * Fix credentials persisting in git mirror .git/config after clone or failed
+    update
+  * [Security] Enforce allow-plugins in non-interactive mode for pre-2.2 lock
+    file (#12764)
+
+  [ Jay-Way ]
+  * Improve warning message when lockfile creation is disabled (#12760)
+
+  [ Kuba Werłos ]
+  * Bump only actually updated packages when running
+    `composer update --bump-after-update` (#12733)
+
+  [ Kay W. ]
+  * Add `source-fallback` config option to disable/enable source fallback on
+    download failure (#12698)
+
+  [ discollizard ]
+  * Add new --require param to create-project to add new packages to the
+    project as it gets installed (#12738)
+
+  [ ಠ_ಠ ]
+  * Add support for temporary --with constraints with wildcards in
+    UpdateCommand (#12658)
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.7.4
+
+ -- David Prévot <taffit@debian.org>  Mon, 06 Apr 2026 09:53:47 +0200
+
+composer (2.9.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Revert "Work around issue with msys/rmdir on windows (#12726)"
+  * Fix detection of 7z when it is installed as 7za
+  * Release 2.9.5
+
+  [ James Titcumb ]
+  * Add support for PIE list of download-url-methods (#12727)
+
+ -- David Prévot <taffit@debian.org>  Fri, 30 Jan 2026 06:34:54 +0100
+
+composer (2.9.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix git rev-list usages to support older git versions (#12705)
+  * Reorder diagnose output and add active plugins (#12706)
+  * Sanitize invalid unicode sequences into question marks to avoid preg errors
+  * Work around issue with msys/rmdir on windows (#12726)
+  * Update changelog
+  * Release 2.9.4
+
+  [ Maksim Cherkasov ]
+  * Disable HTTP/3 when HTTP proxy is used (#12699)
+
+  [ heui ]
+  * Replace substr with mb_substr for UTF-8 support (#12704)
+
+ -- David Prévot <taffit@debian.org>  Sun, 25 Jan 2026 08:31:24 +0100
+
+composer (2.9.3-1) unstable; urgency=medium
+
+  * Security: Fixed ANSI sequence injection [CVE-2025-67746]
+
+  [ Jordi Boggiano ]
+  * Remove requirement that a full Composer instance be passed to
+    EventDispatcher (#12629)
+  * Fix update --lock / update mirrors not working when locked packages
+    contain vulnerabilities, fixes #12634 (#12645)
+  * Retry on curl timeouts (28) (#12662)
+  * Use git rev-list instead of log to avoid issues with
+    log.showSignature being enabled (#12666)
+  * Fix regression in showing reasons for ignoring advisories (#12668)
+  * Fix no-security-blocking / COMPOSER_NO_SECURITY_BLOCKING not working
+    on updates done via the install command
+  * Validate php-ext schema in ValidatingArrayLoader (#12694)
+  * Fix support for securetransport + libressl
+  * Release 2.9.3
+
+  [ ಠ_ಠ ]
+  * fix crash bumping version with composer update and disabled lockfile
+
+  [ Ilia Urvachev ]
+  * fix(AuthHelper): misplaced `username` and `password` (#12667)
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.7.3
+  * Convert d/watch to version 5
+
+ -- David Prévot <taffit@debian.org>  Tue, 30 Dec 2025 16:00:43 +0100
+
+composer (2.9.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * New flags to disable/configure blocking (#12617)
+  * Add config command support for missing audit settings (#12609)
+  * Add a way to configure block and audit specific ignores
+  * Fix ignoring of CVE ids in security blocking
+  * Fix partial updates failing when a locked package has security advisories
+    (#12626)
+  * Release 2.9.2
+
+ -- David Prévot <taffit@debian.org>  Sun, 23 Nov 2025 09:18:53 +0100
+
+composer (2.9.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix a few minor issues with bump-after-update flag (#12598)
+  * Fix script autoloading regressions (#12606)
+  * Fix null call of Command::setDescription, fixes #12605
+  * Release 2.9.1
+
+  [ Ruben Pascal Abel ]
+  * Reverting 86b4aa1 to fix path resolution for vendor/bin proxies (#12601)
+
+ -- David Prévot <taffit@debian.org>  Sat, 15 Nov 2025 14:07:52 +0100
+
+composer (2.9.0~rc1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Add support for --minimal-changes with full updates (#12349)
+  * Improve performance of script handlers (#12456)
+  * Ensure packages where the abandoned state changes get reinstalled to sync
+    up the state in installed.json (#12423)
+  * Add detection for preload being active and if it causes errors try to warn
+    users (#12528)
+  * Fix display of dist refs for dev versions when source is missing (#12562)
+  * Add --locked flag to licenses command (#12595)
+  * Release 2.9.0-RC1
+
+  [ Ayesh Karunaratne ]
+  * CurlDownloader - Add support for HTTP/3 (#12363)
+
+  [ Lubomir Stanko ]
+  * Add support to authorize with Custom Headers in auth.json or COMPOSER_AUTH
+    env (#12372)
+
+  [ Ilia Urvachev ]
+  * feat(auth.json): support for authorization with client TLS-certificates
+    (#12406)
+
+  [ Alexis Lefebvre ]
+  * doc: add SHELL_VERBOSITY to CLI (#12473)
+
+  [ Ion Bazan ]
+  * Add update-with-minimal-changes config option (#12545)
+  * Allow non-interactive init without input (#12546)
+
+  [ Stefan ]
+  * feat: Added --ignore-unreachable flag to audit command for
+    private/unreachable repositories (#12470)
+
+  [ Stephan ]
+  * Add driver to support forgejo/codeberge repositories (#12307)
+  * Audit: add option to ignore individually abandoned packages (#12572)
+  * Composer update: filter packages with security advisories from pool (#11956)
+
+  [ Joshua Behrens ]
+  * Add repo command to manipualte repositories in composer.json (#12388)
+
+  [ Nicolas Grekas ]
+  * Add COMPOSER_PREFER_DEV_OVER_PRERELEASE env var (#12585)
+
+  [ Dan Wallis ]
+  * [feature] Automatically recover from trivial merge conflicts in
+    `composer.lock` (#11517)
+
+ -- David Prévot <taffit@debian.org>  Mon, 10 Nov 2025 18:54:39 +0100
+
+composer (2.8.12-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix php8.5 deprecation warning (#12513)
+  * Bump json-schema min requirement
+  * Bump symfony requirements
+  * Drop react/promise 2.x again, refs #12188
+  * Release 2.8.12
+
+  [ ಠ_ಠ ]
+  * fixes a regression introduced via 304107d (#12512)
+
+  [ Stephan ]
+  * Bitbucket: add support for API tokens (#12515)
+
+  [ Daniel Pfeiffer ]
+  * Allows for source to have a space in path name
+
+  [ Kayw ]
+  * Fix `--global` flag path resolution for bin-dir config
+
+  [ Yanick Witschi ]
+  * Reduce memory usage in PoolBuilder (#12516)
+
+ -- David Prévot <taffit@debian.org>  Mon, 22 Sep 2025 12:35:31 +0200
+
+composer (2.8.11-2) unstable; urgency=medium
+
+  * Skip failure on 32-bit architectures
+
+ -- David Prévot <taffit@debian.org>  Fri, 29 Aug 2025 10:29:23 +0200
+
+composer (2.8.11-1) unstable; urgency=medium
+
+  * Upload to unstable now that Trixie has been released
+
+  [ Jordi Boggiano ]
+  * Avoid bumping 0.3 to 0.4.3 for example for pre-1.0 releases, fixes #12468
+  * Fix audit command failing when an advisory contains an invalid constraint
+    (#12507)
+  * Update changelog
+  * Release 2.8.11
+
+  [ Juliette ]
+  * Update reactphp/promise for PHP 8.5 compatibility (#12504)
+  * PHP 8.5 | Prevent deprecation notices for Reflection*::setAccessible()
+    (#12493)
+
+  [ Jorg Adam Sowa ]
+  * fix: deprecation of curl_close in CurlDownloader.php (#12505)
+
+  [ Alexey Kopytko ]
+  * Fix PSR-4 warnings when using exclude-from-classmap with symlinked
+    directories (#12480)
+
+  [ David Prévot ]
+  * Remove Rules-Requires-Root
+
+ -- David Prévot <taffit@debian.org>  Tue, 26 Aug 2025 08:38:57 +0200
+
+composer (2.8.10-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Remove possessive quantifier to fix JS regex engines support for schema
+    (#12438)
+  * Fix git prompt breaking on some systems, fixes #12435 (#12437)
+  * Avoid marking a plugin as loaded until it is actually loaded (#12442)
+  * Fix deprecation message on PHP 8.4 when platform check fails (#12453)
+  * Fix notification callback not being valid/reachable (#12472)
+  * Release 2.8.10
+
+  [ Steven Rombauts ]
+  * Handle Planner role in GitLab (#12426)
+
+  [ Robin Chalas ]
+  * Add forward compatibility layer for symfony/console >7.4 (#12445)
+
+  [ ConnorLock ]
+  * Fix Bitbucket oauth failure (#12462)
+
+ -- David Prévot <taffit@debian.org>  Sun, 13 Jul 2025 12:36:28 +0200
+
+composer (2.8.9-1) experimental; urgency=medium
+
+  * Upload to experimental during the freeze
+
+  [ Jordi Boggiano ]
+  * Do not output script being run when running via composer <script-name>
+    (#12383)
+  * Check the whole archive if a file looks like a zipbomb (#12409)
+  * Fix creation of empty archives (#12408)
+  * Update changelog
+  * Release 2.8.9
+
+  [ Christian Flothmann ]
+  * ensure that version suffixes are case-insensitive (#12376)
+
+  [ HypeMC ]
+  * Don't run bump after update with `--lock` (#12371)
+
+ -- David Prévot <taffit@debian.org>  Wed, 14 May 2025 08:37:55 +0200
+
+composer (2.8.8-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix deprecation warnings in code inspections for vendor/autoload.php,
+    fixes #12331
+  * Upgrade json-schema to v6 (#12348)
+  * Fix handling of replace together with the --with temporary constraints
+    (#12353)
+  * Fix error handler to bypass some new php 8.5 warnings and avoid spamming
+    output too much with deprecation notices (#12360)
+  * Fix InstalledVersions showing duplicates at Composer runtime during
+    installation, fixes #12225 (#12361)
+  * Fix some issues running tests on 32bit
+  * Release 2.8.8
+
+  [ Maarten Bruna ]
+  * Add COMPOSER_MAX_PARALLEL_PROCESSES (#12356)
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.7.2
+
+ -- David Prévot <taffit@debian.org>  Sat, 05 Apr 2025 11:50:09 +0200
+
+composer (2.8.6-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Add hint when avast is detected and we get a curl error 60, refs #9894
+  * Add verbose output to show when scripts get skipped by the new env var,
+    refs #12290
+  * Release 2.8.6
+
+  [ Sebastian Muszynski ]
+  * Introduce COMPOSER_WITH_DEPENDENCIES and COMPOSER_WITH_ALL_DEPENDENCIES
+    env var
+
+  [ Stephan ]
+  * Merge pull request #12290 from glaubinix/skip-scripts-for-certain-events
+
+  [ Petar Obradović ]
+  * feat: Detect containerd runtime and allow root execution (#12299)
+
+  [ Philipp Scheit ]
+  * ZipArchiver: treat backslaches in folder names on Unix (#12327)
+
+  [ David Prévot ]
+  * Update debian/clean
+  * Modernize PHPUnit syntax
+
+ -- David Prévot <taffit@debian.org>  Thu, 27 Feb 2025 23:08:48 +0100
+
+composer (2.8.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix unstable order of psr-0 and psr-4 rules
+  * Fix regression from #12233 in InstalledVersions when reload is used,
+    fixes #12235
+  * Release 2.8.5
+
+  [ Andrew Nicols ]
+  * Discard unsupported FUNDING.yml URL values
+
+  [ jrfnl ]
+  * GitHubDriver::getFundingInfo(): add support for thanks.dev and polar.sh
+
+  [ Tim Düsterhus ]
+  * Generate build provenance attestation during release
+
+  [ David Prévot ]
+  * Revert "Force system dependencies loading"
+  * Revert "Fix regression from #12233 in InstalledVersions when reload is
+    used, fixes #12235"
+
+ -- David Prévot <taffit@debian.org>  Wed, 22 Jan 2025 08:22:33 +0100
+
+composer (2.8.4-3) unstable; urgency=medium
+
+  * Use --exclude-group multiple times (PHPUnit 11 fix)
+
+ -- David Prévot <taffit@debian.org>  Fri, 10 Jan 2025 13:20:16 +0100
+
+composer (2.8.4-2) unstable; urgency=medium
+
+  * Refresh patch for PHPUnit 11
+
+ -- David Prévot <taffit@debian.org>  Tue, 31 Dec 2024 14:23:28 +0100
+
+composer (2.8.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Ensure installed.php data is sorted deterministically, fixes #12197
+  * Fix bump-after-update when passing inline constraints, fixes #12223
+  * Avoid duplicate errors in the output, fixes #12214
+  * Fixed InstalledVersions returning duplicates in some instances
+  * Fix create-project when passed with a path repo to disable symlinks by default
+  * Avoid returning failing status code if the composer audit fails in diagnose command, refs #12196
+  * Release 2.8.4
+
+  [ Javier Spagnoletti ]
+  * Use a bitmask to produce deterministic exit codes for the "audit" command
+    (#12203)
+
+  [ Lctrs ]
+  * disable multiplexing for some versions of curl (#12207)
+
+  [ Justin Beaty ]
+  * Fix bug when plugin defines multiple PluginInterface classes (#12226)
+
+ -- David Prévot <taffit@debian.org>  Mon, 23 Dec 2024 17:49:58 +0100
+
+composer (2.8.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Avoid updating the lock hash if there is no lock
+  * Release 2.8.3
+
+ -- David Prévot <taffit@debian.org>  Mon, 18 Nov 2024 07:52:28 +0100
+
+composer (2.8.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Clean up lock update code to remove redundancy and avoid errors (#12149)
+  * Fix handling of signals in non-PHP binaries run via proxies (#12176)
+  * Fix create-project regression when using path repos with relative paths,
+    fixes #12150
+  * Remove SignalHandler from Application to fix issues handling ctrl-C
+    inside prompts
+  * Release 2.8.2
+
+  [ Christian Flothmann ]
+  * do not stumble over missing descriptions (#12152)
+
+ -- David Prévot <taffit@debian.org>  Sat, 02 Nov 2024 17:59:43 +0100
+
+composer (2.8.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix a few cases where the prompt for using a parent dir's composer.json fails to work correctly, fixes #8023
+  * Fix --strict-ambiguous to really report all issues, fixes #12140 (#12148)
+  * Fix create-project to reuse the target folders permissions for files created (#12146)
+  * Release 2.8.1
+
+  [ Antal Áron ]
+  * Allow init without license (#12145)
+
+ -- David Prévot <taffit@debian.org>  Wed, 09 Oct 2024 14:52:18 +0200
+
+composer (2.8.0-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix handling of COMPOSER_ROOT_VERSION to normalize according to
+    expectations, fixes #12101 (#12109)
+  * Fix handling of platform packages in why-not command and partial updates,
+    fixes #12104 (#12110)
+  * Add suggestions of provider packages for ext- and lib- packages (#12113)
+  * Fix require command skipping new stability-flags from the lock file, fixes
+    #11698 (#12112)
+  * Add a way to control which scripts get args and where (#12086)
+  * Respect sort-packages option when adding plugins to the allow-plugins list,
+    fixes #11348
+  * Add --strict-ambiguous to dump-autoload command (#12119)
+  * Show warnings for each missing platform package in create-project, fixes
+    #10736 (#12120)
+  * Validate licenses passed into init command (#12115)
+  * Add ability to reinstall packages by type (#12114)
+  * Add --patch-only flag to update command to restrict updates to patch
+    versions and make them safer (#12122)
+  * Make version guessing more deterministic if two branches appear to be the
+    base of a feature branch (#12129)
+  * Fix init command to accept proprietary as license
+  * Update changelog
+  * Release 2.8.0
+
+  [ Mohamed Hubail ]
+  * Add `--abandoned` option (#12091)
+
+  [ John Stevenson ]
+  * Remove proxy transition fallback (#11938)
+
+  [ Job Vink ]
+  * Improve interactive package updates (#11990)
+
+  [ Joe ]
+  * Add allow-missing-requirements config setting to ignore missing
+    requirements (#11966)
+
+  [ Carlos Granados ]
+  * Add option to run bump after update (#11942)
+
+  [ Juliette ]
+  * PHP 8.4 | Remove use of `E_STRICT` (#12116)
+
+  [ PrinsFrank ]
+  * Add dry-run argument to dump-autoload documentation (#12138)
+
+  [ Johnson Page ]
+  * Add `composer audit --ignore-severity` option (#12132)
+
+  [ David Prévot ]
+  * Change expected output in a test
+
+ -- David Prévot <taffit@debian.org>  Fri, 04 Oct 2024 08:12:05 +0200
+
+composer (2.7.9-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix docker detection breaking on constrained environments, fixes #12095
+  * Release 2.7.9
+
+ -- David Prévot <taffit@debian.org>  Fri, 06 Sep 2024 07:47:45 +0200
+
+composer (2.7.8-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix archive command crashing if a path cannot be realpathed on windows,
+    fixes #11544
+  * Refactor the BasePackage::$stabilities into a constant
+  * Fix addressability of branches containing # characters (#12042)
+  * Improvements to docker detection (#12062)
+  * Normalize namespaces in psr-0/psr-4 rules to fix edge cases, fixes
+    #12028 (#12063)
+  * Ensure COMPOSER_AUTH takes precedence over local auth.json, fixes #12084
+  * Fix relative:true not being respected in path repo installs, fixes
+    #12074 (#12092)
+  * Fix duplicate libraries causing issues when conflicting extensions from
+    core and pecl are installed concurrently (#12093)
+  * Fix copy() sometimes failing on virtualbox shared folders, fixes #12057
+  * Release 2.7.8
+
+  [ Ilya Urvachev ]
+  * fix(Locker): don't store transport-options.ssl within the lock-file (#12019)
+
+  [ ADmad ]
+  * Fix deprecation notice on PHP 8.4 (#12046)
+
+  [ Sam L ]
+  * Provide release-date/release-age and latest-release-date in composer outdated -A -f json (#12053)
+
+ -- David Prévot <taffit@debian.org>  Sun, 01 Sep 2024 12:38:50 +0200
+
+composer (2.7.7-2) unstable; urgency=medium
+
+  * Use --require-file for phpabtl (Closes: #1074182)
+
+ -- David Prévot <taffit@debian.org>  Tue, 25 Jun 2024 07:58:56 +0200
+
+composer (2.7.7-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix Filesystem::isLocalPath including windows checks on linux
+  * Fix perforce arg not being escaped correctly
+  * Fix handling of zip bombs when unzipping archives
+  * Fix UX when a non-required plugin is still present in vendor dir (#12000)
+  * Fixed PSR violations for classes not matching the namespace of a rule being
+    hidden, fixes #11957
+  * Fix new platform requirements from composer.json not being checked when
+    composer.lock is outdated, fixes #11989 (#12001)
+  * Fix empty type support in init command, fixes #11999
+  * Fix secure-http check to avoid bypass using emojis
+  * Merge pull request from GHSA-v9qv-c7wm-wgmf [CVE-2024-35242]
+    (Closes: #1073126)
+  * Merge pull request from GHSA-47f6-5gq3-vx9c [CVE-2024-35241]
+    (Closes: #1073125)
+  * Fix windows parameter encoding to prevent abuse of unicode characters with
+    best fit encoding conversion
+  * Release 2.7.7
+
+  [ Krzysztof Ciszewski ]
+  * composer#11852 fix: ability to remove autoload* keys (#11967)
+  * Fix composer error when git config safe.bareRepository is set to explicit
+    (#11969)
+
+  [ Dan Wallis ]
+  * Close style tags to avoid bleed (#11972)
+
+  [ Sam B ]
+  * To enable to the TransportException code to be accessed in PHP < 8.1, make
+    reflection property accessible (#11974)
+
+ -- David Prévot <taffit@debian.org>  Thu, 13 Jun 2024 08:57:06 +0200
+
+composer (2.7.6-3) unstable; urgency=medium
+
+  * Compatibility with updated php-composer-class-map-generator
+
+ -- David Prévot <taffit@debian.org>  Sat, 08 Jun 2024 07:52:56 +0200
+
+composer (2.7.6-2) unstable; urgency=medium
+
+  * Make provider functions static (PHPUnit 11 Fix) (Closes: #1070504)
+
+ -- David Prévot <taffit@debian.org>  Mon, 20 May 2024 11:37:45 +0200
+
+composer (2.7.6-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Workaround curl bug in 8.7.0/8.7.1, fixes #11913
+  * Fix config command issue handling objects in some conditions, fixes #11945
+  * Add new uninstall alias to docs
+  * Fix binary proxies having an absolute path to vendor dir when project dir
+    is a symlink, fixes #11947
+  * Fix Composer autoloader being hijackable by script/plugin event handlers
+    (#11955)
+  * Fix transport exception not always using 255 exit code, fixes #11954
+  * Tweak exit code for network errors to be 100, refs #11954
+  * Fix private autoloader callbacks breaking the new runtime autoloader
+    handling code
+  * Release 2.7.6
+
+  [ maximilian-walter ]
+  * Don't show root warning for Podman containers (#11946)
+
+  [ Buster Neece ]
+  * Add "uninstall" as alias to "remove". (#11951)
+
+ -- David Prévot <taffit@debian.org>  Sun, 05 May 2024 09:32:03 +0200
+
+composer (2.7.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix composer status command handling of failed promises, closes #11889
+  * Ensure integer env vars do not cause a crash, fixes #11908
+  * Ensure we clear the locally configured cache dir instead of default one,
+    fixes #11921
+  * Fix show command output to remove v prefixes on versions, making for more
+    uniform output, fixes #11925
+  * Release 2.7.4
+
+  [ Yanick Witschi ]
+  * Only show warning about default version when not "project" type (#11885)
+
+  [ Ayesh Karunaratne ]
+  * [PHP 8.4] Fix for implicit nullability deprecation (#11888)
+
+  [ Brad Jones ]
+  * Surface the advisory ID when CVE not present. (#11892)
+
+  [ gaxweb ]
+  * Allow for SSH URLs when using hg repository type (#11878)
+
+  [ Fabrizio Balliano ]
+  * Added support for buy_me_a_coffee (#11902)
+
+  [ John Stevenson ]
+  * Refactor proxy handling to require https_proxy (#11915)
+
+  [ Barry vd. Heuvel ]
+  * Load ProxyManager before running command to fix autoload order (#11943)
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.7.0
+  * Drop version from build-dependencies
+
+ -- David Prévot <taffit@debian.org>  Tue, 23 Apr 2024 08:06:18 +0200
+
+composer (2.7.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix plugins still being available in a few special contexts when running
+    as non-interactive root, mainly create-project, refs #11854
+  * Optimize outdated --ignore to avoid fetching the latest package info for
+    ignored packages, fixes #11863
+  * Fix ensureDirectoryExists not working when a broken symlink appears
+    somewhere in the path, fixes #11864
+  * Release 2.7.2
+
+  [ Pol Dellaiera ]
+  * Add a warning message when Composer is not able to guess the root package
+    version (#11858)
+  * Fix update --lock to avoid updating all metadata except dist/source urls
+    and mirrors (#11850)
+
+  [ Michael Newton ]
+  * Include PHP information when showing Composer version verbosely (#11866)
+
+  [ Bastien Roucariès ]
+  * Add salsa-ci.yml
+
+ -- David Prévot <taffit@debian.org>  Tue, 12 Mar 2024 08:18:18 +0100
+
+composer (2.7.1-2) unstable; urgency=medium
+
+  * Force system dependencies loading
+
+ -- David Prévot <taffit@debian.org>  Sun, 11 Feb 2024 12:08:01 +0100
+
+composer (2.7.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Merge pull request from GHSA-7c6p-848j-wh5h [CVE-2024-24821]
+    (Closes: #1063603)
+  * Release 2.7.1
+
+  [ David Prévot ]
+  * Extend recommended packages list (Closes: #1061291)
+
+ -- David Prévot <taffit@debian.org>  Sat, 10 Feb 2024 11:18:19 +0100
+
+composer (2.6.6-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.6.6
+
+  [ Dan Wallis ]
+  * Use global constant if available for libpq version (#11684)
+  * Display error instead of throwing exception when unable to update
+    with temporary constraint (#11692)
+
+ -- David Prévot <taffit@debian.org>  Tue, 12 Dec 2023 07:49:21 +0100
+
+composer (2.6.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix autoload generator dump() non-BC signature change in 2.6.4
+  * Release 2.6.5
+
+  [ Uladzimir Tsykun ]
+  * Fix error when vendor dir contains broken symlinks (#11670)
+
+ -- David Prévot <taffit@debian.org>  Sun, 08 Oct 2023 09:17:05 +0200
+
+composer (2.6.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Merge pull request from GHSA-jm6m-4632-36hf [CVE-2023-43655]
+  * Release 2.6.4
+
+ -- David Prévot <taffit@debian.org>  Tue, 03 Oct 2023 13:21:24 +0200
+
+composer (2.6.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix loading of root aliases on path repo packages when doing partial
+    updates, fixes #11630 (#11632)
+  * Add audit.abandoned warnings for abandoned packages, fixes #11623 (#11639)
+  * Release 2.6.3
+
+  [ Christophe Coevoet ]
+  * Fix the promise resolution for the cleanup logic (#11620)
+
+  [ Jason McCreary ]
+  * Get realpath for `ZipArchive` (#11636)
+
+  [ Yanick Witschi ]
+  * Fixed replaced packages being incorrectly missing when unlocked by an old
+    version (#11629)
+
+  [ wgevaert ]
+  * Add warning when duplicate "files" autoload rules are detected (#11109)
+
+ -- David Prévot <taffit@debian.org>  Sat, 16 Sep 2023 17:18:35 +0530
+
+composer (2.6.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.6.2
+
+ -- David Prévot <taffit@debian.org>  Tue, 05 Sep 2023 20:05:50 +0530
+
+composer (2.5.8-1) unstable; urgency=medium
+
+  * Upload to unstable now that bookworm has been released
+
+  [ Jordi Boggiano ]
+  * Fix regression in edge cases where root package gets added to a repository
+    already during the install process, fixes #11495
+  * Fix EventDispatcher on windows picking bat files when using "@php binary",
+    fixes #11490
+  * Ignore ICU CDLR version fetching when ICU cannot initialize the resource
+    bundle, fixes #11492
+  * Update type declarations on ClassLoader, fixes #11482 (#11500)
+  * Release 2.5.8
+
+  [ David Prévot ]
+  * Avoid option not compatible with PHPUnit 10
+
+ -- David Prévot <taffit@debian.org>  Tue, 13 Jun 2023 07:21:32 +0200
+
+composer (2.5.7-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix autoload regression with metapackage dependencies (#11481)
+  * Update changelog
+  * Release 2.5.7
+
+ -- David Prévot <taffit@debian.org>  Wed, 24 May 2023 20:51:32 +0200
+
+composer (2.5.6-1) experimental; urgency=medium
+
+  * Upload to experimental during the freeze
+
+  [ Jordi Boggiano ]
+  * Fix lock file being more recent than vendor dir when require guesses the
+    constraint after resolution, fixes #11405
+  * Fixed binary proxies to return whatever the original binary returns as
+    well, fixes #11416 (#11454)
+  * Fix support for readonly classes as plugins, fixes #11404
+  * Fix getmypid being required as it is not always available, fixes #11401
+  * Return null for install path for metapackages instead of an empty path
+    which then resolves to the root package's path (#11455)
+  * Fix numeric default-branches with v prefix (e.g. v2.x-dev) being treated
+    as non-numeric and receiving an alias like e.g. dev-main
+  * Fix lock file verification to take into account root provider/replacers
+    and output mismatches there more clearly, fixes #11458 (#11475)
+  * Update changelog
+  * Release 2.5.6
+
+  [ Stefan Grootscholten ]
+  * Fix authentication issues with private bitbucket repos (#11464)
+
+ -- David Prévot <taffit@debian.org>  Wed, 24 May 2023 12:51:13 +0200
+
+composer (2.5.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Escape % chars in user input before passing to sprintf, fixes #11359
+  * Fix github header handling to be case insensitive, fixes rate limit
+    extraction (#11366)
+  * Fix return type of InstalledVersions::getInstalled, fixes #11304
+  * Update changelog
+  * Release 2.5.5
+
+  [ Uladzimir Tsykun ]
+  * Fix basic auth infinite loop (#11320)
+
+  [ Wim Leers ]
+  * Follow-up for #5205: fix high concurrency race condition
+
+ -- David Prévot <taffit@debian.org>  Fri, 24 Mar 2023 10:41:51 +0100
+
+composer (2.5.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.5.4
+
+  [ Marek Nocoń ]
+  * Added optional plugin check in PluginInstaller (#11318)
+
+ -- David Prévot <taffit@debian.org>  Wed, 15 Feb 2023 18:24:56 +0100
+
+composer (2.5.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.5.3
+
+  [ Nicolas Grekas ]
+  * Add extra.plugin-optional to auto-disable plugins in non-interactive mode
+    (#11315)
+
+ -- David Prévot <taffit@debian.org>  Sat, 11 Feb 2023 06:53:04 +0100
+
+composer (2.5.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Warn when require ends up auto-selecting a feature branch,
+    fixes #11264 (#11270)
+  * Release 2.5.2
+
+ -- David Prévot <taffit@debian.org>  Mon, 06 Feb 2023 08:26:32 +0100
+
+composer (2.5.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Add autoconfiguration of gitlab-domains/github-domains when auth is present
+    for custom domains, fixes #11062
+  * Add warning when outdated command rejects an existing version due to
+    platform requirements, fixes #11016 (#11113)
+  * Add hard failure if COMPOSER_AUTH is malformed json, fixes #11085
+  * Add support for adding Command classes as scripts (#11151)
+  * Add interactive prompt for which script/binary to run if run-script/exec is
+    called without arg, fixes #11128 (#11157)
+  * Make the require command guess versions more accurately by delegating to the
+    solver (except with --no-update) (#11160)
+  * Update to composer/pcre 2.1 (#11189)
+  * Add support for bumping >=x to >=latest, fixes #11179
+  * Improve version selection in archive command, fixes #4794 (#11230)
+  * Release 2.5.1
+
+  [ Jellyfrog ]
+  * Add download-only mode (#11041)
+
+  [ Stephan Jorek ]
+  * Feature: Add support for autocompleting setting-keys in config-command
+    (#11130)
+
+  [ PrinsFrank ]
+  * Prompt users in interactive mode for where to store the credentials if a
+    local auth config file exists (#11188)
+  * Check missing-from-lock-file required packages when running install and fail
+    when there are any (#11195)
+
+  [ David Prévot ]
+  * Update standards version to 4.6.2, no changes needed.
+
+ -- David Prévot <taffit@debian.org>  Sat, 24 Dec 2022 09:18:30 +0100
+
+composer (2.4.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Retry cache writes if they fail, refs #11076
+  * Fix outdated command outputting some of the legend to stdout
+  * Fix regression in loading Composer on SMB/network shares, refs #8231 #11077
+  * Fix status command reporting differences when source reference is a tag
+    name, fixes #11155
+  * Release 2.4.4
+
+  [ Kuba Werłos ]
+  * Add "--dry-run" to bump command (#11047)
+
+ -- David Prévot <taffit@debian.org>  Sat, 29 Oct 2022 10:59:15 +0200
+
+composer (2.4.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix json format of audit command missing affectedVersions, fix reportedAt
+    format (BC BREAK!), fixes #11104 (#11120)
+  * Fixes plugin commands not being loaded during completion
+  * Fix parsing of aliases used within complex OR constraints, fixes #11086
+  * Fix min-php version check to avoid crashing sites with a 200, fixes #11091
+  * Ensure files are readable before reading in JsonFile, fixes #11077
+  * Fix require failing to do a dry-run when requiring a package with a
+    stability flag, fixes #11112
+  * Release 2.4.3
+
+ -- David Prévot <taffit@debian.org>  Mon, 17 Oct 2022 08:44:15 +0200
+
+composer (2.4.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Fix handling of zero-major versions in outdated --major-only flag, fixes #11032
+  * Fix show --platform regression failing if no composer.json exists, fixes #11046
+  * Fix handling of upper-bound platform req ignores to not act on conflicts (#11037)
+  * Fix type error in validating array loader when name is not set
+  * Fix handling of plugin activation when running as root
+  * Release 2.4.2
+
+ -- David Prévot <taffit@debian.org>  Mon, 19 Sep 2022 08:14:21 +0200
+
+composer (2.4.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.4.1
+
+ -- David Prévot <taffit@debian.org>  Sun, 21 Aug 2022 09:54:52 +0200
+
+composer (2.4.0-1) unstable; urgency=medium
+
+  * Upload new minor to unstable
+
+  [ Jordi Boggiano ]
+  * Release 2.4.0
+
+  [ Michael Telgmann ]
+  * Improve documentation about the new bash completion feature (#10962)
+
+  [ David Prévot ]
+  * Add bash completion
+
+ -- David Prévot <taffit@debian.org>  Fri, 19 Aug 2022 07:32:17 +0200
+
+composer (2.4.0~rc1-1) experimental; urgency=medium
+
+  * Upload RC to experimental
+
+  [ Jordi Boggiano ]
+  * Make use of new composer/class-map-generator package and build up BC layer
+  * Add seld/signal-handler dependency
+  * Release 2.4.0-RC1
+
+  [ David Prévot ]
+  * Add new build-dependencies
+    - php-composer-class-map-generator
+    - php-seld-signal-handler
+
+ -- David Prévot <taffit@debian.org>  Tue, 26 Jul 2022 11:46:51 +0200
+
+composer (2.3.10-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.3.10
+
+  [ David Prévot ]
+  * Install /u/s/pkg-php-tools/autoloaders file
+  * Declare more minimal versions in {,build-}dependencies
+  * Drop satisfied minimal versions in test dependencies
+
+ -- David Prévot <taffit@debian.org>  Sat, 16 Jul 2022 09:59:10 +0200
+
+composer (2.3.9-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.3.9
+
+ -- David Prévot <taffit@debian.org>  Fri, 08 Jul 2022 09:24:04 +0200
+
+composer (2.3.8-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.3.8
+
+  [ David Prévot ]
+  * Drop now useless debian/pkg-php-tools-* entries
+
+ -- David Prévot <taffit@debian.org>  Mon, 04 Jul 2022 08:00:29 +0200
+
+composer (2.3.7-2) unstable; urgency=medium
+
+  * Upload to unstable
+  * Force recent php-composer-pcre
+
+ -- David Prévot <taffit@debian.org>  Sat, 18 Jun 2022 12:05:52 +0200
+
+composer (2.3.7-1) experimental; urgency=medium
+
+  * Upload new minor to experimental
+
+  [ Jordi Boggiano ]
+  * Bump target version, bump PHP and dependency requirements to PHP 7.2+
+  * Upgrade to composer/pcre 2.x
+  * Release 2.3.7
+
+  [ Simon Podlipsky ]
+  * Allow psr/log ^3.0 (#10454)
+
+  [ David Prévot ]
+  * Revert "Track 2.2 for now"
+  * Update Standards-Version to 4.6.1
+  * Build-depend on recent php-composer-pcre
+  * Use php-curl for the testsuite
+
+ -- David Prévot <taffit@debian.org>  Fri, 17 Jun 2022 17:30:56 +0200
+
+composer (2.2.14-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.14
+
+ -- David Prévot <taffit@debian.org>  Sat, 11 Jun 2022 10:02:58 +0200
+
+composer (2.2.13-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.13
+
+ -- David Prévot <taffit@debian.org>  Thu, 26 May 2022 20:43:21 +0200
+
+composer (2.2.12-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.12
+
+  [ Stephan ]
+  * Merge pull request from GHSA-x7cr-6qr6-2hh6
+    [CVE-2022-24828] Closes: #1009960
+
+  [ David Prevot ]
+  * Track 2.2 for now
+
+ -- David Prévot <dprevot@evolix.fr>  Thu, 21 Apr 2022 15:15:02 +0200
+
+composer (2.2.9-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.9
+
+ -- David Prévot <dprevot@evolix.fr>  Tue, 22 Mar 2022 17:25:49 +0100
+
+composer (2.2.7-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.7
+
+ -- David Prévot <taffit@debian.org>  Mon, 07 Mar 2022 01:32:52 +0100
+
+composer (2.2.6-2) unstable; urgency=medium
+
+  * Force recent symfony/console for CI
+
+ -- David Prévot <taffit@debian.org>  Mon, 07 Feb 2022 05:45:20 -0400
+
+composer (2.2.6-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Minor BC Break! Rename COMPOSER_BIN_DIR available inside binaries to
+    COMPOSER_RUNTIME_BIN_DIR (#10512)
+  * Release 2.2.6
+
+  [ David Prévot ]
+  * Force recent symfony/console output
+
+ -- David Prévot <taffit@debian.org>  Sat, 05 Feb 2022 11:18:18 -0400
+
+composer (2.2.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.5
+
+ -- David Prévot <taffit@debian.org>  Sat, 22 Jan 2022 09:45:43 -0400
+
+composer (2.2.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.4
+
+ -- David Prévot <taffit@debian.org>  Mon, 10 Jan 2022 08:20:38 -0400
+
+composer (2.2.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.3
+
+ -- David Prévot <taffit@debian.org>  Fri, 31 Dec 2021 10:51:57 -0400
+
+composer (2.2.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.2.2
+
+ -- David Prévot <taffit@debian.org>  Thu, 30 Dec 2021 10:12:08 -0400
+
+composer (2.2.1-2) unstable; urgency=medium
+
+  * Skip tests failing on 32-bit architectures
+
+ -- David Prévot <taffit@debian.org>  Sat, 25 Dec 2021 18:40:13 -0400
+
+composer (2.2.1-1) unstable; urgency=medium
+
+  * Upload release to unstable
+
+  [ Jordi Boggiano ]
+  * Release 2.2.1
+
+  [ David Prévot ]
+  * Exclude more files for phpab
+
+ -- David Prévot <taffit@debian.org>  Wed, 22 Dec 2021 18:55:57 -0400
+
+composer (2.2.0~rc1-1) experimental; urgency=medium
+
+  * Upload RC to experimental
+
+  [ Jordi Boggiano ]
+  * Add composer/pcre dependency and use it everywhere instead of preg_*
+  * Release 2.2.0-RC1
+
+  [ David Prévot ]
+  * Build-Depend on php-composer-pcre
+
+ -- David Prévot <taffit@debian.org>  Thu, 09 Dec 2021 07:56:31 -0400
+
+composer (2.1.14-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Remove symfony/console ^6 compat as it is incorrect, fixes #10321
+  * Release 2.1.14
+
+  [ David Prévot ]
+  * Drop d/pkg-php-tools-autoloaders entry provided by
+    /u/s/p/a/php-composer-spdx-licenses
+
+ -- David Prévot <taffit@debian.org>  Tue, 30 Nov 2021 07:08:49 -0400
+
+composer (2.1.12-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.1.12
+
+  [ David Prévot ]
+  * Install /u/s/p/overrides file
+  * d/README.source: Remove wrong statement about upstream signature
+
+ -- David Prévot <taffit@debian.org>  Sat, 13 Nov 2021 06:55:43 -0400
+
+composer (2.1.11-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.1.11
+
+ -- David Prévot <taffit@debian.org>  Fri, 05 Nov 2021 09:38:14 -0400
+
+composer (2.1.10-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.1.10
+
+  [ Matthew Davis ]
+  * Allow psr/log ^2.0 (#10158)
+
+ -- David Prévot <taffit@debian.org>  Mon, 01 Nov 2021 09:15:32 -0400
+
+composer (2.1.9-1) unstable; urgency=medium
+
+  * Upload to unstable now that Bullseye has been released
+
+  [ Jordi Boggiano ]
+  * Release 2.1.9
+
+  [ David Prévot ]
+  * Update standards version to 4.6.0, no changes needed
+  * Drop pkg-php-tools overrides for php-json-schema
+  * Exclude another file for phpab
+
+ -- David Prévot <taffit@debian.org>  Thu, 07 Oct 2021 22:01:15 -0400
+
+composer (2.1.3-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.1.3
+
+ -- David Prévot <taffit@debian.org>  Fri, 18 Jun 2021 15:07:35 -0400
+
+composer (2.0.14-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.0.14
+
+  [ Jérémy Derussé ]
+  * Allow Symfony 6.0 (#9896)
+
+  [ John Stevenson ]
+  * Upgrade to xdebug-handler 2 (#9832)
+
+  [ David Prévot ]
+  * Build-depend on recent php-composer-xdebug-handler
+
+ -- David Prévot <taffit@debian.org>  Sat, 22 May 2021 12:10:41 -0400
+
+composer (2.0.13-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Switch to composer/metadata-minifier, fixes #9727
+  * Release 2.0.13
+  * Security: Fixed command injection vulnerability in HgDriver/HgDownloader
+    and hardened other VCS drivers and downloaders (GHSA-h5h8-pc6h-jvvx)
+    [CVE-2021-29472]
+
+  [ David Prévot ]
+  * New php-composer-metadata-minifier (build-)dependency
+
+ -- David Prévot <taffit@debian.org>  Tue, 27 Apr 2021 18:00:29 -0400
+
+composer (2.0.12-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.0.12
+
+ -- David Prévot <taffit@debian.org>  Thu, 08 Apr 2021 09:22:12 -0400
+
+composer (2.0.11-1) experimental; urgency=medium
+
+  * Upload to experimental to respect the freeze
+
+  [ Jordi Boggiano ]
+  * Release 2.0.11
+
+  [ David Prévot ]
+  * Update copyright
+  * Extend excluded file list for autoload
+  * Generate phpabtpl at build time
+  * d/control:
+    - Drop versioned dependency satisfied in the upcoming stable
+    - Use dh-sequence-phpcomposer instead of pkg-php-tools
+
+ -- David Prévot <taffit@debian.org>  Tue, 09 Mar 2021 11:24:35 -0400
+
+composer (2.0.9-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 2.0.9
+
+  [ David Prévot ]
+  * Simplify gbp import-orig workflow
+
+ -- David Prévot <taffit@debian.org>  Thu, 28 Jan 2021 20:05:13 -0400
+
+composer (2.0.8-2) unstable; urgency=medium
+
+  * Upload to unstable in sync with PHPUnit 9
+
+ -- David Prévot <taffit@debian.org>  Sun, 20 Dec 2020 17:04:35 -0400
+
+composer (2.0.8-1) experimental; urgency=medium
+
+  * Upload new major release to experimental
+
+  [ Jordi Boggiano ]
+  * Update react/promise requirement
+  * Fix php8 build bootstrap
+  * Try to workaround react/promise php8 issue
+  * Bump to use composer/semver 3.x
+  * Release 2.0.8
+
+  [ David Prévot ]
+  * Install upgrade documentation
+  * Build-Depend on php-react-promise
+  * Build-Depend on recent php-composer-semver
+  * Ignore Class Redeclarations in test files
+  * Use recent PHPUnit to run tests
+  * Use php-intl for the testsuite
+
+ -- David Prévot <taffit@debian.org>  Fri, 11 Dec 2020 14:05:54 -0400
+
+composer (1.10.19-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.19
+
+  [ David Prévot ]
+  * Update watch file format version to 4.
+  * Update Standards-Version to 4.5.1
+
+ -- David Prévot <taffit@debian.org>  Fri, 11 Dec 2020 11:30:40 -0400
+
+composer (1.10.13-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.13
+
+ -- David Prévot <taffit@debian.org>  Sun, 13 Sep 2020 07:51:25 -0400
+
+composer (1.10.12-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.12
+
+ -- David Prévot <taffit@debian.org>  Tue, 08 Sep 2020 21:48:19 -0400
+
+composer (1.10.11-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.11
+
+  [ David Prévot ]
+  * Rename main branch to debian/latest (DEP-14)
+
+ -- David Prévot <taffit@debian.org>  Tue, 08 Sep 2020 13:45:31 -0400
+
+composer (1.10.10-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.10
+
+ -- David Prévot <taffit@debian.org>  Sat, 08 Aug 2020 09:43:55 +0200
+
+composer (1.10.9-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.9
+
+ -- David Prévot <taffit@debian.org>  Sun, 02 Aug 2020 09:03:35 +0200
+
+composer (1.10.8-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.8
+
+  [ David Prévot ]
+  * Factorise test handling
+  * Set Rules-Requires-Root: no.
+
+ -- David Prévot <taffit@debian.org>  Thu, 09 Jul 2020 01:52:38 -0400
+
+composer (1.10.7-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.7
+
+ -- David Prévot <taffit@debian.org>  Fri, 05 Jun 2020 17:29:25 -1000
+
+composer (1.10.6-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.6
+
+  [ David Prévot ]
+  * Use debhelper-compat 13
+  * Simplify override_dh_auto_test
+  * composer.1: Preserve source
+
+ -- David Prévot <taffit@debian.org>  Wed, 27 May 2020 09:33:53 -1000
+
+composer (1.10.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.5
+
+ -- David Prévot <taffit@debian.org>  Sun, 12 Apr 2020 23:43:12 -1000
+
+composer (1.10.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.10.1
+
+ -- David Prévot <taffit@debian.org>  Sat, 14 Mar 2020 15:17:36 -1000
+
+composer (1.10.0-1) unstable; urgency=medium
+
+  * Upload release version to unstable
+
+  [ Jordi Boggiano ]
+  * Release 1.10.0
+
+ -- David Prévot <taffit@debian.org>  Tue, 10 Mar 2020 16:32:41 -1000
+
+composer (1.10.0~rc-1) experimental; urgency=medium
+
+  * Upload RC to experimental (with updated testsuite, closes: #952339)
+
+  [ Jordi Boggiano ]
+  * Release 1.10.0-RC
+
+ -- David Prévot <taffit@debian.org>  Sun, 23 Feb 2020 10:56:20 -1000
+
+composer (1.9.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.9.3
+
+ -- David Prévot <taffit@debian.org>  Sat, 08 Feb 2020 14:18:55 -1000
+
+composer (1.9.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.9.2
+
+  [ David Prévot ]
+  * Set upstream metadata fields:
+    Bug-Database, Bug-Submit, Repository, Repository-Browse
+  * Update Standards-Version to 4.5.0
+
+ -- David Prévot <taffit@debian.org>  Sun, 02 Feb 2020 17:34:42 -1000
+
+composer (1.9.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.9.1
+
+  [ David Prévot ]
+  * Use DEB_VERSION_UPSTREAM instead of dpkg-parsechangelog
+  * Provide LICENSE file out of u/s/d (Closes: #934104)
+  * Update standards version to 4.4.1, no changes needed.
+  * Set upstream metadata fields: Repository.
+  * Remove obsolete fields Name, Contact from debian/upstream/metadata.
+  * d/control: Drop versioned dependency satisfied in (old)stable
+
+ -- David Prévot <taffit@debian.org>  Sat, 02 Nov 2019 16:42:32 -1000
+
+composer (1.9.0-2) unstable; urgency=medium
+
+  * Compatibility with recent PHPUnit (8)
+  * Use oneliner for CI
+
+ -- David Prévot <taffit@debian.org>  Sat, 03 Aug 2019 04:16:23 -0400
+
+composer (1.9.0-1) unstable; urgency=medium
+
+  * Upload to unstable now that buster has been released
+
+  [ Jordi Boggiano ]
+  * Release 1.9.0
+
+  [ David Prévot ]
+  * Add ci dependency
+  * Update standards version, no changes needed.
+  * Set upstream metadata fields: Contact, Name.
+
+ -- David Prévot <taffit@debian.org>  Fri, 02 Aug 2019 17:50:48 -0400
+
+composer (1.8.6-1) experimental; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.8.6
+
+ -- David Prévot <taffit@debian.org>  Sat, 15 Jun 2019 18:55:29 -1000
+
+composer (1.8.5-1) experimental; urgency=medium
+
+  * Upload to experimental during the freeze
+
+  [ Jordi Boggiano ]
+  * Release 1.8.5
+
+  [ David Prévot ]
+  * Document gbp import-ref usage
+  * Add back testsuite
+  * Adapt to recent version of PHPUnit
+
+ -- David Prévot <taffit@debian.org>  Sat, 04 May 2019 14:19:52 -1000
+
+composer (1.8.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.8.4
+
+ -- David Prévot <taffit@debian.org>  Fri, 15 Feb 2019 22:06:33 -1000
+
+composer (1.8.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.8.3
+
+  [ David Prévot ]
+  * Use debhelper-compat 12
+  * Update Standards-Version to 4.3.0
+
+ -- David Prévot <taffit@debian.org>  Fri, 01 Feb 2019 14:25:18 -1000
+
+composer (1.8.0-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.8.0
+
+  [ David Prévot ]
+  * Recommend unzip
+    Thanks to Olaf van der Spek <olafvdspek@gmail.com> (Closes: #914802)
+
+ -- David Prévot <taffit@debian.org>  Wed, 05 Dec 2018 07:37:48 -1000
+
+composer (1.7.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.7.3
+
+  [ David Prévot ]
+  * Use debhelper-compat 11
+  * Drop get-orig-source target
+  * Use https in Format
+  * Use Standards-Version 4.2.1
+
+ -- David Prévot <taffit@debian.org>  Sat, 03 Nov 2018 19:33:23 +1300
+
+composer (1.7.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.7.2
+
+ -- David Prévot <taffit@debian.org>  Mon, 20 Aug 2018 16:29:36 -1000
+
+composer (1.7.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.7.1
+
+ -- David Prévot <taffit@debian.org>  Wed, 08 Aug 2018 09:59:28 +0800
+
+composer (1.7.0-1) unstable; urgency=medium
+
+  * Upload release to unstable
+
+  [ Jordi Boggiano ]
+  * Release 1.7.0
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.2.0
+
+ -- David Prévot <taffit@debian.org>  Sat, 04 Aug 2018 13:24:25 +0800
+
+composer (1.7.0~rc-1) experimental; urgency=medium
+
+  * Upload RC to experimental
+
+  [ Jordi Boggiano ]
+  * Release 1.7.0-RC
+
+  [ johnstevenson ]
+  * Use external XdebugHandler library
+
+  [ Helmut Hummel ]
+  * Use symfony/console for hidden questions
+
+  [ David Prévot ]
+  * Adapt package to updated dependencies
+  * Update Standards-Version to 4.1.5
+
+ -- David Prévot <taffit@debian.org>  Sat, 28 Jul 2018 12:07:38 +0800
+
+composer (1.6.5-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.6.5
+
+ -- David Prévot <taffit@debian.org>  Mon, 07 May 2018 13:19:33 -1000
+
+composer (1.6.4-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.6.4
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.1.4
+
+ -- David Prévot <taffit@debian.org>  Mon, 16 Apr 2018 15:34:56 -1000
+
+composer (1.6.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.6.3
+
+  [ David Prévot ]
+  * Move project repository to salsa.d.o
+  * Update Standards-Version to 4.1.3
+
+ -- David Prévot <taffit@debian.org>  Tue, 27 Feb 2018 17:40:39 -1000
+
+composer (1.6.2-1) unstable; urgency=medium
+
+  * Upload stable version to unstable
+
+  [ Jordi Boggiano ]
+  * Release 1.6.2
+
+ -- David Prévot <taffit@debian.org>  Sat, 06 Jan 2018 12:57:09 +0530
+
+composer (1.6.0~rc-1) experimental; urgency=medium
+
+  * Upload RC to experimental
+
+  [ Jordi Boggiano ]
+  * Release 1.6.0-RC
+
+  [ Felix Becker ]
+  * Exclude non-essential files from dist package
+
+  [ David Prévot ]
+  * Drop versioned dependency satisfied in stable
+  * Drop tests removed upstream (Closes: #882946)
+  * Update Standards-Version to 4.1.2
+
+ -- David Prévot <taffit@debian.org>  Sun, 24 Dec 2017 10:11:20 +0530
+
+composer (1.5.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.5.2
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.1.0
+
+ -- David Prévot <taffit@debian.org>  Wed, 13 Sep 2017 08:51:04 -1000
+
+composer (1.5.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.5.1
+
+  [ David Prévot ]
+  * Don’t run tests relying on remote network for ci (Closes: #872165)
+
+ -- David Prévot <taffit@debian.org>  Sat, 19 Aug 2017 17:30:43 -1000
+
+composer (1.4.3-2) unstable; urgency=medium
+
+  * Add more tests relying on remote network
+
+ -- David Prévot <taffit@debian.org>  Sun, 06 Aug 2017 20:49:32 -0400
+
+composer (1.4.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.4.3
+
+  [ David Prévot ]
+  * Update Standards-Version to 4.0.1
+  * Don’t run tests relying on remote network
+  * Don’t run tests relying on git repository
+
+ -- David Prévot <taffit@debian.org>  Sun, 06 Aug 2017 15:08:36 -0400
+
+composer (1.2.2-1) unstable; urgency=medium
+
+  [ Calin Marian ]
+  * Urlencode Gitlab project names
+
+  [ Jordi Boggiano ]
+  * Release 1.2.2
+
+  [ Fabien Potencier ]
+  * Fix POST_DEPENDENCIES_SOLVING trigger
+
+ -- David Prévot <taffit@debian.org>  Fri, 11 Nov 2016 13:46:46 -0930
+
+composer (1.2.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.2.1
+
+  [ bohwaz ]
+  * Add Fossil support to Composer
+
+  [ David Prévot ]
+  * Suggest fossil now supported upstream
+
+ -- David Prévot <taffit@debian.org>  Thu, 20 Oct 2016 15:59:09 -1000
+
+composer (1.1.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.1.3
+
+ -- David Prévot <taffit@debian.org>  Thu, 30 Jun 2016 13:28:36 -0400
+
+composer (1.1.2-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.1.2
+
+ -- David Prévot <taffit@debian.org>  Wed, 01 Jun 2016 12:38:57 -0400
+
+composer (1.1.1-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.1.1
+
+ -- David Prévot <taffit@debian.org>  Tue, 17 May 2016 19:02:30 -0400
+
+composer (1.1.0-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Use extracted ca-bundle package
+  * Release 1.1.0
+
+  [ Jérémy Derussé ]
+  * Allow plugins to register commands
+
+  [ Nicolas Grekas ]
+  * Speedup autoloading on PHP 5.6 & 7.0+ using static arrays
+
+  [ David Prévot ]
+  * Revert "Track stable releases"
+  * Adapt to php-composer-ca-bundle split
+  * Adapt to php-psr-log dependency
+
+ -- David Prévot <taffit@debian.org>  Wed, 11 May 2016 14:06:31 -0400
+
+composer (1.0.3-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Release 1.0.3
+
+  [ Derek Marcotte ]
+  * fix command injection from the environment when run as root
+
+  [ David Prévot ]
+  * Track stable releases
+
+ -- David Prévot <taffit@debian.org>  Fri, 29 Apr 2016 21:37:47 -0400
+
+composer (1.0.2-1) unstable; urgency=medium
+
+  [ David Prévot ]
+  * Demote mercurial to Suggests, add subversion too (Closes: #820336)
+  * Update Standards-Version to 3.9.8
+
+  [ Jordi Boggiano ]
+  * Release 1.0.2
+
+ -- David Prévot <taffit@debian.org>  Thu, 21 Apr 2016 20:28:27 -0400
+
+composer (1.0.0-1) unstable; urgency=medium
+
+  [ Paul Wenke ]
+  * Developed bitbucket-oauth functionality.
+
+  [ Jordi Boggiano ]
+  * Mark failed downloads as failed instead of 100% complete, fixes #5111
+  * Release 1.0.0
+
+  [ Niels Keurentjes ]
+  * Clobber sudo credentials to prevent careless privilege escalations.
+
+  [ Andrii Vasyliev ]
+  * add getter for global composer
+
+  [ Tom Klingenberg ]
+  * Skip non-empty directories in zip generation
+
+ -- David Prévot <taffit@debian.org>  Wed, 06 Apr 2016 12:51:49 -0400
+
+composer (1.0.0~beta2-1) unstable; urgency=medium
+
+  [ Barry vd. Heuvel ]
+  * Make remove with dependencies default
+
+  [ Haralan Dobrev ]
+  * List project suggestions in create-project command
+
+  [ Jordi Boggiano ]
+  * Add conflict detection in why-not, fixes #5013
+  * Add support for SSL_CERT_DIR and openssl.capath, fixes #5017
+  * Update license to 2016
+  * Change installs into updates if there is no lock file, fixes #5034
+  * Add update channels support to self-update and diagnose, fixes #4960
+  * Release 1.0.0-beta2
+
+  [ Steve Langasek ]
+  * Add xz-utils as test dependency (Closes: #818644)
+
+  [ David Prévot ]
+  * Update copyright (year)
+
+ -- David Prévot <taffit@debian.org>  Mon, 28 Mar 2016 23:00:38 -0400
+
+composer (1.0.0~beta1-1) unstable; urgency=medium
+
+  [ Jan Prieser ]
+  * added ZipArchiver to actually compress zip files
+
+  [ hfcorriez ]
+  * Support compress tar.gz and tar.bz2 archiver
+
+  [ Henrik Bjørnskov ]
+  * Initial GitLab Driver
+
+  [ Pierre Rudloff ]
+  * XzDownloader test
+
+  [ Jordi Boggiano ]
+  * Only list tree of packages required by root and not every installed
+    package individually, refs #2600
+  * Disable git, svn, http protocols for VCS downloaders, fixes #4968
+  * Release 1.0.0-beta1
+
+  [ Niels Keurentjes ]
+  * Implemented Prohibits and Depends correctly now.
+
+  [ Davey Shafik ]
+  * Add `composer exec` command
+
+  [ David Prévot ]
+  * d/control: Workaround for OR-ed versions
+  * Use system cacert.pem instead of embedded one
+  * Update copyright
+  * Build with recent pkg-php-tools for the PHP 7.0 transition
+  * Use now split php-mbstring and php-zip for the tests
+
+ -- David Prévot <taffit@debian.org>  Wed, 09 Mar 2016 21:14:43 -0400
+
+composer (1.0.0~alpha11-3) unstable; urgency=medium
+
+  * Composer Cache Injection vulnerability fix [CVE-2015-8371]
+
+ -- David Prévot <taffit@debian.org>  Sun, 14 Feb 2016 15:24:51 -0400
+
+composer (1.0.0~alpha11-2) unstable; urgency=medium
+
+  * Fix tests for justinrainbow/json-schema 1.6 (Closes: #810771)
+  * Update Standards-Version to 3.9.7
+
+ -- David Prévot <taffit@debian.org>  Wed, 03 Feb 2016 16:02:51 -0400
+
+composer (1.0.0~alpha11-1) unstable; urgency=medium
+
+  [ Rob Bast ]
+  * remove spdx files, introduce external library
+  * add semver, deprecated existing classes
+
+  [ Jordi Boggiano ]
+  * Release 1.0.0-alpha11
+
+  [ Remi Collet ]
+  * ignore this test with 'jsonc'
+  * fix for changes in justinrainbow/json-schema 1.4.4
+
+  [ David Prévot ]
+  * Update copyright
+  * Update packaging to new dependencies
+
+ -- David Prévot <taffit@debian.org>  Wed, 18 Nov 2015 17:27:46 -0400
+
+composer (1.0.0~alpha10+20150602-2) unstable; urgency=medium
+
+  * Fix for changes in php-json-schema 1.4.4 (Closes: #799765)
+
+ -- David Prévot <taffit@debian.org>  Fri, 23 Oct 2015 19:05:52 -0400
+
+composer (1.0.0~alpha10+20150602-1) unstable; urgency=medium
+
+  [ David Prévot ]
+  * Use php-cli-prompt instead of embed seld/cli-prompt copy
+
+ -- David Prévot <taffit@debian.org>  Tue, 02 Jun 2015 15:19:36 -0400
+
+composer (1.0.0~alpha10+20150511-1) unstable; urgency=medium
+
+  [ Jordi Boggiano ]
+  * Spaces are now equivalent to comma in constraints and mean AND
+  * Add support for capital X in 3.X and || for OR
+  * Add support for hyphen ranges
+  * Add support for caret (^) operator
+  * Use external lib for hidden cli prompting
+
+  [ AQNOUCH Mohammed ]
+  * Updated copyright to 2015
+
+  [ David Prévot ]
+  * Provide homemade static autoload.php
+  * Rely on recent symfony package for the static autoload.php
+  * Update homepage
+  * Update copyright (year)
+  * Embed seld/cli-prompt copy until php-cli-prompt gets processed out of new
+
+ -- David Prévot <taffit@debian.org>  Sun, 24 May 2015 10:05:07 -0400
+
+composer (1.0.0~alpha9+dfsg-1) unstable; urgency=low
+
+  * Initial release (closes: #714118)
+
+ -- David Prévot <taffit@debian.org>  Sun, 15 Feb 2015 18:47:27 -0400

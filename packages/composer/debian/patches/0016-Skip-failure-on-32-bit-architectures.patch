@@ -1,0 +1,90 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Fri, 29 Aug 2025 08:31:05 +0200
+Subject: Skip failure on 32-bit architectures
+
+---
+ .../Composer/Test/Downloader/XzDownloaderTest.php  | 75 ----------------------
+ 1 file changed, 75 deletions(-)
+ delete mode 100644 tests/Composer/Test/Downloader/XzDownloaderTest.php
+
+diff --git a/tests/Composer/Test/Downloader/XzDownloaderTest.php b/tests/Composer/Test/Downloader/XzDownloaderTest.php
+deleted file mode 100644
+index d461c48..0000000
+--- a/tests/Composer/Test/Downloader/XzDownloaderTest.php
++++ /dev/null
+@@ -1,75 +0,0 @@
+-<?php declare(strict_types=1);
+-
+-/*
+- * This file is part of Composer.
+- *
+- * (c) Nils Adermann <naderman@naderman.de>
+- *     Jordi Boggiano <j.boggiano@seld.be>
+- *
+- * For the full copyright and license information, please view the LICENSE
+- * file that was distributed with this source code.
+- */
+-
+-namespace Composer\Test\Downloader;
+-
+-use Composer\Downloader\XzDownloader;
+-use Composer\Test\TestCase;
+-use Composer\Util\Filesystem;
+-use Composer\Util\Platform;
+-use Composer\Util\Loop;
+-use Composer\Util\HttpDownloader;
+-
+-class XzDownloaderTest extends TestCase
+-{
+-    /**
+-     * @var Filesystem
+-     */
+-    private $fs;
+-
+-    /**
+-     * @var string
+-     */
+-    private $testDir;
+-
+-    public function setUp(): void
+-    {
+-        if (Platform::isWindows()) {
+-            $this->markTestSkipped('Skip test on Windows');
+-        }
+-        if (PHP_INT_SIZE === 4) {
+-            $this->markTestSkipped('Skip test on 32bit');
+-        }
+-        $this->testDir = self::getUniqueTmpDirectory();
+-    }
+-
+-    protected function tearDown(): void
+-    {
+-        if (Platform::isWindows()) {
+-            return;
+-        }
+-        parent::tearDown();
+-        $this->fs = new Filesystem;
+-        $this->fs->removeDirectory($this->testDir);
+-    }
+-
+-    public function testErrorMessages(): void
+-    {
+-        $package = self::getPackage();
+-        $package->setDistUrl($distUrl = 'file://'.__FILE__);
+-
+-        $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
+-        $config = $this->getConfig(['vendor-dir' => $this->testDir]);
+-        $downloader = new XzDownloader($io, $config, $httpDownloader = new HttpDownloader($io, $config), null, null, null);
+-
+-        try {
+-            $loop = new Loop($httpDownloader);
+-            $promise = $downloader->download($package, $this->testDir.'/install-path');
+-            $loop->wait([$promise]);
+-            $downloader->install($package, $this->testDir.'/install-path');
+-
+-            $this->fail('Download of invalid tarball should throw an exception');
+-        } catch (\RuntimeException $e) {
+-            self::assertMatchesRegularExpression('/(File format not recognized|Unrecognized archive format)/i', $e->getMessage());
+-        }
+-    }
+-}

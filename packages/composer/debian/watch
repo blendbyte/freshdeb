@@ -1,0 +1,8 @@
+Version: 5
+
+Source: https://github.com/composer/composer
+Matching-Pattern: refs/tags/v?(\d.+)
+Gitexport: all
+Gitmode: full
+Mode: git
+Uversionmangle: s/-?([^\d.]+)/~$1/i;tr/A-Z/a-z/

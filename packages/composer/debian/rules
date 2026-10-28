@@ -1,0 +1,82 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/default.mk
+UPSTREAM := $(DEB_VERSION_UPSTREAM)
+USRDIR   := $(CURDIR)/build
+
+%:
+	dh $@ -XCompiler.php
+
+override_dh_auto_build:
+	phpabtpl composer.json > debian/autoload.php.tpl
+	sed -i "s#'/usr/share/php/Composer#__DIR__ . '#" debian/autoload.php.tpl
+	sed -i "s#'/usr/share/php#__DIR__ . '/..#" debian/autoload.php.tpl
+	phpab \
+		--output src/Composer/autoload.php \
+		--template debian/autoload.php.tpl \
+		src/Composer
+	mkdir --parents vendor build/share/php/data/Composer build/vendor
+	# Mimic system path for tests
+	cp -r src/Composer build/share/php
+	cp -r LICENSE res build/share/php/data/Composer
+	ln -s /usr/share/php/Composer/CaBundle build/share/php/Composer
+	ln -s /usr/share/php/Composer/ClassMapGenerator build/share/php/Composer
+	ln -s /usr/share/php/Composer/MetadataMinifier build/share/php/Composer
+	ln -s /usr/share/php/Composer/Pcre build/share/php/Composer
+	ln -s /usr/share/php/Composer/Semver build/share/php/Composer
+	ln -s /usr/share/php/Composer/Spdx build/share/php/Composer
+	ln -s /usr/share/php/Composer/XdebugHandler build/share/php/Composer
+	ln -s /usr/share/php/JsonSchema build/share/php
+	ln -s /usr/share/php/Psr build/share/php
+	ln -s /usr/share/php/React build/share/php
+	ln -s /usr/share/php/Seld build/share/php
+	ln -s /usr/share/php/Symfony build/share/php
+	phpabtpl \
+		--require-file ../share/php/Composer/autoload.php \
+		> debian/autoload.tests.php.tpl
+	phpab \
+		--tolerant \
+		--output build/vendor/autoload.php \
+		--template debian/autoload.tests.php.tpl \
+		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_removed_include_paths_and_autolad_files.php \
+		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_include_paths.php \
+		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_include_paths.php \
+		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_removed_include_paths_and_autolad_files.php \
+		--exclude tests/Composer/Test/Autoload/Fixtures/pcrebacktracelimit/StripNoise.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-a/PluginA.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/a/PluginA.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-b/PluginB.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/b/PluginB.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/Hooks.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/InstalledVersions.php \
+		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/ClassLoader.php \
+		--exclude tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-a/PluginA.php \
+		--exclude tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-b/PluginB.php \
+		--exclude tests/Composer/Test/Plugin/Fixtures/plugin-v9/Installer/Plugin.php \
+		--exclude tests/Composer/Test/Plugin/Fixtures/plugin-v2/Installer/Plugin2.php \
+		--exclude tests/Composer/Test/Plugin/Fixtures/plugin-v3/Installer/Plugin2.php \
+		tests/Composer/Test
+
+override_dh_auto_test:
+	phpunit --include-path build/share/php --exclude-group remote --exclude-group git
+
+override_dh_installdocs:
+	dh_installdocs -Xdoc/composer
+
+execute_after_dh_install:
+	mkdir --parent $(CURDIR)/debian/tmp
+	cp -r bin build
+	cd $(USRDIR)/share/php && \
+		$(USRDIR)/bin/composer completion --no-interaction bash \
+		> $(CURDIR)/debian/tmp/composer
+
+execute_before_dh_installman:
+	cd $(USRDIR)/share/php && help2man \
+		--help-option=\  \
+		--include=$(CURDIR)/debian/composer.1.in \
+		--version-string=$(UPSTREAM) \
+		--source="composer $(UPSTREAM)" \
+		--no-info \
+		--no-discard-stderr \
+		"echo -n 'Usage: composer' && $(USRDIR)/bin/composer --no-ansi | tail -n+10" \
+		> $(CURDIR)/debian/tmp/composer.1

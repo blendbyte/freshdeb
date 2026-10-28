@@ -1,0 +1,56 @@
+From: freshdeb <packages@freshdeb.com>
+Subject: Compile the phar without a git checkout
+
+bin/compile takes the version and date from git and runs "composer install"
+itself, which needs a git checkout and network access. A distribution builds
+from the release's source without .git, with the dependencies already in
+vendor/ and the autoloader dumped; it passes the version and the release's
+commit date in COMPOSER_COMPILE_VERSION and COMPOSER_COMPILE_DATE instead.
+Without those variables nothing changes.
+
+Forwarded: not-needed
+---
+--- a/bin/compile
++++ b/bin/compile
+@@ -4,6 +4,10 @@
+ $cwd = getcwd();
+ assert(is_string($cwd));
+ chdir(__DIR__.'/../');
++// Without a git checkout (a distribution's build), the caller provides the
++// version and date in COMPOSER_COMPILE_VERSION and COMPOSER_COMPILE_DATE and
++// has installed the dependencies (without dev) and dumped the autoloader.
++if (false === getenv('COMPOSER_COMPILE_VERSION')) {
+ $ts = rtrim(exec('git rev-list --no-commit-header -n1 --format=%ct HEAD'));
+ if (!is_numeric($ts)) {
+     echo 'Could not detect date using "git rev-list --no-commit-header -n1 --format=%ct HEAD"'.PHP_EOL;
+@@ -26,6 +30,7 @@
+     echo 'Could not remove the autoloader suffix, make sure exec is allowed and php can be found in your PATH';
+     exit(1);
+ }
++}
+ chdir($cwd);
+ 
+ require __DIR__.'/../src/bootstrap.php';
+--- a/src/Composer/Compiler.php
++++ b/src/Composer/Compiler.php
+@@ -51,6 +51,12 @@
+ 
+         $process = new ProcessExecutor();
+ 
++        if (false !== ($version = getenv('COMPOSER_COMPILE_VERSION')) && false !== ($date = getenv('COMPOSER_COMPILE_DATE'))) {
++            // A release built without a git checkout: its tag and commit date.
++            $this->version = $version;
++            $this->versionDate = new \DateTime($date);
++            $this->versionDate->setTimezone(new \DateTimeZone('UTC'));
++        } else {
+         $command = Git::buildRevListCommand($process, ['-n1', '--format=%H', 'HEAD']);
+         if (0 !== $process->execute($command, $output, dirname(__DIR__, 2))) {
+             throw new \RuntimeException('Can\'t run git rev-list. You must ensure to run compile from composer git repository clone and that git binary is available.');
+@@ -76,6 +82,7 @@
+                 $this->branchAliasVersion = $localConfig['extra']['branch-alias']['dev-main'];
+             }
+         }
++        }
+ 
+         if ('' === $this->version) {
+             throw new \UnexpectedValueException('Version detection failed');

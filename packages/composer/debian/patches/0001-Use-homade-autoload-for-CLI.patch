@@ -1,0 +1,28 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <david@tilapin.org>
+Date: Sun, 15 Feb 2015 22:23:46 -0400
+Subject: Use homade autoload for CLI
+
+Forwarded: not-needed
+---
+ bin/composer | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bin/composer b/bin/composer
+index 8f40338..e05d0b1 100755
+--- a/bin/composer
++++ b/bin/composer
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env php
++#!/usr/bin/php
+ <?php
+ 
+ if (PHP_SAPI !== 'cli' && PHP_SAPI !== 'phpdbg') {
+@@ -30,7 +30,7 @@ if (ini_get('opcache.enable_cli') && ini_get('opcache.preload')) {
+ }
+ 
+ setlocale(LC_ALL, 'C');
+-require __DIR__.'/../src/bootstrap.php';
++require __DIR__ . '/../share/php/Composer/autoload.php';
+ 
+ use Composer\Console\Application;
+ use Composer\XdebugHandler\XdebugHandler;

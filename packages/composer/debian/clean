@@ -1,0 +1,6 @@
+.phpunit.result.cache
+build/
+debian/autoload.php.tpl
+debian/autoload.tests.php.tpl
+src/Composer/autoload.php
+vendor/

@@ -1,0 +1,277 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Mon, 20 May 2024 11:35:47 +0200
+Subject: Make provider functions static (PHPUnit 11 Fix)
+
+Bug-Debian: https://bugs.debian.org/1070504
+---
+ tests/Composer/Test/Advisory/AuditorTest.php               | 4 ++--
+ tests/Composer/Test/Command/BaseDependencyCommandTest.php  | 2 +-
+ tests/Composer/Test/Command/InstallCommandTest.php         | 2 +-
+ tests/Composer/Test/Command/ReinstallCommandTest.php       | 2 +-
+ tests/Composer/Test/Command/RequireCommandTest.php         | 2 +-
+ tests/Composer/Test/Command/SelfUpdateCommandTest.php      | 4 ++--
+ tests/Composer/Test/Command/ShowCommandTest.php            | 4 ++--
+ tests/Composer/Test/Command/UpdateCommandTest.php          | 2 +-
+ tests/Composer/Test/FilterList/FilterListAuditorTest.php   | 4 ++--
+ tests/Composer/Test/Json/ComposerSchemaTest.php            | 4 ++--
+ tests/Composer/Test/Package/Version/VersionGuesserTest.php | 2 +-
+ tests/Composer/Test/Platform/RuntimeTest.php               | 2 +-
+ tests/Composer/Test/Policy/IgnoreIdRuleTest.php            | 2 +-
+ tests/Composer/Test/Policy/IgnorePackageRuleTest.php       | 2 +-
+ tests/Composer/Test/Policy/IgnoreSeverityRuleTest.php      | 2 +-
+ tests/Composer/Test/Policy/PolicyConfigTest.php            | 2 +-
+ 16 files changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/tests/Composer/Test/Advisory/AuditorTest.php b/tests/Composer/Test/Advisory/AuditorTest.php
+index 93a0e26..b8e13cc 100644
+--- a/tests/Composer/Test/Advisory/AuditorTest.php
++++ b/tests/Composer/Test/Advisory/AuditorTest.php
+@@ -273,7 +273,7 @@ Found 2 abandoned packages:
+         self::assertSame($output, trim(str_replace("\r", '', $io->getOutput())));
+     }
+ 
+-    public function ignoredIdsProvider(): \Generator
++    public static function ignoredIdsProvider(): \Generator
+     {
+         yield 'ignore by CVE' => [
+             [
+@@ -479,7 +479,7 @@ Found 2 abandoned packages:
+         self::assertSame($exitCode, $result);
+     }
+ 
+-    public function ignoreSeverityProvider(): \Generator
++    public static function ignoreSeverityProvider(): \Generator
+     {
+         yield 'ignore medium' => [
+             [
+diff --git a/tests/Composer/Test/Command/BaseDependencyCommandTest.php b/tests/Composer/Test/Command/BaseDependencyCommandTest.php
+index 87fc5fd..83e7542 100644
+--- a/tests/Composer/Test/Command/BaseDependencyCommandTest.php
++++ b/tests/Composer/Test/Command/BaseDependencyCommandTest.php
+@@ -439,7 +439,7 @@ OUTPUT
+     /**
+      * @return Generator<string, array{array<string, string>, string}>
+      */
+-    public function caseWhyNotProvider(): Generator
++    public static function caseWhyNotProvider(): Generator
+     {
+         yield 'it could not found the package with a specific version' => [
+             ['package' => 'vendor1/package1', 'version' => '3.*'],
+diff --git a/tests/Composer/Test/Command/InstallCommandTest.php b/tests/Composer/Test/Command/InstallCommandTest.php
+index c2fe2a3..c2599bf 100644
+--- a/tests/Composer/Test/Command/InstallCommandTest.php
++++ b/tests/Composer/Test/Command/InstallCommandTest.php
+@@ -46,7 +46,7 @@ class InstallCommandTest extends TestCase
+         self::assertSame(trim($expected), trim($appTester->getDisplay(true)));
+     }
+ 
+-    public function errorCaseProvider(): Generator
++    public static function errorCaseProvider(): Generator
+     {
+         yield 'it writes an error when the dev flag is passed' => [
+             [
+diff --git a/tests/Composer/Test/Command/ReinstallCommandTest.php b/tests/Composer/Test/Command/ReinstallCommandTest.php
+index 705bb31..9a963bb 100644
+--- a/tests/Composer/Test/Command/ReinstallCommandTest.php
++++ b/tests/Composer/Test/Command/ReinstallCommandTest.php
+@@ -56,7 +56,7 @@ class ReinstallCommandTest extends TestCase
+         self::assertSame($expected, trim($appTester->getDisplay(true)));
+     }
+ 
+-    public function caseProvider(): Generator
++    public static function caseProvider(): Generator
+     {
+         yield 'reinstall a package by name' => [
+             ['packages' => ['root/req', 'root/anotherreq*']],
+diff --git a/tests/Composer/Test/Command/RequireCommandTest.php b/tests/Composer/Test/Command/RequireCommandTest.php
+index ddac9dc..b5c4634 100644
+--- a/tests/Composer/Test/Command/RequireCommandTest.php
++++ b/tests/Composer/Test/Command/RequireCommandTest.php
+@@ -336,7 +336,7 @@ OUTPUT
+         self::assertArrayNotHasKey($currentKey, $composer_content);
+     }
+ 
+-    public function provideInconsistentRequireKeys(): \Generator
++    public static function provideInconsistentRequireKeys(): \Generator
+     {
+         yield [
+             true,
+diff --git a/tests/Composer/Test/Command/SelfUpdateCommandTest.php b/tests/Composer/Test/Command/SelfUpdateCommandTest.php
+index f25462f..0b314aa 100644
+--- a/tests/Composer/Test/Command/SelfUpdateCommandTest.php
++++ b/tests/Composer/Test/Command/SelfUpdateCommandTest.php
+@@ -110,7 +110,7 @@ class SelfUpdateCommandTest extends TestCase
+     /**
+      * @return array<array<string>>
+      */
+-    public function channelOptions(): array
++    public static function channelOptions(): array
+     {
+         return [
+             ['--stable', 'stable channel'],
+@@ -175,7 +175,7 @@ class SelfUpdateCommandTest extends TestCase
+     /**
+      * @return array<string, array{0: string, 1: array{0: string, 1: bool}}>
+      */
+-    public function backupVersionProvider(): array
++    public static function backupVersionProvider(): array
+     {
+         return [
+             'tagged release' => ['2024-06-15_10-30-45-2.5.0', ['2.5.0', true]],
+diff --git a/tests/Composer/Test/Command/ShowCommandTest.php b/tests/Composer/Test/Command/ShowCommandTest.php
+index 6857446..b3cb60a 100644
+--- a/tests/Composer/Test/Command/ShowCommandTest.php
++++ b/tests/Composer/Test/Command/ShowCommandTest.php
+@@ -757,7 +757,7 @@ OUTPUT;
+         $appTester->run(['command' => 'show', 'package' => $package] + $options);
+     }
+ 
+-    public function provideNotExistingPackage(): \Generator
++    public static function provideNotExistingPackage(): \Generator
+     {
+         yield 'package with no options' => [
+             'not/existing',
+@@ -820,7 +820,7 @@ OUTPUT;
+         self::assertSame($expected, trim($appTester->getDisplay(true)));
+     }
+ 
+-    public function providePackageAndTree(): \Generator
++    public static function providePackageAndTree(): \Generator
+     {
+         yield 'just package' => [
+             static function () {
+diff --git a/tests/Composer/Test/Command/UpdateCommandTest.php b/tests/Composer/Test/Command/UpdateCommandTest.php
+index bd411d8..26d2b1d 100644
+--- a/tests/Composer/Test/Command/UpdateCommandTest.php
++++ b/tests/Composer/Test/Command/UpdateCommandTest.php
+@@ -477,7 +477,7 @@ OUTPUT;
+         );
+     }
+ 
+-    public function provideInteractiveUpdates(): \Generator
++    public static function provideInteractiveUpdates(): \Generator
+     {
+         yield [
+             ['dep/pkg' => '1.0.1'],
+diff --git a/tests/Composer/Test/FilterList/FilterListAuditorTest.php b/tests/Composer/Test/FilterList/FilterListAuditorTest.php
+index dc4df39..f7d6b45 100644
+--- a/tests/Composer/Test/FilterList/FilterListAuditorTest.php
++++ b/tests/Composer/Test/FilterList/FilterListAuditorTest.php
+@@ -32,7 +32,7 @@ class FilterListAuditorTest extends TestCase
+         $this->filterListAuditor = new FilterListAuditor();
+     }
+ 
+-    public function provideIgnoredPackages(): array
++    public static function provideIgnoredPackages(): array
+     {
+         return [
+             'acme/other fully ignore' => [['acme/other'], 1],
+@@ -78,7 +78,7 @@ class FilterListAuditorTest extends TestCase
+         $this->assertCount($expectedCount, $entries);
+     }
+ 
+-    public function provideIgnoreSource(): array
++    public static function provideIgnoreSource(): array
+     {
+         $cases = [];
+         foreach (['block', 'audit'] as $operation) {
+diff --git a/tests/Composer/Test/Json/ComposerSchemaTest.php b/tests/Composer/Test/Json/ComposerSchemaTest.php
+index b5c98c8..4a89d2f 100644
+--- a/tests/Composer/Test/Json/ComposerSchemaTest.php
++++ b/tests/Composer/Test/Json/ComposerSchemaTest.php
+@@ -42,7 +42,7 @@ class ComposerSchemaTest extends TestCase
+         self::assertEquals($expectedError, $this->check($json));
+     }
+ 
+-    public function versionProvider(): array
++    public static function versionProvider(): array
+     {
+         return [
+             ['1.0.0', true],
+@@ -218,7 +218,7 @@ class ComposerSchemaTest extends TestCase
+     /**
+      * @return iterable<string, array{0: string}>
+      */
+-    public function reservedPolicyListNameProvider(): iterable
++    public static function reservedPolicyListNameProvider(): iterable
+     {
+         yield 'ignore- prefix' => ['ignore-foo'];
+         yield 'ignore prefix without dash' => ['ignoremalware'];
+diff --git a/tests/Composer/Test/Package/Version/VersionGuesserTest.php b/tests/Composer/Test/Package/Version/VersionGuesserTest.php
+index f3301cf..00a4757 100644
+--- a/tests/Composer/Test/Package/Version/VersionGuesserTest.php
++++ b/tests/Composer/Test/Package/Version/VersionGuesserTest.php
+@@ -407,7 +407,7 @@ class VersionGuesserTest extends TestCase
+     /**
+      * @return array<array{string, string}>
+      */
+-    public function rootEnvVersionsProvider(): array
++    public static function rootEnvVersionsProvider(): array
+     {
+         return [
+             ['1.0-dev', '1.0.x-dev'],
+diff --git a/tests/Composer/Test/Platform/RuntimeTest.php b/tests/Composer/Test/Platform/RuntimeTest.php
+index ac79ff7..ebdccd3 100644
+--- a/tests/Composer/Test/Platform/RuntimeTest.php
++++ b/tests/Composer/Test/Platform/RuntimeTest.php
+@@ -25,7 +25,7 @@ class RuntimeTest extends TestCase
+         self::assertSame($expectedOutput, Runtime::parseHtmlExtensionInfo($htmlInput));
+     }
+ 
+-    public function provideExtensionInfos(): array
++    public static function provideExtensionInfos(): array
+     {
+         return [
+             'pdo_sqlite' => [
+diff --git a/tests/Composer/Test/Policy/IgnoreIdRuleTest.php b/tests/Composer/Test/Policy/IgnoreIdRuleTest.php
+index 551c315..1ecb7a8 100644
+--- a/tests/Composer/Test/Policy/IgnoreIdRuleTest.php
++++ b/tests/Composer/Test/Policy/IgnoreIdRuleTest.php
+@@ -76,7 +76,7 @@ class IgnoreIdRuleTest extends TestCase
+     /**
+      * @return array<string, array{0: array<mixed>}>
+      */
+-    public function provideUnsupportedIgnoreIdMapShapes(): array
++    public static function provideUnsupportedIgnoreIdMapShapes(): array
+     {
+         return [
+             'integer key with null value' => [[null]],
+diff --git a/tests/Composer/Test/Policy/IgnorePackageRuleTest.php b/tests/Composer/Test/Policy/IgnorePackageRuleTest.php
+index 06345eb..2d9ddbc 100644
+--- a/tests/Composer/Test/Policy/IgnorePackageRuleTest.php
++++ b/tests/Composer/Test/Policy/IgnorePackageRuleTest.php
+@@ -110,7 +110,7 @@ class IgnorePackageRuleTest extends TestCase
+     /**
+      * @return array<string, array{0: array<mixed>}>
+      */
+-    public function provideUnsupportedIgnoreMapShapes(): array
++    public static function provideUnsupportedIgnoreMapShapes(): array
+     {
+         return [
+             'integer key with array value' => [[
+diff --git a/tests/Composer/Test/Policy/IgnoreSeverityRuleTest.php b/tests/Composer/Test/Policy/IgnoreSeverityRuleTest.php
+index cd8e1c0..3309ccd 100644
+--- a/tests/Composer/Test/Policy/IgnoreSeverityRuleTest.php
++++ b/tests/Composer/Test/Policy/IgnoreSeverityRuleTest.php
+@@ -76,7 +76,7 @@ class IgnoreSeverityRuleTest extends TestCase
+     /**
+      * @return array<string, array{0: array<mixed>}>
+      */
+-    public function provideUnsupportedIgnoreSeverityMapShapes(): array
++    public static function provideUnsupportedIgnoreSeverityMapShapes(): array
+     {
+         return [
+             'integer key with null value' => [[null]],
+diff --git a/tests/Composer/Test/Policy/PolicyConfigTest.php b/tests/Composer/Test/Policy/PolicyConfigTest.php
+index 4a874e8..bfcaa0d 100644
+--- a/tests/Composer/Test/Policy/PolicyConfigTest.php
++++ b/tests/Composer/Test/Policy/PolicyConfigTest.php
+@@ -37,7 +37,7 @@ class PolicyConfigTest extends TestCase
+     /**
+      * @return iterable<string, array{0: string}>
+      */
+-    public function provideReservedCustomListNames(): iterable
++    public static function provideReservedCustomListNames(): iterable
+     {
+         // Future-reserved prefix
+         yield 'ignore-foo prefix' => ['ignore-foo'];

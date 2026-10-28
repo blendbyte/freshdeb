@@ -1,0 +1,26 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Wed, 22 Jan 2025 13:54:39 +0100
+Subject: Revert "Add workaround for InstalledVersion to ensure we always run
+ last version"
+
+This reverts commit d2cd6dec2d924aa725ccf080eb48086d7eac90f7.
+
+Origin: vendor, https://github.com/composer/composer/commit/d2cd6dec2d924aa725ccf080eb48086d7eac90f7
+---
+ tests/bootstrap.php | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/tests/bootstrap.php b/tests/bootstrap.php
+index 4745000..7c4f88d 100644
+--- a/tests/bootstrap.php
++++ b/tests/bootstrap.php
+@@ -19,9 +19,6 @@ if (function_exists('date_default_timezone_set') && function_exists('date_defaul
+ }
+ 
+ require __DIR__.'/../src/bootstrap.php';
+-// ensure we always use the latest InstalledVersions.php even if an older composer ran the install, but we need
+-// to have it included from vendor dir and not from src/ otherwise some gated check in the code will not work
+-copy(__DIR__.'/../src/Composer/InstalledVersions.php', __DIR__.'/../vendor/composer/InstalledVersions.php');
+ require __DIR__.'/../vendor/composer/InstalledVersions.php';
+ 
+ Platform::putEnv('COMPOSER_TESTS_ARE_RUNNING', '1');

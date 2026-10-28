@@ -1,0 +1,37 @@
+From: =?utf-8?q?David_Pr=C3=A9vot?= <taffit@debian.org>
+Date: Mon, 20 May 2024 11:58:08 +0200
+Subject: Group nophpunit11 for tests failing with PHPUnit 11
+
+Bug-Debian: https://bugs.debian.org/1070504
+---
+ tests/Composer/Test/Command/SelfUpdateCommandTest.php | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/tests/Composer/Test/Command/SelfUpdateCommandTest.php b/tests/Composer/Test/Command/SelfUpdateCommandTest.php
+index 0b314aa..ac3e99a 100644
+--- a/tests/Composer/Test/Command/SelfUpdateCommandTest.php
++++ b/tests/Composer/Test/Command/SelfUpdateCommandTest.php
+@@ -16,6 +16,7 @@ use Composer\Command\SelfUpdateCommand;
+ use Composer\Composer;
+ use Composer\Test\TestCase;
+ use PHPUnit\Framework\Attributes\Group;
++use PHPUnit\Framework\Attributes\RequiresPhpunit;
+ use Symfony\Component\Process\Process;
+ 
+ /**
+@@ -58,6 +59,7 @@ class SelfUpdateCommandTest extends TestCase
+         self::assertStringContainsString('Upgrading to version', $appTester->getOutput());
+     }
+ 
++    #[RequiresPhpunit('< 11')]
+     public function testUpdateToSpecificVersion(): void
+     {
+         $appTester = new Process([PHP_BINARY, $this->phar, 'self-update', '2.4.0']);
+@@ -79,6 +81,7 @@ class SelfUpdateCommandTest extends TestCase
+     /**
+      * @dataProvider channelOptions
+      */
++    #[RequiresPhpunit('< 11')]
+     public function testUpdateToDifferentChannel(string $option, string $expectedOutput): void
+     {
+         if (Composer::VERSION !== '@package_version'.'@' && in_array($option, ['--stable', '--preview'], true)) {

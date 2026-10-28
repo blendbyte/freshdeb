@@ -1,0 +1,384 @@
+diff -ruN a/debian/autoloaders/composer b/debian/autoloaders/composer
+--- a/debian/autoloaders/composer
++++ b/debian/autoloaders/composer
+@@ -1 +0,0 @@
+-composer composer Composer/autoload.php
+diff -ruN a/debian/clean b/debian/clean
+--- a/debian/clean
++++ b/debian/clean
+@@ -1,6 +1,11 @@
+-.phpunit.result.cache
+-build/
+-debian/autoload.php.tpl
+-debian/autoload.tests.php.tpl
+-src/Composer/autoload.php
+-vendor/
++composer.phar
++debian/.composer/
++debian/.composer.json
++vendor/autoload.php
++vendor/composer/ClassLoader.php
++vendor/composer/InstalledVersions.php
++vendor/composer/LICENSE
++vendor/composer/autoload_*.php
++vendor/composer/installed.json
++vendor/composer/installed.php
++vendor/composer/platform_check.php
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -2,34 +2,10 @@
+ Section: php
+ Maintainer: Debian PHP PEAR Maintainers <pkg-php-pear@lists.alioth.debian.org>
+ Uploaders: David Prévot <taffit@debian.org>
+-Build-Depends: debhelper-compat (= 14),
++Build-Depends: debhelper-compat (= 13),
+                dh-sequence-bash-completion,
+-               dh-sequence-phpcomposer,
+-               git <!nocheck>,
+                help2man,
+-               jsonlint,
+-               mercurial <!nocheck>,
+-               php-composer-ca-bundle,
+-               php-composer-class-map-generator,
+-               php-composer-metadata-minifier,
+-               php-composer-pcre,
+-               php-composer-semver,
+-               php-composer-spdx-licenses,
+-               php-composer-xdebug-handler,
+-               php-curl <!nocheck>,
+-               php-intl <!nocheck>,
+-               php-json-schema,
+-               php-mbstring <!nocheck>,
+-               php-psr-log,
+-               php-react-promise,
+-               php-seld-signal-handler,
+-               php-symfony-console,
+-               php-symfony-filesystem,
+-               php-symfony-finder,
+-               php-symfony-process,
+-               php-zip <!nocheck>,
+-               phpab,
+-               phpunit <!nocheck>
++               php-cli
+ Standards-Version: 4.7.4
+ Homepage: https://getcomposer.org/
+ Vcs-Browser: https://salsa.debian.org/php-team/pear/composer
+@@ -37,20 +13,17 @@
+ 
+ Package: composer
+ Architecture: all
+-Depends: ${misc:Depends}, ${phpcomposer:Debian-require}
++Depends: ${misc:Depends}, php-cli
+ Recommends: git,
+             php-curl,
+             php-intl,
+             php-mbstring,
+             php-zip,
+             unzip,
+-            xz-utils,
+-            ${phpcomposer:Debian-recommend}
+-Suggests: fossil, mercurial, subversion, ${phpcomposer:Debian-suggest}
+-Replaces: ${phpcomposer:Debian-replace}
+-Breaks: ${phpcomposer:Debian-conflict}, ${phpcomposer:Debian-replace}
+-Provides: ${phpcomposer:Debian-provide}
++            xz-utils
++Suggests: fossil, mercurial, subversion
+ Description: dependency manager for PHP
+- ${phpcomposer:description}.
++ Composer helps you declare, manage and install dependencies of PHP
++ projects. It ensures you have the right stack everywhere.
+  .
+  It behaves like Bundler (Ruby), npm (Node), etc.
+diff -ruN a/debian/freshdeb-bootstrap.php b/debian/freshdeb-bootstrap.php
+--- a/debian/freshdeb-bootstrap.php
++++ b/debian/freshdeb-bootstrap.php
+@@ -0,0 +1,70 @@
++<?php
++/*
++ * freshdeb: set up vendor/ for "composer install", which then records the
++ * installed packages and writes the real autoloader (debian/rules).
++ *
++ * The prepare hook put the dependencies from composer.lock in vendor/, each
++ * extracted from its locked git commit. This writes what "composer install"
++ * would have recorded about them, vendor/composer/installed.json, and a
++ * temporary vendor/autoload.php that loads Composer's own sources and the
++ * dependencies by their autoload rules, enough to run bin/composer.
++ */
++
++$root = dirname(__DIR__);
++$vendor = $root.'/vendor';
++$lock = json_decode(file_get_contents($root.'/composer.lock'), true, 512, JSON_THROW_ON_ERROR);
++
++$packages = [];
++foreach ($lock['packages'] as $package) {
++    if (!is_dir($vendor.'/'.$package['name'])) {
++        fwrite(STDERR, "missing from vendor/: {$package['name']}\n");
++        exit(1);
++    }
++    $package['installation-source'] = 'dist';
++    $package['install-path'] = '../'.$package['name'];
++    $packages[] = $package;
++}
++@mkdir($vendor.'/composer', 0777, true);
++file_put_contents(
++    $vendor.'/composer/installed.json',
++    json_encode(['packages' => $packages, 'dev' => false, 'dev-package-names' => []], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n"
++);
++
++file_put_contents($vendor.'/autoload.php', <<<'PHP'
++<?php
++// freshdeb: temporary, until "composer install" replaces it.
++require_once __DIR__.'/../src/Composer/Autoload/ClassLoader.php';
++
++$loader = new \Composer\Autoload\ClassLoader(__DIR__);
++$loader->addPsr4('Composer\\', __DIR__.'/../src/Composer/');
++$installed = json_decode(file_get_contents(__DIR__.'/composer/installed.json'), true);
++$files = [];
++foreach ($installed['packages'] as $package) {
++    $dir = __DIR__.'/'.$package['name'].'/';
++    foreach ($package['autoload']['psr-4'] ?? [] as $prefix => $paths) {
++        $loader->addPsr4($prefix, array_map(function ($path) use ($dir) { return $dir.$path; }, (array) $paths));
++    }
++    foreach ($package['autoload']['psr-0'] ?? [] as $prefix => $paths) {
++        $loader->add($prefix, array_map(function ($path) use ($dir) { return $dir.$path; }, (array) $paths));
++    }
++    foreach ($package['autoload']['files'] ?? [] as $file) {
++        $files[] = $dir.$file;
++    }
++    // Here only the polyfills' stubs, one class per file named after it.
++    foreach ($package['autoload']['classmap'] ?? [] as $path) {
++        $stubs = is_dir($dir.$path) ? glob($dir.rtrim($path, '/').'/*.php') : [$dir.$path];
++        foreach ($stubs as $stub) {
++            $loader->addClassMap([basename($stub, '.php') => $stub]);
++        }
++    }
++}
++$loader->register(true);
++foreach ($files as $file) {
++    require_once $file;
++}
++
++return $loader;
++PHP
++);
++
++echo 'vendor/: '.count($packages)." packages recorded, temporary autoloader written\n";
+diff -ruN a/debian/install b/debian/install
+--- a/debian/install
++++ b/debian/install
+@@ -1,6 +1,4 @@
+-LICENSE			usr/share/php/data/Composer
+-bin/composer		usr/bin
+-debian/autoloaders	usr/share/pkg-php-tools
+-debian/overrides	usr/share/pkg-php-tools
+-res			usr/share/php/data/Composer
+-src/Composer		usr/share/php
++usr/bin/composer
++# Software that loads Composer's class loader from /usr/share/php (jammy's
++# civicrm-common) keeps working.
++src/Composer/Autoload/ClassLoader.php usr/share/php/Composer/Autoload
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -0,0 +1,27 @@
++composer (2.10.0-1) unstable; urgency=medium
++
++  freshdeb: this package installs composer.phar, built from Composer's
++  source the way upstream builds it, as /usr/bin/composer. The
++  distributions' packages installed Composer's PHP sources in
++  /usr/share/php instead, with Debian's php-composer-* and php-symfony-*
++  libraries; those libraries are no longer needed (apt autoremove), and of
++  Composer's classes only its class loader
++  (/usr/share/php/Composer/Autoload/ClassLoader.php) is still there for
++  other software. Projects that use Composer as a library should require
++  composer/composer themselves.
++
++  "composer self-update" is disabled: updates come with this package.
++
++  Changes since the distributions' versions that may need action:
++   * Updates refuse package versions with known security advisories
++     (config audit.block-insecure, default true since 2.9), and installs
++     refuse packages reported as malware (2.10).
++   * If a package's dist (zip) download fails, Composer no longer falls
++     back to cloning its source (config source-fallback, 2.10).
++   * "composer audit" exits with 0 or 1 only (2.10); its JSON output has
++     reportedAt as an RFC 3339 string (2.5).
++  Upstream's changelog has every change:
++  https://github.com/composer/composer/blob/main/CHANGELOG.md
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
+diff -ruN a/debian/overrides/composer b/debian/overrides/composer
+--- a/debian/overrides/composer
++++ b/debian/overrides/composer
+@@ -1 +0,0 @@
+-composer composer composer
+diff -ruN a/debian/pkg-php-tools-autoloaders b/debian/pkg-php-tools-autoloaders
+--- a/debian/pkg-php-tools-autoloaders
++++ b/debian/pkg-php-tools-autoloaders
+@@ -1 +0,0 @@
+-seld		phar-utils	none
+diff -ruN a/debian/pkg-php-tools-overrides b/debian/pkg-php-tools-overrides
+--- a/debian/pkg-php-tools-overrides
++++ b/debian/pkg-php-tools-overrides
+@@ -1 +0,0 @@
+-seld		phar-utils	none
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -2,81 +2,75 @@
+ 
+ include /usr/share/dpkg/default.mk
+ UPSTREAM := $(DEB_VERSION_UPSTREAM)
+-USRDIR   := $(CURDIR)/build
++
++# freshdeb: composer.phar built from the release's source the way upstream
++# builds it (bin/compile), instead of Composer's sources installed against
++# Debian's php-* libraries, which older releases don't have in the versions
++# Composer needs. The dependencies are the ones in upstream's composer.lock,
++# each extracted from its locked git commit by the prepare hook
++# (hooks/vendor-deps.py); debian/freshdeb-bootstrap.php sets them up for
++# "composer install", run from the source itself. Composer runs offline
++# here, with its home inside the build tree.
++export COMPOSER_HOME := $(CURDIR)/debian/.composer
++export COMPOSER_DISABLE_NETWORK := 1
++export COMPOSER_NO_INTERACTION := 1
++# The version of the source tree (no git to tell), as in upstream's build.
++export COMPOSER_ROOT_VERSION := $(UPSTREAM)
++# The release's commit date (from the prepare hook), which upstream's phar
++# shows in "composer --version" and uses for its file timestamps.
++RELEASE_DATE := $(shell cat freshdeb-release-date)
++RELEASE_TS := $(shell date --utc --date='$(RELEASE_DATE)' +%s)
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION := $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog)
++COMPOSER := $(CURDIR)/debian/tmp/usr/bin/composer
+ 
+ %:
+-	dh $@ -XCompiler.php
++	dh $@
+ 
+ override_dh_auto_build:
+-	phpabtpl composer.json > debian/autoload.php.tpl
+-	sed -i "s#'/usr/share/php/Composer#__DIR__ . '#" debian/autoload.php.tpl
+-	sed -i "s#'/usr/share/php#__DIR__ . '/..#" debian/autoload.php.tpl
+-	phpab \
+-		--output src/Composer/autoload.php \
+-		--template debian/autoload.php.tpl \
+-		src/Composer
+-	mkdir --parents vendor build/share/php/data/Composer build/vendor
+-	# Mimic system path for tests
+-	cp -r src/Composer build/share/php
+-	cp -r LICENSE res build/share/php/data/Composer
+-	ln -s /usr/share/php/Composer/CaBundle build/share/php/Composer
+-	ln -s /usr/share/php/Composer/ClassMapGenerator build/share/php/Composer
+-	ln -s /usr/share/php/Composer/MetadataMinifier build/share/php/Composer
+-	ln -s /usr/share/php/Composer/Pcre build/share/php/Composer
+-	ln -s /usr/share/php/Composer/Semver build/share/php/Composer
+-	ln -s /usr/share/php/Composer/Spdx build/share/php/Composer
+-	ln -s /usr/share/php/Composer/XdebugHandler build/share/php/Composer
+-	ln -s /usr/share/php/JsonSchema build/share/php
+-	ln -s /usr/share/php/Psr build/share/php
+-	ln -s /usr/share/php/React build/share/php
+-	ln -s /usr/share/php/Seld build/share/php
+-	ln -s /usr/share/php/Symfony build/share/php
+-	phpabtpl \
+-		--require-file ../share/php/Composer/autoload.php \
+-		> debian/autoload.tests.php.tpl
+-	phpab \
+-		--tolerant \
+-		--output build/vendor/autoload.php \
+-		--template debian/autoload.tests.php.tpl \
+-		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_removed_include_paths_and_autolad_files.php \
+-		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_include_paths.php \
+-		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_include_paths.php \
+-		--exclude tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_removed_include_paths_and_autolad_files.php \
+-		--exclude tests/Composer/Test/Autoload/Fixtures/pcrebacktracelimit/StripNoise.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-a/PluginA.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/a/PluginA.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-b/PluginB.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/b/PluginB.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/Hooks.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/InstalledVersions.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/ClassLoader.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-a/PluginA.php \
+-		--exclude tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-b/PluginB.php \
+-		--exclude tests/Composer/Test/Plugin/Fixtures/plugin-v9/Installer/Plugin.php \
+-		--exclude tests/Composer/Test/Plugin/Fixtures/plugin-v2/Installer/Plugin2.php \
+-		--exclude tests/Composer/Test/Plugin/Fixtures/plugin-v3/Installer/Plugin2.php \
+-		tests/Composer/Test
+-
++	php --version
++	php debian/freshdeb-bootstrap.php
++	# What bin/compile does in a git checkout: "composer install" without dev
++	# packages, with upstream's class name suffix for the autoloader
++	# (composer.json restored after). Everything is in place, so it installs
++	# nothing; it records the installed packages and writes the autoloader.
++	# No policy blocking: that needs Packagist, and the lock is upstream's.
++	cp composer.json debian/.composer.json
++	php bin/composer config autoloader-suffix ComposerPhar$(RELEASE_TS)
++	php bin/composer install --no-dev --no-scripts --no-plugins --no-progress --no-blocking
++	mv debian/.composer.json composer.json
++	# Composer's own commit in InstalledVersions, which upstream's build gets
++	# from git (here: root package and composer/composer, unknown otherwise).
++	sed -i "s/'reference' => null,/'reference' => '$(REVISION)',/" vendor/composer/installed.php
++	test "$$(grep -c "'reference' => '$(REVISION)'," vendor/composer/installed.php)" = 2
++	COMPOSER_COMPILE_VERSION=$(UPSTREAM) COMPOSER_COMPILE_DATE='$(RELEASE_DATE)' \
++		php -d phar.readonly=0 bin/compile
++
++# Upstream's PHPUnit suite needs its dev dependencies (PHPUnit itself); the
++# smoke tests exercise the installed package instead. Here: the phar runs,
++# reports the release and refuses to replace itself.
+ override_dh_auto_test:
+-	phpunit --include-path build/share/php --exclude-group remote --exclude-group git
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	php composer.phar --version | grep -F 'Composer version $(UPSTREAM) '
++	! php composer.phar self-update
++endif
+ 
+-override_dh_installdocs:
+-	dh_installdocs -Xdoc/composer
++override_dh_auto_install:
++	install -D -m 0755 composer.phar $(COMPOSER)
+ 
+ execute_after_dh_install:
+-	mkdir --parent $(CURDIR)/debian/tmp
+-	cp -r bin build
+-	cd $(USRDIR)/share/php && \
+-		$(USRDIR)/bin/composer completion --no-interaction bash \
+-		> $(CURDIR)/debian/tmp/composer
++	$(COMPOSER) completion --no-interaction bash > debian/tmp/composer
+ 
+ execute_before_dh_installman:
+-	cd $(USRDIR)/share/php && help2man \
++	help2man \
+ 		--help-option=\  \
+ 		--include=$(CURDIR)/debian/composer.1.in \
+ 		--version-string=$(UPSTREAM) \
+ 		--source="composer $(UPSTREAM)" \
+ 		--no-info \
+ 		--no-discard-stderr \
+-		"echo -n 'Usage: composer' && $(USRDIR)/bin/composer --no-ansi | tail -n+10" \
+-		> $(CURDIR)/debian/tmp/composer.1
++		"echo -n 'Usage: composer' && $(COMPOSER) --no-ansi | tail -n+10" \
++		> debian/tmp/composer.1
++
++override_dh_installdocs:
++	dh_installdocs -Xdoc/composer
+diff -ruN a/debian/tests/control b/debian/tests/control
+--- a/debian/tests/control
++++ b/debian/tests/control
+@@ -1,13 +0,0 @@
+-Test-Command: mkdir -p vendor build/vendor && phpabtpl --require composer/composer > debian/autoload.tests.php.tpl && phpab --tolerant -o build/vendor/autoload.php -t debian/autoload.tests.php.tpl -e tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_removed_include_paths_and_autolad_files.php -e tests/Composer/Test/Autoload/Fixtures/autoload_static_functions_with_include_paths.php -e tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_include_paths.php -e tests/Composer/Test/Autoload/Fixtures/autoload_real_functions_with_removed_include_paths_and_autolad_files.php -e tests/Composer/Test/Autoload/Fixtures/pcrebacktracelimit/StripNoise.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-a/PluginA.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/a/PluginA.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/plugin-b/PluginB.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/plugin/b/PluginB.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/Hooks.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/InstalledVersions.php -e tests/Composer/Test/Fixtures/functional/installed-versions2/vendor/composer/ClassLoader.php -e tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-a/PluginA.php -e tests/Composer/Test/Fixtures/functional/plugin-autoloading-only-loads-dependencies/plugin-b/PluginB.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v9/Installer/Plugin.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v9/Installer/Plugin.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v2/Installer/Plugin2.php -e tests/Composer/Test/Plugin/Fixtures/plugin-v3/Installer/Plugin2.php tests/Composer/Test && phpunit --exclude-group remote --exclude-group git
+-Restrictions: allow-stderr
+-Depends: git,
+-         mercurial,
+-         php-curl,
+-         php-intl,
+-         php-mbstring,
+-         php-zip,
+-         phpab,
+-         phpunit,
+-         pkg-php-tools,
+-         xz-utils,
+-         @
