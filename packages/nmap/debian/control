@@ -1,0 +1,99 @@
+Source: nmap
+Section: net
+Maintainer: Debian Security Tools <team+pkg-security@tracker.debian.org>
+Uploaders: Hilko Bengen <bengen@debian.org>,
+           Samuel Henrique <samueloph@debian.org>
+Build-Depends: bison,
+               debhelper-compat (= 14),
+               dh-python,
+               flex,
+               liblinear-dev,
+               liblua5.4-dev,
+               libpcap0.8-dev,
+               libpcre2-dev,
+               libssh2-1-dev,
+               libssl-dev,
+               lua-lpeg-dev,
+               gir1.2-gtk-3.0,
+               gir1.2-pango-1.0,
+               gir1.2-glib-2.0,
+               gir1.2-gdkpixbuf-2.0,
+Build-Depends-Indep: default-jdk-headless,
+                     dh-sequence-python3,
+                     gcc-mingw-w64-i686,
+                     python3,
+                     python3-pip,
+                     python3-gi,
+                     python3-setuptools,
+                     pybuild-plugin-pyproject,
+Standards-Version: 4.7.4
+Homepage: https://nmap.org/
+Vcs-Git: https://salsa.debian.org/pkg-security-team/nmap.git
+Vcs-Browser: https://salsa.debian.org/pkg-security-team/nmap
+
+Package: nmap
+Architecture: any
+Depends: nmap-common (= ${source:Version}),
+Suggests: ncat, ndiff, zenmap
+Description: The Network Mapper
+ Nmap is a utility for network exploration or security auditing. It
+ supports ping scanning (determine which hosts are up), many port
+ scanning techniques, version detection (determine service protocols
+ and application versions listening behind ports), and TCP/IP
+ fingerprinting (remote host OS or device identification). Nmap also
+ offers flexible target and port specification, decoy/stealth scanning,
+ sunRPC scanning, and more. Most Unix and Windows platforms are
+ supported in both GUI and commandline modes. Several popular handheld
+ devices are also supported, including the Sharp Zaurus and the iPAQ.
+
+Package: nmap-common
+Architecture: all
+Multi-Arch: foreign
+Recommends: nmap
+Description: Architecture independent files for nmap
+ Nmap is a utility for network exploration or security auditing. It
+ supports ping scanning (determine which hosts are up), many port
+ scanning techniques, version detection (determine service protocols
+ and application versions listening behind ports), and TCP/IP
+ fingerprinting (remote host OS or device identification). Nmap also
+ offers flexible target and port specification, decoy/stealth scanning,
+ sunRPC scanning, and more. Most Unix and Windows platforms are
+ supported in both GUI and commandline modes. Several popular handheld
+ devices are also supported, including the Sharp Zaurus and the iPAQ.
+ .
+ This package contains the nmap files shared by all architectures.
+
+Package: zenmap
+Architecture: all
+Depends: ndiff,
+         nmap,
+         python3-gi,
+         python3-gi-cairo,
+         gir1.2-gtk-3.0,
+         gir1.2-pango-1.0,
+         gir1.2-glib-2.0,
+         gir1.2-gdkpixbuf-2.0,
+Recommends: pkexec
+Description: The Network Mapper Front End
+ Zenmap is an Nmap frontend. It is meant to be useful for advanced users
+ and to make Nmap easy to use by beginners. It was originally derived
+ from Umit, an Nmap GUI created as part of the Google Summer of Code.
+
+Package: ndiff
+Architecture: all
+Recommends: nmap
+Breaks: nmap (<< ${source:Version})
+Depends: python3-lxml,
+Description: The Network Mapper - result compare utility
+ Ndiff is a tool to aid in the comparison of Nmap scans. It takes two
+ Nmap XML output files and prints the differences between them them:
+ hosts coming up and down, ports becoming open or closed, and things like that.
+ It can produce output in human-readable text or machine-readable XML formats.
+
+Package: ncat
+Architecture: any
+Description: NMAP netcat reimplementation
+ ncat is a reimplementation of Netcat by the NMAP project, providing
+ most of the features present in the original implementations, along
+ with some new features such as IPv6 and SSL support. Port scanning
+ support has been removed.

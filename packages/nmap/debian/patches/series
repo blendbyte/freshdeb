@@ -1,0 +1,4 @@
+0001-use-su-to-root.patch
+0002-Use-Debian-s-ca-certificates.patch
+upstream-Fix-incompatible-pointer-type-error.patch
+dont_define_strlcat_in_libdnet.patch

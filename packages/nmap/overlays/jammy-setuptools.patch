@@ -1,0 +1,61 @@
+diff -ruN a/debian/freshdeb/ndiff-setup.py b/debian/freshdeb/ndiff-setup.py
+--- a/debian/freshdeb/ndiff-setup.py
++++ b/debian/freshdeb/ndiff-setup.py
+@@ -0,0 +1,13 @@
++# freshdeb: jammy's setuptools (59) can't read pyproject.toml's [project]
++# table; the same metadata for its setup.py interface.
++import re
++
++from setuptools import setup
++
++version = re.search(r'VERSION = "([^"]+)"', open("Version.py").read()).group(1)
++setup(
++    name="ndiff",
++    version=version,
++    py_modules=["ndiff"],
++    entry_points={"console_scripts": ["ndiff = ndiff:run_main"]},
++)
+diff -ruN a/debian/freshdeb/zenmap-setup.py b/debian/freshdeb/zenmap-setup.py
+--- a/debian/freshdeb/zenmap-setup.py
++++ b/debian/freshdeb/zenmap-setup.py
+@@ -0,0 +1,15 @@
++# freshdeb: jammy's setuptools (59) can't read pyproject.toml's [project]
++# table; the same metadata for its setup.py interface.
++import re
++
++from setuptools import find_namespace_packages, setup
++
++version = re.search(r'VERSION = "([^"]+)"', open("zenmapCore/Version.py").read()).group(1)
++setup(
++    name="zenmap",
++    version=version,
++    packages=find_namespace_packages(include=["zenmapCore*", "zenmapGUI*", "radialnet*"]),
++    include_package_data=True,
++    package_data={"": ["*.gif", "*.png", "*.conf", "*.usp", "*.html", "*.mo", "*.xml"]},
++    entry_points={"gui_scripts": ["zenmap = zenmapGUI.App:run"]},
++)
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -2,12 +2,21 @@
+ 
+ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+ 
++# freshdeb: jammy's setuptools (59) can't build from pyproject.toml's
++# [project] table; ndiff and zenmap build through setup.py shims instead.
++export PYBUILD_SYSTEM = distutils
++
+ %:
+ 	dh $@
+ 
++execute_before_dh_auto_clean execute_before_dh_auto_configure-indep:
++	cp debian/freshdeb/ndiff-setup.py ndiff/setup.py
++	cp debian/freshdeb/zenmap-setup.py zenmap/setup.py
++
+ execute_after_dh_auto_clean:
+ 	dh_auto_clean --sourcedir=ndiff --buildsystem=pybuild -- --name=ndiff
+ 	dh_auto_clean --sourcedir=zenmap --buildsystem=pybuild -- --name=zenmap
++	rm -f ndiff/setup.py zenmap/setup.py
+ 
+ override_dh_auto_configure:
+ 	dh_auto_configure -- \

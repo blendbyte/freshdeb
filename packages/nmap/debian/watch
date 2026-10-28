@@ -1,0 +1,9 @@
+Version: 5
+
+Source: https://nmap.org/dist/
+Matching-Pattern: nmap-(\d+\..*)\.tar.*
+Compression: xz
+Dversionmangle: s/\+dfsg\d*$//
+Repack: yes
+Repacksuffix: +dfsg
+Uversionmangle: s/(beta|test)/~\\1/i

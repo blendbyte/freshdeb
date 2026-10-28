@@ -1,0 +1,4 @@
+# Debian's, without dont_define_strlcat_in_libdnet.patch (7.992 dropped that declaration itself).
+0001-use-su-to-root.patch
+0002-Use-Debian-s-ca-certificates.patch
+upstream-Fix-incompatible-pointer-type-error.patch

@@ -1,0 +1,4 @@
+/usr/lib/python3.*/dist-packages/ndiff-*.dist-info
+# useless zenmap aliases that we haven't shipped for some time.
+/usr/bin/xnmap
+/usr/bin/nmapfe

@@ -1,0 +1,23 @@
+From: Hilko Bengen <bengen@debian.org>
+Date: Fri, 25 Apr 2014 09:51:17 +0200
+Subject: use su-to-root
+
+---
+ zenmap/install_scripts/unix/zenmap-root.desktop | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/zenmap/install_scripts/unix/zenmap-root.desktop b/zenmap/install_scripts/unix/zenmap-root.desktop
+index a27ffaa..4f30a62 100644
+--- a/zenmap/install_scripts/unix/zenmap-root.desktop
++++ b/zenmap/install_scripts/unix/zenmap-root.desktop
+@@ -1,8 +1,8 @@
+ [Desktop Entry]
+ Name=Zenmap (as root)
+ GenericName=GUI Port Scanner
+-TryExec=su-to-zenmap.sh
+-Exec=su-to-zenmap.sh %F
++TryExec=pkexec
++Exec=pkexec /usr/bin/zenmap %F
+ Terminal=false
+ Icon=zenmap
+ Type=Application

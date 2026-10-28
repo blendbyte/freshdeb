@@ -1,0 +1,28 @@
+From: Samuel Henrique <samueloph@debian.org>
+Date: Wed, 29 Oct 2025 19:55:55 +0000
+Subject: Drop strlcat definition from embedded library libdnet-stripped
+
+ Upstream tried to do this at
+ https://github.com/nmap/nmap/commit/1c2402122251d237e2b7af3fa8582d33f0d15a4f,
+ but it wasn't enough, at least for us.
+---
+ libdnet-stripped/acconfig.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/libdnet-stripped/acconfig.h b/libdnet-stripped/acconfig.h
+index fb7f15a..8138c0c 100644
+--- a/libdnet-stripped/acconfig.h
++++ b/libdnet-stripped/acconfig.h
+@@ -19,9 +19,9 @@
+ int inet_pton(int, const char *, void *);
+ #endif
+ 
+-#ifndef HAVE_STRLCAT
+-int strlcat(char *, const char *, int);
+-#endif
++// #ifndef HAVE_STRLCAT
++// int strlcat(char *, const char *, int);
++// #endif
+ 
+ #ifndef HAVE_STRLCPY
+ int strlcpy(char *, const char *, int);

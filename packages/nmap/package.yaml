@@ -1,0 +1,34 @@
+# nmap (https://nmap.org), Debian's packaging (pkg-security-team), from the release tarball, built against the system libraries like Debian.
+
+name: nmap
+description: "nmap network scanner, with ncat, ndiff and zenmap"
+homepage: https://nmap.org
+
+upstream:
+  git: https://github.com/nmap/nmap.git
+  tag_regex: '^v(?P<version>\d+\.\d+)$'
+  # The release tarball, as Debian; matches nmap.org's signed digest (dist/sigs/).
+  tarball: https://nmap.org/dist/nmap-{version}.tar.bz2
+
+packaging:
+  origin: https://salsa.debian.org/pkg-security-team/nmap.git
+  ref: 99d35794da498524a529b20758d1cc10cf4c9a78  # 7.991+dfsg-1, unstable
+
+# Upstream maintains only its latest release: one track that follows every release.
+tracks:
+  main:
+    tag: "v7.992"
+    commit: 0ee561663c1d7d2d4e708cd414dccfd3d9df30d9
+    sha256: 0c12660eddbf7eabeff6996cb0c044a4eadf2bb0c6fbcb340d6cf72b1caee402
+    revision: 1
+    patches: patches/main  # Debian's, without the libdnet strlcat patch (in 7.992)
+# System libraries like Debian; on jammy and bookworm nmap uses its bundled libssh2 (it needs libssh2 1.11, they have 1.10).
+
+overlays:
+  # NEWS for the jump from the distributions' versions (all releases).
+  - patch: overlays/news.patch
+  # Compat 14 (in sid's debhelper) adds the shlibs/misc substvars itself; no release we build for has it (all releases).
+  - patch: overlays/debhelper-13.patch
+  # jammy's setuptools (59) can't build ndiff and zenmap from pyproject.toml: setup.py shims with the same metadata.
+  - patch: overlays/jammy-setuptools.patch
+    codenames: [jammy]

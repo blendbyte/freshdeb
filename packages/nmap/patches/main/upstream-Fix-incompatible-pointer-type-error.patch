@@ -1,0 +1,39 @@
+From: Sven Geuer <sge@debian.org>
+Date: Wed, 29 Oct 2025 19:31:11 +0000
+Subject: Fix passing argument 4 of ReadFile from incompatible pointer type
+
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1100245
+Forwarded: https://github.com/nmap/nmap/pull/3070
+Last-Update: 2025-03-28
+
+ReadFile returns the number of read bytes in a DWORD, i.e. unsigned long,
+not in an int.
+Mangle returned value into an int when it is used with calling output(), it
+cannot be greater than 1023 (= 0x3FF) anyway.
+Last-Update: 2025-03-28
+---
+ nselib/data/psexec/nmap_service.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/nselib/data/psexec/nmap_service.c b/nselib/data/psexec/nmap_service.c
+index a6a563b..fc94930 100644
+--- a/nselib/data/psexec/nmap_service.c
++++ b/nselib/data/psexec/nmap_service.c
+@@ -109,7 +109,7 @@ static void go(int num, char *lpAppPath, char *env, int headless, int include_st
+ 	HANDLE              stdout_read, stdout_write;
+ 	DWORD               creation_flags;
+ 
+-	int bytes_read;
++	DWORD bytes_read;
+ 	char buffer[1024];
+ 
+ 	/* Create a security attributes structure. This is required to inherit handles. */
+@@ -176,7 +176,7 @@ static void go(int num, char *lpAppPath, char *env, int headless, int include_st
+ 			while(ReadFile(stdout_read, buffer, 1023, &bytes_read, NULL))
+ 			{
+ 				if(strlen(readfile) == 0)
+-					output(num, buffer, bytes_read);
++					output(num, buffer, (int)(bytes_read && 0x7FFF));
+ 			}
+ 			CloseHandle(stdout_read);
+ 

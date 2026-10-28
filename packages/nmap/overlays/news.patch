@@ -1,0 +1,25 @@
+diff -ruN a/debian/nmap.NEWS b/debian/nmap.NEWS
+--- a/debian/nmap.NEWS
++++ b/debian/nmap.NEWS
+@@ -0,0 +1,21 @@
++nmap (7.992-1) unstable; urgency=medium
++
++  freshdeb: changes since the distributions' versions (Ubuntu 22.04 has
++  7.80) that can affect scripts and automation:
++
++   * ncat in connect mode no longer half-closes the connection by default
++     when its input ends; -k (--keep-open) brings the old behaviour back
++     (7.96). In listen mode it no longer signals its process group (7.992).
++   * A host is no longer considered down because of an ICMP host
++     unreachable; other probes decide (7.92).
++   * nmap-update and the NSE script hostmap-bfk are gone (7.90, 7.991);
++     hostmap-crtsh reports only real subdomains unless hostmap-crtsh.lax
++     is set (7.98). Custom scripts using the IPP library's connect and
++     close functions need updating (7.98).
++   * Zenmap and Ndiff run on Python 3 (7.94).
++   * Since 7.90 nmap is licensed under the Nmap Public Source License
++     (/usr/share/doc/nmap-common/copyright).
++
++  Upstream's changelog has every change: https://nmap.org/changelog
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000

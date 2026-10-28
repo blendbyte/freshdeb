@@ -1,0 +1,56 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -4,7 +4,7 @@
+ Uploaders: Hilko Bengen <bengen@debian.org>,
+            Samuel Henrique <samueloph@debian.org>
+ Build-Depends: bison,
+-               debhelper-compat (= 14),
++               debhelper-compat (= 13),
+                dh-python,
+                flex,
+                liblinear-dev,
+@@ -34,6 +34,8 @@
+ Package: nmap
+ Architecture: any
+ Depends: nmap-common (= ${source:Version}),
++         ${misc:Depends},
++         ${shlibs:Depends},
+ Suggests: ncat, ndiff, zenmap
+ Description: The Network Mapper
+  Nmap is a utility for network exploration or security auditing. It
+@@ -49,6 +51,7 @@
+ Package: nmap-common
+ Architecture: all
+ Multi-Arch: foreign
++Depends: ${misc:Depends},
+ Recommends: nmap
+ Description: Architecture independent files for nmap
+  Nmap is a utility for network exploration or security auditing. It
+@@ -66,6 +69,8 @@
+ Package: zenmap
+ Architecture: all
+ Depends: ndiff,
++         ${misc:Depends},
++         ${python3:Depends},
+          nmap,
+          python3-gi,
+          python3-gi-cairo,
+@@ -84,6 +89,8 @@
+ Recommends: nmap
+ Breaks: nmap (<< ${source:Version})
+ Depends: python3-lxml,
++         ${misc:Depends},
++         ${python3:Depends},
+ Description: The Network Mapper - result compare utility
+  Ndiff is a tool to aid in the comparison of Nmap scans. It takes two
+  Nmap XML output files and prints the differences between them them:
+@@ -92,6 +99,8 @@
+ 
+ Package: ncat
+ Architecture: any
++Depends: ${misc:Depends},
++         ${shlibs:Depends},
+ Description: NMAP netcat reimplementation
+  ncat is a reimplementation of Netcat by the NMAP project, providing
+  most of the features present in the original implementations, along

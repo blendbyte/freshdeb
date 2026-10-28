@@ -1,0 +1,4 @@
+debian/com.ubuntu.zenmap.policy usr/share/polkit-1/actions
+
+zenmap/install_scripts/unix/*.desktop /usr/share/applications/
+zenmap/zenmapCore/data/pixmaps/zenmap.png /usr/share/icons/hicolor/256x256/apps/

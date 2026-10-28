@@ -1,0 +1,3 @@
+nselib/data/jdwp-class/*.class
+nselib/data/psexec/nmap_service.ex*
+ndiff/INSTALLED_FILES
