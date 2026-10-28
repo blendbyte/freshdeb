@@ -1,0 +1,33 @@
+Source: prometheus-redis-exporter
+Section: net
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders:
+ Guillem Jover <gjover@sipwise.com>,
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-golang,
+ golang-any (>= 2:1.20~),
+ golang-github-gomodule-redigo-dev (>= 1:1.8.3-1~),
+ golang-github-mna-redisc-dev,
+ golang-github-prometheus-client-golang-dev,
+ golang-github-prometheus-client-model-dev,
+ golang-github-sirupsen-logrus-dev,
+Testsuite: autopkgtest-pkg-go
+Standards-Version: 4.7.4
+Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-redis-exporter
+Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-redis-exporter.git
+Homepage: https://github.com/oliver006/redis_exporter
+XS-Go-Import-Path: github.com/oliver006/redis_exporter
+
+Package: prometheus-redis-exporter
+Architecture: any
+Pre-Depends:
+ ${misc:Pre-Depends},
+Depends:
+ adduser,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Static-Built-Using:
+ ${misc:Static-Built-Using},
+Description: Prometheus exporter for Valkey metrics (Redis-compatible)
+ Supports Valkey and Redis 2.x, 3.x, 4.x, 5.x, 6.x, and 7.x.

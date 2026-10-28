@@ -1,0 +1,193 @@
+.\" Copyright (c) 2024 Sipwise GmbH, Austria
+.\"
+.\" Permission is hereby granted, free of charge, to any person obtaining a copy
+.\" of this software and associated documentation files (the "Software"), to deal
+.\" in the Software without restriction, including without limitation the rights
+.\" to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+.\" copies of the Software, and to permit persons to whom the Software is
+.\" furnished to do so, subject to the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be included in all
+.\" copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+.\" AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+.\" OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+.\" SOFTWARE.
+.
+.TH prometheus\-redis\-exporter 1 "2020\-03\-13" 1.4.0 "prometheus"
+.SH NAME
+prometheus\-redis\-exporter \- Prometheus exporter for Valkey/Redis metrics
+.SH SYNOPSIS
+.B prometheus\-redis\-exporter
+.RI [ option ...]
+.SH DESCRIPTION
+This Prometheus exporter retrieves monitoring data from Valkey (or Redis)
+servers,
+and exposes them via an HTTP server to be collected by Prometheus.
+.SH OPTIONS
+.TP
+.BI \-check\-key\-groups " string"
+Comma separated list of lua regex for grouping keys
+.TP
+.BI \-check\-keys " string"
+Comma separated list of key-patterns to export value and length/size,
+searched for with SCAN.
+.TP
+.BI \-check\-keys\-batch\-size " int"
+Approximate number of keys to process in each execution, larger value speeds
+up scanning.
+WARNING: Valkey and Redis are still single-threaded apps (unlike KeyDB),
+so a huge COUNT can affect production environment (default \fB1000\fP).
+.TP
+.BI \-check\-single\-keys " string"
+Comma separated list of single keys to export value and length/size.
+.TP
+.BI \-check\-single\-streams " string"
+Comma separated list of single streams to export info about streams, groups
+and consumers.
+.TP
+.BI \-check\-streams " string"
+Comma separated list of stream-patterns to export info about streams, groups
+and consumers, searched for with SCAN.
+.TP
+.BI \-config\-command " string"
+What to use for the
+.B CONFIG
+command (default "\fBCONFIG\fP").
+.TP
+.BI \-connection\-timeout " string"
+Timeout for connection to Valkey/Redis instance (default "\fB15s\fP").
+.TP
+.BI \-count\-keys " string"
+Comma separated list of patterns to count
+(eg: 'db0=production_*,db3=sessions:*'), searched for with SCAN.
+.TP
+.BI \-disable\-exporting\-key\-values
+Whether to disable values of keys stored in redis as labels or not when
+using.
+.B \-check\-keys
+or
+.BR \-check\-single\-key .
+.TP
+.B \-exclude\-latency\-histogram\-metrics
+Do not try to collect latency histogram metrics.
+.TP
+.BI \-export\-client\-list
+Whether to scrape Client List specific metrics.
+.TP
+.BI \-export\-client\-port
+Whether to include the client's port when exporting the client list.
+Warning: including the port increases the number of metrics generated and
+will make your Prometheus server take up more memory.
+.TP
+.B \-include\-config\-metrics
+Whether to include all config settings as metrics.
+.TP
+.BI \-include\-system\-metrics
+Whether to include system metrics like e.g.
+.IR redis_total_system_memory_bytes .
+.TP
+.BI \-is\-cluster
+Whether this is a Valkey/Redis cluster (enable this if you need to fetch key
+level data on a Valkey/Redis Cluster).
+.TP
+.BI \-is\-tile38
+Whether to scrape Tile38 specific metrics.
+.TP
+.BI \-log\-format " string"
+Log format, valid options are txt and json (default "\fBtxt\fP").
+.TP
+.BI \-max\-distinct\-key\-groups " int"
+The maximum number of distinct key groups with the most memory utilization
+to present as distinct metrics per database, the leftover key groups will
+be aggregated in the 'overflow' bucket (default 100).
+.TP
+.BI \-namespace " string"
+Namespace for metrics (default "\fBredis\fP").
+.TP
+.BI \-ping\-on\-connect
+Whether to ping the redis instance after connecting.
+.TP
+.B \-redact\-config\-metrics
+Whether to redact config settings that include potentially sensitive
+information like passwords (default true).
+.TP
+.BI \-redis\-only\-metrics
+Whether to also export go runtime metrics.
+.TP
+.BI \-redis.addr " string"
+Address of the Valkey/Redis instance to scrape
+(default "\fBredis://localhost:6379\fP").
+.TP
+.BI \-redis.password " string"
+Password of the Valkey/Redis instance to scrape.
+.TP
+.BI \-redis.password\-file " string"
+Password file of the Valkey/Redis instance to scrape.
+.TP
+.BI \-redis.user " string"
+User name to use for authentication (Valkey/Redis ACL for Valkey/Redis 6.0
+and newer).
+.TP
+.BI \-script " string"
+Path to Lua Valkey/Redis script for collecting extra metrics.
+.TP
+.BI \-set\-client\-name
+Whether to set client name to redis_exporter
+(default \fBtrue\fP).
+.TP
+.BI \-skip\-tls\-verification
+Whether to to skip TLS verification.
+.TP
+.B \-streams\-exclude\-consumer\-metrics
+Do not collect per consumer metrics for streams (decreases cardinality).
+.TP
+.BI \-tls\-ca\-cert\-file " string"
+Name of the CA certificate file (including full path) if the server requires
+TLS client authentication.
+.TP
+.BI \-tls\-client\-cert\-file " string"
+Name of the client certificate file (including full path) if the server
+requires TLS client authentication.
+.TP
+.BI \-tls\-client\-key\-file " string"
+Name of the client key file (including full path) if the server requires
+TLS client authentication.
+.TP
+.BI \-tls\-server\-ca\-cert\-file " string"
+Name of the CA certificate file (including full path) if the web interface
+and telemetry should require TLS client authentication.
+.TP
+.BI \-tls\-server\-cert\-file " string"
+Name of the server certificate file (including full path) if the web
+interface and telemetry should use TLS.
+.TP
+.BI \-tls\-server\-key\-file " string"
+Name of the server key file (including full path) if the web interface and
+telemetry should use TLS.
+.TP
+.BI \-tls\-server\-min\-version " string"
+Minimum TLS version that is acceptable by the web interface and telemetry
+when using TLS (default "TLS1.2").
+.TP
+.BI \-web.listen\-address " string"
+Address to listen on for web interface and telemetry
+(default "\fB:9121\fP").
+.TP
+.BI \-web.telemetry\-path " string"
+Path under which to expose metrics
+(default "\fB/metrics\fP").
+.TP
+.BI \-debug
+Output verbose debug information.
+.TP
+.BI \-version
+Show version information and exit.
+.SH SEE ALSO
+.BR valkey\-server (1),
+.BR redis\-server (8),
+.BR prometheus (1).

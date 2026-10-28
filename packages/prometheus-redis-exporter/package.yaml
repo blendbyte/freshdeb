@@ -1,0 +1,34 @@
+# Prometheus Valkey/Redis exporter: https://github.com/oliver006/redis_exporter
+#
+# Packaging is Debian's (salsa.debian.org/go-team/packages/
+# prometheus-redis-exporter); debian/ is an unmodified import of the commit
+# in packaging.ref. Debian builds against Debian-packaged Go libraries that
+# only exist in unstable; overlays/go-build.patch builds with a pinned Go
+# toolchain and vendored, checksum-verified modules instead, like upstream's
+# release binaries. See README.md.
+#
+# Upstream supports only its latest release (about one a week), so there is
+# one track, "main", that follows every release (component main).
+
+name: prometheus-redis-exporter
+description: "Prometheus exporter for Valkey and Redis metrics (redis_exporter)"
+homepage: https://github.com/oliver006/redis_exporter
+
+upstream:
+  git: https://github.com/oliver006/redis_exporter.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/go-team/packages/prometheus-redis-exporter.git
+  ref: 0886b3eda5585a86bb9a574d0b27111afbcece72  # 1.86.0-1, unstable
+
+tracks:
+  main:
+    tag: "v1.96.0"
+    commit: 9f6a2d1ecbc004851498bac7fc79e18793581979
+    revision: 1
+    go: "1.27.3"  # upstream's release build: Go 1.27 (release workflow); go.mod: go 1.26.0
+
+overlays:
+  # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
+  - patch: overlays/go-build.patch

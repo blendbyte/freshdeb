@@ -1,0 +1,90 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control	2026-10-28 07:55:15.026820046 +0800
++++ b/debian/control	2026-10-28 07:55:24.030116409 +0800
+@@ -5,14 +5,6 @@
+  Guillem Jover <gjover@sipwise.com>,
+ Build-Depends:
+  debhelper-compat (= 13),
+- dh-sequence-golang,
+- golang-any (>= 2:1.20~),
+- golang-github-gomodule-redigo-dev (>= 1:1.8.3-1~),
+- golang-github-mna-redisc-dev,
+- golang-github-prometheus-client-golang-dev,
+- golang-github-prometheus-client-model-dev,
+- golang-github-sirupsen-logrus-dev,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-redis-exporter
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-redis-exporter.git
+@@ -27,7 +19,5 @@
+  adduser,
+  ${misc:Depends},
+  ${shlibs:Depends},
+-Static-Built-Using:
+- ${misc:Static-Built-Using},
+ Description: Prometheus exporter for Valkey metrics (Redis-compatible)
+  Supports Valkey and Redis 2.x, 3.x, 4.x, 5.x, 6.x, and 7.x.
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -3,37 +3,42 @@
+ 
+ # export DH_VERBOSE = 1
+ 
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have, with the flags and version stamps of upstream's
++# release binaries. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment.
++export CGO_ENABLED := 0
++
+ BUILDDIR := $(CURDIR)/_build
+-METAPKG := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
+-BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+-    +%Y%m%d-%H:%M:%S)
+-GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
++BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' +%F-%T)
+ BUILDTAGS  :=
+ BUILDFLAGS  = -tags "$(BUILDTAGS)" -ldflags " \
+-    -X main.BuildCommitSha=$(BRANCH)\
++    -X main.BuildCommitSha=$(REVISION)\
+     -X main.BuildDate=$(BUILD_DATE)\
+-    -X main.BuildVersion=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
++    -X main.BuildVersion=v$(DEB_VERSION_UPSTREAM)"
+ 
+ %:
+-	dh $@ --buildsystem=golang --builddirectory=$(BUILDDIR)
++	dh $@
+ 
+ BINNAME := $(DEB_SOURCE)
+ 
++override_dh_auto_configure:
++
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
+-	# Rename the binary to match the debian package.
+-	mv -v $(BUILDDIR)/bin/redis_exporter $(BUILDDIR)/bin/$(BINNAME)
++	go version
++	go build $(BUILDFLAGS) -o $(BUILDDIR)/bin/$(BINNAME) .
+ 
+ override_dh_auto_install:
+ 
+ override_dh_auto_test:
+ 	# The test suite requires a running redis-server.
++
++# Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf $(BUILDDIR)

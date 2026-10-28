@@ -1,0 +1,198 @@
+prometheus-redis-exporter (1.86.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 09 Jun 2026 20:25:42 +0200
+
+prometheus-redis-exporter (1.84.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Switch debian/gitlab-ci.yml to debian/salsa-ci.yml.
+  * Namespace debhelper fragment files with binary package name.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 26 May 2026 23:57:00 +0200
+
+prometheus-redis-exporter (1.83.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Remove «Rules-Requires-Root: no», which is now the default.
+  * Remove «Priority: optional», which is now the default.
+  * Bump Standards-Version to 4.7.4.
+  * Switch to debian/watch format version 5.
+  * Run wrap-and-sort -ast.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 19 May 2026 00:23:15 +0200
+
+prometheus-redis-exporter (1.69.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 26 Mar 2025 23:59:43 +0100
+
+prometheus-redis-exporter (1.68.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Sort debian/control fields in the same order as dh-make-golang generates.
+  * Switch to Standards-Version 4.7.2 (no changes needed).
+  * Use _build as the build directory.
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 14 Mar 2025 19:25:20 +0100
+
+prometheus-redis-exporter (1.67.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Set minimum golang-any version to >= 2:1.20~.
+  * Match upstream Valkey capitalization.
+  * Lowercase man page title.
+  * Add reference to valkey-server(1) in prometheus-redis-exporter(1) man page.
+  * Update copyright years.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 01 Feb 2025 00:23:05 +0100
+
+prometheus-redis-exporter (1.63.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 01 Oct 2024 02:03:14 +0200
+
+prometheus-redis-exporter (1.62.0-2) unstable; urgency=medium
+
+  * Fix reference to KeyDB.
+  * Correctly capitalize ValKey.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 09 Sep 2024 20:31:31 +0200
+
+prometheus-redis-exporter (1.62.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Switch to Standards-Version 4.7.0 (no changes needed).
+  * Switch from Built-Using field to Static-Built-Using.
+  * Update copyright years.
+  * Update packaging to refer to ValKey and version 7.x instead of just Redis.
+  * Update manual page for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 27 Aug 2024 20:18:28 +0200
+
+prometheus-redis-exporter (1.54.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 09 Sep 2023 01:22:02 +0200
+
+prometheus-redis-exporter (1.52.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update copyright years.
+  * Switch to Standards-Version 4.6.2 (no changes needed).
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 10 Aug 2023 13:56:13 +0200
+
+prometheus-redis-exporter (1.45.0-2) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Repository-Browse.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 21 Nov 2022 00:18:26 +0000
+
+prometheus-redis-exporter (1.45.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Switch to Standards-Version 4.6.1 (no changes needed).
+  * Remove --help output from default file.
+  * Update copyright years.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 08 Nov 2022 19:31:20 +0100
+
+prometheus-redis-exporter (1.37.0-2) unstable; urgency=medium
+
+  * Set build variables correctly for --version and metrics.
+    Reported by Michael Prokop <mprokop@sipwise.com>.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 23 Mar 2022 09:48:44 +0100
+
+prometheus-redis-exporter (1.37.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 22 Mar 2022 17:22:18 +0100
+
+prometheus-redis-exporter (1.36.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 12 Mar 2022 01:26:49 +0100
+
+prometheus-redis-exporter (1.33.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update man page and default file for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 22 Dec 2021 20:20:53 +0100
+
+prometheus-redis-exporter (1.32.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update debian/watch file.
+  * Move instead of copy when renaming the daemon in debian/rules.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 13 Dec 2021 23:00:40 +0100
+
+prometheus-redis-exporter (1.31.4-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Switch to Standards-Version 4.6.0 (no changes needed).
+  * Use @PACKAGE@ in debian/watch file instead of literal name.
+  * Update gitlab-ci.yml from its new refactored template.
+  * Update gbp.conf following latest Go Team workflow.
+  * Update dependencies for new upstream release.
+  * Update man page and default file for new upstream release.
+  * Add myself to Uploaders.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 29 Nov 2021 20:33:53 +0100
+
+prometheus-redis-exporter (1.16.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Remove unnecessary DH_GOPKG variable from debian/rules
+  * Update gitlab-ci.yml from latest upstream version
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 01 Feb 2021 18:46:04 +0100
+
+prometheus-redis-exporter (1.15.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Indent debian/watch file
+  * Update Maintainer and version.BuildUser with new team address
+  * Add debian/upstream/metadata file
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 26 Jan 2021 17:30:07 +0100
+
+prometheus-redis-exporter (1.13.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Change systemd service Restart directive from always to on-failure
+  * Use '' instead of `' in text
+  * Remove error suppression from postinst
+  * Run adduser unconditionally
+  * Remove $syslog dependency from init script
+  * Add man:prometheus-redis-exporter(1) to systemd unit Documentation field
+  * Switch from /var/run to /run
+  * Rewrite init script using start-stop-daemon
+  * Do not change pathname metadata if there are dpkg statoverrides in place
+  * Switch to debhelper-compat 13, no changes needed
+  * Update copyright years
+  * Add missing dependency on adduser
+  * Add support for reload action to sysvinit init script
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 23 Jan 2021 03:20:15 +0100
+
+prometheus-redis-exporter (1.13.1-1) unstable; urgency=medium
+
+  * Initial release, based on packaging work by Guillem Jover.
+    (Closes: #954286)
+
+ -- Michael Prokop <mika@debian.org>  Wed, 02 Dec 2020 23:21:19 +0100

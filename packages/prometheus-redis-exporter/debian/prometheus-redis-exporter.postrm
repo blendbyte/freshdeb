@@ -1,0 +1,17 @@
+#!/bin/sh
+# postrm script for prometheus-redis-exporter
+# Script executed after the package is removed.
+
+set -e
+
+case "$1" in
+  purge)
+        rm -rf /var/lib/prometheus/redis-exporter/ \
+            /var/log/prometheus/prometheus-redis-exporter.log \
+            /var/log/prometheus/prometheus-redis-exporter.log.* \
+            /run/prometheus/prometheus-redis-exporter.pid
+        # We do NOT remove the system user.
+        ;;
+esac
+
+#DEBHELPER#

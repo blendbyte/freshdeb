@@ -1,0 +1,15 @@
+[Unit]
+Description=Prometheus exporter for Valkey metrics (Redis compatible)
+Documentation=https://github.com/oliver006/redis_exporter man:prometheus-redis-exporter(1)
+
+[Service]
+Restart=on-failure
+User=prometheus
+EnvironmentFile=/etc/default/prometheus-redis-exporter
+ExecStart=/usr/bin/prometheus-redis-exporter $ARGS
+ExecReload=/bin/kill -HUP $MAINPID
+TimeoutStopSec=20s
+SendSIGKILL=no
+
+[Install]
+WantedBy=multi-user.target

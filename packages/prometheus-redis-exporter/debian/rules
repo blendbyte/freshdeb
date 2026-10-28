@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/pkg-info.mk
+
+# export DH_VERBOSE = 1
+
+BUILDDIR := $(CURDIR)/_build
+METAPKG := github.com/prometheus/common
+
+BRANCH     := debian/sid
+USER       := team+pkg-go@tracker.debian.org
+BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+    +%Y%m%d-%H:%M:%S)
+GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+BUILDTAGS  :=
+BUILDFLAGS  = -tags "$(BUILDTAGS)" -ldflags " \
+    -X main.BuildCommitSha=$(BRANCH)\
+    -X main.BuildDate=$(BUILD_DATE)\
+    -X main.BuildVersion=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Branch=$(BRANCH)\
+    -X $(METAPKG)/version.BuildUser=$(USER)\
+    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+
+%:
+	dh $@ --buildsystem=golang --builddirectory=$(BUILDDIR)
+
+BINNAME := $(DEB_SOURCE)
+
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+	# Rename the binary to match the debian package.
+	mv -v $(BUILDDIR)/bin/redis_exporter $(BUILDDIR)/bin/$(BINNAME)
+
+override_dh_auto_install:
+
+override_dh_auto_test:
+	# The test suite requires a running redis-server.

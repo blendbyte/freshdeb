@@ -1,0 +1,2 @@
+var/lib/prometheus/redis-exporter
+var/log/prometheus
