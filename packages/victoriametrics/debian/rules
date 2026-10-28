@@ -1,0 +1,57 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+export DH_GOLANG_EXCLUDES := \
+	apptest/ \
+	# EOL
+
+export DH_GOLANG_INSTALL_EXTRA := \
+	app/vmalert/templates/templates/ \
+	app/vmselect/graphite/functions.json \
+	lib/httpserver/favicon.ico \
+	# EOL
+
+%:
+	dh $@ --builddirectory=_build --buildsystem=golang
+
+# Ignore errors due to floating point comparisons w/o epsilon.
+ifneq (,$(filter $(DEB_HOST_ARCH),armhf riscv64 s390x))
+  TESTS_FLAKY = yes
+endif
+
+TESTS_SKIP =
+
+# Fails on at least "amd64 i386 riscv64".
+TESTS_SKIP += TestStorage_futureTimestamps
+# Fails on at least autopkgtest and reproducible-builds.org systems.
+TESTS_SKIP += TestExecSuccess
+TESTS_SKIP += TestExecError
+
+ifneq (,$(filter $(DEB_HOST_ARCH),loong64 ppc64el s390x))
+  TESTS_SKIP += TestRollupHoltWinters
+endif
+
+ifneq (,$(filter $(DEB_HOST_ARCH),armhf i386))
+  TESTS_SKIP += TestDecompressLimitedFail
+endif
+
+ifneq (,$(filter $(DEB_HOST_ARCH),ppc64el))
+  TESTS_SKIP += TestBackoffRetry_Failure
+endif
+
+ifneq (,$(TESTS_SKIP))
+  TESTS_SKIP_OPT = -skip '$(subst $(eval ) ,|,$(TESTS_SKIP))'
+  TESTS_FLAKY_RUN_OPT = -run '$(subst $(eval ) ,|,$(TESTS_SKIP))'
+endif
+
+export VMAUTH_PATH = ../../../../../../bin/vmauth-race
+export VMINSERT_PATH = ../../../../../../bin/vminsert-race
+export VMSELECT_PATH = ../../../../../../bin/vmselect-race
+
+override_dh_auto_test:
+ifeq ($(TESTS_FLAKY),yes)
+	@echo "Notice: Running tests in flaky mode, errors will be ignored."
+endif
+	$(if $(TESTS_FLAKY),-)dh_auto_test -- $(TESTS_SKIP_OPT)
+	-dh_auto_test -- $(TESTS_FLAKY_RUN_OPT)

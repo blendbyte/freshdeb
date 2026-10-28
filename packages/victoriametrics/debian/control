@@ -1,0 +1,148 @@
+Source: victoriametrics
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders:
+ Guillem Jover <gjover@sipwise.com>,
+Section: net
+Testsuite: autopkgtest-pkg-go
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-golang,
+ golang-any,
+ golang-github-bmatcuk-doublestar-dev,
+ golang-github-cespare-xxhash-v2-dev,
+ golang-github-cheggaaa-pb.v3-dev (>= 3.1.0~),
+ golang-github-gogo-protobuf-dev,
+ golang-github-golang-snappy-dev,
+ golang-github-google-go-cmp-dev,
+ golang-github-googleapis-gax-go-dev,
+ golang-github-klauspost-compress-dev (>= 1.9.5~),
+ golang-github-oklog-ulid-dev,
+ golang-github-urfave-cli-v2-dev,
+ golang-github-valyala-fastjson-dev (>= 1.6.1~),
+ golang-github-valyala-fastrand-dev <!nocheck>,
+ golang-github-valyala-fasttemplate-dev,
+ golang-github-valyala-gozstd-dev,
+ golang-github-valyala-histogram-dev,
+ golang-github-valyala-quicktemplate-dev (>= 1.8.0~),
+ golang-github-victoriametrics-easyproto-dev,
+ golang-github-victoriametrics-fastcache-dev (>= 1.13.3+ds1-2~),
+ golang-github-victoriametrics-metrics-dev (>= 1.24.0~),
+ golang-github-victoriametrics-metricsql-dev (>= 0.83.0~),
+ golang-golang-x-net-dev,
+ golang-golang-x-oauth2-google-dev (>= 0.25.0~),
+ golang-golang-x-sys-dev,
+ golang-google-api-dev (>= 0.15.0~),
+ golang-google-cloud-dev (>= 0.49.0~),
+ golang-gopkg-yaml.v2-dev,
+# Needed by vendored module (github.com/Azure/azure-sdk-for-go)
+ golang-github-azuread-microsoft-authentication-library-for-go-dev,
+# Needed by vendored module (github.com/AzureAD/microsoft-authentication-library-for-go)
+ golang-github-pkg-browser-dev,
+# Needed by vendored module (cloud.google.com, google.golang.org/api)
+ golang-github-google-s2a-go-dev,
+ golang-github-googleapis-enterprise-certificate-proxy-dev,
+# Needed by vendored module (go.opentelemetry.io/collector)
+ golang-github-go-viper-mapstructure-dev,
+ golang-github-gobwas-glob-dev,
+ golang-github-hashicorp-go-version-dev,
+ golang-github-knadh-koanf-dev,
+ golang-github-puzpuzpuz-xsync-dev,
+# Needed by vendored module (github.com/prometheus/prometheus/)
+ golang-github-bboreham-go-loser-dev,
+ golang-github-dennwc-varint-dev,
+ golang-github-go-kit-log-dev,
+ golang-github-grafana-regexp-dev,
+ golang-github-pkg-errors-dev,
+ golang-github-prometheus-client-golang-dev,
+ golang-github-prometheus-common-dev (>= 0.62.0~),
+ golang-github-prometheus-sigv4-dev,
+ golang-go.uber-atomic-dev,
+ golang-go.uber-multierr-dev,
+ golang-k8s-client-go-dev,
+ golang-opentelemetry-contrib-dev (>= 1.43.0~),
+ golang-opentelemetry-otel-dev (>= 1.43.0~),
+ golang-uber-goleak-dev,
+Standards-Version: 4.7.4
+Vcs-Browser: https://salsa.debian.org/go-team/packages/victoriametrics
+Vcs-Git: https://salsa.debian.org/go-team/packages/victoriametrics.git
+Homepage: https://github.com/VictoriaMetrics/VictoriaMetrics
+XS-Go-Import-Path: github.com/VictoriaMetrics/VictoriaMetrics
+
+Package: victoria-metrics
+Architecture: any
+Multi-Arch: foreign
+Pre-Depends:
+ ${misc:Pre-Depends},
+Depends:
+ adduser,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Static-Built-Using: ${misc:Static-Built-Using}
+Description: fast, cost-effective and scalable time series database
+ VictoriaMetrics is a fast, cost-effective and scalable time-series database.
+ It can be used as long-term remote storage for Prometheus.
+ .
+ Prominent features:
+  * Supports Prometheus querying API, so it can be used as Prometheus
+    drop-in replacement in Grafana. VictoriaMetrics implements MetricsQL
+    query language, which is inspired by PromQL.
+  * Supports global query view. Multiple Prometheus instances may write
+    data into VictoriaMetrics. Later this data may be used in a single query.
+  * High performance and good scalability for both inserts and selects.
+    Outperforms InfluxDB and TimescaleDB by up to 20x.
+  * Uses 10x less RAM than InfluxDB when working with millions of unique time
+    series (aka high cardinality).
+  * Optimized for time series with high churn rate. Think about
+    prometheus-operator metrics from frequent deployments in Kubernetes.
+  * High data compression, so up to 70x more data points may be crammed into
+    limited storage comparing to TimescaleDB.
+  * Optimized for storage with high-latency IO and low IOPS (HDD and network
+    storage in AWS, Google Cloud, Microsoft Azure, etc).
+  * A single-node VictoriaMetrics may substitute moderately sized clusters
+    built with competing solutions such as Thanos, M3DB, Cortex, InfluxDB or
+    TimescaleDB.
+  * Easy operation:
+    - VictoriaMetrics consists of a single small executable without external
+      dependencies.
+    - All the configuration is done via explicit command-line flags with
+      reasonable defaults.
+    - All the data is stored in a single directory pointed by
+      -storageDataPath flag.
+    - Easy and fast backups from instant snapshots to S3 or GCS with
+      vmbackup / vmrestore.
+    - Data migration between VictoriaMetrics, Prometheus and InfluxDB with
+      vmctl.
+  * Storage is protectedfrom corruption on unclean shutdown (i.e. OOM,
+    hardware reset or kill -9) thanks to the storage architecture.
+  * Supports metrics' scraping, ingestion and backfilling (#backfilling)
+    via the following protocols:
+    - Metrics from Prometheus exporters such as node_exporter.
+    - Prometheus remote write API
+    - InfluxDB line protocol
+    - Graphite plaintext protocol with tags if -graphiteListenAddr is set.
+    - OpenTSDB put message if -opentsdbListenAddr is set.
+    - HTTP OpenTSDB /api/put requests if -opentsdbHTTPListenAddr is set.
+    - /api/v1/import.
+  * Ideally works with big amounts of time series data from Kubernetes, IoT
+    sensors, connected cars, industrial telemetry, financial data and
+    various Enterprise workloads.
+  * Has open source cluster version.
+
+Package: golang-github-victoriametrics-victoriametrics-dev
+Section: golang
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ golang-github-aws-aws-sdk-go-dev,
+ golang-github-cespare-xxhash-v2-dev,
+ golang-github-golang-snappy-dev,
+ golang-github-klauspost-compress-dev (>= 1.9.5~),
+ golang-github-valyala-fasttemplate-dev,
+ golang-golang-x-oauth2-google-dev (>= 0.25.0~),
+ golang-golang-x-sys-dev,
+ golang-google-api-dev (>= 0.15.0~),
+ golang-google-cloud-dev (>= 0.49.0~),
+ golang-gopkg-yaml.v2-dev,
+ ${misc:Depends},
+Description: fast, cost-effective and scalable time series database (library)
+ This package provides the library code for VictoriaMetrics.

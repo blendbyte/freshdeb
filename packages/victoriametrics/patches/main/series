@@ -1,0 +1,4 @@
+# Debian's test fix only. Disable-vmui and Do-not-fail-if-vmselect-cannot-
+# load-the-vmui-config are dropped (the web UI is built in), Skip-memory-
+# test-on-arm only matters on 32-bit arm.
+Skip-a-test-if-the-Cert-serial-does-not-match.patch

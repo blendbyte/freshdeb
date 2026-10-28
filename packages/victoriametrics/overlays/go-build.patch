@@ -1,0 +1,293 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -3,65 +3,8 @@
+ Uploaders:
+  Guillem Jover <gjover@sipwise.com>,
+ Section: net
+-Testsuite: autopkgtest-pkg-go
+ Build-Depends:
+  debhelper-compat (= 13),
+- dh-sequence-golang,
+- golang-any,
+- golang-github-bmatcuk-doublestar-dev,
+- golang-github-cespare-xxhash-v2-dev,
+- golang-github-cheggaaa-pb.v3-dev (>= 3.1.0~),
+- golang-github-gogo-protobuf-dev,
+- golang-github-golang-snappy-dev,
+- golang-github-google-go-cmp-dev,
+- golang-github-googleapis-gax-go-dev,
+- golang-github-klauspost-compress-dev (>= 1.9.5~),
+- golang-github-oklog-ulid-dev,
+- golang-github-urfave-cli-v2-dev,
+- golang-github-valyala-fastjson-dev (>= 1.6.1~),
+- golang-github-valyala-fastrand-dev <!nocheck>,
+- golang-github-valyala-fasttemplate-dev,
+- golang-github-valyala-gozstd-dev,
+- golang-github-valyala-histogram-dev,
+- golang-github-valyala-quicktemplate-dev (>= 1.8.0~),
+- golang-github-victoriametrics-easyproto-dev,
+- golang-github-victoriametrics-fastcache-dev (>= 1.13.3+ds1-2~),
+- golang-github-victoriametrics-metrics-dev (>= 1.24.0~),
+- golang-github-victoriametrics-metricsql-dev (>= 0.83.0~),
+- golang-golang-x-net-dev,
+- golang-golang-x-oauth2-google-dev (>= 0.25.0~),
+- golang-golang-x-sys-dev,
+- golang-google-api-dev (>= 0.15.0~),
+- golang-google-cloud-dev (>= 0.49.0~),
+- golang-gopkg-yaml.v2-dev,
+-# Needed by vendored module (github.com/Azure/azure-sdk-for-go)
+- golang-github-azuread-microsoft-authentication-library-for-go-dev,
+-# Needed by vendored module (github.com/AzureAD/microsoft-authentication-library-for-go)
+- golang-github-pkg-browser-dev,
+-# Needed by vendored module (cloud.google.com, google.golang.org/api)
+- golang-github-google-s2a-go-dev,
+- golang-github-googleapis-enterprise-certificate-proxy-dev,
+-# Needed by vendored module (go.opentelemetry.io/collector)
+- golang-github-go-viper-mapstructure-dev,
+- golang-github-gobwas-glob-dev,
+- golang-github-hashicorp-go-version-dev,
+- golang-github-knadh-koanf-dev,
+- golang-github-puzpuzpuz-xsync-dev,
+-# Needed by vendored module (github.com/prometheus/prometheus/)
+- golang-github-bboreham-go-loser-dev,
+- golang-github-dennwc-varint-dev,
+- golang-github-go-kit-log-dev,
+- golang-github-grafana-regexp-dev,
+- golang-github-pkg-errors-dev,
+- golang-github-prometheus-client-golang-dev,
+- golang-github-prometheus-common-dev (>= 0.62.0~),
+- golang-github-prometheus-sigv4-dev,
+- golang-go.uber-atomic-dev,
+- golang-go.uber-multierr-dev,
+- golang-k8s-client-go-dev,
+- golang-opentelemetry-contrib-dev (>= 1.43.0~),
+- golang-opentelemetry-otel-dev (>= 1.43.0~),
+- golang-uber-goleak-dev,
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/victoriametrics
+ Vcs-Git: https://salsa.debian.org/go-team/packages/victoriametrics.git
+@@ -77,7 +20,6 @@
+  adduser,
+  ${misc:Depends},
+  ${shlibs:Depends},
+-Static-Built-Using: ${misc:Static-Built-Using}
+ Description: fast, cost-effective and scalable time series database
+  VictoriaMetrics is a fast, cost-effective and scalable time-series database.
+  It can be used as long-term remote storage for Prometheus.
+@@ -128,21 +70,3 @@
+     various Enterprise workloads.
+   * Has open source cluster version.
+ 
+-Package: golang-github-victoriametrics-victoriametrics-dev
+-Section: golang
+-Architecture: all
+-Multi-Arch: foreign
+-Depends:
+- golang-github-aws-aws-sdk-go-dev,
+- golang-github-cespare-xxhash-v2-dev,
+- golang-github-golang-snappy-dev,
+- golang-github-klauspost-compress-dev (>= 1.9.5~),
+- golang-github-valyala-fasttemplate-dev,
+- golang-golang-x-oauth2-google-dev (>= 0.25.0~),
+- golang-golang-x-sys-dev,
+- golang-google-api-dev (>= 0.15.0~),
+- golang-google-cloud-dev (>= 0.49.0~),
+- golang-gopkg-yaml.v2-dev,
+- ${misc:Depends},
+-Description: fast, cost-effective and scalable time series database (library)
+- This package provides the library code for VictoriaMetrics.
+diff -ruN a/debian/golang-github-victoriametrics-victoriametrics-dev.install b/debian/golang-github-victoriametrics-victoriametrics-dev.install
+--- a/debian/golang-github-victoriametrics-victoriametrics-dev.install
++++ b/debian/golang-github-victoriametrics-victoriametrics-dev.install
+@@ -1 +0,0 @@
+-usr/share
+diff -ruN a/debian/golang-github-victoriametrics-victoriametrics-dev.lintian-overrides b/debian/golang-github-victoriametrics-victoriametrics-dev.lintian-overrides
+--- a/debian/golang-github-victoriametrics-victoriametrics-dev.lintian-overrides
++++ b/debian/golang-github-victoriametrics-victoriametrics-dev.lintian-overrides
+@@ -1,7 +0,0 @@
+-# This is test data.
+-package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/VictoriaMetrics/VictoriaMetrics/lib/promauth/testdata/test_secretfile.txt]
+-package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/VictoriaMetrics/VictoriaMetrics/lib/promscrape/testdata/password.txt]
+-package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/VictoriaMetrics/VictoriaMetrics/lib/flagutil/testdata/password.txt]
+-# This is part of the upstream naming.
+-golang-github-victoriametrics-victoriametrics-dev: repeated-path-segment *
+-golang-github-victoriametrics-victoriametrics-dev: package-has-long-file-name *
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -0,0 +1,38 @@
++victoriametrics (1.113.0-1) unstable; urgency=medium
++
++  freshdeb: this VictoriaMetrics is built like upstream's release binaries,
++  so unlike the distributions' packages it includes the web UI (vmui, at
++  http://<host>:8428/vmui/) and the vmagent and vmalert web pages.
++
++  The data in /var/lib/victoria-metrics is upgraded in place, but can't go
++  back: since 1.90 the distributions' versions refuse it ("unexpected number
++  of substrings in the part name"), and since 1.92 they would lose index
++  entries. Take a backup before upgrading if you might want to downgrade:
++  curl http://localhost:8428/snapshot/create, then vmbackup.
++
++  Command-line flags that no longer exist, so the service won't start with
++  them in ARGS (/etc/default/victoria-metrics):
++    victoria-metrics: -relabelDebug
++    vmagent: -remoteWrite.multitenantURL, -remoteWrite.relabelDebug,
++      -remoteWrite.urlRelabelDebug
++    vmalert: -datasource.lookback, -datasource.queryTimeAlignment,
++      -remoteRead.ignoreRestoreErrors, -rule.configCheckInterval
++
++  Changes since the distributions' versions that may need action:
++   * Scraping (-promscrape.config, and vmagent) ignores the timestamps
++     targets send unless honor_timestamps: true is set (1.93).
++   * Series over -maxLabelsPerTimeseries or -maxLabelValueLen are dropped
++     instead of truncated, counted in vm_rows_ignored_total (1.108).
++   * -promscrape.dropOriginalLabels defaults to false (1.137).
++   * The native export format (/api/v1/export/native) changed (1.82):
++     exports can't be imported into older versions.
++   * Self-monitoring metrics were renamed or dropped: type="indexdb" split
++     into "indexdb/inmemory" and "indexdb/file" (1.85), the
++     indexdb/tagFilters cache became indexdb/tagFiltersToMetricIDs (1.83),
++     vm_mmaped_files became vm_mmapped_files (1.114),
++     vm_index_search_duration_seconds is gone (1.111). Dashboards and alerts
++     on them need updating.
++  Upstream's changelog has every update note:
++  https://docs.victoriametrics.com/victoriametrics/changelog/
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -1,57 +1,60 @@
+ #!/usr/bin/make -f
+ 
+-include /usr/share/dpkg/architecture.mk
++include /usr/share/dpkg/pkg-info.mk
+ 
+-export DH_GOLANG_EXCLUDES := \
+-	apptest/ \
+-	# EOL
+-
+-export DH_GOLANG_INSTALL_EXTRA := \
+-	app/vmalert/templates/templates/ \
+-	app/vmselect/graphite/functions.json \
+-	lib/httpserver/favicon.ico \
+-	# EOL
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have, the way upstream builds its release binaries
++# (deployment/docker/Makefile, app-via-docker): cgo for gozstd (zstd from its
++# bundled static library), linked statically, tags netgo and osusergo, and
++# upstream's version stamp. That also keeps the web UI (vmui) and the vmagent
++# and vmalert pages, which upstream commits built into the tree and Debian
++# has to remove. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment.
++export CGO_ENABLED := 1
++
++# What Debian's package ships; generator and the VictoriaLogs tools stay out
++# (debian/not-installed).
++APPS := victoria-metrics vmagent vmalert vmalert-tool vmauth vmbackup vmctl vmrestore
++
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),0000000000)
++BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' +%Y%m%d-%H%M%S)
++# Upstream's stamp: <app>-<date>-tags-v<version>-0-g<commit>, from
++# "git describe --long --all" on the release tag.
++BUILDINFO  := $(BUILD_DATE)-tags-v$(DEB_VERSION_UPSTREAM)-0-g$(shell echo $(REVISION) | cut -c1-10)
++GOTAGS     := netgo osusergo
+ 
+ %:
+-	dh $@ --builddirectory=_build --buildsystem=golang
++	dh $@
+ 
+-# Ignore errors due to floating point comparisons w/o epsilon.
+-ifneq (,$(filter $(DEB_HOST_ARCH),armhf riscv64 s390x))
+-  TESTS_FLAKY = yes
+-endif
+-
+-TESTS_SKIP =
+-
+-# Fails on at least "amd64 i386 riscv64".
+-TESTS_SKIP += TestStorage_futureTimestamps
+-# Fails on at least autopkgtest and reproducible-builds.org systems.
+-TESTS_SKIP += TestExecSuccess
+-TESTS_SKIP += TestExecError
+-
+-ifneq (,$(filter $(DEB_HOST_ARCH),loong64 ppc64el s390x))
+-  TESTS_SKIP += TestRollupHoltWinters
+-endif
+-
+-ifneq (,$(filter $(DEB_HOST_ARCH),armhf i386))
+-  TESTS_SKIP += TestDecompressLimitedFail
+-endif
++override_dh_auto_configure:
+ 
+-ifneq (,$(filter $(DEB_HOST_ARCH),ppc64el))
+-  TESTS_SKIP += TestBackoffRetry_Failure
+-endif
+-
+-ifneq (,$(TESTS_SKIP))
+-  TESTS_SKIP_OPT = -skip '$(subst $(eval ) ,|,$(TESTS_SKIP))'
+-  TESTS_FLAKY_RUN_OPT = -run '$(subst $(eval ) ,|,$(TESTS_SKIP))'
+-endif
++override_dh_auto_build:
++	go version
++	set -e; for app in $(APPS); do \
++	    go build -trimpath -buildvcs=false -tags '$(GOTAGS)' \
++	        -ldflags "-extldflags '-static' -X 'github.com/VictoriaMetrics/VictoriaMetrics/lib/buildinfo.Version=$$app-$(BUILDINFO)'" \
++	        -o _build/bin/$$app ./app/$$app; \
++	done
++
++# Upstream's unit tests (lib/ and app/; apptest/ needs cluster binaries), with
++# Debian's skips: TestStorage_futureTimestamps depends on the clock,
++# TestExecSuccess and TestExecError on a shell environment.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	go test -tags '$(GOTAGS)' \
++	    -skip 'TestStorage_futureTimestamps|TestExecSuccess|TestExecError' \
++	    ./lib/... ./app/...
++endif
++
++override_dh_auto_install:
++	set -e; for app in $(APPS); do \
++	    install -D -m 0755 _build/bin/$$app debian/tmp/usr/bin/$$app; \
++	done
+ 
+-export VMAUTH_PATH = ../../../../../../bin/vmauth-race
+-export VMINSERT_PATH = ../../../../../../bin/vminsert-race
+-export VMSELECT_PATH = ../../../../../../bin/vmselect-race
++# Go binaries: nothing for dwz to compress.
++override_dh_dwz:
+ 
+-override_dh_auto_test:
+-ifeq ($(TESTS_FLAKY),yes)
+-	@echo "Notice: Running tests in flaky mode, errors will be ignored."
+-endif
+-	$(if $(TESTS_FLAKY),-)dh_auto_test -- $(TESTS_SKIP_OPT)
+-	-dh_auto_test -- $(TESTS_FLAKY_RUN_OPT)
++override_dh_auto_clean:
++	rm -rf _build
+diff -ruN a/debian/victoria-metrics.init b/debian/victoria-metrics.init
+--- a/debian/victoria-metrics.init
++++ b/debian/victoria-metrics.init
+@@ -22,6 +22,9 @@
+ 
+ DESC="monitoring system and time series database"
+ NAME=victoria-metrics
++# freshdeb: the pid file and the binary identify the daemon; its name is
++# longer than the 15 characters start-stop-daemon can match, so reload failed.
++COMMAND_NAME=none
+ USER=_$NAME
+ GROUP=_$NAME
+ DAEMON=/usr/bin/$NAME
+diff -ruN a/debian/victoria-metrics.service b/debian/victoria-metrics.service
+--- a/debian/victoria-metrics.service
++++ b/debian/victoria-metrics.service
+@@ -14,6 +14,7 @@
+ RestartSec=1
+ EnvironmentFile=/etc/default/victoria-metrics
+ ExecStart=/usr/bin/victoria-metrics $ARGS
++ExecReload=/bin/kill -HUP $MAINPID
+ 
+ [Install]
+ WantedBy=multi-user.target

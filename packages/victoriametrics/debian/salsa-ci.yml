@@ -1,0 +1,11 @@
+# See <https://salsa.debian.org/salsa-ci-team/pipeline> for documentation.
+---
+include:
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
+variables:
+  # Enable once we no longer vendor anything.
+  SALSA_CI_ENABLE_WRAP_AND_SORT: 0
+  SALSA_CI_WRAP_AND_SORT_ARGS: '-sat'
+  # Enable once we provide man pages.
+  SALSA_CI_LINTIAN_FAIL_WARNING: 0
+  SALSA_CI_AUTOPKGTEST_ALLOWED_EXIT_STATUS: 0

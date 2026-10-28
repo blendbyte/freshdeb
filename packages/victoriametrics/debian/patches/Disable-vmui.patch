@@ -1,0 +1,65 @@
+From: Guillem Jover <gjover@sipwise.com>
+Date: Thu, 29 Feb 2024 19:46:28 +0800
+Subject: Disable vmui app
+
+Origin: other, Sipwise
+Forwarded: not-needed
+
+This app contains tons of TypeScript and node.js dependencies and files
+with unclear provenance. Remove it to avoid the headache of having to deal
+with this, which does not seem worth it.
+---
+ app/vmagent/main.go  | 1 -
+ app/vmalert/web.go   | 1 -
+ app/vminsert/main.go | 1 -
+ app/vmselect/main.go | 1 -
+ 4 files changed, 4 deletions(-)
+
+diff --git a/app/vmagent/main.go b/app/vmagent/main.go
+index 347a411..22cd672 100644
+--- a/app/vmagent/main.go
++++ b/app/vmagent/main.go
+@@ -96,7 +96,6 @@ var (
+ )
+ 
+ var (
+-	//go:embed static
+ 	staticFiles  embed.FS
+ 	staticServer = http.FileServer(http.FS(staticFiles))
+ )
+diff --git a/app/vmalert/web.go b/app/vmalert/web.go
+index 74f47ac..5374412 100644
+--- a/app/vmalert/web.go
++++ b/app/vmalert/web.go
+@@ -68,7 +68,6 @@ type requestHandler struct {
+ }
+ 
+ var (
+-	//go:embed static
+ 	staticFiles   embed.FS
+ 	staticHandler = http.FileServer(http.FS(staticFiles))
+ 	staticServer  = http.StripPrefix("/vmalert", staticHandler)
+diff --git a/app/vminsert/main.go b/app/vminsert/main.go
+index dbb7b74..f7ed615 100644
+--- a/app/vminsert/main.go
++++ b/app/vminsert/main.go
+@@ -80,7 +80,6 @@ var (
+ 	opentsdbhttpServer *opentsdbhttpserver.Server
+ )
+ 
+-//go:embed static
+ var staticFiles embed.FS
+ 
+ var staticServer = http.FileServer(http.FS(staticFiles))
+diff --git a/app/vmselect/main.go b/app/vmselect/main.go
+index cd3fae1..4413171 100644
+--- a/app/vmselect/main.go
++++ b/app/vmselect/main.go
+@@ -95,7 +95,6 @@ var (
+ 	})
+ )
+ 
+-//go:embed vmui
+ var vmuiFiles embed.FS
+ 
+ var vmuiFileServer = http.FileServer(http.FS(vmuiFiles))

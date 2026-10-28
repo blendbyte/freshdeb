@@ -1,0 +1,7 @@
+# This is test data.
+package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/VictoriaMetrics/VictoriaMetrics/lib/promauth/testdata/test_secretfile.txt]
+package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/VictoriaMetrics/VictoriaMetrics/lib/promscrape/testdata/password.txt]
+package-contains-documentation-outside-usr-share-doc [usr/share/gocode/src/github.com/VictoriaMetrics/VictoriaMetrics/lib/flagutil/testdata/password.txt]
+# This is part of the upstream naming.
+golang-github-victoriametrics-victoriametrics-dev: repeated-path-segment *
+golang-github-victoriametrics-victoriametrics-dev: package-has-long-file-name *

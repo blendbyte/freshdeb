@@ -1,0 +1,8 @@
+usr/bin/victoria-metrics
+usr/bin/vmagent
+usr/bin/vmalert
+usr/bin/vmalert-tool
+usr/bin/vmauth
+usr/bin/vmbackup
+usr/bin/vmctl
+usr/bin/vmrestore

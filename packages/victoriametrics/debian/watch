@@ -1,0 +1,8 @@
+Version: 5
+
+Template: GitHub
+Dist: https://github.com/VictoriaMetrics/VictoriaMetrics
+Version-Type: SEMANTIC_VERSION
+UVersion-Mangle: s/(\d)[_\.\-\+]?(RC|rc|pre|dev|beta|alpha|cluster)[.]?(\d*)$/$1~$2$3/
+DVersion-Mangle: s/\+ds\d*$//
+Repack-Suffix: +ds1

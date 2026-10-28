@@ -1,0 +1,52 @@
+From: Guillem Jover <gjover@sipwise.com>
+Date: Wed, 26 Feb 2025 16:24:13 +0100
+Subject: Skip memory test on arm
+
+These tests require too much memory for some 32-bit archs, and they fail on
+Debian build daemons. Skip them.
+
+Origin: other, Sipwise
+Forwarded: no
+---
+ app/vmselect/prometheus/prometheus_test.go | 4 ++--
+ lib/storage/table_search_test.go           | 5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/app/vmselect/prometheus/prometheus_test.go b/app/vmselect/prometheus/prometheus_test.go
+index 6ed4cc3..d176906 100644
+--- a/app/vmselect/prometheus/prometheus_test.go
++++ b/app/vmselect/prometheus/prometheus_test.go
+@@ -240,8 +240,8 @@ func TestCalculateMaxMetricsLimitByResource(t *testing.T) {
+ 		}
+ 	}
+ 
+-	// Skip when GOARCH=386
+-	if runtime.GOARCH != "386" {
++	// Skip when GOARCH=386 or GOARH=arm
++	if runtime.GOARCH != "386" && runtime.GOARCH != "arm" {
+ 		// 8 CPU & 32 GiB
+ 		f(16, int(math.Round(32*1024*1024*1024*0.4)), 4294967)
+ 		// 4 CPU & 32 GiB
+diff --git a/lib/storage/table_search_test.go b/lib/storage/table_search_test.go
+index af1b952..7ccf6bd 100644
+--- a/lib/storage/table_search_test.go
++++ b/lib/storage/table_search_test.go
+@@ -3,6 +3,7 @@ package storage
+ import (
+ 	"fmt"
+ 	"math/rand"
++	"runtime"
+ 	"sort"
+ 	"testing"
+ 	"time"
+@@ -11,6 +12,10 @@ import (
+ )
+ 
+ func TestTableSearch(t *testing.T) {
++	if runtime.GOARCH == "arm" {
++		t.Skip("Skipping memory-intensive test on 32-bit platform")
++	}
++
+ 	rng := rand.New(rand.NewSource(1))
+ 
+ 	var trData TimeRange

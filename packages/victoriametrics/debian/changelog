@@ -1,0 +1,266 @@
+victoriametrics (1.145.0+ds1-2) unstable; urgency=medium
+
+  * Team upload
+  * Update Build-Depends and Depends to use golang-github-cespare-xxhash-v2,
+    matching go.mod
+
+ -- Mathias Gibbens <gibmat@debian.org>  Sun, 27 Sep 2026 16:29:14 +0000
+
+victoriametrics (1.145.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Mark several tests unconditionally flaky.
+  * Move golang-github-oklog-ulid-dev as a direct build dependency.
+  * Use environment variables instead of patching the code for the apptests.
+  * Refresh patches for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 09 Jun 2026 19:42:35 +0200
+
+victoriametrics (1.144.0+ds1-3) unstable; urgency=medium
+
+  * Skip more flaky tests.
+  * Quote tests expressions to skip and run.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 03 Jun 2026 23:05:46 +0200
+
+victoriametrics (1.144.0+ds1-2) unstable; urgency=medium
+
+  * Skip flaky tests on build and autopkgtest. (Closes: #1138205)
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 03 Jun 2026 20:09:43 +0200
+
+victoriametrics (1.144.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 27 May 2026 22:20:44 +0200
+
+victoriametrics (1.143.0+ds1-2) unstable; urgency=medium
+
+  * Disable wrap-and-sort salsa CI check until we no longer vendor anything.
+  * Add version constraints for opentelemetry build dependencies.
+    (Closes: #1137576)
+  * Generalize flaky dh_auto_test mode switch.
+  * Skip tests on i386 due to 32-bit system types.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 26 May 2026 23:24:19 +0200
+
+victoriametrics (1.143.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release: (Closes: #1120226)
+   - Fixes build failure. (Closes: #1136935)
+  * Remove «Rules-Requires-Root: no», which is now the default.
+  * Remove «Priority: optional», which is now the default.
+  * Bump Standards-Version to 4.7.4.
+  * Switch to debian/watch format version 5.
+  * Update copyright file for new upstream release.
+  * Update Build-Depends for new upstream release.
+  * Refresh patches, removed patches merged upstream.
+  * Switch debian/gitlab-ci.yml to debian/salsa-ci.yml.
+  * Update lintian overrides for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 23 May 2026 00:21:27 +0200
+
+victoriametrics (1.112.0+ds1-5) unstable; urgency=medium
+
+  * Team upload.
+  * Applied go-1.26-fix.patch. (Closes: #1129170)
+
+ -- Andrew Lee (李健秋) <ajqlee@debian.org>  Tue, 24 Mar 2026 16:07:19 +0100
+
+victoriametrics (1.112.0+ds1-4) unstable; urgency=medium
+
+  * Team upload
+  * Skip additional memory-intensive test on armel, which causes build
+    failures on Debian build daemons
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 18 Aug 2025 15:16:39 +0000
+
+victoriametrics (1.112.0+ds1-3) unstable; urgency=medium
+
+  * Team upload
+  * Add new Support-prometheus-common-v0.62.0.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 18 Aug 2025 12:40:13 +0000
+
+victoriametrics (1.112.0+ds1-2) unstable; urgency=medium
+
+  * Fix FTBFS on systems with a single CPU. (Closes: #1107327)
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 11 Jun 2025 20:32:22 +0200
+
+victoriametrics (1.112.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Skip memory test on arm.
+  * Update vmui Files-Excluded.
+  * Remove patch skipping failing test, fixed upstream.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 26 Feb 2025 20:33:24 +0100
+
+victoriametrics (1.111.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Remove unused vendor/github.com/VictoriaMetrics/fasthttp from
+    Files-Included.
+  * Update vmui Files-Excluded.
+  * Update patches.
+  * Add embedded files to DH_GOLANG_INSTALL_EXTRA.
+  * Explicitly list the binaries to install.
+  * Update copyright file for new upstream release.
+  * Update dependencies for new upstream release.
+  * Fix program pathnames in test suite.
+  * Do not run the "unittest" that execute the programs built.
+  * Disable failing test.
+  * Switch from Built-Using field to Static-Built-Using.
+  * Switch to Standards-Version 4.7.1 (no changes needed).
+  * Update lintian overrides.
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 20 Feb 2025 22:31:56 +0100
+
+victoriametrics (1.79.14+ds1-2) unstable; urgency=medium
+
+  * Team upload
+  * Backport upstream fix for Go1.22
+
+ -- Shengjing Zhu <zhsj@debian.org>  Thu, 29 Feb 2024 23:26:54 +0800
+
+victoriametrics (1.79.14+ds1-1) unstable; urgency=medium
+
+  * New upstream LTS release.
+    - Fix unaligned read access causing SIGBUS on some architectures.
+      (Closes: #1051392)
+  * Bump versions for victoria-metrics module build-dependencies.
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 08 Sep 2023 23:59:45 +0200
+
+victoriametrics (1.79.5+ds1-3) unstable; urgency=medium
+
+  * Take patch from upstream to fix flaky test due to math rand.
+  * Switch to Standards-Version 4.6.2 (no changes needed)
+  * Update copyright years
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 10 Aug 2023 18:34:38 +0200
+
+victoriametrics (1.79.5+ds1-2) unstable; urgency=medium
+
+  * Increase wait time to cover slow architectures. (Closes: #1010544)
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 25 Nov 2022 13:45:23 +0100
+
+victoriametrics (1.79.5+ds1-1) unstable; urgency=medium
+
+  * New upstream LTS release.
+    - Exclude static content from vmui.
+    - Remove use-system-xxhash.patch, solved upstream.
+    - Remove go:embed for vmui static content.
+    - Revert temporary switch to a github.com/cheggaaa/pb/v3 fork.
+  * Include architecture.mk for arch-specific override to take effect.
+  * Remove --help output from default file.
+  * Switch to Standards-Version 4.6.1 (no changes needed).
+  * Update copyright file for new upstream release.
+  * Update dependencies for new upstream release.
+  * Add template files for test suite.
+  * Update lintian overrides.
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 24 Nov 2022 21:47:27 +0100
+
+victoriametrics (1.75.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 22 Mar 2022 17:27:10 +0100
+
+victoriametrics (1.74.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Switch from vendored module to golang-github-cheggaaa-pb.v3-dev.
+  * Refresh system xxhash patch.
+  * Update defaults file for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 14 Mar 2022 15:38:15 +0100
+
+victoriametrics (1.71.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fix build failures due to random metrics order. (Closes: #1002222)
+  * Remove patch from upstream.
+  * Update build dependencies for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 22 Dec 2021 16:29:25 +0100
+
+victoriametrics (1.70.0+ds1-2) unstable; urgency=medium
+
+  * Import upstream patch to fix unaligned atomic access on 32-bit arches.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 14 Dec 2021 19:22:43 +0100
+
+victoriametrics (1.70.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update gitlab-ci.yml from its new refactored template.
+  * Update debian/watch file.
+  * Update build-dependencies for new upstream release.
+  * Update default file for new upstream release.
+  * Append ~ to upstream dependency versions to allow for backports.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 13 Dec 2021 23:11:11 +0100
+
+victoriametrics (1.69.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #985781)
+  * Exclude and disable vmui from code, based on TypeScript and node.js,
+    with unclear source provenance.
+  * Update .gitignore files.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Switch to Standards-Version 4.6.0 (no changes needed).
+  * Update lintian-overrides.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 23 Nov 2021 20:17:24 +0100
+
+victoriametrics (1.53.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Imports vmctl tool.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 08 Feb 2021 23:15:20 +0100
+
+victoriametrics (1.52.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Move note about license location on Debian systems into a Comment field.
+  * Switch from /var/run to /run.
+  * Fix coding style in init script.
+  * Use '' instead of unbalanced `' in text.
+  * Ignore test suite errors on non-amd64,i386,armel due to floating point
+    checks missing epsilon handling in comparison.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 26 Jan 2021 23:41:54 +0100
+
+victoriametrics (1.51.0+ds-3) unstable; urgency=medium
+
+  * Mark packages as Multi-Arch:foreign.
+  * Update option documentation in default file.
+  * Update copyright years.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 06 Jan 2021 01:59:31 +0100
+
+victoriametrics (1.51.0+ds-2) unstable; urgency=medium
+
+  * Rename DAEMON_ARGS to ARGS in default file to match other prometheus
+    packages.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 05 Jan 2021 19:56:47 +0100
+
+victoriametrics (1.51.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Bump golang-github-victoriametrics-metricsql-dev Build-Depends to 0.9.1.
+
+ -- Guillem Jover <gjover@sipwise.com>  Mon, 28 Dec 2020 18:18:00 +0100
+
+victoriametrics (1.50.1+ds-1) unstable; urgency=medium
+
+  * Initial release (Closes: #953666)
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 17 Dec 2020 02:02:05 +0100

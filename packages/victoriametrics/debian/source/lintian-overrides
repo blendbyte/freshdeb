@@ -1,0 +1,14 @@
+# The vendored code is stripped so the NOTICE does not match the shipped code.
+missing-notice-file-for-apache-license [vendor/github.com/prometheus/prometheus/NOTICE]
+# Upstream writes long lines.
+very-long-line-length-in-source-file * > * [*.md:*]
+very-long-line-length-in-source-file * > * [*.MD:*]
+very-long-line-length-in-source-file * > * [*.qtpl:*]
+very-long-line-length-in-source-file * > * [*.qtpl.go:*]
+very-long-line-length-in-source-file * > * [lib/jwt/jwks_test.go:*]
+very-long-line-length-in-source-file * > * [lib/jwt/jwt_test.go:*]
+very-long-line-length-in-source-file * > * [lib/jwt/jwt_timing_test.go:*]
+very-long-line-length-in-source-file * > * [lib/jwt/verifier_pool_test.go:*]
+very-long-line-length-in-source-file * > * [lib/protoparser/opentelemetry/firehose/parser_test.go:*]
+very-long-line-length-in-source-file * > * [lib/protoparser/prometheus/parser_timing_test.go:*]
+very-long-line-length-in-source-file * > * [vendor/github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/internal/generated/zz_pageblob_client.go:*]

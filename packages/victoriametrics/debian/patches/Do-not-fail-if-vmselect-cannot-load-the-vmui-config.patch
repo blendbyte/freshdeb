@@ -1,0 +1,38 @@
+From: Guillem Jover <gjover@sipwise.com>
+Date: Fri, 22 May 2026 22:32:21 +0200
+Subject: Do not fail if vmselect cannot load the vmui config
+
+We do not ship the vmui webUI component, so we should not be failing
+when the file does not exist.
+---
+ app/vmselect/main.go | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/app/vmselect/main.go b/app/vmselect/main.go
+index 4413171..5468bf2 100644
+--- a/app/vmselect/main.go
++++ b/app/vmselect/main.go
+@@ -3,11 +3,13 @@ package vmselect
+ import (
+ 	"embed"
+ 	"encoding/json"
++	"errors"
+ 	"flag"
+ 	"fmt"
+ 	"net/http"
+ 	nethttputil "net/http/httputil"
+ 	"net/url"
++	"os"
+ 	"strings"
+ 	"time"
+ 
+@@ -788,6 +790,9 @@ func initVMUIConfig() {
+ 	}
+ 	data, err := vmuiFiles.ReadFile("vmui/config.json")
+ 	if err != nil {
++		if errors.Is(err, os.ErrNotExist) {
++			return
++		}
+ 		logger.Fatalf("cannot read vmui default config: %s", err)
+ 	}
+ 	err = json.Unmarshal(data, &cfg)

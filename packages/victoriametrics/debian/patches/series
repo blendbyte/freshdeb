@@ -1,0 +1,4 @@
+Disable-vmui.patch
+Skip-memory-test-on-arm.patch
+Skip-a-test-if-the-Cert-serial-does-not-match.patch
+Do-not-fail-if-vmselect-cannot-load-the-vmui-config.patch
