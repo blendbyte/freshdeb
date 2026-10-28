@@ -1112,13 +1112,19 @@ def numeric_prefix(version, depth):
     return ".".join(parts[:depth])
 
 
-def watch_package(pkg, tags, today=None):
-    """Return proposed changes for one package given {tag: commit}."""
+def upstream_releases(pkg, tags):
+    """{version: (tag, commit)} for the tags that match the package's tag_regex."""
     releases = {}
     for tag, sha in tags.items():
         match = pkg.tag_regex.match(tag)
         if match:
             releases[match.group("version")] = (tag, sha)
+    return releases
+
+
+def watch_package(pkg, tags, today=None):
+    """Return proposed changes for one package given {tag: commit}."""
+    releases = upstream_releases(pkg, tags)
     changes = []
     active = {k: t for k, t in pkg.tracks.items() if t.active(today)}
     numeric_tracks = [k for k in pkg.tracks if re.fullmatch(r"\d+(\.\d+)*", k)]
@@ -1246,6 +1252,48 @@ def watch_go(pkg, changes, releases):
     return extra
 
 
+def watch_report(pkg, tags, changes, go=None, today=None):
+    """Lines for the watch log: per track our version, the newest upstream
+    release it follows and what watch decided, the same for its Go
+    toolchain, and new release lines."""
+    releases = upstream_releases(pkg, tags)
+    newest = max(releases, key=_VersionKey) if releases else None
+    lines = [f"{pkg.name}: {len(releases)} upstream releases match tag_regex"
+             + (f", newest {newest}" if newest else "")]
+    for key, track in pkg.tracks.items():
+        label = f"{pkg.name} {key}" + (f" (line {track.line})" if track.line else "")
+        ours = pkg.upstream_version(track.tag)
+        if not track.active(today):
+            lines.append(f"  {label}: ours {ours}, end of life since {track.eol} -> skipped")
+            continue
+        candidates = [v for v in releases if track.follows(v)]
+        found = max(candidates, key=_VersionKey) if candidates else None
+        bump = next((c for c in changes if c["kind"] == "bump" and c["track"] == key), None)
+        if bump:
+            decision = f"update to {bump['tag']}" + (f" with Go {bump['go']}" if bump.get("go") else "")
+        elif found is None:
+            decision = "no upstream release for this track"
+        else:
+            decision = "up to date"
+        lines.append(f"  {label}: ours {ours}, upstream {found or '-'} -> {decision}")
+        if track.go and not bump:
+            rebuild = next((c for c in changes if c["kind"] == "toolchain" and c["track"] == key), None)
+            newest_go = newest_go_patch(go_minor(track.go), go) if go else None
+            if rebuild:
+                go_decision = f"rebuild with Go {rebuild['go']}"
+            elif go is None:
+                go_decision = "not checked"
+            else:
+                go_decision = "up to date"
+            lines.append(f"  {label}: Go {track.go}, newest {go_minor(track.go)}.x {newest_go or '-'} -> {go_decision}")
+    for change in changes:
+        if change["kind"] == "new-track":
+            moves = ", ".join(f"alias {a} -> {t}" for a, t in change["aliases"].items())
+            lines.append(f"  {pkg.name}: new release line {change['track']} ({change['tag']}) -> add track "
+                         f"{change['track']} based on {change['based_on']}" + (f", {moves}" if moves else ""))
+    return lines
+
+
 def ensure_go_toolchain(root, version, sums):
     """Add a Go release's checksums to config.yaml if they aren't there."""
     if version in load_config(root).toolchains.get("go", {}):
@@ -1333,11 +1381,15 @@ def cmd_watch(args):
     for name in names:
         pkg = load_package(name, root)
         if not pkg.data.get("watch", True):
+            print(f"{pkg.name}: watch disabled", file=sys.stderr)
             continue
-        found = watch_package(pkg, remote_tags(pkg.upstream["git"]))
+        tags = remote_tags(pkg.upstream["git"])
+        found = watch_package(pkg, tags)
         if any(track.go for track in pkg.tracks.values()):
             releases = releases if releases is not None else go_releases(list(config.architectures))
             found += watch_go(pkg, found, releases)
+        # The report goes to stderr: stdout is the JSON the workflow reads.
+        print("\n".join(watch_report(pkg, tags, found, releases)), file=sys.stderr)
         changes.extend(found)
     if args.tracks:
         changes = [c for c in changes if c["track"] in args.tracks]

@@ -622,6 +622,70 @@ class AssetTests(unittest.TestCase):
         self.assertEqual(errors, [])
 
 
+class WatchReportTests(unittest.TestCase):
+    """The watch log: ours, upstream and the decision per track."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def report(self, pkg, extra_tags, go=None, today=TODAY):
+        tags = {**{t.tag: t.commit for t in pkg.tracks.values()}, **extra_tags}
+        changes = freshdeb.watch_package(pkg, tags, today)
+        if go:
+            changes += freshdeb.watch_go(pkg, changes, go)
+        return freshdeb.watch_report(pkg, tags, changes, go, today)
+
+    @staticmethod
+    def next_patch(version):
+        *head, last = version.split(".")
+        return ".".join(head + [str(int(last) + 1)])
+
+    def test_update_and_up_to_date(self):
+        pkg = freshdeb.load_package("prometheus", self.tmp)
+        main, lts = pkg.tracks["main"], pkg.tracks["lts"]
+        ours = pkg.upstream_version(main.tag)
+        newer = self.next_patch(ours)
+        lines = self.report(pkg, {f"v{newer}": "a" * 40})
+        self.assertIn(f"  prometheus main: ours {ours}, upstream {newer} -> update to v{newer}", lines)
+        lts_ours = pkg.upstream_version(lts.tag)
+        self.assertIn(f"  prometheus lts (line {lts.line}): ours {lts_ours}, upstream {lts_ours} -> up to date", lines)
+        self.assertIn(f"  prometheus lts (line {lts.line}): Go {lts.go}, newest {freshdeb.go_minor(lts.go)}.x - "
+                      "-> not checked", lines)
+
+    def test_go_rebuild(self):
+        pkg = freshdeb.load_package("prometheus", self.tmp)
+        main, lts = pkg.tracks["main"], pkg.tracks["lts"]
+        newer = self.next_patch(lts.go)
+        go = {v: {"amd64": "a" * 64, "arm64": "b" * 64} for v in (lts.go, newer, main.go)}
+        lines = self.report(pkg, {}, go=go)
+        label = f"prometheus lts (line {lts.line})"
+        self.assertIn(f"  {label}: Go {lts.go}, newest {freshdeb.go_minor(lts.go)}.x {newer} "
+                      f"-> rebuild with Go {newer}", lines)
+        self.assertIn(f"  prometheus main: Go {main.go}, newest {freshdeb.go_minor(main.go)}.x {main.go} "
+                      "-> up to date", lines)
+
+    def test_end_of_life(self):
+        pkg = freshdeb.load_package("valkey", self.tmp)
+        key, track = min(pkg.tracks.items(), key=lambda item: item[1].eol)
+        lines = self.report(pkg, {}, today=track.eol + dt.timedelta(days=1))
+        self.assertIn(f"  valkey {key}: ours {pkg.upstream_version(track.tag)}, end of life since {track.eol} "
+                      "-> skipped", lines)
+
+    def test_new_release_line(self):
+        pkg = freshdeb.load_package("valkey", self.tmp)
+        newest = max(pkg.tracks, key=freshdeb._VersionKey)
+        major, minor = newest.split(".")
+        line = f"{major}.{int(minor) + 1}"
+        lines = self.report(pkg, {f"{line}.0": "a" * 40})
+        self.assertIn(f"  valkey: new release line {line} ({line}.0) -> add track {line} based on {newest}, "
+                      f"alias {major} -> {line}", lines)
+
+
 class WatchTests(unittest.TestCase):
     def setUp(self):
         self.pkg = freshdeb.load_package("valkey", ROOT)

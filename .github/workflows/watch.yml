@@ -47,10 +47,18 @@ jobs:
       - name: Install PyYAML
         run: sudo apt-get install -y --no-install-recommends python3-yaml
 
+      # Logs per package and track: our version, the newest upstream release
+      # it follows, Go toolchains, and what watch decided.
       - name: Find upstream releases
         run: |
           python3 scripts/freshdeb.py watch > changes.json
-          jq -r '.[] | "\(.package) \(.track): \(.kind) -> \(.tag)"' changes.json
+          echo
+          if [[ "$(jq length changes.json)" == 0 ]]; then
+            echo "No changes: every track is up to date."
+          else
+            echo "Changes (one pull request each):"
+            jq -r '.[] | "  \(.package) \(.track): \(.kind) -> \(.tag // ("Go " + .go))"' changes.json
+          fi
 
       - name: Open pull requests
         env:
