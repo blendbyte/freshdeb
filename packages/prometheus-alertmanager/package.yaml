@@ -30,7 +30,7 @@ tracks:
   main:
     tag: "v0.34.1"
     commit: 73c6bfe7393929211294c1954f30d8ed78e4d0ad
-    revision: 3
+    revision: 4
     go: "1.26.10"  # what upstream's release build uses (.promu.yml: go 1.26; go.mod: go 1.25.0)
     patches: patches/main  # Debian's 0003 (Debian defaults; amtool also reads upstream's config paths) and a compat patch for Debian's --web.ui-path flag
     assets:
