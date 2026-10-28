@@ -45,7 +45,7 @@ test "$(vm_users)" = _victoria-metrics
 
 echo "samples written are returned by queries"
 at=$(( $(date +%s) - 120 ))
-write_samples <<EOF
+write_samples "$VM" <<EOF
 freshdeb_smoke{role="test"} 42 ${at}000
 EOF
 expect_value 'freshdeb_smoke{role="test"}' 42 "$at"

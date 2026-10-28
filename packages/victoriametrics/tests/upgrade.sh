@@ -26,7 +26,7 @@ case "${1:?seed or check}" in
         old=$(( $(date +%s) - 86400 ))
         echo "$recent $old" > "$state/times"
         start_vm
-        write_samples <<EOF
+        write_samples "$VM" <<EOF
 freshdeb_upgrade{written_by="distro"} 42 ${recent}000
 freshdeb_upgrade_old{written_by="distro"} 7 ${old}000
 EOF
@@ -44,7 +44,7 @@ EOF
         expect_value 'freshdeb_upgrade_old{written_by="distro"}' 7 "$old"
         # And it keeps taking new samples into the upgraded storage.
         new=$(( $(date +%s) - 60 ))
-        write_samples <<EOF
+        write_samples "$VM" <<EOF
 freshdeb_upgrade{written_by="freshdeb"} 43 ${new}000
 EOF
         expect_value 'freshdeb_upgrade{written_by="freshdeb"}' 43 "$new"
