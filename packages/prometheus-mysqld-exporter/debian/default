@@ -1,0 +1,33 @@
+# Set the command-line arguments to pass to the server.
+# Due to shell escaping, to pass backslashes for regexes, you need to double
+# them (\\d for \d). If running under systemd, you need to double them again
+# (\\\\d to mean \d), and escape newlines too.
+ARGS=""
+
+### Database authentication
+#
+# By default the DATABASE connection string will be read from
+# the file specified with the -config.my-cnf parameter.  For example:
+# ARGS='--config.my-cnf /etc/mysql/debian.cnf'
+#
+# Note that SSL options can only be set using a cnf file.
+#
+# To use UNIX domain sockets authentication with or without password:
+# DATA_SOURCE_NAME="prometheus:nopassword@unix(/run/mysqld/mysqld.sock)/"
+# DATA_SOURCE_NAME="prometheus@unix(/run/mysqld/mysqld.sock)/"
+#
+# To use a TCP connection and password authentication:
+# DATA_SOURCE_NAME="prometheus:password@(hostname:port)/dbname"
+
+### Monitoring user creation.
+#
+# You need a user with enough privileges for the exporter to run.
+#
+# Example to create a user to connect (only) via UNIX socket:
+#   CREATE USER IF NOT EXISTS 'prometheus'@'localhost' IDENTIFIED WITH unix_socket;
+#
+# To create a user with a password, that can log in via UNIX or TCP sockets:
+#   CREATE USER IF NOT EXISTS 'prometheus'@'localhost' IDENTIFIED BY 'password';
+#
+# Finally, to grant the necessary privileges:
+#   GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'prometheus'@'localhost';

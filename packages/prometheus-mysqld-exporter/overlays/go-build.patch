@@ -1,0 +1,223 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -5,23 +5,8 @@
+  Martina Ferrari <tina@debian.org>,
+  Guillem Jover <gjover@sipwise.com>,
+ Section: net
+-Testsuite: autopkgtest-pkg-go
+ Build-Depends:
+  debhelper-compat (= 13),
+- dh-sequence-golang,
+- golang-any (>= 2:1.21~),
+- golang-github-blang-semver-dev,
+- golang-github-data-dog-go-sqlmock-dev,
+- golang-github-go-sql-driver-mysql-dev,
+- golang-github-google-go-cmp-dev,
+- golang-github-google-uuid-dev,
+- golang-github-prometheus-client-golang-dev (>= 1.19.0),
+- golang-github-prometheus-client-model-dev,
+- golang-github-prometheus-common-dev,
+- golang-github-prometheus-exporter-toolkit-dev (>= 0.14.0),
+- golang-github-smartystreets-goconvey-dev,
+- golang-gopkg-alecthomas-kingpin.v2-dev,
+- golang-gopkg-ini.v1-dev,
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-mysqld-exporter
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-mysqld-exporter.git
+@@ -38,8 +23,6 @@
+  ${shlibs:Depends},
+ Suggests:
+  default-mysql-server | virtual-mysql-server,
+-Static-Built-Using:
+- ${misc:Static-Built-Using},
+ Description: Prometheus exporter for MySQL server
+  Prometheus exporter for MySQL server metrics.
+  .
+diff -ruN a/debian/default b/debian/default
+--- a/debian/default
++++ b/debian/default
+@@ -6,18 +6,30 @@
+ 
+ ### Database authentication
+ #
+-# By default the DATABASE connection string will be read from
+-# the file specified with the -config.my-cnf parameter.  For example:
+-# ARGS='--config.my-cnf /etc/mysql/debian.cnf'
+-#
+-# Note that SSL options can only be set using a cnf file.
+-#
+-# To use UNIX domain sockets authentication with or without password:
+-# DATA_SOURCE_NAME="prometheus:nopassword@unix(/run/mysqld/mysqld.sock)/"
+-# DATA_SOURCE_NAME="prometheus@unix(/run/mysqld/mysqld.sock)/"
++# The credentials are read from /var/lib/prometheus/.my.cnf (the prometheus
++# user's ~/.my.cnf), or from the file given with --config.my-cnf, e.g.
++# ARGS="--config.my-cnf=/etc/prometheus/mysqld-exporter.cnf". It has to be
++# readable by the prometheus user, and should not be readable by others:
++#
++#   [client]
++#   user = prometheus
++#   password = secret
++#   # A UNIX domain socket ...
++#   socket = /run/mysqld/mysqld.sock
++#   # ... or TCP (default: localhost:3306):
++#   # host = db.example.com
++#   # port = 3306
++#
++# TLS options (ssl-ca, ssl-cert, ssl-key, tls) can only be set in the file.
++# More [client.<name>] sections can be used with /probe?auth_module=<name>.
++#
++# Alternatively, without a file: --mysqld.username and --mysqld.address
++# (host:port or unix:///run/mysqld/mysqld.sock) in ARGS, and the password in
++# MYSQLD_EXPORTER_PASSWORD here:
++# MYSQLD_EXPORTER_PASSWORD="secret"
+ #
+-# To use a TCP connection and password authentication:
+-# DATA_SOURCE_NAME="prometheus:password@(hostname:port)/dbname"
++# DATA_SOURCE_NAME is no longer supported (since 0.15), see
++# /usr/share/doc/prometheus-mysqld-exporter/NEWS.Debian.gz.
+ 
+ ### Monitoring user creation.
+ #
+@@ -31,3 +43,6 @@
+ #
+ # Finally, to grant the necessary privileges:
+ #   GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'prometheus'@'localhost';
++#
++# On MariaDB 10.5 and later, the slave_status collector also needs:
++#   GRANT SLAVE MONITOR ON *.* TO 'prometheus'@'localhost';
+diff -ruN a/debian/init b/debian/init
+--- a/debian/init
++++ b/debian/init
+@@ -23,7 +23,7 @@
+ PIDFILE=/run/prometheus/$NAME.pid
+ LOGFILE=/var/log/prometheus/$NAME.log
+ 
+-export DATA_SOURCE_NAME
++export DATA_SOURCE_NAME MYSQLD_EXPORTER_PASSWORD
+ 
+ START_ARGS="--no-close --background --make-pidfile"
+ STOP_ARGS="--remove-pidfile"
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -0,0 +1,44 @@
++prometheus-mysqld-exporter (0.21.0-1) unstable; urgency=medium
++
++  freshdeb: selected mysql_global_status_* and mysql_slave_status_* metrics
++  (query and table cache totals, threads, uptime, replica running and lag)
++  are now typed as counters or gauges instead of untyped. Queries keep
++  working; check rules or tools that look at metric types.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
++prometheus-mysqld-exporter (0.15.0-1) unstable; urgency=medium
++
++  freshdeb: mysqld_exporter 0.15 no longer reads DATA_SOURCE_NAME. If you
++  set it in /etc/default/prometheus-mysqld-exporter, the exporter does not
++  start: it logs that DATA_SOURCE_NAME is ignored, and that it found no
++  configuration. Move the credentials to /var/lib/prometheus/.my.cnf, owned
++  by and readable only by the prometheus user:
++
++    [client]
++    user = prometheus
++    password = secret
++    socket = /run/mysqld/mysqld.sock
++
++  or use host and port instead of socket for TCP. A file elsewhere works
++  with --config.my-cnf=<file> in ARGS. /etc/default/prometheus-mysqld-exporter
++  documents the other settings.
++
++  /var/lib/prometheus/.my.cnf, the prometheus user's ~/.my.cnf, stays the
++  default file this package reads (upstream's default since 0.15 is .my.cnf
++  in the working directory), so setups that already used it keep working.
++
++  The scrape metrics mysql_exporter_scrapes_total,
++  mysql_exporter_scrape_errors_total and mysql_last_scrape_failed are gone;
++  mysql_up and mysql_exporter_collector_success are what is left.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
++prometheus-mysqld-exporter (0.14.0-1) unstable; urgency=medium
++
++  freshdeb: the metrics of the info_schema.processlist and
++  info_schema.replica_host collectors were renamed in mysqld_exporter 0.14.
++  Both collectors are off by default; if you enabled them, update queries,
++  rules and dashboards that use their metrics.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -4,34 +4,38 @@
+ # Uncomment this to turn on verbose mode.
+ #export DH_VERBOSE=1
+ 
+-export DH_GOLANG_INSTALL_EXTRA := test_exporter.cnf
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have, with the flags and version stamps of upstream's
++# release binaries. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment.
++export CGO_ENABLED := 0
+ 
+ BUILDDIR := build
+ METAPKG := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
+ BUILD_DATE  = $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+     +%Y%m%d-%H:%M:%S)
+-GO_VERSION  = $(shell go version | sed 's/go version \(\S*\).*/\1/')
+ BUILDFLAGS  = -ldflags \
+   " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
++    -X $(METAPKG)/version.Revision=$(REVISION)\
++    -X $(METAPKG)/version.Branch=HEAD\
++    -X $(METAPKG)/version.BuildUser=freshdeb\
++    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)"
+ 
+ %:
+-	dh $@ --buildsystem=golang --builddirectory=$(BUILDDIR)
++	dh $@
+ 
+ BINNAME := $(DEB_SOURCE)
+ WHATIS := "$(BINNAME) \\- Prometheus exporter for MySQL/MariaDB"
+ 
++override_dh_auto_configure:
++
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
+-	# Rename the binary to match the debian package.
+-	mv -v $(BUILDDIR)/bin/mysqld_exporter $(BUILDDIR)/bin/$(BINNAME)
++	go version
++	go build $(BUILDFLAGS) -o $(BUILDDIR)/bin/$(BINNAME) .
+ 	$(BUILDDIR)/bin/$(BINNAME) --help-man > $(BUILDDIR)/$(BINNAME).1
+ 	# Remove build user/build date/go version headers, which is ugly.
+ 	sed -i -e '/^  /d' $(BUILDDIR)/$(BINNAME).1
+@@ -40,5 +44,18 @@
+ 	# Remove default values as they create unwieldy long lines.
+ 	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' $(BUILDDIR)/$(BINNAME).1
+ 
++# Upstream's test suite, as upstream's "make test" runs it. It needs no
++# database: the collectors are tested against sqlmock.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	go test -short $(BUILDFLAGS) ./...
++endif
++
+ override_dh_auto_install:
+-	dh_auto_install -- --no-source
++	install -D -m 0755 $(BUILDDIR)/bin/$(BINNAME) debian/prometheus-mysqld-exporter/usr/bin/$(BINNAME)
++
++# Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf $(BUILDDIR)

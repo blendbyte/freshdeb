@@ -1,0 +1,15 @@
+#!/bin/sh
+# postrm script for prometheus-mysqld-exporter
+# Script executed after the package is removed.
+
+set -e
+
+case "$1" in
+  purge)
+        rm -rf /var/log/prometheus/prometheus-mysqld-exporter.log* \
+               /run/prometheus/prometheus-mysqld-exporter.pid
+	# We do NOT remove the system user.
+	;;
+esac
+
+#DEBHELPER#

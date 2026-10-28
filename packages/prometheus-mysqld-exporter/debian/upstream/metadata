@@ -1,0 +1,4 @@
+Bug-Database: https://github.com/prometheus/mysqld_exporter/issues
+Bug-Submit: https://github.com/prometheus/mysqld_exporter/issues/new
+Repository: https://github.com/prometheus/mysqld_exporter.git
+Repository-Browse: https://github.com/prometheus/mysqld_exporter

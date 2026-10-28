@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/pkg-info.mk
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+export DH_GOLANG_INSTALL_EXTRA := test_exporter.cnf
+
+BUILDDIR := build
+METAPKG := github.com/prometheus/common
+
+BRANCH     := debian/sid
+USER       := team+pkg-go@tracker.debian.org
+BUILD_DATE  = $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+    +%Y%m%d-%H:%M:%S)
+GO_VERSION  = $(shell go version | sed 's/go version \(\S*\).*/\1/')
+BUILDFLAGS  = -ldflags \
+  " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Branch=$(BRANCH)\
+    -X $(METAPKG)/version.BuildUser=$(USER)\
+    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+
+%:
+	dh $@ --buildsystem=golang --builddirectory=$(BUILDDIR)
+
+BINNAME := $(DEB_SOURCE)
+WHATIS := "$(BINNAME) \\- Prometheus exporter for MySQL/MariaDB"
+
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+	# Rename the binary to match the debian package.
+	mv -v $(BUILDDIR)/bin/mysqld_exporter $(BUILDDIR)/bin/$(BINNAME)
+	$(BUILDDIR)/bin/$(BINNAME) --help-man > $(BUILDDIR)/$(BINNAME).1
+	# Remove build user/build date/go version headers, which is ugly.
+	sed -i -e '/^  /d' $(BUILDDIR)/$(BINNAME).1
+	# Fix whatis entry.
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n'$(WHATIS) $(BUILDDIR)/$(BINNAME).1
+	# Remove default values as they create unwieldy long lines.
+	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' $(BUILDDIR)/$(BINNAME).1
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source

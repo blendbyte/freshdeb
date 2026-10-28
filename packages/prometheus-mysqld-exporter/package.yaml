@@ -1,0 +1,36 @@
+# Prometheus mysqld_exporter: https://github.com/prometheus/mysqld_exporter
+#
+# Packaging is Debian's (salsa.debian.org/go-team/packages/
+# prometheus-mysqld-exporter); debian/ is an unmodified import of the commit
+# in packaging.ref. Debian builds against Debian-packaged Go libraries that
+# only exist in unstable; overlays/go-build.patch builds with a pinned Go
+# toolchain and vendored, checksum-verified modules instead, like upstream's
+# release binaries. See README.md.
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: prometheus-mysqld-exporter
+description: "Prometheus exporter for MySQL and MariaDB servers (mysqld_exporter)"
+homepage: https://github.com/prometheus/mysqld_exporter
+
+upstream:
+  git: https://github.com/prometheus/mysqld_exporter.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/go-team/packages/prometheus-mysqld-exporter.git
+  ref: 0200fd4aca24b90e9d62f2ec7391bbcd32e1dcc5  # 0.19.0-2, unstable
+
+tracks:
+  main:
+    tag: "v0.21.0"
+    commit: 8feed91b970d346a15c12f164957c8f9a0e3291e
+    revision: 1
+    go: "1.27.3"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
+    patches: patches/main  # ours: ~/.my.cnf default, DATA_SOURCE_NAME warning; Debian's 0001 (kingpin import path) and 0002 (sorted scrapers; a list since 0.21) dropped
+
+overlays:
+  # Pinned Go toolchain and vendored modules instead of dh-golang, and the
+  # credentials documentation and NEWS for 0.15's changes (all releases).
+  - patch: overlays/go-build.patch

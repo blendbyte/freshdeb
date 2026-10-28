@@ -1,0 +1,27 @@
+From: freshdeb <packages@freshdeb.com>
+Subject: Warn when DATA_SOURCE_NAME is set
+
+mysqld_exporter 0.15 dropped DATA_SOURCE_NAME, which Debian's packages
+up to 0.14 used for the connection. Setups that still rely on it fail to
+start with "no configuration found"; say why in the log.
+
+Forwarded: not-needed
+---
+ mysqld_exporter.go | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/mysqld_exporter.go b/mysqld_exporter.go
+--- a/mysqld_exporter.go
++++ b/mysqld_exporter.go
+@@ -366,6 +366,11 @@ func main() {
+ 
+ 	logger.Info("Starting mysqld_exporter", "version", version.Info())
+ 	logger.Info("Build context", "build_context", version.BuildContext())
++	// Debian's packages before 0.15 documented DATA_SOURCE_NAME, which
++	// mysqld_exporter no longer reads.
++	if os.Getenv("DATA_SOURCE_NAME") != "" {
++		logger.Warn("DATA_SOURCE_NAME is no longer supported and is ignored; put the credentials in the --config.my-cnf file instead, see /usr/share/doc/prometheus-mysqld-exporter/NEWS.Debian.gz")
++	}
+ 
+ 	if err := validateExporterFlags(*exporterMaxOpenConns, *exporterQueryTimeout, *timeoutOffset); err != nil {
+ 		logger.Error(err.Error())

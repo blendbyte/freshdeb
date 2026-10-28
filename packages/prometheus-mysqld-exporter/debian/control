@@ -1,0 +1,47 @@
+Source: prometheus-mysqld-exporter
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders:
+ Filippo Giunchedi <filippo@debian.org>,
+ Martina Ferrari <tina@debian.org>,
+ Guillem Jover <gjover@sipwise.com>,
+Section: net
+Testsuite: autopkgtest-pkg-go
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-golang,
+ golang-any (>= 2:1.21~),
+ golang-github-blang-semver-dev,
+ golang-github-data-dog-go-sqlmock-dev,
+ golang-github-go-sql-driver-mysql-dev,
+ golang-github-google-go-cmp-dev,
+ golang-github-google-uuid-dev,
+ golang-github-prometheus-client-golang-dev (>= 1.19.0),
+ golang-github-prometheus-client-model-dev,
+ golang-github-prometheus-common-dev,
+ golang-github-prometheus-exporter-toolkit-dev (>= 0.14.0),
+ golang-github-smartystreets-goconvey-dev,
+ golang-gopkg-alecthomas-kingpin.v2-dev,
+ golang-gopkg-ini.v1-dev,
+Standards-Version: 4.7.4
+Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-mysqld-exporter
+Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-mysqld-exporter.git
+Homepage: https://github.com/prometheus/mysqld_exporter
+XS-Go-Import-Path: github.com/prometheus/mysqld_exporter
+
+Package: prometheus-mysqld-exporter
+Architecture: any
+Pre-Depends:
+ ${misc:Pre-Depends},
+Depends:
+ adduser,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Suggests:
+ default-mysql-server | virtual-mysql-server,
+Static-Built-Using:
+ ${misc:Static-Built-Using},
+Description: Prometheus exporter for MySQL server
+ Prometheus exporter for MySQL server metrics.
+ .
+ Supported MySQL versions: 5.1 and up, however not all collection methods
+ are supported on MySQL < 5.6.

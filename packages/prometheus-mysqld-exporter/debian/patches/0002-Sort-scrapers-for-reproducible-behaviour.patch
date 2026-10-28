@@ -1,0 +1,63 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Fri, 7 Feb 2025 21:22:12 +0000
+Subject: Sort scrapers for reproducible behaviour
+
+Forwarded: https://github.com/prometheus/mysqld_exporter/issues/895
+Last-Update: 2025-02-07
+
+The scrapers are initialised from a map which has undefined sorting,
+resulting in ordering changes in help messages and processing, and
+ultimately in unreproducible builds due to changes in the generated
+manpage.
+
+This patch fixes this problem by sorting the scrapers by name during
+initialisation.
+---
+ mysqld_exporter.go | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/mysqld_exporter.go b/mysqld_exporter.go
+index 31ed60d..7df4f30 100644
+--- a/mysqld_exporter.go
++++ b/mysqld_exporter.go
+@@ -17,9 +17,12 @@ import (
+ 	"context"
+ 	"fmt"
+ 	"log/slog"
++	"maps"
+ 	"net/http"
+ 	"os"
++	"slices"
+ 	"strconv"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/prometheus/client_golang/prometheus"
+@@ -229,11 +232,14 @@ func newHandler(scrapers []collector.Scraper, logger *slog.Logger) http.HandlerF
+ }
+ 
+ func main() {
++	sortedScrapers := slices.SortedFunc(maps.Keys(scrapers), func(a, b collector.Scraper) int {
++		return strings.Compare(a.Name(), b.Name());
++	})
+ 	// Generate ON/OFF flags for all scrapers.
+ 	scraperFlags := map[collector.Scraper]*bool{}
+-	for scraper, enabledByDefault := range scrapers {
++	for _, scraper := range sortedScrapers {
+ 		defaultOn := "false"
+-		if enabledByDefault {
++		if scrapers[scraper] {
+ 			defaultOn = "true"
+ 		}
+ 
+@@ -264,8 +270,8 @@ func main() {
+ 
+ 	// Register only scrapers enabled by flag.
+ 	enabledScrapers := []collector.Scraper{}
+-	for scraper, enabled := range scraperFlags {
+-		if *enabled {
++	for _, scraper := range sortedScrapers {
++		if *scraperFlags[scraper] {
+ 			logger.Info("Scraper enabled", "scraper", scraper.Name())
+ 			enabledScrapers = append(enabledScrapers, scraper)
+ 		}

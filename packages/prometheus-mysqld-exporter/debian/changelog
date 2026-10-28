@@ -1,0 +1,317 @@
+prometheus-mysqld-exporter (0.19.0-2) unstable; urgency=medium
+
+  * Remove «Rules-Requires-Root: no», which is now the default.
+  * Remove «Priority: optional», which is now the default.
+  * Bump Standards-Version to 4.7.4.
+  * Switch to debian/watch format version 5.
+  * Run wrap-and-sort -ast.
+  * Add myself to Uploaders.
+  * Switch from Built-Using to Static-Built-Using field.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 19 May 2026 23:48:31 +0200
+
+prometheus-mysqld-exporter (0.19.0-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 29 Mar 2026 18:03:19 +0000
+
+prometheus-mysqld-exporter (0.18.0-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Drop obsolete 0003-Support-prometheus-exporter-toolkit-v0.14.0.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Jan 2026 12:03:37 +0000
+
+prometheus-mysqld-exporter (0.17.2-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream (bugfix) release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 26 Feb 2025 15:50:21 +0000
+
+prometheus-mysqld-exporter (0.17.1-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Refresh patches
+  * Bump Standards-Version to 4.7.1 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 23 Feb 2025 02:40:18 +0000
+
+prometheus-mysqld-exporter (0.16.0-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Daniel Swarbrick ]
+  * Add new 0003-Support-prometheus-exporter-toolkit-v0.14.0.patch (Closes:
+    #1096211)
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint
+    (>= 0.14.0)
+
+  [ Martina Ferrari ]
+  * Sort scrapers for reproducible behaviour
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 19 Feb 2025 12:40:07 +0000
+
+prometheus-mysqld-exporter (0.16.0-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Drop obsolete patches:
+    - 0001-Skip-test-which-requires-a-running-mysqld.patch (test removed
+      upstream)
+    - 0003-Support-prometheus-common-v0.50.0.patch (implemented upstream)
+    - 0004-Support-prometheus-exporter-toolkit-v0.12.0.patch (applied
+      upstream)
+  * Bump Standards-Version to 4.7.0 (no changes)
+  * Drop no longer used golang-github-go-kit-log-dev Build-Depends
+  * Bump golang-any Build-Depends version constraint to (>= 2:1.21~) due to
+    use of log/slog package
+  * Add new Build-Depends golang-github-blang-semver-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 19 Nov 2024 18:54:54 +0000
+
+prometheus-mysqld-exporter (0.15.1-2) unstable; urgency=medium
+
+  * Team upload
+  * Add new 0004-Support-prometheus-exporter-toolkit-v0.12.0.patch (Closes:
+    #1081714)
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint
+    (>= 0.12.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 19 Sep 2024 17:47:47 +0000
+
+prometheus-mysqld-exporter (0.15.1-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Add new 0003-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+  * Bump Standards-Version to 4.6.2 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 18 Mar 2024 04:30:01 +0000
+
+prometheus-mysqld-exporter (0.15.0-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Daniel Swarbrick ]
+  * d/rules: fix override_dh_auto_install.
+    Let dh_auto_install handle the installation of binaries (omitting .go
+    source). Add debian/manpages, which is more easily machine-readable than
+    parsing debian/rules.
+
+  [ Shengjing Zhu ]
+  * Add golang-github-google-go-cmp-dev to Build-Depends
+
+ -- Shengjing Zhu <zhsj@debian.org>  Sat, 29 Jul 2023 19:28:41 +0800
+
+prometheus-mysqld-exporter (0.15.0-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Drop obsolete 03-support-newer-exporter-toolkit.patch
+  * Convert patches to gbp-pq format
+  * Add new Revert-kingpin-import-path.patch
+  * debian/default: remove DATA_SOURCE_NAME environment variable hint (no
+    longer supported by upstream)
+  * debian/rules: add test_exporter.cnf to DH_INSTALL_EXTRA
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 22 Jul 2023 19:34:08 +0000
+
+prometheus-mysqld-exporter (0.14.0-3) unstable; urgency=medium
+
+  * Team upload
+
+  [ Daniel Swarbrick ]
+  * Add new 03-support-newer-exporter-toolkit.patch
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+    version to 0.8.0
+
+  [ Guillem Jover ]
+  * Remove --help output from default file
+  * Replace auth_socket with unix_socket in default file comment header
+    (Closes: #1016879)
+  * Switch to Standards-Version 4.6.1 (no changes needed)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 17 Dec 2022 03:14:55 +0000
+
+prometheus-mysqld-exporter (0.14.0-2) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster (oldstable)
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 02 Nov 2022 20:47:55 +0000
+
+prometheus-mysqld-exporter (0.14.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Improve package Description.
+  * Remove unused Files-Excluded.
+  * Update default file for new upstream release.
+  * Move instead of copy when renaming the daemon in debian/rules.
+  * Update Build-Depends for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 12 Mar 2022 01:38:58 +0100
+
+prometheus-mysqld-exporter (0.13.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Update gitlab-ci.yml from its new refactored template.
+  * Update gbp.conf following latest Go Team workflow.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Switch to Standards-Version 4.6.0 (no changes needed).
+  * Update debian/watch file.
+  * Replace generic Prometheus URL in unit file with man page reference.
+  * Do not install development documents.
+  * Add Repository-Browse upstream metadata field.
+  * Refresh and remove patches for new upstream release.
+  * Update dependencies for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 30 Nov 2021 22:34:50 +0100
+
+prometheus-mysqld-exporter (0.12.1+ds-3) unstable; urgency=medium
+
+  * Team upload.
+  * Switch to debian/watch format version 4
+  * Indent debian/watch file
+  * Update Maintainer and version.BuildUser with new team address
+  * Add new debian/upstream/metadata file
+  * Remove trailing slashes and globs from Files-Excluded field
+  * Update gitlab-ci.yml from latest upstream version
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 29 Jan 2021 23:34:30 +0100
+
+prometheus-mysqld-exporter (0.12.1+ds-2) unstable; urgency=medium
+
+  * Team upload.
+  * Add missing dependency on adduser
+  * Change systemd service Restart directive from always to on-failure
+  * Remove error suppression from postinst
+  * Only change conffile metadata if it exists
+  * Run adduser unconditionally
+  * Do not change pathname metadata if there are dpkg statoverrides in place
+  * Use '' instead of `' in text
+  * Switch from /var/run to /run
+  * Switch to debhelper-compat 13
+  * Switch to Standards-Version 4.5.1 (no changes needed)
+  * Remove all rotated logs on purge
+  * Remove $syslog dependency from init script
+  * Use $() instead of `` in init script
+  * Rewrite init script using start-stop-daemon
+  * Move note about license location on Debian systems into a Comment field
+  * Add a logrotate fragment file
+  * Update copyright claims
+  * Update gitignore entries
+  * Use $(BUILDDIR) uniformly instead of the literal build/
+  * Do not enable DH_VERBOSE by default
+
+ -- Guillem Jover <gjover@sipwise.com>  Sat, 23 Jan 2021 04:01:41 +0100
+
+prometheus-mysqld-exporter (0.12.1+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #952291
+  * Update compat and Standards-Version with no changes.
+  * debian/default: Update, reformat, and reorganise. Closes: #953652
+  * Update and unify packaging.
+  * Patch test that requires a running mysql server.
+  * Document how to use UNIX domain sockets for auth. Closes: #953040
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 16 May 2020 23:26:21 +0000
+
+prometheus-mysqld-exporter (0.11.0+ds-1) unstable; urgency=medium
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Martina Ferrari ]
+  * New upstream release.
+  * Better document data source configuration.
+  * debian/init: always export DATA_SOURCE_NAME and use --inherit in
+    daemon call.
+  * debian/control: Update Standards-Version with no changes.
+  * Stop cme messing with Files-Excluded.
+  * Remove patch already applied upstream.
+  * debian/control: Add new dependency.
+  * Patch test to avoid depending on a new version of go-convey.
+  * debian/default: Update flag description.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 16 Oct 2018 00:53:55 +0000
+
+prometheus-mysqld-exporter (0.10.0+git20180201.a71f4bb+ds-2) unstable; urgency=high
+
+  * Use non-recursive chown.
+  * Fix FTBFS in 32bits arches. Closes: #893051
+  * debian/control: Add myself to Uploaders.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 27 Mar 2018 00:49:40 +0000
+
+prometheus-mysqld-exporter (0.10.0+git20180201.a71f4bb+ds-1) unstable; urgency=high
+
+  * Team upload.
+
+  [ Filippo Giunchedi ]
+  * Suggest default-mysql-server | virtual-mysql-server (Closes: #848481)
+
+  [ Martina Ferrari ]
+  * debian/control: Update package name for client-golang.
+  * debian/control: Update Standards-Version (no changes).
+  * debian/control: Fix Vcs-* fields.
+  * debian/control: Replace golang-go with golang-any in Build-Depends.
+  * debian/control: Mark package as autopkgtest-able.
+  * debian/rules: Replace DH_GOPKG with XS-Go-Import-Path.
+  * debian/rules: Replace dpkg-parsechangelog with /usr/share/dpkg/pkg-info.mk
+    and simplify.
+  * New upstream release/git snapshot. Closes: #884542.
+  * debian/control: Require latest go-sqlmock, as tests fail otherwise.
+  * debian/rules: Fix dh_auto_install parameters.
+  * debian/control: Automated cme fixes.
+  * debian/control: Update debhelper compat.
+  * debian/copyright: Add Files-Excluded to match repackaging.
+  * Remove unneeded lintian override.
+  * debian/doc: Refresh.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 15 Mar 2018 03:07:26 +0000
+
+prometheus-mysqld-exporter (0.9.0+ds-3) unstable; urgency=medium
+
+  * debian/patches/fix_test_int_overflow.patch: Fix tests for 32bit archs
+
+ -- Filippo Giunchedi <filippo@debian.org>  Mon, 21 Nov 2016 00:48:31 +0000
+
+prometheus-mysqld-exporter (0.9.0+ds-2) unstable; urgency=medium
+
+  * Set BUILDFLAGS to report branch/version/revision in
+  mysqld_exporter_build_info metric
+
+ -- Filippo Giunchedi <filippo@debian.org>  Mon, 10 Oct 2016 12:42:38 +0100
+
+prometheus-mysqld-exporter (0.9.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+    + BREAKING CHANGES: InnoDB buffer pool page stats have been renamed/fixed
+      to better support aggregations
+      https://github.com/prometheus/mysqld_exporter/pull/130
+
+ -- Filippo Giunchedi <filippo@debian.org>  Wed, 05 Oct 2016 17:04:04 +0100
+
+prometheus-mysqld-exporter (0.8.1+ds-2) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * Use a secure transport for the Vcs-Git and Vcs-Browser URL
+
+ -- Paul Tagliamonte <paultag@debian.org>  Wed, 29 Jun 2016 20:55:56 -0400
+
+prometheus-mysqld-exporter (0.8.1+ds-1) unstable; urgency=medium
+
+  * Initial release (Closes: #815560)
+  * Unvendorize all dependencies
+
+ -- Filippo Giunchedi <filippo@debian.org>  Tue, 10 May 2016 16:37:31 +0100

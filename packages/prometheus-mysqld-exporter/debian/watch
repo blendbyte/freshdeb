@@ -1,0 +1,7 @@
+Version: 5
+
+Template: GitHub
+Dist: https://github.com/prometheus/mysqld_exporter
+UVersion-Mangle: s/(\d)[_\.\-\+]?(RC|rc|pre|dev|beta|alpha)[.]?(\d*)$/$1~$2$3/
+DVersion-Mangle: s/\+ds\d*$//
+Repack-Suffix: +ds1

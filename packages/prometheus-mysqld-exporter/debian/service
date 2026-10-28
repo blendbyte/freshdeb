@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus exporter for MySQL server
+Documentation=man:prometheus-mysqld-exporter(1)
+
+[Service]
+Restart=on-failure
+User=prometheus
+EnvironmentFile=/etc/default/prometheus-mysqld-exporter
+ExecStart=/usr/bin/prometheus-mysqld-exporter $ARGS
+
+[Install]
+WantedBy=multi-user.target
