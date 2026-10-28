@@ -1,0 +1,91 @@
+Description: Use the latest humanlog
+ In Debian we have humanlog 0.7.6, while upstream is based on 0.4.1.
+ .
+ Diff: https://github.com/humanlogio/humanlog/compare/v0.4.1...v0.7.6
+ .
+ Breaking changes:
+ .
+   (1)  aybabtme/humanlog was moved to humanlogio/humanlog
+      - Before:   https://github.com/aybabtme/humanlog
+      - After:    https://github.com/humanlogio/humanlog
+ .
+   (2)  Scanner was changed to Scan:
+      - Before:   Scanner(io.Reader, io.Writer, opts*)
+      - After:    Scan(context.Context, io.Reader, sink.Sink, opts*)
+ .
+   (3)  DefaultOptions was changed:
+      - Before:   DefaultOptions = &HandlerOptions
+      - After:    DefaultOptions = func() *HandlerOptions
+Author: Jongmin Kim <jmkim@debian.org>
+Forwarded: no
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/pkg/logs/logs.go
++++ b/pkg/logs/logs.go
+@@ -48,7 +48,7 @@
+ 
+ func formatted(log *logrus.Logger) *logrus.Entry {
+ 	// highly recommended: tail -f development.log | humanlog
+-	// https://github.com/aybabtme/humanlog
++	// https://github.com/humanlogio/humanlog
+ 	log.Formatter = &logrus.JSONFormatter{}
+ 
+ 	return log.WithFields(logrus.Fields{})
+--- a/pkg/logs/tail/logs_default.go
++++ b/pkg/logs/tail/logs_default.go
+@@ -6,8 +6,10 @@
+ 	"log"
+ 	"os"
+ 	"os/exec"
++	"context"
+ 
+-	"github.com/aybabtme/humanlog"
++	"github.com/humanlogio/humanlog"
++	"github.com/humanlogio/humanlog/pkg/sink/stdiosink"
+ )
+ 
+ func tailLogsForPlatform(logFilePath string, opts *humanlog.HandlerOptions) {
+@@ -18,7 +20,10 @@
+ 		log.Fatal(err)
+ 	}
+ 
+-	if err := humanlog.Scanner(stdout, os.Stdout, opts); err != nil {
++	ctx := context.Background()
++	sink := stdiosink.NewStdio(os.Stdout, stdiosink.DefaultStdioOpts)
++
++	if err := humanlog.Scan(ctx, stdout, sink, opts); err != nil {
+ 		log.Fatal(err)
+ 	}
+ 
+--- a/pkg/logs/tail/logs_windows.go
++++ b/pkg/logs/tail/logs_windows.go
+@@ -7,7 +7,7 @@
+ 	"strings"
+ 	"time"
+ 
+-	"github.com/aybabtme/humanlog"
++	"github.com/humanlogio/humanlog"
+ )
+ 
+ func tailLogsForPlatform(logFilePath string, opts *humanlog.HandlerOptions) {
+--- a/pkg/logs/tail/tail.go
++++ b/pkg/logs/tail/tail.go
+@@ -5,7 +5,7 @@
+ 	"log"
+ 	"os"
+ 
+-	"github.com/aybabtme/humanlog"
++	"github.com/humanlogio/humanlog"
+ )
+ 
+ // TailLogs lets us run `lazygit --logs` to print the logs produced by other lazygit processes.
+@@ -13,8 +13,7 @@
+ func TailLogs(logFilePath string) {
+ 	fmt.Printf("Tailing log file %s\n\n", logFilePath)
+ 
+-	opts := humanlog.DefaultOptions
+-	opts.Truncates = false
++	opts := humanlog.DefaultOptions()
+ 
+ 	_, err := os.Stat(logFilePath)
+ 	if err != nil {

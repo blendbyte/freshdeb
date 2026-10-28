@@ -1,0 +1,75 @@
+Description: Use original go-git instead of fork
+ Upstream uses fork. and we use the original version, which is already in
+ Debian. There is no API conflicts.
+Author: Jongmin Kim <jmkim@debian.org>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/pkg/commands/git_commands/branch_loader.go
++++ b/pkg/commands/git_commands/branch_loader.go
+@@ -9,7 +9,7 @@
+ 	"time"
+ 
+ 	"github.com/jesseduffield/generics/set"
+-	"github.com/jesseduffield/go-git/v5/config"
++	"github.com/go-git/go-git/v5/config"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+ 	"github.com/jesseduffield/lazygit/pkg/common"
+--- a/pkg/commands/git_commands/common.go
++++ b/pkg/commands/git_commands/common.go
+@@ -1,7 +1,7 @@
+ package git_commands
+ 
+ import (
+-	gogit "github.com/jesseduffield/go-git/v5"
++	gogit "github.com/go-git/go-git/v5"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+ 	"github.com/jesseduffield/lazygit/pkg/common"
+ 	"github.com/jesseduffield/lazygit/pkg/config"
+--- a/pkg/commands/git_commands/config.go
++++ b/pkg/commands/git_commands/config.go
+@@ -1,8 +1,8 @@
+ package git_commands
+ 
+ import (
+-	gogit "github.com/jesseduffield/go-git/v5"
+-	"github.com/jesseduffield/go-git/v5/config"
++	gogit "github.com/go-git/go-git/v5"
++	"github.com/go-git/go-git/v5/config"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/git_config"
+ 	"github.com/jesseduffield/lazygit/pkg/common"
+ )
+--- a/pkg/commands/git_commands/deps_test.go
++++ b/pkg/commands/git_commands/deps_test.go
+@@ -4,7 +4,7 @@
+ 	"os"
+ 
+ 	"github.com/go-errors/errors"
+-	gogit "github.com/jesseduffield/go-git/v5"
++	gogit "github.com/go-git/go-git/v5"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/git_config"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+ 	"github.com/jesseduffield/lazygit/pkg/common"
+--- a/pkg/commands/git_commands/remote_loader.go
++++ b/pkg/commands/git_commands/remote_loader.go
+@@ -6,7 +6,7 @@
+ 	"strings"
+ 	"sync"
+ 
+-	gogit "github.com/jesseduffield/go-git/v5"
++	gogit "github.com/go-git/go-git/v5"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+ 	"github.com/jesseduffield/lazygit/pkg/common"
+--- a/pkg/commands/git.go
++++ b/pkg/commands/git.go
+@@ -6,7 +6,7 @@
+ 
+ 	"github.com/go-errors/errors"
+ 
+-	gogit "github.com/jesseduffield/go-git/v5"
++	gogit "github.com/go-git/go-git/v5"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/git_config"
+ 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"

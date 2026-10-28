@@ -1,0 +1,74 @@
+Source: lazygit
+Section: vcs
+Priority: optional
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders: Jongmin Kim <jmkim@debian.org>,
+           Ananthu C V <weepingclown@debian.org>
+Build-Depends: debhelper-compat (= 13),
+               dh-golang,
+               golang-any,
+               golang-github-adrg-xdg-dev,
+               golang-github-atotto-clipboard-dev,
+               golang-github-cloudfoundry-jibber-jabber-dev,
+               golang-github-creack-pty-dev,
+               golang-github-fsmiamoto-git-todo-parser-dev,
+               golang-github-gdamore-tcell.v2-dev,
+               golang-github-go-errors-errors-dev,
+               golang-github-go-git-go-git-dev,
+               golang-github-gobwas-glob-dev,
+               golang-github-gookit-color-dev,
+               golang-github-humanlogio-humanlog-dev,
+               golang-dario-mergo-dev,
+               golang-github-integrii-flaggy-dev,
+               golang-github-invopop-jsonschema-dev,
+               golang-github-jesseduffield-generics-dev (>= 0.0~git20250517.b0b4a53),
+               golang-github-jesseduffield-gocui-dev (>= 0.4+git20251002.67e0e55),
+               golang-github-jesseduffield-kill-dev,
+               golang-github-jesseduffield-lazycore-dev,
+               golang-github-jesseduffield-minimal-dev,
+               golang-github-kardianos-osext-dev,
+               golang-github-kyokomi-emoji-dev,
+               golang-github-lucasb-eyer-go-colorful-dev,
+               golang-github-mattn-go-runewidth-dev,
+               golang-github-mgutz-str-dev,
+               golang-github-mitchellh-go-ps-dev,
+               golang-github-ozeidan-fuzzy-patricia-dev,
+               golang-github-sahilm-fuzzy-dev,
+               golang-github-samber-lo-dev,
+               golang-github-sanity-io-litter-dev,
+               golang-github-sasha-s-go-deadlock-dev,
+               golang-github-sirupsen-logrus-dev,
+               golang-github-spf13-afero-dev,
+               golang-github-spkg-bom-dev,
+               golang-github-stretchr-testify-dev,
+               golang-github-xo-terminfo-dev,
+               golang-golang-x-exp-dev,
+               golang-golang-x-sync-dev,
+               golang-gopkg-yaml.v3-dev
+Standards-Version: 4.7.2
+Homepage: https://github.com/jesseduffield/lazygit
+Vcs-Browser: https://salsa.debian.org/go-team/packages/lazygit
+Vcs-Git: https://salsa.debian.org/go-team/packages/lazygit.git
+XS-Go-Import-Path: github.com/jesseduffield/lazygit
+Testsuite: autopkgtest-pkg-go
+
+Package: lazygit
+Architecture: any
+Built-Using: ${misc:Built-Using}
+Static-Built-Using: ${misc:Static-Built-Using}
+Depends: git, ${misc:Depends}, ${shlibs:Depends}
+Description: Simple terminal UI for git commands
+ lazygit is a simple terminal UI for git commands that makes git easier
+ to use.
+ .
+ It provides an interactive interface to perform common git operations
+ such as:
+ .
+   * Viewing and staging files
+   * Committing changes
+   * Browsing logs and diffs
+   * Managing branches and remotes
+   * Handling stashes
+ .
+ All features of lazygit can be easily accessed using arrow keys and
+ intuitive keystrokes.

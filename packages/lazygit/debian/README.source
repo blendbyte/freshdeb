@@ -1,0 +1,61 @@
+lazygit
+===
+
+About branches:
+
+  * We removed the 'vendor/' directory from the upstream source to comply
+    with Debian Policy §4.13, which discourages convenience copies of code:
+
+        https://www.debian.org/doc/debian-policy/ch-source.html#embedded-code-copies
+
+  * We adopted the branch structure proposed in this draft workflow:
+
+        https://lists.debian.org/debian-go/2020/02/msg00044.html (see "Branches")
+
+  * Branch names:
+
+      - upstream    : the pristine upstream source with no modifications.
+      - unvendored  : derived from 'upstream', with the 'vendor/' directory removed.
+      - debian/sid  : derived from 'unvendored'; the Debian packaging branch.
+
+  * Branch structure:
+
+      - upstream
+         +- unvendored
+             +- debian/sid
+                 +- debian/<distribution target>
+
+About tests:
+
+  * Currently, there is no valid autopkgtest. In 'debian/rules', it could be
+    enabled in 'dh_auto_test' using:
+
+        go test pkg/integration/clients/*.go
+
+    However, it attempts to fetch modules from the Internet rather than using
+    the Go packages provided via Build-Depends.
+
+  * (Reference) Integration tests:
+
+        https://github.com/jesseduffield/lazygit/blob/master/pkg/integration/README.md
+
+
+About upstream *-master directories:
+
+  * From 0.57.0, two new *-master directories were introduced:
+
+      - docs-master
+      - schema-master
+
+    These are used for upstream development and are not intended for distribution.
+    They should not be installed into docs/ in the binary package. The canonical
+    directories for distribution are:
+
+      - docs
+      - schema
+
+  * (Reference) Explanation of these directories in the upstream commit message:
+
+        https://github.com/jesseduffield/lazygit/commit/d5677318ab6e24ce6b40633aa411cd3b896ae87c
+
+ -- Jongmin Kim <jmkim@debian.org>  Tue, 09 Dec 2025 18:50:46 +0900

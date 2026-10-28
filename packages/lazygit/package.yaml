@@ -1,0 +1,35 @@
+# lazygit: https://github.com/jesseduffield/lazygit
+#
+# Packaging is Debian's (salsa.debian.org/go-team/packages/lazygit); debian/
+# is an unmodified import of the commit in packaging.ref. Debian builds
+# against Debian-packaged Go libraries (some of them Debian's own forks)
+# that only exist in unstable; overlays/go-build.patch builds with a pinned
+# Go toolchain and vendored, checksum-verified modules instead, like
+# upstream's release binaries. See README.md.
+#
+# Upstream supports only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: lazygit
+description: "Simple terminal UI for git commands"
+homepage: https://github.com/jesseduffield/lazygit
+
+upstream:
+  git: https://github.com/jesseduffield/lazygit.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/go-team/packages/lazygit.git
+  ref: bbd00280fcaba6dcdfe913d3442ec2e4cb4dcedc  # 0.57.0+ds1-1, unstable
+
+tracks:
+  main:
+    tag: "v0.66.2"
+    commit: 63ab89fff478854deb4a35ef8902676b3cc5ca72
+    revision: 1
+    go: "1.26.10"  # what upstream's release build uses (release.yml: go 1.26.x; go.mod: go 1.26.0)
+    patches: patches/main  # empty: Debian's patches port lazygit to Debian's library packages
+
+overlays:
+  # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
+  - patch: overlays/go-build.patch

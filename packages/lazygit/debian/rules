@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+export DH_GOLANG_EXCLUDES := scripts/*
+export DH_GOLANG_INSTALL_EXTRA := pkg/i18n/translations/ja.json \
+                                  pkg/i18n/translations/pl.json \
+                                  pkg/i18n/translations/ru.json \
+                                  pkg/i18n/translations/ko.json \
+                                  pkg/i18n/translations/pt.json \
+                                  pkg/i18n/translations/zh-CN.json \
+                                  pkg/i18n/translations/nl.json \
+                                  pkg/i18n/translations/zh-TW.json
+export DH_GOLANG_BUILDPKG := github.com/jesseduffield/lazygit
+
+BUILDFLAGS := -ldflags="-extldflags -Wl,-z,now -X main.version='$(DEB_VERSION)' -X main.buildSource='debian'"
+ifneq ($(shell dpkg-architecture -qDEB_HOST_ARCH), mips64el)
+BUILDFLAGS += -buildmode=pie
+endif
+
+%:
+	dh $@ --buildsystem=golang --with=golang
+
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+
+override_dh_auto_configure:
+	# Generate manpage from template using @DEB_VERSION@ for package version
+	sed "s/@DEB_VERSION@/$(DEB_VERSION)/" debian/manpages/lazygit.1.in > debian/manpages/lazygit.1
+	dh_auto_configure
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source

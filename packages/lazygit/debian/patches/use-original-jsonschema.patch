@@ -1,0 +1,40 @@
+Description: Use original jsonschema instead of fork
+ Upstream uses fork. and we use the original version, which is already in
+ Debian. There is no API conflicts.
+Author: Jongmin Kim <jmkim@debian.org>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/pkg/config/user_config.go
++++ b/pkg/config/user_config.go
+@@ -3,7 +3,7 @@
+ import (
+ 	"time"
+ 
+-	"github.com/karimkhaleel/jsonschema"
++	"github.com/invopop/jsonschema"
+ )
+ 
+ type UserConfig struct {
+--- a/pkg/jsonschema/generate_config_docs.go
++++ b/pkg/jsonschema/generate_config_docs.go
+@@ -8,7 +8,7 @@
+ 	"strings"
+ 
+ 	"github.com/jesseduffield/lazycore/pkg/utils"
+-	"github.com/karimkhaleel/jsonschema"
++	"github.com/invopop/jsonschema"
+ 	"github.com/samber/lo"
+ 
+ 	"gopkg.in/yaml.v3"
+--- a/pkg/jsonschema/generate.go
++++ b/pkg/jsonschema/generate.go
+@@ -11,7 +11,7 @@
+ 
+ 	"github.com/jesseduffield/lazycore/pkg/utils"
+ 	"github.com/jesseduffield/lazygit/pkg/config"
+-	"github.com/karimkhaleel/jsonschema"
++	"github.com/invopop/jsonschema"
+ 	"github.com/samber/lo"
+ )
+ 

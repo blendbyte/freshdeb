@@ -1,0 +1,5 @@
+# None of Debian's patches are needed with vendored modules: five switch
+# import paths to Debian's library packages and forks, and
+# build-reproducible.patch drops the commit and build date from --version
+# (ours come from the changelog and SOURCE_DATE_EPOCH, so they're
+# reproducible).

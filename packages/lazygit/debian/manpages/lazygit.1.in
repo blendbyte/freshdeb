@@ -1,0 +1,176 @@
+.Dd December 9, 2025
+.Dt LAZYGIT 1
+.Os lazygit @DEB_VERSION@
+.Sh NAME
+.Nm lazygit
+.Nd Simple terminal UI for git commands
+.Sh SYNOPSIS
+.Nm
+.Op Ar git-arg
+.Op Fl h | Fl -help
+.Op Fl v | Fl -version
+.Op Fl p | Fl -path Ar path
+.Op Fl f | Fl -filter Ar path
+.Op Fl d | Fl -debug
+.Op Fl l | Fl -logs
+.Op Fl -profile
+.Op Fl c | Fl -config
+.Op Fl cd | Fl -print-config-dir
+.Op Fl ucd | Fl -use-config-dir Ar dir
+.Op Fl w | Fl -work-tree Ar path
+.Op Fl g | Fl -git-dir Ar path
+.Op Fl ucf | Fl -use-config-file Ar files
+.Op Fl sm | Fl -screen-mode Ar mode
+.Sh DESCRIPTION
+.Nm
+is a simple terminal UI for git commands that makes git easier to use.
+.Pp
+It provides an interactive interface to perform common git operations such as:
+.Bl -bullet
+.It
+Viewing and staging files
+.It
+Committing changes
+.It
+Browsing logs and diffs
+.It
+Managing branches and remotes
+.It
+Handling stashes
+.El
+.Pp
+All features of
+.Nm
+can be easily accessed using arrow keys and intuitive keystrokes.
+.Sh OPTIONS
+.Ss Positional Arguments
+.Bl -tag -width "git-arg"
+.It Ar git-arg
+Panel to focus upon opening lazygit. Accepted values (based on git terminology):
+.Sy status ,
+.Sy branch ,
+.Sy log ,
+.Sy stash .
+Ignored if
+.Fl -filter
+argument is passed.
+.El
+.Pp
+.Ss Flags
+.Bl -tag -width "-ucf, --use-config-file"
+.It Fl h , Fl -help
+Displays help with available flags, subcommands, and positional value parameters.
+.It Fl v , Fl -version
+Print the current version of lazygit.
+.It Fl p , Fl -path Ar path
+Path of the git repository.
+Equivalent to
+.Fl -work-tree Ns = Ns Ar path
+and
+.Fl -git-dir Ns = Ns Ar path Ns Pa /.git .
+.It Fl f , Fl -filter Ar path
+Path to filter on in
+.Cm git log -- <path> .
+When in filter mode, the commits, reflog, and stash are filtered based on the given path, and some operations are restricted.
+.It Fl d , Fl -debug
+Run in debug mode with logging. Use the
+.Ev LOG_LEVEL
+environment variable to set the log level (debug, info, warn, error).
+.It Fl l , Fl -logs
+Tail lazygit logs. Intended for use when
+.Cm lazygit --debug
+is running in another terminal tab.
+.It Fl -profile
+Start the profiler and serve it on HTTP port 6060. See
+.Pa /usr/share/doc/lazygit/CONTRIBUTING.md.gz
+for more details.
+.It Fl c , Fl -config
+Print the default config.
+.It Fl cd , Fl -print-config-dir
+Print the path to the configuration directory.
+.It Fl ucd , Fl -use-config-dir Ar dir
+Override the default configuration directory with the provided directory.
+.It Fl w , Fl -work-tree Ar path
+Set the Git
+.Fl -work-tree
+argument.
+.It Fl g , Fl -git-dir Ar path
+Set the Git
+.Fl -git-dir
+argument.
+.It Fl ucf , Fl -use-config-file Ar file1,file2,...
+Use a comma-separated list of custom config file(s).
+.It Fl sm , Fl -screen-mode Ar mode
+Set the initial screen mode, which determines the size of the focused panel.
+Valid values are:
+.Sy normal (default) ,
+.Sy half ,
+.Sy full .
+.El
+.Sh KEYBINDINGS
+Default keybindings vary by context. For example:
+.Bl -tag -width Ds
+.It Sy j / k
+Move up/down in lists.
+.It Sy h / l
+Move between panels (left/right).
+.It Sy 1 / 2 / 3 / 4 / 5
+Focus a specific panel.
+.It Sy [ / ]
+Move between tabs within a panel.
+.It Sy s
+Stage / unstage a file.
+.It Sy c
+Open commit panel.
+.It Sy p
+Push to remote.
+.It Sy P
+Pull from remote.
+.It Sy /
+Search.
+.It Sy PgUp / PgDn
+Scroll content (e.g. log or diff views).
+.It Sy Space
+Select item or toggle checkbox (e.g. in stash or patch panels).
+.It Sy Enter
+Enter panel or confirm action.
+.It Sy Esc
+Cancel action or close popup.
+.It Sy q
+Quit the application.
+.El
+.Pp
+To view the full keybindings list, press
+.Sy ?
+in the application.
+.Pp
+.Bl -tag -width indent
+.It You can refer to the following files for full keystrokes:
+.Pa /usr/share/doc/lazygit/docs/keybindings/Keybindings_en.md.gz
+.El
+.Sh FILES
+.Bl -tag -width indent
+.It Pa ~/.config/lazygit/config.yml
+User configuration file.
+This file defines keybindings, theme settings, git override commands, and more.
+You can refer to the following file for the complete list of keystrokes:
+.Bl -bullet -compact
+.It
+.Pa /usr/share/doc/lazygit/docs/Config.md.gz
+.It
+.Pa /usr/share/doc/lazygit/docs/Custom_Command_Keybindings.md.gz
+.It
+.Pa /usr/share/doc/lazygit/docs/Custom_Pagers.md
+.El
+.It Pa ~/.config/lazygit/state.yml
+UI layout and persistent state.
+.El
+.Sh AUTHORS
+.An -nosplit
+.Nm
+was written by
+.An Jesse Duffield Aq Mt jesseduffield@gmail.com .
+.Pp
+This manual was created by
+.An Jongmin Kim Aq Mt jmkim@debian.org
+for the Debian project (but may be used by others).

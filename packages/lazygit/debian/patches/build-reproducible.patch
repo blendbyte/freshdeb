@@ -1,0 +1,38 @@
+Description: Build reproducible
+ lazygit includes commit hash and build date into its binary. Those
+ variables are used when showing the lazygit version.
+ .
+ As Debian packages are managed with git, we should extract the commit
+ hash on build time. However, some build environments (like sbuild) do
+ not use git repository while building. In these cases, git is not
+ available while build time. So we cannot assume that we can always
+ extract the commit hash.
+ .
+ Build date always changes depending on the time. And it's not
+ reproducible.
+ .
+ This patch removes the commit hash and build date from version printing
+ function.
+Author: Jongmin Kim <jmkim@debian.org>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/main.go
++++ b/main.go
+@@ -6,16 +6,12 @@ import (
+ 
+ // These values may be set by the build script via the LDFLAGS argument
+ var (
+-	commit      string
+-	date        string
+ 	version     string
+ 	buildSource = "unknown"
+ )
+ 
+ func main() {
+ 	ldFlagsBuildInfo := &app.BuildInfo{
+-		Commit:      commit,
+-		Date:        date,
+ 		Version:     version,
+ 		BuildSource: buildSource,
+ 	}

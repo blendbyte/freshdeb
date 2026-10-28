@@ -1,0 +1,6 @@
+build-reproducible.patch
+use-original-go-git.patch
+use-original-jsonschema.patch
+use-original-git-todo-parser.patch
+fix-import-path-fuzzy-patricia.patch
+use-latest-humanlogio.patch

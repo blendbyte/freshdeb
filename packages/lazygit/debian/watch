@@ -1,0 +1,6 @@
+Version: 5
+Template: GitHub
+Owner: jesseduffield
+Project: lazygit
+Dversion-Mangle: s/@DEB_EXT@//
+Repacksuffix: +ds1
