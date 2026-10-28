@@ -1,0 +1,2491 @@
+nano (9.3-1) unstable; urgency=medium
+
+  * The "If I must die" release.
+  * New upstream release.
+  * Update lintian overrides.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 22 Oct 2026 16:55:37 +0200
+
+nano (9.2-1) unstable; urgency=medium
+
+  * The "Amal Khalil" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 09 Aug 2026 14:34:05 +0200
+
+nano (9.1-1) unstable; urgency=medium
+
+  * The "Shajareh Tayyebeh Elementary School" release.
+  * New upstream release.
+  * Move to debhelper compat v14.
+  * Remove all substvar generated Depends relations, now implicit with dh14.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 01 Jul 2026 10:42:41 +0200
+
+nano (9.0-1) unstable; urgency=medium
+
+  * The "Sumud" release.
+  * New upstream release.
+  * Update Standards-Version to 4.7.4, with no changes needed.
+  * Update copyright years.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 17 Apr 2026 11:31:12 +0200
+
+nano (8.7.1-1) unstable; urgency=medium
+
+  * The "Yellow Line" release.
+  * New upstream release.
+  * Drop redundant Priority field for source package.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 08 Feb 2026 23:29:41 +0100
+
+nano (8.7-1) unstable; urgency=medium
+
+  * The "Aysam Mualla" release.
+  * New upstream release.
+  * Use version 5 of watch file.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Drop now redundant Rules-Requires-Root control field.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 21 Nov 2025 00:18:13 +0100
+
+nano (8.6-1) unstable; urgency=medium
+
+  * The "Awdah Hathaleen" release.
+  * New upstream release.
+  * Update lintian overrides.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 22 Aug 2025 12:33:43 +0200
+
+nano (8.5-1) unstable; urgency=medium
+
+  * The "Anas al-Sharif" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update copyright years.
+  * Don't refer to old FSF postal address.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 18 Aug 2025 22:15:49 +0200
+
+nano (8.4-1) unstable; urgency=medium
+
+  * The "Steve Langasek" release. Thanks for your help, for the
+    chats, for the moments shared, for being such an incredible person.
+    You will be missed.
+  * Remove Steve from Uploaders.
+  * New upstream release.
+    - includes test-groff fixes from Bjarni Ingi Gislason to nano manpages.
+      (closes: #1095957).
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update Standards-Version to 4.7.2.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 06 Apr 2025 16:11:52 +0200
+
+nano (8.3-1) unstable; urgency=medium
+
+  * The "Mazón dimissió" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 06 Jan 2025 19:08:18 +0100
+
+nano (8.2-1) unstable; urgency=medium
+
+  * The "La Regata de Jaume" release.
+  * New upstream release.
+  * Add nano and nano-tiny lintian overrides for /bin → /usr/bin mismatch,
+    as update-alternatives calls should not be updated to the usrmerged paths.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 28 Sep 2024 01:57:23 +0200
+
+nano (8.1-1) unstable; urgency=medium
+
+  * The "Hem sigut feliços, 🐵" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Set "colonparsing` in system nanorc, to retain "filename:linenumber"
+    functionality by default.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 16 Jul 2024 00:25:35 +0200
+
+nano (8.0-1) unstable; urgency=medium
+
+  * The "Gaza" release.
+  * New upstream release.
+  * Rename debian and upstream branches to adhere to DEP14.
+  * Update Standards-Version to 4.7.0, with no changes needed.
+  * Avoid running autopoint during dh_autoreconf.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update copyright years.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 06 May 2024 23:48:31 +0200
+
+nano (7.2-2) unstable; urgency=medium
+
+  [ Jordi Mallach ]
+  * The "Pellets" release.
+  * Fix a partial sync of debian/nanorc in the previous upload.
+    This updates some example bindings to the new syntax, avoiding
+    having control characters in the configuration file (closes: #1032422).
+  * Build-Depend on pkgconf instead of pkg-config.
+  * Update Standards-Version to 4.6.2, with no changes needed.
+
+  [ Chris Hofstaedtler ]
+  * Install all files below /usr. (Closes: #1059411)
+    Keep update-alternatives calls unchanged to preserve user
+    configuration.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 17 Jan 2024 01:35:55 +0100
+
+nano (7.2-1) unstable; urgency=medium
+
+  * The "Blue checkmark" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update copyright years.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 18 Jan 2023 16:31:52 +0100
+
+nano (7.1-1) unstable; urgency=medium
+
+  * The "Home Petrov, si soc jo!" release.
+  * New upstream release.
+  * Update source lintian-overrides.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 14 Dec 2022 16:15:59 +0100
+
+nano (7.0-1) unstable; urgency=medium
+
+  * The "Cent anys de Joan Fuster" release.
+  * New upstream release.
+  * Update upstream signing key to 168E6F4297BFD7A79AFD4496514BBE2EB8E1961F.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update lintian source-overrides to silence false positives.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 23 Nov 2022 18:10:31 +0100
+
+nano (6.4-1) unstable; urgency=medium
+
+  * The "Explicaciones, ¿de qué? Jajaja" release.
+  * New upstream release.
+  * Update Standards-Version to 4.6.1 (no changes needed).
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 03 Aug 2022 12:35:51 +0200
+
+nano (6.3-1) unstable; urgency=medium
+
+  * The "Duque de Feria" release.
+  * New upstream release.
+  * Add support for the noudeb build profile.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 03 May 2022 00:42:04 +0200
+
+nano (6.2-1) unstable; urgency=medium
+
+  * The "Priviet" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 19 Feb 2022 09:58:06 +0100
+
+nano (6.1-1) unstable; urgency=medium
+
+  * The "Remolacha" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 09 Feb 2022 12:45:28 +0100
+
+nano (6.0-1) unstable; urgency=medium
+
+  * The "Emérito" release.
+  * New upstream release.
+  * Add debian.nanorc as part of the packaging. Nano upstream has
+    dropped it from the tarball due to its limited scope for users
+    of Debian and derivatives. It'll be maintained here from now on.
+  * Add support for mirror, s3 and in-toto APT transports.
+  * Install out-of-tree syntax files in /usr/share/nano/debian.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 15 Dec 2021 16:41:06 +0100
+
+nano (5.9-1) unstable; urgency=medium
+
+  * The "Miquel Grau" release.
+    - includes syntax highlighting rules for .yaml files (closes: #982091).
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 14 Oct 2021 16:21:27 +0200
+
+nano (5.8-2) unstable; urgency=medium
+
+  * The "Oficina del Español" release.
+  * Update Standards-Version to 4.6.0.
+  * Upload to unstable, now that ncurses can generate correct deps
+    for nano-udeb.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 06 Sep 2021 15:01:19 +0200
+
+nano (5.8-1) experimental; urgency=medium
+
+  * The "mallorquín, menorquín, ibicenco y formenterés" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Bump debian/watch to version 4.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 16 Aug 2021 10:58:50 +0200
+
+nano (5.7-1) experimental; urgency=medium
+
+  * The "Más vale malo conocido" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 06 May 2021 23:42:32 +0200
+
+nano (5.6.1-1) experimental; urgency=medium
+
+  * The "Ni oblit ni perdó" release.
+  * New upstream release.
+  * Switch ncurses Build-Depends to current -dev package name.
+  * Stop building nano-udeb against S-Lang, as support for it was dropped
+    in nano 5.5. Bump Build-Depends on ncurses to the first version
+    providing libncursesw6-udeb.
+  * Drop all patches.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 11 Apr 2021 23:45:05 +0200
+
+nano (5.4-2+deb11u2) bullseye; urgency=medium
+
+  * The "No a l'ampliació del port" release.
+  * Add three additional patches from Benno Schulenberg, with two
+    crash fixes and one data-loss fix.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 02 Dec 2022 14:06:48 +0100
+
+nano (5.4-2+deb11u1) bullseye; urgency=medium
+
+  * The "Bueno, de verdad, hasta luego, paso" release.
+  * Add additional patches from Benno Schulenberg with post 5.4
+    crash, docs and general fixes.
+  * Change debian-branch to bullseye.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 22 Nov 2021 01:07:23 +0100
+
+nano (5.4-2) unstable; urgency=medium
+
+  * The "M." release.
+  * Add a collection of relevant, post 5.4 patches provided by
+    Benno Schulenberg. Thank you!
+  * Build-Depend on texinfo as patching the docs requires makeinfo.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 08 Feb 2021 00:21:28 +0100
+
+nano (5.4-1) unstable; urgency=medium
+
+  * The "Isabel Zendal Warehouse" release.
+  * New upstream release.
+  * Compile -tiny and -udeb with --without-included-regex to make binaries
+    substantially smaller. Also get rid of superfluous configure options
+    that are disabled by default when building with --enable-tiny.
+    Thanks to Benno Schulenberg for the suggestion.
+  * Sync debian/nanorc with upstream nanorc.sample and correct references
+    to @PKGDATADIR@ (closes: #973386).
+  * Update Standards-Version to 4.5.1, with no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 02 Dec 2020 13:16:08 +0100
+
+nano (5.3-1) unstable; urgency=medium
+
+  * The "Nou d’Octubre" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample and enable stateflags
+    by default. See manpage for details.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 09 Oct 2020 14:56:25 +0200
+
+nano (5.2-1) unstable; urgency=medium
+
+  * The "Rastreadores voluntarios" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 26 Aug 2020 16:22:10 +0200
+
+nano (5.1-1) unstable; urgency=medium
+
+  * The "Operación Bicho" release.
+  * New upstream release.
+  * Symlink the debian and haskell nanorc files down from the extra
+    directory to enable them by default.
+  * Override lintian warning about non-upstreamed nano-tiny manual page.
+  * Convert nano-tiny.fr.1 to UTF-8.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 14 Aug 2020 01:58:20 +0200
+
+nano (4.9.3-1) unstable; urgency=medium
+
+  * The "Herd Immunity" release.
+  * Drop --disable-wrapping-as-root from nano's configure call, it's obsolete.
+  * Move to debhelper compat v13.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 01 Jun 2020 16:40:44 +0200
+
+nano (4.9.2-1) unstable; urgency=medium
+
+  * The "Cantó i el concepte de la sort" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 07 Apr 2020 19:36:13 +0200
+
+nano (4.9.1-1) unstable; urgency=medium
+
+  * The "https://xkcd.com/2287/" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 31 Mar 2020 14:50:23 +0200
+
+nano (4.9-1) unstable; urgency=medium
+
+  * The "https://www.youtube.com/watch?v=1QkecjKLKQU" release.
+  * New upstream release.
+  * Update upstream signing key.
+  * Add upstream metadata information.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 29 Mar 2020 00:06:09 +0100
+
+nano (4.8-1) unstable; urgency=medium
+
+  * The "SIT AND TALK" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 14 Feb 2020 11:08:47 +0100
+
+nano (4.7-2) unstable; urgency=medium
+
+  * The "Glòria" release.
+  * No change reupload as I uploaded amd64 binaries by mistake. 🙄
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 30 Jan 2020 23:54:29 +0100
+
+nano (4.7-1) unstable; urgency=medium
+
+  * The "#MaiPAI" release.
+  * New upstream release.
+  * Add gbp.conf.
+  * Update Standards-Version to 4.5.0.
+  * Build nano-tiny against ncurses. Slang support is increasingly
+    buggy due to untested codepaths and bugs in Slang itself.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 30 Jan 2020 00:29:34 +0100
+
+nano (4.6-1) unstable; urgency=medium
+
+  * The "Tren Gandia-Dénia" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Suggest hunspell instead of spell, as nano will now try that first.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 29 Nov 2019 16:14:55 +0100
+
+nano (4.5-1) unstable; urgency=medium
+
+  * The "Paco’s Unboxing" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 08 Oct 2019 22:34:55 +0200
+
+nano (4.4-1) unstable; urgency=medium
+
+  * The "Forn de Barraca" release.
+  * New upstream release.
+  * Switch to debhelper compat v12 and use debhelper-compat instead of
+    debian/compat.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 26 Sep 2019 17:58:26 +0200
+
+nano (4.3-1) unstable; urgency=medium
+
+  * The "Carola" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Release to unstable.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 29 Jun 2019 04:10:50 +0200
+
+nano (4.1-1) experimental; urgency=medium
+
+  * The "Assange" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 17 Apr 2019 12:42:17 +0200
+
+nano (4.0-1) experimental; urgency=medium
+
+  * The "Alberto Carlos" release.
+  * New upstream release.
+  * Remove patches, all included upstream.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 02 Apr 2019 01:56:44 +0200
+
+nano (3.2-3) unstable; urgency=medium
+
+  * The "Open Arms" release.
+  * Add series of patches from Benno, to address several known crashes and
+    hangs, as well as a couple presentation issues.
+  * Add gbp.conf with debian branch pointing to buster.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 12 Jun 2019 02:34:18 +0200
+
+nano (3.2-2) unstable; urgency=medium
+
+  * The "#JoAcuso" release.
+  * Add patch to avoid showing ^S and ^Q options in nano-tiny, as using
+    those can cause problems on some d-i environments, like installs over
+    serial console. Thanks, Benno! (Closes: #915017).
+  * Update Standards-Version to 4.3.0, no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 20 Feb 2019 12:27:34 +0100
+
+nano (3.2-1) unstable; urgency=medium
+
+  * The "La banca *siempre* gana" release.
+  * New upstream release.
+  * Remove patches, which are obsolete with the new release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 14 Nov 2018 00:27:30 +0100
+
+nano (3.1-1) unstable; urgency=medium
+
+  * The "Nano maintainer uses Changelog to make political claims" release.
+  * New upstream release.
+  * Remove previous release patch, which is now included upstream.
+  * Add patch from git to fix compilation for tiny builds.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 19 Sep 2018 23:03:30 +0200
+
+nano (3.0-2) unstable; urgency=medium
+
+  * The "Albert's Shrinking CV" release.
+  * Apply patch from Benno to fix the behaviour of Backspace on some
+    situations.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 14 Sep 2018 00:18:47 +0200
+
+nano (3.0-1) unstable; urgency=medium
+
+  * The "Un Montón de Másters of the Univers(ity)" release.
+  * New upstream release (closes: #908465).
+  * Update watch to allow for series dir without dots (v3/).
+  * Set Rules-Requires-Root to no.
+  * Update Standards-Version to 4.2.1.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 10 Sep 2018 17:15:27 +0200
+
+nano (2.9.8-1) unstable; urgency=medium
+
+  * The "Razan al-Najjar" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 04 Jun 2018 14:32:49 +0200
+
+nano (2.9.7-1) unstable; urgency=medium
+
+  * The "Well, we can't put all these people in jail" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 16 May 2018 13:35:35 +0200
+
+nano (2.9.6-1) unstable; urgency=medium
+
+  * The "No es abuso, es violación" release.
+  * New upstream release.
+  * Update to Standards-Version 4.1.4, with no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 03 May 2018 00:28:38 +0200
+
+nano (2.9.5-1) unstable; urgency=medium
+
+  * The "Máster del Cifuverso" release.
+  * New upstream release.
+  * Capitalise Pico in nano's description.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 29 Mar 2018 14:50:47 +0200
+
+nano (2.9.4-1) unstable; urgency=medium
+
+  * The "11M" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Drop patch to fix redo, as it's included in the new release.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 12 Mar 2018 00:45:52 +0100
+
+nano (2.9.3-2) unstable; urgency=medium
+
+  * The "#8M" release.
+  * Add patch from git master to fix a condition where redo would fail.
+    Thanks Benno for the heads-up (LP: #1753724).
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 06 Mar 2018 15:46:39 +0100
+
+nano (2.9.3-1) unstable; urgency=medium
+
+  * The "Doctrina Botín" release.
+    - this release drops the "justifytrim" option, and adds "trimblanks",
+      which also applies to hard-wrapping.
+  * New upstream release.
+  * Update Vcs fields for migration to salsa.debian.org.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Use https for copyright format URL.
+  * Bump to debhelper compat v11.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 14 Feb 2018 01:13:09 +0100
+
+nano (2.9.2-1) unstable; urgency=medium
+
+  * The "AP-6" release.
+  * New upstream release.
+  * Update Standards-Version to 4.1.3, with no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 10 Jan 2018 14:21:24 +0100
+
+nano (2.9.1-1) unstable; urgency=medium
+
+  * The "Groc" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 29 Nov 2017 20:12:23 +0100
+
+nano (2.9.0-1) unstable; urgency=medium
+
+  * The "155" release.
+  * New upstream release.
+    - this release drops the "quiet" and "backwards" config options.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update to Standards-Version 4.1.1, with no changes needed.
+  * Remove tiny build fix patch; obsolete.
+  * Remove trailing spaces from several changelog lines (pedantic Lintian).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 20 Nov 2017 23:22:50 +0100
+
+nano (2.8.7-1) unstable; urgency=medium
+
+  * The "No tinc por no / tengo miedo" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Add patch to fix builds using --enable-tiny.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 30 Aug 2017 02:21:14 +0200
+
+nano (2.8.6-3) unstable; urgency=medium
+
+  * The "Operació Catalunya" release.
+  * Remove Provides: editor to all packages, as this virtual package name
+    was removed in November 1996 (even before the first release of TIP!).
+  * Add Breaks/Replaces to ease upgrades for the fix in -2 (closes: #871577).
+  * Update to Standards-Version 4.1.0.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 24 Aug 2017 14:49:24 +0200
+
+nano (2.8.6-2) unstable; urgency=medium
+
+  * The "Cloacas de Interior" release.
+  * Remove unwanted info manual from nano-tiny (closes: #869876).
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 04 Aug 2017 16:50:04 +0200
+
+nano (2.8.6-1) unstable; urgency=medium
+
+  * The "Tarjetas Black" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Update package description with an update list of features (thanks to
+    Benno for the suggestion).
+  * Remove explicit Build-Dep on a dpkg-dev version that is fulfilled in
+    oldoldstable.
+  * Also remove autotools-dev, as that is now pulled in by debhelper.
+  * Rewrite debian/rules using the dh sequencer, greatly simplifying it.
+  * Add pkg-config to Build-Deps to avoid a FTBFS under the new scheme.
+  * Update Standards-Version to 4.0.0.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 21 Jul 2017 14:06:55 +0200
+
+nano (2.8.5-1) unstable; urgency=medium
+
+  * The "Amnistía Fiscal" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Upload to unstable.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 26 Jun 2017 12:50:37 +0200
+
+nano (2.8.4-1) experimental; urgency=medium
+
+  * The "Susana Presidenta" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 22 May 2017 13:48:14 +0200
+
+nano (2.8.2-1) experimental; urgency=medium
+
+  * The "Canal de Isabel II" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 05 May 2017 10:41:49 +0200
+
+nano (2.8.1-1) experimental; urgency=medium
+
+  * The "Esperanza" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 26 Apr 2017 00:54:21 +0200
+
+nano (2.8.0-1) experimental; urgency=medium
+
+  * The "Carrero Blanco Flight Simulator" release.
+  * New upstream release.
+    - includes a softwrap code overhaul that makes it more usable.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 03 Apr 2017 14:44:45 +0200
+
+nano (2.7.5-1) experimental; urgency=medium
+
+  * The "doctor Carles & Fallarela" release... 🙄
+  * New upstream release.
+  * Remove unused DEB_HOST_GNU_SYSTEM definition.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 28 Mar 2017 12:18:42 +0200
+
+nano (2.7.4-1) unstable; urgency=medium
+
+  * The "Yak-42" release.
+  * New upstream release.
+    - includes a new ChangeLog based on git log (closes: #849805).
+  * Bump to debhelper compat v10.
+  * Add missing bug closer in 2.7.3-1 changelog.
+  * Adjust for renamed upstream sample.nanorc.
+  * Don't pass arguments to dh_installinfo, as the info file is now
+    installed by default.
+  * Update copyright for new doc paths.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 11 Jan 2017 03:10:48 +0100
+
+nano (2.7.3-1) unstable; urgency=medium
+
+  * The "Gran Vía" release.
+  * New upstream release.
+    - includes updates to nftables syntax file (closes: #848961).
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 30 Dec 2016 13:36:57 +0100
+
+nano (2.7.2-1) unstable; urgency=medium
+
+  * The """Alcaldesa de España""" release.
+  * New upstream release.
+  * Update Vcs-* fields following the migration to git.
+  * Make Homepage field and nano-tiny manpages point to https.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 14 Dec 2016 10:37:00 +0100
+
+nano (2.7.1-1) unstable; urgency=medium
+
+  * The "Por imperativo, abstención" release.
+  * New upstream release.
+  * Watch for xz tarballs.
+  * Sync debian/nanorc with upstream nanorc.sample.
+    - New option "linenumbers", that adds a column with line number to
+      the left of the bugger
+    - New option "showcursor", that makes it easier to use nano's file browser
+      via braille displays.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 02 Nov 2016 13:15:44 +0100
+
+nano (2.7.0-1) unstable; urgency=medium
+
+  * The "Banco Mundial" release.
+  * New upstream release.
+  * Remove cherrypicked linux_console.patch.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 07 Sep 2016 00:54:41 +0100
+
+nano (2.6.3-1) unstable; urgency=medium
+
+  * The "61,341€ Scalextric" release.
+  * New upstream release.
+  * Add linux_console.patch: conditionalize some Linux-only code, which also
+    fixes NANO_TINY compilations.
+  * Plot twist! s/nano/GNU nano/g in relevant descriptions.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 18 Aug 2016 09:35:45 +0200
+
+nano (2.6.2-1) unstable; urgency=medium
+
+  * The "Nobody expects a Spanish Government" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 01 Aug 2016 11:02:19 +0200
+
+nano (2.6.1-1) unstable; urgency=medium
+
+  * The "Disfruten lo votado" release.
+  * New upstream release.
+  * Enable all hardening options for all flavours.
+  * Bump Standards-Version to 3.9.8, no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 06 Jul 2016 01:14:32 +0200
+
+nano (2.6.0-1) unstable; urgency=medium
+
+  * The "Hospital Provincial de Castelló" release.
+  * New upstream release.
+  * Drop all cherrypicked patches.
+  * Adapt debian/watch for downloading from https://nano-editor.org/dist.
+  * Update debian/upstream/signing-key.asc with Benno's key.
+  * s/GNU nano/nano/g, as with this release, nano is no longer a GNU package.
+  * Adapt debian/copyright for the above.
+  * UPGRADE has been renamed to IMPROVEMENTS, update doc list accordingly.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 19 Jun 2016 12:17:54 +0100
+
+nano (2.5.3-3) unstable; urgency=medium
+
+  * The "Grup Popular - Ajuntament de València" release.
+  * Add the following cherrypicks from upstream Git, as suggested by
+    Benno Schulenberg, to fix some crashes and hangs:
+    - d/p/0001-files-do-not-call-free-on-the-result-of-dirname.patch
+    - d/p/0002-files-allocate-enough-space-for-the-prompt-when-find.patch
+    - d/p/0003-files-limit-the-number-of-attempts-at-climbing-up-th.patch
+    - d/p/0004-files-handle-systems-that-disallow-NULL-as-first-par.patch
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 26 Apr 2016 13:54:06 +0200
+
+nano (2.5.3-2) unstable; urgency=medium
+
+  * The "Feria Valencia" release.
+  * Add rcfile_skip-rest-of-file-on-error.patch: patch from upstream SVN;
+    fix a segfault when reading a rcfile with errors.
+  * Bump Standards-Version to 3.9.7, no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 08 Mar 2016 08:57:43 +0100
+
+nano (2.5.3-1) unstable; urgency=medium
+
+  * The "Taula" release.
+  * New upstream release.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 29 Feb 2016 11:13:52 +0100
+
+nano (2.5.2-1) unstable; urgency=medium
+
+  * The "Imelsa" release.
+  * New upstream release.
+    - Ignores $HOME when effective user is root, to avoid creating root-owned
+      files when for example invoking under sudo (LP: #1471459).
+  * Sync debian/nanorc with upstream nanorc.sample.
+  * Use https for the download URL and Vcs-Browser.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 12 Feb 2016 14:29:11 +0100
+
+nano (2.5.1-1) unstable; urgency=medium
+
+  * The "Nóos" release.
+  * New upstream release.
+    - Adds new syntax definition for nftables rulesets (closes: #805288)
+    - Extends make syntax for .mk and .make files (closes: #804845)
+  * Get rid of nano-menu.xpm and Debian menu definition.
+  * Sync debian/nanorc with upstream nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 18 Jan 2016 10:58:11 +0100
+
+nano (2.5.0-1) unstable; urgency=medium
+
+  * The "Ciegsa" release.
+  * New upstream release.
+    - Includes fixes for some special terminal conditions (closes: #800681)
+  * Drop old Breaks for alpine-pico; the fixed version is in oldoldstable.
+  * Bump debhelper compat to 9.
+  * Make cleanup of -tiny slightly less verbose.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 28 Dec 2015 23:39:01 +0100
+
+nano (2.4.3-1) unstable; urgency=medium
+
+  * The "Aldeanos" release.
+  * New upstream release.
+    - Fixes a multi-edit crash (closes: #787914)
+    - No longer opens new buffers for directories (closes: #551717)
+    - Fixes a case of undo buffer corruption (closes: #793053)
+    - Fixes a buffer overflow on long hostnames and locking (closes: #804653)
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 18 Nov 2015 14:18:45 +0100
+
+nano (2.4.2-1) unstable; urgency=medium
+
+  * The "Acord del Botànic" release.
+  * New upstream release.
+    - Includes many improvements to syntax highlighting definitions
+      (closes: #664456, #688892, #744005, #783763, #785508, #788318, #790017).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 06 Jul 2015 14:05:33 +0200
+
+nano (2.4.1-1) unstable; urgency=medium
+
+  * The "Carrer dels ‘2 milions de peles’" release.
+  * New upstream release.
+  * Release to unstable.
+  * Rewrite debian/copyright into machine-readable format 1.0.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 08 May 2015 08:58:38 +0200
+
+nano (2.4.0-1) experimental; urgency=medium
+
+  * The "Degeim passar el fred del verano" release.
+  * New upstream stable release!
+  * Include $CFLAGS in $CFTINY definition, to ensure hardening is also
+    applied to -tiny and -udeb, and also cleanup some redundant flags.
+  * For now, build without libmagic, as nano lives in /bin and libmagic
+    is in /usr/lib, and the point of installing to /bin is to have a
+    working nano in case of /usr mount failure.
+  * Drop remove_build_date_from_help.patch, applied upstream.
+  * Drop obsolete depends on dpkg (>= 1.15.4) || install-info.
+  * Bump Standards-Version to 3.9.6.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 24 Mar 2015 17:20:14 +0100
+
+nano (2.3.99pre3-1) experimental; urgency=medium
+
+  * The "Presó d'Aranjuez" release.
+  * New upstream development release.
+  * Add patch remove_build_date_from_help.patch: as name says, to make
+    nano build reproducibly. Thanks, Lunar! (closes: #774388).
+  * Remove the /usr/bin/nano → /bin/nano symlink entirely, and workarounds
+    for Hurd's /usr → . layout (closes: #767929).
+  * Remove branch directory from download url in old style copyright file
+    (closes: #770682).
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 01 Mar 2015 13:32:26 +0100
+
+nano (2.3.6-1) experimental; urgency=medium
+
+  * The "Él no está, soy su hermano" release.
+  * New upstream development release (closes: #752005).
+    - uses libmagic to detect filetype
+    - cursor position saving
+    - vim-style file locking (closes: #286716)
+    - many improvements to undo/redo, now enabled by default
+    - ability to read named pipes
+    - linter support
+    - ability to reconfigure titlebar/statusbar/menu colours
+    - lots of new syntax support
+  * Add libmagic-dev to Build-Depends.
+  * Drop BUGS from installed documentation.
+  * Sync debian/nanorc with current upstream nanorc.sample.
+  * Drop all patches: all merged upstream.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 21 Jul 2014 19:58:28 +0200
+
+nano (2.2.6-3) unstable; urgency=medium
+
+  * The "Gürtel" release.
+  * Acknowledge 2.2.6-1.1 NMU (-2 was tagged, never uploaded... mysteries).
+  * Get rid of massively obsolete preinst upgrade code from 2004.
+  * Remove nano.desktop.
+  * Remove nano.README.Debian, the information included was now obsolete
+    or pointless.
+  * Canonicalise Vcs URLs.
+  * Use dpkg's buildflags.mk to enable hardening. Bump dpkg-dev Build-Dep
+    to >= 1.16.1~ accordingly (closes: #656133).
+  * Bump Standards-Version to 3.9.5.
+  * Add debian/upstream/signing-key.asc with Chris Allegreta's OpenPGP key.
+  * Move watch file to version 3, use http URL, add pgpsigurlmangle to
+    enable verification of tarball signatures and stop calling uupdate.
+  * Add manpage_escaping.patch to fix some escaping issues in nano.1 and
+    rnano.1. Thanks to Bjarni Ingi Gislason (closes: #662842, #726956).
+  * Add apt_transports.patch to add all currently supported apt methods to
+    the debian sources.list regexp.
+  * Shuffle build-* target deps and add an explicit build-indep target to
+    appease Lintian.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 16 Jul 2014 18:47:53 +0200
+
+nano (2.2.6-2) unstable; urgency=low
+
+  * The "… a Picassent!" release.
+  * Add patches from Rodolphe Pelloux-Prayer to fix highlighting of
+    sources.list entries with tabs, and to support files in
+    /etc/apt/sources.list/*.list. Thanks! Closes: #614817.
+  * Bump Standards-Version to 3.9.2, no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 06 Jul 2011 21:25:40 +0200
+
+nano (2.2.6-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Ensure config.{sub,guess} are uptodate
+
+ -- Wookey <wookey@debian.org>  Mon, 16 Dec 2013 22:26:27 +0000
+
+nano (2.2.6-1) unstable; urgency=low
+
+  * The "Què vol que li diga? Que vosté és una sinvergüensa?" release.
+  * New upstream release.
+  * Apply auto.patch from Tiago Silva (and DEP-3ified by Colin Watson)
+    to support C/C++ 'auto' storage class specifier (closes: #605403).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 30 Aug 2010 19:35:50 +0200
+
+nano (2.2.5-1) unstable; urgency=low
+
+  * The "Teulada" release.
+  * New upstream release.
+    - better behaviour when creating backup files on certain conditions.
+    - allow, via new command line option, to revert to old backup behaviour.
+  * Bump Standards-Version to 3.9.1 (no changes).
+  * Break, not Conflict, alpine-pico. Drop obsolete Conflicts from 2003.
+  * Rename nano-udeb's XC-Package-Type control field to Package-Type.
+    Bump dpkg-dev to 1.15.7.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 30 Aug 2010 18:05:29 +0200
+
+nano (2.2.4-1) unstable; urgency=low
+
+  * The "905€" release.
+  * New upstream release.
+    - fixes minor security issues: symlink attack (CVE-2010-1160)
+      and ownership of arbitrary files (CVE-2010-1161). Closes: #577817.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 15 Apr 2010 19:26:23 +0200
+
+nano (2.2.3-1) unstable; urgency=low
+
+  * The "Polop" release.
+  * New upstream release.
+  * Drop Build-Depends on groff; it was only needed to rebuild the
+    modified manpages.
+  * Nearly three years late, alpine-pico is finally playing the
+    update-alternatives game and can now coexist with nano. Update
+    our conflict accordingly. Thanks, Asheesh!
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 12 Feb 2010 02:49:13 +0100
+
+nano (2.2.2-1) unstable; urgency=low
+
+  * The "Cabanyal" release.
+  * New upstream release.
+  * Switch to dpkg source 3.0 (quilt). Remove quilt patching support and
+    README.source from the packaging, and drop quilt from Build-Depends.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 20 Jan 2010 00:18:38 +0100
+
+nano (2.2.1-1) unstable; urgency=low
+
+  * The "Don Carlos" release.
+  * New upstream release.
+  * Remove obsolete patch 01_manpage_hyphens, fixed upstream.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 22 Dec 2009 19:34:49 +0100
+
+nano (2.2.0-1) unstable; urgency=low
+
+  * The "Televisió Sense Fronteres" release.
+  * New upstream stable release!
+  * Remove patch 10_tinybuildfix, applied upstream.
+  * Update 01_manpage_hyphens, as it's been applied only partially upstream.
+  * Remove French manpages from nano, until they are back in sync with the
+    original versions (§12.1, Policy 3.8.3).
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 01 Dec 2009 20:59:14 +0100
+
+nano (2.1.99pre2-1) unstable; urgency=low
+
+  * The "Molt Poc Honorable" release.
+  * New upstream prerelease.
+    - fixes a cascade of "Closecode = -1" messages when opening multiple
+      buffers (closes: #551716).
+    - fixes handling of undo and casesensitive options in rcfiles
+      (closes: #558223)
+  * Apply patch #6993 from Savannah to fix builds of nano-tiny (thanks, DLR).
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 27 Nov 2009 23:26:24 +0100
+
+nano (2.1.99pre1-1) unstable; urgency=low
+
+  * The "Ferraris" release.
+  * New upstream prerelease.
+  * Remove empty /usr/share/nano from nano-tiny.
+  * Drop 10_browser_floating_point_exception.patch, obsolete.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 16 Nov 2009 14:05:28 +0100
+
+nano (2.1.11-3) unstable; urgency=low
+
+  * The "Caja Madrid" release.
+  * Throw away html manpages, on both nano and nano-tiny. Fixes a
+    file conflict between both (closes: #553380).
+  * Fix, again, the install path for the nanorc example.
+  * Use upstream's fix for the browser floating point exception.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 30 Oct 2009 19:35:28 +0100
+
+nano (2.1.11-2) unstable; urgency=low
+
+  * The "Ric Costa" release.
+  * Upload 2.1 to unstable, as upstream says a stable 2.2 release will
+    happen soon.
+  * Make nano depend on dpkg (>= 1.15.4) | install-info for the install-info
+    transition.
+  * Add dependencies on ${misc:Depends} for all packages.
+  * Bump Standards-Version to 3.8.3.
+  * Add 10_browser_floating_point_exception.patch to the series patch so it
+    really gets applied. Thanks again to Paul Wise (closes: #496008).
+  * Update 01_manpage_hyphens.patch to fix newly introduced unescaped
+    minus signs.
+  * Add descriptions to all patches according to DEP-3.
+  * Remove --enable-all from configure call, as it does nothing.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 28 Oct 2009 19:20:22 +0100
+
+nano (2.1.11-1) experimental; urgency=low
+
+  * The "Socialistes Valencians" release.
+  * New upstream development release.
+  * Resynchronise nanorc with sample.nanorc, which now includes the
+    undo and soft options.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 16 Sep 2009 21:04:31 +0200
+
+nano (2.1.10-1) experimental; urgency=low
+
+  * The "Una pastuqui importante" release.
+  * New upstream development release (closes: #522295).
+    - includes PHP syntax highlighting (closes: #477186).
+    - includes experimental undo support, but it's known to be unstable.
+  * Rewrite all descriptions, as suggested by Justin B. Rye, emphasyzing
+    nano's features instead of Pico's non-freeness (closes: #508903).
+  * Fix corrupted UTF-8 in several ancient changelog entries.
+  * Fix install directory for example nanorc.
+  * Resynchronize nanorc with sample.nanorc for the new options in nano 2.2.
+  * Enable syntax highlighting by default. Please tell me if nano gets
+    slower on your setup in order to reconsider this change (closes: #514909).
+  * Add 10_browser_floating_point_exception.patch to fix a division by zero;
+    report and suggested fix by Paul Wise (closes: #496008).
+  * Fix some fixes in 01_manpage_hyphens.patch.
+  * Bump Standards-Version to 3.8.2, no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 14 Aug 2009 09:54:24 +0200
+
+nano (2.0.9-2) unstable; urgency=low
+
+  * The "Yo me pago mis trajes" release.
+  * Upload to unstable.
+  * Bump Standards-Version to 3.8.1 (no changes required).
+  * Point to versioned licences in the copyright file.
+  * Update to debhelper v7 (from v4!), update Build-Depends accordingly.
+  * Use dh_prep instead of dh_clean -k.
+  * Add patch 01_manpage_hyphens.patch to correct a few unescaped
+    hyphens, as pointed out by lintian.
+  * As we're modifying the manpages, we need to temporarily build-dep
+    on groff.
+  * Enable nowrap in the default configuration. Although we use the
+    --disable-wrapping-as-root compile option, it isn't enough for many
+    reasons, as described by Anders Kaseorg in #513443. Users wishing to
+    revert this can edit the global config, or use "unset nowrap" in
+    their personal nanorc. Closes: #253298, #513443, and Ubuntu bugs
+    #39866 and #261495.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 27 Mar 2009 11:04:20 +0100
+
+nano (2.0.9-1) experimental; urgency=low
+
+  * The "Professor-traductor" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 18 Sep 2008 04:07:22 +0200
+
+nano (2.0.8-1) experimental; urgency=low
+
+  * The "Il quarto ponte sul Canal Grande" release.
+  * New upstream release.
+  * Remove patches, all have been accepted upstream.
+  * Move nano to SVN in collab-maint, and add the corresponding Vcs-*
+    headers.
+  * Improve short descriptions by actually mentioning nano is an editor.
+    Thanks to Filipus Klutiero for the suggestion (closes: #495289).
+  * Add nanorc.sample as an example, even if the system-wide nanorc is a
+    modified copy of it (closes: #490202).
+  * Don't distribute po/ChangeLog. The source package is enough for that.
+  * Rename debhelper configuration files to have the "nano." prefix.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 26 Aug 2008 18:35:35 +0200
+
+nano (2.0.7-5) stable; urgency=low
+
+  * The "No me preocupa nada, como Juan sin miedo, porque nada temo"
+    release.
+  * Backport two minor security fixes from upcoming 2.0.10 and 2.2.4:
+    - CVE-2010-1160: symlink attack.
+    - CVE-2010-1161: change of ownership of arbitrary files.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 26 Apr 2010 13:41:39 +0200
+
+nano (2.0.7-4) unstable; urgency=high
+
+  * The "Valencia, tenemos la fórmula" release.
+  * Add patch successful_write_no_free_space.patch to solve an issue
+    with nano reporting successful writes on full devices, potentially
+    causing files to be zeroed.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 25 Aug 2008 17:27:55 +0200
+
+nano (2.0.7-3) unstable; urgency=low
+
+  * The "Benitatxell" release.
+  * Add patch open_flags.patch to add mode parametre to open() to solve a
+    FTBFS in Ubuntu 8.10, compiled with -D_FORTIFY_SOURCE=2 (LP: 247692).
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 12 Jul 2008 07:09:02 +0200
+
+nano (2.0.7-2) unstable; urgency=low
+
+  * The "43 morts + 47 ferits = 0 responsables" release.
+  * debian/patches/ja_help_freeze.patch: apply patch from Mitsuya Shibata
+    to fix an endless loop when displaying help using a Japanese locale.
+    (fixes LP #201769).
+  * debian/patches/small_window_sigsegv.patch: apply patch from SVN to
+    fix a segfault when running nano on a too small terminal terminal.
+  * Build-Depend on quilt and adapt debian/rules accordingly.
+  * Add a debian/README.source with some quilt notes, as posted by
+    Russ Allbery in d-d-a.
+  * Bump Standards-Version to 3.8.0.
+  * Set section of the doc-base entries to "Editors".
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  3 Jul 2008 13:03:00 +0200
+
+nano (2.0.7-1) unstable; urgency=low
+
+  * The "Volem TV3" release.
+  * New upstream release.
+    - GNU nano is now released under the GPL3+ and GPL3+/GFDL1.2 for docs.
+    - fixes bad detection of MAC/DOS file format (closes: #451659)
+  * debian/copyright: reflect copyright changes.
+  * debian/rules:
+    - apply patch from Neil Williams to allow cross building of the
+      package (closes: #451188).
+    - remove empty /usr dir from nano-udeb.
+  * debian/nano.doc-base.manual, debian/nano.doc-base.faq: add doc-base
+    registration for the texinfo documentation and the HTML FAQ
+    (closes: #451693).
+  * debian/prerm: fix pico alternative removal (thanks Luca Capello,
+    closes: 435617).
+  * debian/menu: Update to new Debian menu structure.
+  * debian/control:
+    - add Homepage field.
+    - update Standards Version to 3.7.3.0.
+    - drop build-dep on dpatch, not used for now.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 24 Dec 2007 15:19:01 +0100
+
+nano (2.0.6-2) unstable; urgency=low
+
+  * The "Ja en teniem prou?" release.
+  * debian/postinst, debian/prerm: add a new alternative "pico", at priority
+    10, to allow alpine-pico to be installed without conflicting with nano.
+    Alpine, being Pine's free successor, will have a higher priority, even if
+    nano still has many more features (closes: #409504).
+  * debian/links:
+    - remove pico related links.
+    - remove nb -> no locale link, this transition is really old news now.
+  * debian/control: conflict with alpine-pico (<= 0.99+dfsg-1).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 28 May 2007 22:34:06 +0200
+
+nano (2.0.6-1) unstable; urgency=low
+
+  * The "Ja en tenim prou" release.
+    - fixes several bugs related to handling of filenames starting with "~"
+      (closes: 419353).
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 02 May 2007 11:29:24 +0200
+
+nano (2.0.4-1) unstable; urgency=low
+
+  * The "Gente con tantos méritos" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 18 Apr 2007 18:09:22 +0200
+
+nano (2.0.3-1) unstable; urgency=low
+
+  * The "Pelotazo C. F." release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed,  7 Feb 2007 09:12:46 +0100
+
+nano (2.0.2-1etch1) stable; urgency=low
+
+  * The "Subestació de Patraix fora!" release.
+  * Apply several important fixes from the 2.0 CVS branch:
+    - 01_CVS_filebugs.dpatch: fixes several file-handling related bugs,
+      including a segfault, when working with filenames starting with "~",
+      and the lack of warning when overwriting a file (closes: #419353).
+      From CVS; provided by David Lawrence Ramsey.
+    - 02_CVS_justify_segfault.dpatch: fixes a segfault in the justify code
+      when marking/cutting text. From CVS; provided by David Lawrence Ramsey.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 17 May 2007 00:52:30 +0200
+
+nano (2.0.2-1) unstable; urgency=medium
+
+  * The "Compromís pel País Valencià" release.
+  * New upstream release.
+    - fixes a segfault and several memleaks.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 22 Dec 2006 17:11:14 +0100
+
+nano (2.0.1-1) unstable; urgency=low
+
+  * The "Xúquer Viu" release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 21 Nov 2006 12:20:53 +0100
+
+nano (2.0.0-1) unstable; urgency=low
+
+  * The "La Regata de Rita" release.
+  * New upstream stable release!
+    See the UPGRADE document for a summary of new features since 1.2.x.
+  * debian/copyright: update, add David to Copyright holders and add the
+    standard GPL header.
+  * debian/nanorc: sync with nanorc.sample.
+  * debian/watch: added.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue,  7 Nov 2006 18:03:39 +0100
+
+nano (1.9.99pre3-1) unstable; urgency=low
+
+  * The "Catrals per tot arreu" release.
+  * New upstream prerelease.
+  * debian/nanorc: sync with nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 26 Oct 2006 01:45:48 +0200
+
+nano (1.9.99pre2-1) unstable; urgency=low
+
+  * The "Sense pacte, perdem el País" release.
+  * New upstream prerelease.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon,  2 Oct 2006 19:43:12 +0200
+
+nano (1.9.99pre1-1) unstable; urgency=low
+
+  * The "Fundación Agua y Progreso" release.
+  * New upstream prerelease.
+  * debian/nanorc: sync with nanorc.sample.
+  * debian/examples: removed, since we already have a nanorc in the
+    package based on nanorc.sample.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 29 Aug 2006 22:40:05 +0200
+
+nano (1.3.12-2) unstable; urgency=low
+
+  * The "Jo no t'espere" release.
+  * debian/nanorc.sample: sync from one of the build dirs, so we get the
+    correct $PKGDATADIR on the syntax section.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed,  5 Jul 2006 13:39:32 +0200
+
+nano (1.3.12-1) unstable; urgency=low
+
+  * The "Quiebra Mítica" release.
+  * New upstream development release.
+  * debian/nanorc: sync with nanorc.sample, which now uses includes for
+    highlight patterns.
+  * debian/patches/*.dpatch: removed, included in new version.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue,  4 Jul 2006 19:56:57 +0200
+
+nano (1.3.11-3) unstable; urgency=low
+
+  * The "Marina d'Or" release.
+  * debian/patches/01_crontab_backup.dpatch: add improvements to this by
+    David Lawrence Ramsey in CVS when the file being prepended has an
+    unreadable name. Fixes the issue for nano-tiny as well.
+  * debian/patches/02_regex_fix.dpatch: patch from CVS by David Lawrence
+    Ramsey to fix zero-length single-line regexes, which were making
+    nano segfault.
+  * debian/patches/03_regex_parsing.dpatch: patch from CVS by David Lawrence
+    Ramsey to allow overriding regexes in the global nanorc with regexes
+    in the personal nanorc without error messages, as it was possible up
+    to nano 1.3.9.
+  * debian/patches/04_line_wrap.dpatch: patch from CVS by David Lawrence
+    Ramsey, to fix nano wrapping some lines containing tabs too early.
+  * debian/patches/00list: updated.
+  * debian/control: bump Standards-Version to 3.7.2.0, no changes needed.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 18 May 2006 23:23:55 +0200
+
+nano (1.3.11-2) unstable; urgency=low
+
+  * The "Marbella, ciudad hermanada con Benidorm" release.
+  * debian/control: generate udeb dependencies automatically, using a newer
+    debhelper and dpkg-dev. Thanks, Frans Pop (closes: #360265). The correct
+    dpkg-dev is pulled by debhelper, so backporters can just ignore the
+    newer debhelper build-dep.
+  * debian/nanorc: sync with upstream's example.
+  * debian/patches/01_crontab_backup.dpatch: new patch from DLR to fix the
+    saving of crontabs with the backup mode active (Ubuntu #29732).
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  6 Apr 2006 00:00:01 +0200
+
+nano (1.3.11-1) unstable; urgency=low
+
+  * The "Camps de Golf" release.
+  * New upstream release.
+  * debian/patches/01_line_allocation_crash.dpatch,
+    debian/patches/02_display_cursor.dpatch: removed, included upstream.
+  * debian/patches/00list: updated.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 30 Mar 2006 09:47:45 +0200
+
+nano (1.3.10-2) unstable; urgency=low
+
+  * The "Pla i Curtet" release.
+  * debian/patches/01_line_allocation_crash.dpatch: fix long standing bug that
+    would make nano crash on some setups (closes: #325065).
+  * debian/patches/02_display_cursor.dpatch: fix a minor display corruption
+    bug.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  4 Feb 2006 17:20:48 +0100
+
+nano (1.3.10-1) unstable; urgency=low
+
+  * The "Comprad, comprad, malditos!" release.
+  * New upstream release.
+    - includes Thijs Kinkhorst's rnano(1) manpage (closes: #339530).
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 25 Dec 2005 03:43:30 +0100
+
+nano (1.3.9-1) unstable; urgency=low
+
+  * The "I fear I'll freeze in Montréal" release.
+  * New upstream development release.
+    - includes Yavor Doganov's new Bulgarian translation (closes: #324385).
+  * Remove obsolete patches: 01_clear_replace and 02_64bit_line_num.
+  * debian/control:
+    - add "XC-Package-Type: udeb" to nano-udeb, and build nano-udeb
+      in a more debhelper-standard way.
+    - bump build-deps to debhelper (>= 4.2.0) for udeb support.
+    - bump Standards-Version to 3.6.2.0, gratis.
+  * debian/rules:
+    - get rid of ugly hacks for udeb generation, debhelper will take care.
+    - major cleanups.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 26 Oct 2005 13:39:02 +0200
+
+nano (1.3.8-2) unstable; urgency=low
+
+  * The "They have no *night* in Finland!" release.
+  * debian/nanorc: revert mouse enabling, for the "just works" principle
+    expected in nano. Some users don't know that you need to press shift
+    while pasting with mouse mode on (closes: #316869).
+  * debian/patches/01_clear_replace.dpatch: clear the replace field when
+    apropriate.
+  * debian/patches/02_64bit_line_num.dpatch: fix line count on 64bit
+    architectures.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 10 Jul 2005 16:46:51 +0300
+
+nano (1.3.8-1) unstable; urgency=low
+
+  * The "They have no Summer in London" release.
+  * New upstream development release.
+    - includes Jens Seidel's German fixes (closes: #313923).
+    - fixes a possible crash on lines ending with tabs (closes: #315439).
+    - fixes a few UTF-8 glitches in nano-tiny's interface caused by the
+      libslang2 switch.
+  * debian/control: build-depend on dpkg-dev (>= 1.13.9) to ensure
+    DPKG_HOST_ARCH_OS used in the previous upload is available.
+  * debian/nanorc: resync with upstream and enable mouse support.
+  * debian/patches/*: all removed, applied upstream.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  2 Jul 2005 12:56:50 +0200
+
+nano (1.3.7-4) unstable; urgency=low
+
+  * The "5 tries weren't enough" release.
+  * debian/rules:
+    - use DPKG_HOST_ARCH_OS instead of DEB_HOST_GNU_SYSTEM to detect
+      a Hurd build, as the latter has changed with Dpkg 1.13
+      (closes: #314661).
+    - install using /bin as bindir for nano-udeb.
+    - remove the rnano symlink from nano-udeb (closes: #315159).
+  * debian/nano-{tiny,udeb}.dirs: removed.
+  * debian/dirs: trimmed.
+  * debian/nanorc: refreshed with current upstream sample file.
+  * debian/patches/03_browser.dpatch: patch from CVS to fix the file
+    browser (closes: #315199).
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 21 Jun 2005 16:59:16 +0200
+
+nano (1.3.7-3) unstable; urgency=low
+
+  * debian/control: switch to libslang2 for nano-tiny and nano-udeb
+    (thanks, Alastair McKinstry; closes: #315090).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 20 Jun 2005 17:38:33 +0200
+
+nano (1.3.7-2) unstable; urgency=low
+
+  * debian/rules:
+    - merge a lost change from 1.2.4-4. On hurd-i386 systems, don't ship
+      the /usr/bin/nano -> /bin/nano link, as the system might have the
+      /usr . -> symlink (closes: #314268).
+    - minor build fixes.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 15 Jun 2005 17:28:46 +0200
+
+nano (1.3.7-1) unstable; urgency=low
+
+  * Upload nano 1.3 to unstable.
+  * debian/control: drop gettext from build-depends.
+  * debian/rules: don't delete .gmo files on clean.
+  * debian/patches/02_man_fr.dpatch: install French manpages where they
+    belong.
+  * debian/patches/00list: updated.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue,  7 Jun 2005 23:54:34 +0200
+
+nano (1.3.7-0) experimental; urgency=low
+
+  * New upstream development release.
+  * debian/rules: get rid of bogus moving of config.h after configure.
+    Thanks, Martin-Éric Racine (closes: #301384).
+  * debian/patches/01_topwin_utf-8.dpatch: obsolete.
+  * debian/patches/01_nanoopt_empty_string.dpatch: patch from CVS to
+    avoid translating an empty string through gettext() in the help
+    output.
+  * debian/patches/00list: updated.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 14 Apr 2005 09:18:05 +0200
+
+nano (1.3.6-0) experimental; urgency=low
+
+  * New upstream development release.
+    - finally, includes UTF-8 support (closes: #248591).
+    - fixes infinite loop when killing the parent terminal (closes: #286781).
+  * debian/control: build-depend on libncursesw5-dev.
+  * debian/rules: don't install rnano in nano-tiny.
+  * debian/patches/01_topwin_utf-8.dpatch: patch from CVS to fix char vs.
+    byte in nano's title line.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 24 Mar 2005 19:19:42 +0100
+
+nano (1.3.5-0) experimental; urgency=low
+
+  * New upstream development release.
+    + integrates my fix for the messy config.h includes (closes: #271915).
+  * debian/patches/01_nanorc_tabsize_fix.dpatch: removed, included in 1.3.5.
+  * debian/patches/00list: updated.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 23 Nov 2004 17:21:31 +0100
+
+nano (1.3.4-0) experimental; urgency=low
+
+  * New upstream development release!
+    + asks for confirmation before saving a file to a new name
+      (closes:#178423).
+    + includes our setlocale fix for nano-tiny.
+  * Switching to the 1.3 branch, now that base packages are frozen.
+    Still no UTF-8 support, but that should happen quite soon in 1.3.5.
+    Please report any regressions you find.
+  * debian/control:
+    + add build-depends on dpatch.
+    + s/slightly restrictive license/restrictive licence/g in the
+      long description.
+  * debian/rules: add adjustments for dpatch support.
+  * debian/patches/01_nanorc_tabsize_fix.dpatch: post 1.3.4 fix from CVS.
+  * debian/patches/00list: added.
+  * debian/docs: adjust for new location of faq.html in doc/.
+  * debian/examples: likewise for nanorc.sample.
+  * debian/info: likewise for nano.info.
+  * debian/nanorc: refreshen with 1.3.4's version.
+  * debian/{nanorc.5,nano.1}.fr, debian/manpages: removed, included upstream.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 18 Aug 2004 19:17:11 +0200
+
+nano (1.2.4-5) unstable; urgency=low
+
+  * debian/preinst: don't leave a /usr/man symlink behind if
+    update-alternatives fails. Thanks to Steve Langasek.
+  * files.c, nano.c, proto.h, winio.c: patch from 1.3 backported by
+    David Lawrence Ramsey to fix an infinite loop (closes: #286781).
+  * po/it.po: include updates to Italian translation from the
+    nano_1_2_branch. Thanks, Marco Colombo.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  9 Apr 2005 18:48:49 +0200
+
+nano (1.2.4-4) unstable; urgency=medium
+
+  * debian/preinst: handle the case where upgrading from woody and
+    /usr/man does not exist (closes: #272915).
+  * debian/rules: don't ship /usr/bin/* -> /bin/* links for hurd-i386
+    (closes: #290038, and makes a lot of people happy).
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 18 Jan 2005 13:04:33 +0100
+
+nano (1.2.4-3) unstable; urgency=high
+
+  * files.c: patch from Ulf Härnhammar to fix a segfault when tab-expanding
+    filenames containing percent signs (closes: #281462).
+  * debian/control: s/slightly restrictive license/restrictive licence/g
+    in the long description.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 17 Nov 2004 00:35:16 +0100
+
+nano (1.2.4-2) unstable; urgency=high
+
+  * The "Last minute changes!" release.
+  * debian/rules: move the nano binary to /bin, so it's available even if
+    /usr can't be mounted (closes: #155376).
+  * debian/links: provide a compatibility symlink /usr/bin/nano -> /bin/nano.
+  * debian/postinst:
+    + update paths in alternative.
+    + simplify the alternative installation rule.
+  * debian/prerm: update paths in alternative.
+  * debian/preinst: new, remove the old /usr/bin/nano alternative if we're
+    upgrading from nano (<< 1.2.4-2).
+  * debian/nano-tiny.postinst: simplify the alternative installation rule.
+  * debian/menu: update path to the nano binary.
+  * Urgency inflated due to vorlon putting some pressure on me. ;)
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 26 Jul 2004 18:46:48 +0200
+
+nano (1.2.4-1) unstable; urgency=low
+
+  * The "tbm will be annoying me again in little more than a week" release.
+  * New upstream release.
+    + includes XSI:ism fixes in config.rpath from David Weinehall.
+  * debian/{,nano-tiny.}postinst: apply patch from David Weinehall to fix
+    XSI:isms in maintainer scripts (closes: #256278).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 28 Jun 2004 17:12:35 +0200
+
+nano (1.2.3-2) unstable; urgency=low
+
+  * nano.c (main): patch from Chris; warn when trying to open a non-readable
+    file from the command line (thanks, Jaap Eldering; closes: #246956).
+  * debian/menu: add a menu hint "Text", and quote as needed (thanks, Yann;
+    closes: #246206).
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 30 May 2004 18:49:16 +0200
+
+nano (1.2.3-1) unstable; urgency=low
+
+  * The "tbm is even more annoying in Real Life that one could imagine"
+    release.
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 18 Feb 2004 18:27:43 +0100
+
+nano (1.2.2-7) unstable; urgency=low
+
+  * debian/control: build depend on slang (>= 1.4.5), woody's
+    doesn't work (thanks, Adrian Bunk; closes: #223833)
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 14 Dec 2003 16:16:17 +0100
+
+nano (1.2.2-6) unstable; urgency=low
+
+  * debian/rules: don't call dh_md5sums for nano-udeb (closes: #221539).
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 19 Nov 2003 16:49:33 +0100
+
+nano (1.2.2-5) unstable; urgency=low
+
+  * search.c: backport patch from HEAD to fix an infinite loop when doing a
+    RegExp Replace of "$".
+  * po/fi.po: Apply patch from Martin-Eric Racine <q-funk@pp.fishpool.fi>
+    to accept "Yy" and "Nn" as well as the Finnish letters in Yes/No
+    prompts (closes: #216030).
+  * po/*.po: Update from CVS.
+  * debian/{,nano-tiny}.prerm: don't remove the alternative on upgrade,
+    not on removal... should fix dangling editor alternative symlinks on
+    removal (thanks, Alexander Viro; closes: #217737).
+  * debian/rules: replace ";" with "&&" in build and install targets.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 30 Oct 2003 14:18:34 +0100
+
+nano (1.2.2-4) unstable; urgency=low
+
+  * debian/rules: rm usr/share/info/dir{,.old}, without .gz suffix, which is
+    added later, duh... (really closes: #213671).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon,  6 Oct 2003 00:54:03 +0200
+
+nano (1.2.2-3) unstable; urgency=low
+
+  * debian/control: add Steve Langasek <vorlon@debian.org> to Uploaders:,
+    just in case I suddenly go missing...
+  * debian/rules: fix for install-info suckage... remove
+    usr/share/info/dir.gz and usr/share/info/dir.old.gz after installing
+    the texinfo documentation (closes: #213671).
+
+ -- Jordi Mallach <jordi@debian.org>  Sun,  5 Oct 2003 01:21:57 +0200
+
+nano (1.2.2-2) unstable; urgency=low
+
+  * nano.c: backport patch from HEAD to fix a loop when nano loses its
+    terminal or is suspended (really fixes: #198946).
+  * debian/control:
+    + remove duplicate gettext build dependency (closes: #212155).
+    + bump Standards-Version to 3.6.1.0 (no changes required).
+  * debian/changelog: fix a typo in the 1.2.1-3 entry, Pico is unsupported,
+    not Pine.
+  * debian/{nano.fr.1, nanorc.fr.5}: add French translations of manpages by
+    Jean-Philiphe Guérard (closes: #207318).
+  * debian/manpages: list the new manpages.
+  * debian/rules: run dh_installman in install.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed,  1 Oct 2003 14:55:52 +0200
+
+nano (1.2.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 12 Aug 2003 10:09:37 +0200
+
+nano (1.2.1-3) unstable; urgency=low
+
+  * The "Good bye, Pico" release.
+  * It has been decided (Bug#202636) that Pico is now an "unsupported"
+    package and nano is going to replace it. Except for the Pine-specific
+    features, nano does everything Pico does, and more. So, lets whack
+    the pico package a bit from now on (closes: #142943).
+  * debian/control:
+    + add Conflicts:,Replaces: pico to nano.
+    + remove unproven claim from description.
+    + build-depend on gettext.
+    + Standards-Version: 3.6.0.0.
+  * debian/changelog: recoded as UTF-8.
+  * debian/links: add /usr/bin/pico -> nano symlink, likewise for manpage.
+  * debian/nanorc: don't enable multibuffers by default. It appears to be a
+    confusing behaviour for less experienced users, and nano's usage is
+    meant to be *obvious* (closes: #198749).
+  * debian/rules: remove .gmo files on clean.
+  * po/de.po: better strings for Cut/Uncut from CVS (closes: #195069).
+  * po/nb.po: translation update (thanks, Armin Bauer; closes: #198964).
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  2 Aug 2003 18:43:49 +0200
+
+nano (1.2.1-2) unstable; urgency=low
+
+  * debian/control: fix typo in nano-udeb's dependencies (closes: #186292).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 21 Apr 2003 13:29:51 +0200
+
+nano (1.2.1-1) unstable; urgency=low
+
+  * New upstream release.
+    + fixes segfault when ~/.nano_history is unreadable (closes: #187993).
+  * debian/control: make nano-udeb depend on the new slang1a-utf8-udeb and
+    libc-udeb, and remove {shlibs:Depends}, and outdated Provides: and
+    Conflicts: nano-tiny-utf8 (closes: #186292).
+  * debian/docs: add UPGRADE, remove nano.1.html.
+  * debian/rules: pass DEB_BUILD_GNU_TYPE and DEB_HOST_GNU_TYPE to configure.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 20 Apr 2003 16:14:11 +0200
+
+nano (1.2.0-1) unstable; urgency=low
+
+  * New upstream stable release!
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 20 Feb 2003 10:59:36 +0100
+
+nano (1.1.99pre3-2) unstable; urgency=low
+
+  * debian/rules: don't install nanorc.5 in nano-tiny (closes: #181114).
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 16 Feb 2003 17:37:33 +0100
+
+nano (1.1.99pre3-1) unstable; urgency=low
+
+  * New upstream prerelease.
+    + includes a new nanorc.5 manpage (closes: #149067).
+  * debian/rules: use --enable-all instead a long list of --enable options
+    for build-nano.
+  * debian/nanorc: synced with upstream.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 14 Feb 2003 17:21:02 +0100
+
+nano (1.1.99pre2-2) unstable; urgency=low
+
+  * debian/control:
+    + Build-Depend on slang1-utf8-dev, so nano-udeb works in debian-installer
+      as it should. This means that nano-tiny also needs to be compiled with
+      slang-utf8, as slang1-dev and slang1-utf8-dev conflict.
+    + This also means that nano-tiny now Conflicts:, Provides: and Replaces:
+      nano-tiny-utf8, and obsoletes the nano-bf source package.
+    + drop autoconf, automake from Build-Depends, again, and tighten debhelper
+      to >= 4.0.0.
+    + Standards-Version: 3.5.8.0 (no changes).
+  * debian/compat: use DH_COMPAT=4.
+  * nano.c: move setlocale() call out of the ENABLE_NLS ifdef, so 8bit chars
+    work in nano-tiny with slang-utf8. Thanks to Junichi Uekawa for the
+    solution (closes: #152238, from nano-tiny-utf8).
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  6 Feb 2003 15:57:56 +0100
+
+nano (1.1.99pre2-1) unstable; urgency=low
+
+  * New upstream prerelease.
+    + should not segfault on searches when using a non-English locale
+      (closes: #177483).
+    + should not segfault on wraps of indented lines (closes: #178863).
+    + should not segfault when trying to edit a directory (closes: #177408).
+    + in short... it should not segfault :)
+  * debian/nanorc: updated, enable search history by default.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon,  3 Feb 2003 17:10:27 +0100
+
+nano (1.1.99pre1-1) unstable; urgency=low
+
+  * New upstream prerelease. We're getting there!
+    + this version won't open empty buffers named after directories when
+      trying to open them (closes: #175021).
+  * As I haven't mucked with configure.ac, there shouldn't be problems
+    with m68k now (closes: #175397).
+  * Home and End appear to work ok with the latest gnome-terminal in unstable
+    (closes: #159214).
+  * debian/rules:
+    + fix rule dependencies (closes: #176764).
+    + add support for DEB_BUILD_OPTIONS=noopt, drop debug.
+    + minor cleanups...
+    + ... but expect a rewrite of this mess very soon.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 17 Jan 2003 23:48:56 +0100
+
+nano (1.1.12-3) unstable; urgency=low
+
+  * The "I suck" release.
+  * Run aclocal, autoheader, automake and autoconf in the source tree,
+    hoping it'll make the thing build in autobuilders.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 26 Oct 2002 19:14:41 +0200
+
+nano (1.1.12-2) unstable; urgency=low
+
+  * debian/control: Build-Depend: on automake1.6, autoconf. Bleh!
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 26 Oct 2002 17:37:53 +0200
+
+nano (1.1.12-1) unstable; urgency=low
+
+  * New upstream development release.
+    + po files are correct, translations of yes/no should work in all
+    languages (closes: #165632).
+  * Apply --disable-wrapping-as-root forward port by David Lawrence Ramsey,
+    which accidentally didn't go in this release and which we need for the
+    installation (closes: #135978 + 5 more). To do wrapping as root, you need
+    to override this with a /root/.nanorc. A global "unset nowrap" will be
+    ignored for the superuser.
+  * Ran autoconf && autoheader on the source package to not need to build dep
+    on the thing.
+  * debian/rules: configure the full nano with --disable-wrapping-as-root.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 25 Oct 2002 14:15:55 +0200
+
+nano (1.1.11-1) unstable; urgency=low
+
+  * New upstream development release.
+    + updated /etc/nanorc, which fixes C syntax (closes: #160100).
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  3 Oct 2002 10:33:31 +0200
+
+nano (1.1.10-1) unstable; urgency=low
+
+  * New upstream development release.
+  * debian/{nano-tiny.postinst,nano-tiny.prerm,postinst,prerm}: remove
+    and update the alternative just when it's necessary, not on every
+    upgrade (closes: #152768). Thanks wiggy!
+  * debian/rules: switch to DH_COMPAT=4.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 26 Jul 2002 00:34:32 +0200
+
+nano (1.1.9-2) unstable; urgency=low
+
+  * move.c: apply patch from CVS to fix a segfault in current_x
+    (thanks Robot101).
+  * debian/rules: rm po/*.gmo on clean.
+  * po/*.po: Updated with Tranlation Project new po's.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 15 Jun 2002 02:33:45 +0200
+
+nano (1.1.9-1) unstable; urgency=medium
+
+  * New upstream development release.
+    + massive memleak fixes (closes: #141736).
+  * Midnight Commander should not conflict with nano's ^O. And if it
+    does, nano has plenty of alternate bindings (like F3 in this case)
+    (closes: #135716).
+  * I haven't been able to reproduce this at all, and there are no
+    other reports of nano-tiny segfaults from other testers. Sean, if
+    you see it again, please reopen (closes: #111924).
+  * debian/dirs: added usr/share/doc/nano.
+  * debian/rules: include po/ChangeLog as changelog.l10n.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 13 May 2002 02:31:26 +0200
+
+nano (1.1.8-2) unstable; urgency=low
+
+  * Updated po files from CVS, to make them somewhat usable for 1.1.8,
+    as requested by Jean-Philippe Guérard.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 21 Apr 2002 22:33:47 +0200
+
+nano (1.1.8-1) unstable; urgency=low
+
+  * New upstream development release.
+    + behaves correctly with special chars (closes: #139046).
+    + doesn't segfault if nanorc isn't readable (closes: #140281).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon,  1 Apr 2002 23:20:03 +0200
+
+nano (1.1.7-3) unstable; urgency=low
+
+  * Applied patch from CVS to fix a segfault in rcfile  parsing
+    (closes: #137142).
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  7 Mar 2002 15:15:32 +0100
+
+nano (1.1.7-2) unstable; urgency=low
+
+  * utils.c: used upstream fix for nano-tiny misscompile.
+  * files.c: fixed bug in check_writable_directory().
+
+ -- Jordi Mallach <jordi@debian.org>  Wed,  6 Mar 2002 17:24:41 +0100
+
+nano (1.1.7-1) unstable; urgency=low
+
+  * New upstream development release.
+    + fixes compile warning about using tempnam (closes: #119795).
+    + Guus' shortcut size patch applied upstream (closes: #114548).
+    + CTRL-A now works when saving files (closes: #131180).
+  * Forwardported fixes from 1.0.8:
+    + debian/copyright: updated download location.
+    + debian/nano-tiny.1: new manpage with the bare minimum info needed
+      by nano-tiny.
+    + debian/nano-tiny.prerm: fixed path to nano-tiny.
+    + debian/rules: install nano-tiny.1.
+  * AFAIK, glibc will ignore the new name of the Norwegian bokmål
+    translation (nb), so symlinking the .mo to the old location till
+    it's fixed.
+  * nano.c:
+    + applied post 1.1.7 memleak fix patch by Rocco Corsi.
+    + removed unused variable.
+  * util.c/fix misscompile in nano-tiny.
+  * debian/rules:
+    + mv config.h to topsrc dir on builds.
+    + removed localedir redefinition, fixed in 1.1.7.
+  * debian/nanorc: use newer config file.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed,  6 Mar 2002 10:56:34 +0100
+
+nano (1.1.6-1) unstable; urgency=low
+
+  * New upstream development release.
+    + implements Meta toggles for some Ctrl combinations which were
+      a bit difficult to use in some keyboards, like French or
+      Spanish (closes: #127374).
+    + fixes some problems with autoindent (closes: #129192).
+  * debian/rules:
+    + build nano with --enable-color.
+    + install debian/nanorc as /etc/nanorc
+    + gah, localedir is broken again, hardcode it in the configure call.
+  * debian/dirs: create /etc
+  * debian/nanorc: some Debian defaults: disables wrapping by default,
+    enables suspending and multibuffers (fixes #127634 for sid).
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 25 Jan 2002 18:49:42 +0100
+
+nano (1.1.5-1) unstable; urgency=low
+
+  * New upstream development release.
+  * debian/rules: removed workaround for the localedir bug.
+  * debian/changelog: removed emacs stuff.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  5 Jan 2002 22:20:34 +0100
+
+nano (1.1.4-3) unstable; urgency=low
+
+  * debian/rules: oh, well... localedir should be in /usr, not
+    /usr/local. Thanks, Josselin (closes: #125809).
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 19 Dec 2001 15:10:42 +0100
+
+nano (1.1.4-2) unstable; urgency=low
+
+  * Ow, 1.1.4-1 was nicely fucked up.
+  * proto.h: added a hunk of the Hurd patch that got lost somehow.
+  * winio.c: fixed 8bit chars segfaults and weirdness (closes: #124313).
+  * debian/rules: 1.1.4's LOCALEDIR definition is broken. Hardcoded it
+    here while it gets fixed.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 18 Dec 2001 12:15:43 +0100
+
+nano (1.1.4-1) unstable; urgency=low
+
+  * New upstream development release.
+  * Uploading to unstable now.
+  * This release should work better on the Hurd. Woo!
+  * It includes an updated French translation, too (closes: #123168).
+  * debian/rules: mhp'ish cleanups.
+  * nano.c: forwardport more Hurd fixes from the 1.0 branch.
+    ^Y shoulnd't suspend nano anymore on the Hurd.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 16 Dec 2001 14:15:05 +0100
+
+nano (1.1.3-0) experimental; urgency=low
+
+  * New upstream development release, from the 1.1 branch:
+    + multibuffer support, nano can now open many files at once.
+    + ~/.nanorc support, see the docdir for an example.
+    + DOS & Mac file format support.
+  * debian/rules: install nanorc.sample with docs.
+  * I believe this won't go into testing automatically, but just in case,
+    release manager, DON'T let this into Woody!
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 10 Dec 2001 17:44:08 +0100
+
+nano (1.0.6-2) unstable; urgency=low
+
+  * nano.c: patch from Rocco Corsi, which fixes nano prompting for a
+    replace even if the word wasn't changed (closes: #120885).
+  * The above change doesn't affect nano-tiny, I'll see if it squeezes in
+    woody.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 27 Nov 2001 11:29:20 +0100
+
+nano (1.0.6-1) unstable; urgency=low
+
+  * New upstream release.
+  * This release fixes a severe bug in reallocated memory addresses,
+    which was causing random segfaults every now and then to some people.
+  * debian/control:
+    + Standards-Version: 3.5.6.0.
+    + removed automake and autoconf from Build-Depends.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 30 Oct 2001 19:13:03 +0100
+
+nano (1.0.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Besides two small fixes for display bugs, the release consists on
+    new and updated translations, including Dutch, by Guus Sliepen.
+    Thanks! (closes: #111237)
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  4 Oct 2001 01:26:14 +0200
+
+nano (1.0.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * Release Manager: this is a bugfix release, no big changes.
+  * debian/docs: added THANKS.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 25 Aug 2001 02:04:29 +0200
+
+nano (1.0.3-4) unstable; urgency=low
+
+  * debian/dirs: Oh my... debhelper doesn't interpret `#' as a comment.
+    Removed the /#usr/share/gnome... directory, eww... (closes: #104048).
+
+ -- Jordi Mallach <jordi@debian.org>  Mon,  9 Jul 2001 13:22:25 +0200
+
+nano (1.0.3-3) unstable; urgency=low
+
+  * debian/rules: install info manual using install-info. Oops...
+    (closes: #103836).
+  * debian/dirs: removed GNOME dir.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun,  8 Jul 2001 01:18:50 +0200
+
+nano (1.0.3-2) unstable; urgency=low
+
+  * debian/control:
+    + changed nano's priority from optional to important
+    + Standards-Version: 3.5.5.0
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  5 Jul 2001 13:55:53 +0200
+
+nano (1.0.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * This release fixes the suspend bug (closes: #100928).
+  * Removed GNOME's menu item, per request of two users. It seems
+    GNOME menus are only populated with GUI apps, so they found
+    a bit strange to see nano in them.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun,  1 Jul 2001 21:18:00 +0200
+
+nano (1.0.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: Standards-Version: 3.5.4.0 (no changes).
+  * debian/nano-menu.xpm: scaled it to be 32x32, so it meets the menu
+    policy. Thanks for the notice, xtifr (closes: #97061).
+  * debian/nano.desktop: fixed icon path.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 13 May 2001 11:49:59 +0200
+
+nano (1.0.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: remove Conflicts and Replaces between nano and
+    nano-tiny, but nano still conflicts with older nano-tiny's.
+    Both packages can coexist now.
+  * debian/rules:
+    + binary for nano-tiny is renamed from 'nano' to 'nano-tiny' and
+      moved to /bin.
+    + both nano-tiny and nano-udeb configure with --disable-wrapping,
+      which closes: #92003, and saves about 2.5kb in the binary.
+  * debian/nano-tiny.{dirs,postinst,prerm}: update to new binary location.
+  * debian/nano-tiny.postinst: downgrade nano-tiny's editor alternative
+    priority to "0" (closes: #87128).
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  7 Apr 2001 22:15:24 +0200
+
+nano (1.0.0-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/README.Debian: removed obsolete info about TIP (nano's old name).
+  * debian/nano.desktop: added a menu item for GNOME.
+  * debian/rules:
+    + DH_COMPAT=3
+    + install nano.desktop
+  * debian/dirs: added "usr/share/gnome/apps/Application".
+  * debian/control: upped debhelper's version on Build-Depends.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 23 Mar 2001 13:36:38 +0100
+
+nano (0.9.99pre3-2) unstable; urgency=low
+
+  * debian/control:
+    + As we're building udebs, we need at least debhelper 2.1.18, updated
+      Build-Depends (closes: #87901).
+    + Standards-Version: 3.5.2.0.
+    + Ok, "Standard" != "standard"...
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 28 Feb 2001 13:04:00 +0100
+
+nano (0.9.99pre3-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    + removed silly sentence from nano-udeb's description.
+    + changed -udeb's priority to Standard.
+    + s/nano/GNU nano/ in the description, as Nano is official GNU software
+      now.
+  * debian/rules: remove the new info pages from -tiny.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 20 Feb 2001 13:33:27 +0100
+
+nano (0.9.99pre2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  1 Feb 2001 03:09:11 +0100
+
+nano (0.9.99pre1-2) unstable; urgency=low
+
+  * New binary: nano-udeb, for use in debian-installer.
+    Lot's of changes and cleanup in debian/rules, control, etc.
+    tausq's cdebconf helped a bit :)
+  * Build -tiny and -udeb with -Os and -fomit-frame-pointer.
+
+ -- Jordi Mallach <jordi@debian.org>  Mon, 29 Jan 2001 23:38:11 +0100
+
+nano (0.9.99pre1-1) unstable; urgency=low
+
+  * After a long wait for testing to catch up, new upstream release
+    (skipped 0.9.25).
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 19 Jan 2001 10:34:11 +0100
+
+nano (0.9.24-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 20 Dec 2000 18:49:50 +0100
+
+nano (0.9.23-1) stable unstable; urgency=high
+
+  * New upstream release.
+  * Release Manager: fixes a symlink attack.
+  * Write temporary files with O_EXCL. Cut open()'s options to fix file
+    permissions.
+  * Suggest "spell" instead of "ispell".
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  9 Dec 2000 22:51:57 +0100
+
+nano (0.9.21-1) unstable; urgency=low
+
+  * New upstream release.
+  * Removed "pwd" calls in rules, replacing them by $(CURDIR).
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 25 Nov 2000 15:55:17 +0100
+
+nano (0.9.20-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: updated the package description a bit.
+  * debian/copyright: updated download URL.
+  * debian/rules: little changes in the build rules.
+
+ -- Jordi Mallach <jordi@debian.org>  Sun, 19 Nov 2000 15:29:47 +0100
+
+nano (0.9.19-1) unstable; urgency=low
+
+  * New upstream release.
+  * Raised Nano's editor priority to 45 so it's stronger than Pico, as
+    suggested by Steve Greenland.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue,  3 Oct 2000 22:00:14 +0200
+
+nano (0.9.18-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 21 Sep 2000 03:50:21 +0200
+
+nano (0.9.17-2) unstable; urgency=medium
+
+  * Applied patch from Rocco Corsi to fix a bug in "Read File"
+    (closes: #71693).
+  * debian/rules: added support for DEB_BUILD_OPTIONS debug and nostrip.
+  * debian/control:
+    + removed suggestion for menu and added one for ispell.
+    + updated Standards-Version to match current Policy, 3.2.1.0.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat, 16 Sep 2000 13:57:27 +0200
+
+nano (0.9.17-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: removed old 'tip' dependencies.
+  * debian/docs: do not install 'INSTALL', it's not useful for a .deb.
+
+ -- Jordi Mallach <jordi@debian.org>  Tue,  5 Sep 2000 02:43:26 +0200
+
+nano (0.9.16-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Fixes a bug that could remove the first line of an edited file.
+
+ -- Jordi Mallach <jordi@debian.org>  Thu, 10 Aug 2000 00:29:17 +0200
+
+nano (0.9.15-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jordi Mallach <jordi@debian.org>  Sat,  5 Aug 2000 00:16:04 +0200
+
+nano (0.9.14-1) unstable; urgency=low
+
+  * New upstream release. 0.9.13 was buggy so I just skipped it.
+  * Introduce the nano-tiny package, which is a stripped version lacking
+    many features. It is intended for usage in boot-floppies.
+  * debian/rules: switch to Debhelper v2. Not using debian/tmp anymore.
+  * debian/control: added Provides: editor and Build-Depends for nano-tiny.
+  * debian/docs: added faq.html.
+  * debian/nano-menu.xpm: Really fix Adrian Bunk's bug #67016, recreating
+    the xpm using the menu guidelines. It uses a maximum of 24 colours now.
+  * debian/menu: reinstall the menu icon.
+
+ -- Jordi Mallach <jordi@debian.org>  Fri, 28 Jul 2000 02:28:42 +0200
+
+nano (0.9.12-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/menu: not installing the xpm at the moment. It was breaking
+    8bpp X displays (closes: #67016, reported by Adrian Bunk).
+
+ -- Jordi Mallach <jordi@debian.org>  Tue, 11 Jul 2000 02:11:32 +0200
+
+nano (0.9.11-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: fix Build-Depends, again. Why do I always forget about
+    something? Thanks again, Roman (: (Closes: #65942)
+
+ -- Jordi Mallach <jordi@debian.org>  Wed, 21 Jun 2000 13:38:59 +0200
+
+nano (0.9.10-1) unstable; urgency=low
+
+  * New upstream release.
+  * New maintainer address. Yeah, I'm an official developer now, and this is
+    the first non-sponsored nano upload! :)
+
+ -- Jordi Mallach <jordi@debian.org>  Thu,  8 Jun 2000 02:27:19 +0200
+
+nano (0.9.9-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: updated Build-Depends, (closes: #64970). Thanks Roman!
+  * Backported a fix from 0.9.10pre1 for signal handlings that were screwed
+    if you invoked the --version and --help switches.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Mon,  5 Jun 2000 11:39:56 +0200
+
+nano (0.9.8-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Many, many changes have taken place in the nano development since
+    Potato's 0.8.6, and many improvements have been added:
+    + Internationalization support, with es, de, fr and it translations
+    + New Slang support, along with other optimizations, making nano
+      smaller (using --enable-tiny at compile time). It is possible that a
+      new nano-tiny package will be added to the distribution soon.
+    + Speed improvements due to code cleanups.
+    + Last but not least, it ships with less segfaults now :)
+  * debian/rules: manual install of nano.xpm, a small logo for the GNOME
+    panel and other menu methods.
+  * debian/nano.xpm: small and simple logo for nano made by me.
+  * debian/docs: install nano.1.html.
+  * debian/menu: assign a pixmap to the menu item.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sun, 21 May 2000 19:32:55 +0200
+
+nano (0.8.6-3) frozen unstable; urgency=high
+
+  * Richard: Frozen target because it fixes a nasty bug on symlink handling.
+    I guess that applies to "destruction of data" severity... read below.
+  * Backported some bugfixes from new upstream versions to fix various
+    bugs:
+    + segfaults related to update_line().
+    + handling of control characters (closes: #60883).
+    + strange cursor behaviour in certain column values (partially fixes
+      #60885).
+    + removal of the extra "newline" at the end of files. This also fixes
+      some segfaults (closes: #62440).
+    + fixed the handling of symlinks. Nano replaced links by the original
+      files before. This was not reported, but I think it's a RC bug.
+    + Correct handling of 8bit characters.
+    Thank you Chris!
+  * Added a new patch from Chris which fixes the long lines behaviour
+    completely (closes: #60885).
+  * Fixed PageUp & Down cursor placement.
+  * debian/control: added some missing Build-Depends.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Thu, 13 Apr 2000 19:49:33 +0200
+
+nano (0.8.6-2) frozen unstable; urgency=high
+
+  * Applied a patch to fix a problem in do_wrap() which caused some
+    segfaults. Also fixes another bug in blank_edit().
+    Richard: Closes #59954, #59970, important bugs.
+  * debian/copyright: updated upstream author's e-mail address.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat, 11 Mar 2000 00:59:19 +0100
+
+nano (0.8.6-1) frozen unstable; urgency=high
+
+  * New upstream release
+  * debian/{postinst,prerm}: provided the required alternative for
+    editor.
+  * Uploading to frozen also: version 0.7.4-2 in Potato still has many
+    weird bugs which are fixed in 0.8.6. (Closes: #58891, release-critical
+    bug).
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat, 26 Feb 2000 06:26:47 +0100
+
+nano (0.8.5-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat, 19 Feb 2000 19:36:45 +0100
+
+nano (0.8.4-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/copyright: updated the location of the original tarballs.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Mon, 14 Feb 2000 23:55:59 +0100
+
+nano (0.8.3-1) unstable; urgency=low
+
+  * New upstream release
+  * A new -p | --pico mode toggles more Pico compatible mode.
+  * Nano does not ignore ~ on input anymore.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Wed,  9 Feb 2000 13:08:28 +0100
+
+nano (0.8.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Fixes a segfault when trying to open a directory, and more.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat,  5 Feb 2000 01:50:22 +0100
+
+nano (0.8.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Saving files on filesystems that don't support hardlinks is fixed
+    in this release.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat, 29 Jan 2000 14:42:14 +0100
+
+nano (0.8.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Wed, 26 Jan 2000 11:51:05 +0100
+
+nano (0.7.9-1) unstable; urgency=low
+
+  * New upstream release
+  * Spell check support added, and more.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Tue, 25 Jan 2000 22:20:07 +0100
+
+nano (0.7.8-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sun, 23 Jan 2000 16:15:36 +0100
+
+nano (0.7.7-1) unstable; urgency=low
+
+  * New upstream release
+  * This version allows long options format and includes a new "Always
+    show cursor position" flag.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat, 22 Jan 2000 01:30:40 +0100
+
+nano (0.7.6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sun, 16 Jan 2000 17:21:11 +0100
+
+nano (0.7.5-1) unstable; urgency=low
+
+  * New upstream release
+  * Fixes a very annoying bug in selecting lines with tabs.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sat, 15 Jan 2000 03:05:33 +0100
+
+nano (0.7.4-1) unstable; urgency=low
+
+  * New upstream release
+  * First version under new name 'nano'. See README.Debian for details about
+    the name change issue.
+  * This package should replace 'tip' in the distribution.
+  * debian/control: Added 'Provides, Replaces and Conflicts: tip' entries.
+  * Removed my manpage from the debian/ directory as it has been merged into
+    the upstream sources.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Tue, 11 Jan 2000 18:36:11 +0100
+
+tip (0.7.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sun,  9 Jan 2000 00:57:26 +0100
+
+tip (0.7.2-2) unstable; urgency=low
+
+  * Wrote a manpage for TIP.
+  * Recompiled against new libncurses5.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Tue,  4 Jan 2000 05:12:36 +0100
+
+tip (0.7.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Skipped versions 0.7.0 and 0.7.1.
+  * debian/README.Debian: updated obsolete information about TIP.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sun,  2 Jan 2000 23:49:52 +0100
+
+tip (0.6.9-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Mon, 27 Dec 1999 19:34:10 +0100
+
+tip (0.6.8-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Sun, 26 Dec 1999 01:15:15 +0100
+
+tip (0.6.7-1) unstable; urgency=low
+
+  * New upstream release
+  * "Insert File" feature added.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Tue, 21 Dec 1999 01:58:34 +0100
+
+tip (0.6.6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Tue, 21 Dec 1999 01:49:34 +0100
+
+tip (0.6.5-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach <jordi@sindominio.net>  Fri, 17 Dec 1999 01:52:42 +0100
+
+tip (0.6.4-1) unstable; urgency=high
+
+  * New upstream release
+  * Fixes a bug which made TIP unusable.
+  * Change in maintainer's name. No real need, but I guess it's better
+    like this.
+
+ -- Jordi Mallach <jordi@sindominio.net>  Thu, 16 Dec 1999 02:38:11 +0100
+
+tip (0.6.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach Pérez <jordi@sindominio.net>  Wed, 15 Dec 1999 15:53:10 +0100
+
+tip (0.6.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Fixes default permissions for new edited files.
+
+ -- Jordi Mallach Pérez <jordi@sindominio.net>  Wed, 15 Dec 1999 15:50:53 +0100
+
+tip (0.6.1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach Pérez <jordi@sindominio.net>  Wed, 15 Dec 1999 15:45:23 +0100
+
+tip (0.6.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jordi Mallach Pérez <jordi@sindominio.net>  Sat, 11 Dec 1999 04:23:00 +0100
+
+tip (0.5.5-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Jordi Mallach Pérez <jordi@sindominio.net>  Wed,  8 Dec 1999 19:39:12 +0100

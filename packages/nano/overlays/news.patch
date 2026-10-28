@@ -1,0 +1,31 @@
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -0,0 +1,27 @@
++nano (9.1-1) unstable; urgency=medium
++
++  freshdeb: nano 9.0 and 9.1 changed a few keys and dropped old Mac files:
++   * M-< and M-> no longer switch between open files; to get that back, put
++     these lines in ~/.nanorc (or /etc/nanorc):
++       bind M-< prevbuf main
++       bind M-> nextbuf main
++   * The ^T toggle between WhereIs and GotoLine is gone.
++   * Files in old Mac format (a lone carriage return as line ending) can no
++     longer be read or written as such.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
++nano (8.0-1) unstable; urgency=medium
++
++  freshdeb: since nano 8.0, ^F starts a forward search and ^B a backward
++  search (M-F and M-B repeat them), instead of moving the cursor right and
++  left; since 8.1, ^L is 'cycle' (center the current line, then move it to
++  the top and the bottom of the screen). To get the old bindings back, put
++  these lines in ~/.nanorc (or /etc/nanorc):
++    bind ^F forward main
++    bind ^B back main
++    bind M-F formatter main
++    bind M-B linter main
++  /usr/share/doc/nano/examples/sample.nanorc lists them too.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000

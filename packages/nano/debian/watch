@@ -1,0 +1,4 @@
+Version: 5
+Source: https://nano-editor.org/dist/@ANY_VERSION@/
+Matching-Pattern: @PACKAGE@@ANY_VERSION@@ARCHIVE_EXT@
+Pgp-Sig-Url-Mangle: s/$/.asc/

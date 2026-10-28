@@ -1,0 +1,78 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# Avoid dh_autoreconf from failing due to running autopoint
+export AUTOPOINT = true
+
+CFTINY  := -Os -fomit-frame-pointer
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+  CFLAGS += -O0
+endif
+
+nanobuild=$(CURDIR)/build-nano
+tinybuild=$(CURDIR)/build-tiny
+udebbuild=$(CURDIR)/build-udeb
+
+CONFFLAGS =
+
+CONFFLAGS_nano =
+
+CONFFLAGS_tiny = \
+	--enable-tiny \
+	--without-included-regex \
+	--disable-nls
+
+CONFFLAGS_udeb = \
+	--enable-tiny \
+	--without-included-regex \
+	--disable-nls
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure --builddirectory=$(nanobuild) \
+		-- $(CONFFLAGS) $(CONFFLAGS_nano)
+	dh_auto_configure --builddirectory=$(tinybuild) \
+		-- $(CONFFLAGS) $(CONFFLAGS_tiny) CFLAGS="$(CFLAGS) $(CFTINY)"
+ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+	dh_auto_configure --builddirectory=$(udebbuild) \
+		-- $(CONFFLAGS) $(CONFFLAGS_udeb) CFLAGS="$(CFLAGS) $(CFTINY)"
+endif
+
+override_dh_auto_build:
+	dh_auto_build --builddirectory=$(nanobuild)
+	dh_auto_build --builddirectory=$(tinybuild)
+ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+	dh_auto_build --builddirectory=$(udebbuild)
+endif
+
+override_dh_auto_install:
+	dh_auto_install --builddirectory=$(nanobuild) \
+		--destdir=$(CURDIR)/debian/nano
+
+	dh_auto_install --builddirectory=$(tinybuild) \
+		--destdir=$(CURDIR)/debian/nano-tiny
+	mv debian/nano-tiny/usr/bin/nano debian/nano-tiny/usr/bin/nano-tiny
+	rm -rf $(CURDIR)/debian/nano-tiny/usr/share/man
+	rm -rf $(CURDIR)/debian/nano-tiny/usr/share/info
+	rm -rf $(CURDIR)/debian/nano-tiny/usr/share/nano
+	rm -rf $(CURDIR)/debian/nano-tiny/usr/share/doc/nano
+	rm -f $(CURDIR)/debian/nano-tiny/usr/bin/rnano
+
+ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+	dh_auto_install --builddirectory=$(udebbuild) \
+		--destdir=$(CURDIR)/debian/nano-udeb
+	rm -rf $(CURDIR)/debian/nano-udeb/usr/share
+	rm -f $(CURDIR)/debian/nano-udeb/usr/bin/rnano
+endif
+
+override_dh_auto_clean:
+	dh_auto_clean --builddirectory=$(nanobuild)
+	dh_auto_clean --builddirectory=$(tinybuild)
+ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+	dh_auto_clean --builddirectory=$(udebbuild)
+endif

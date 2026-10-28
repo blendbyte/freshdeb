@@ -1,0 +1,33 @@
+# GNU nano (https://www.nano-editor.org), Debian's packaging.
+
+name: nano
+description: "GNU nano, small and friendly text editor"
+homepage: https://www.nano-editor.org
+
+upstream:
+  git: https://git.savannah.gnu.org/git/nano.git
+  tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+  # The release tarball, as Debian (generated configure); GNU signs it (.sig).
+  tarball: https://ftp.gnu.org/gnu/nano/nano-{version}.tar.xz
+
+packaging:
+  origin: https://salsa.debian.org/debian/nano.git
+  ref: 1b02da71816eb6d73567925a0a1af95503ec923e  # 9.3-1, unstable
+
+# Upstream supports only its latest release: one track that follows every release.
+tracks:
+  main:
+    tag: "v9.3"
+    commit: a30a7ec25ed7230f438f08af3affe233de7a33bc
+    sha256: a9affc52c9596ee0682bcdd4ceb3c0b235eb221d83d733dfd9b0dff45897cb0d
+    revision: 1
+
+build:
+  # nano-udeb is for the Debian installer only.
+  profiles: [noudeb]
+
+overlays:
+  # No release's debhelper provides compat 14 yet (only unstable's); 13 needs the Depends substvars spelled out.
+  - patch: overlays/debhelper-13.patch
+  # NEWS for the key bindings that changed in 8.0 and 9.0/9.1.
+  - patch: overlays/news.patch

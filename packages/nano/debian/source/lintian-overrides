@@ -1,0 +1,5 @@
+nano source: source-is-missing [doc/faq.html]
+nano source: maintainer-manual-page [debian/nano-tiny.1]
+nano source: maintainer-manual-page [debian/nano-tiny.fr.1]
+nano source: very-long-line-length-in-source-file 634 > 512 [syntax/nanorc.nanorc:10]
+nano source: very-long-line-length-in-source-file 664 > 512 [doc/faq.html:179]

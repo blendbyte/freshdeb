@@ -1,0 +1,2 @@
+debian/nanorc etc
+debian/syntax/* usr/share/nano/debian

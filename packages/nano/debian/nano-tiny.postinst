@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ]; then
+    update-alternatives --install /usr/bin/editor editor /bin/nano-tiny 0 \
+      --slave /usr/share/man/man1/editor.1.gz editor.1.gz \
+      /usr/share/man/man1/nano-tiny.1.gz
+fi
+
+#DEBHELPER#

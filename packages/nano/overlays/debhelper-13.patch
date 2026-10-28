@@ -1,0 +1,28 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -1,7 +1,7 @@
+ Source: nano
+ Section: editors
+ Maintainer: Jordi Mallach <jordi@debian.org>
+-Build-Depends: debhelper-compat (= 14),
++Build-Depends: debhelper-compat (= 13),
+                libncurses-dev,
+                pkgconf,
+                texinfo
+@@ -13,6 +13,7 @@
+ Package: nano
+ Architecture: any
+ Priority: important
++Depends: ${misc:Depends}, ${shlibs:Depends}
+ Suggests: hunspell
+ Breaks: nano-tiny (<< 2.8.6-2)
+ Conflicts: pico
+@@ -38,6 +39,7 @@
+ 
+ Package: nano-tiny
+ Architecture: any
++Depends: ${misc:Depends}, ${shlibs:Depends}
+ Description: small, friendly text editor inspired by Pico - tiny build
+  GNU nano is an easy-to-use text editor originally designed as a replacement
+  for Pico, the ncurses-based editor from the non-free mailer package Pine

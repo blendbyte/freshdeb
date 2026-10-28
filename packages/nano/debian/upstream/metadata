@@ -1,0 +1,6 @@
+Bug-Database: https://savannah.gnu.org/bugs/?group=nano
+Bug-Submit: nano-devel@gnu.org
+Documentation: https://nano-editor.org/dist/latest/nano.html
+Repository: https://git.savannah.gnu.org/git/nano.git
+Repository-Browse: https://git.savannah.gnu.org/cgit/nano.git/
+Security-Contact: Benno Schulenberg <bensberg@telfort.nl>
