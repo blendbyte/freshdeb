@@ -1,0 +1,21 @@
+# This is a helper unit to register local unbound resolver daemon in
+# resolv.conf.  This is done asyncronously in order not to slow down
+# the main unbound service startup, since this will trigger resolvconf
+# reload of other services which might be a lengthly procedure.
+# See #826241 for the origins of this service.
+#
+# Can this whole thing be done using ExecStartPost= in unbound.service?
+
+[Unit]
+Description=Unbound asyncronous resolvconf update helper
+After=unbound.service
+PartOf=unbound.service
+ConditionFileIsExecutable=/sbin/resolvconf
+
+[Service]
+RemainAfterExit=yes
+ExecStart=/usr/libexec/unbound-helper resolvconf_start
+ExecStop=/usr/libexec/unbound-helper resolvconf_stop
+
+[Install]
+WantedBy=unbound.service

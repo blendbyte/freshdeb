@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = remove ]; then
+    rm -rf /var/lib/unbound
+fi
+
+if [ "$1" = purge ]; then
+    rm -f /etc/unbound/unbound_control.key \
+        /etc/unbound/unbound_control.pem \
+        /etc/unbound/unbound_server.key \
+        /etc/unbound/unbound_server.pem
+    rm -f /var/lib/unbound/root.key
+fi
+
+#DEBHELPER#

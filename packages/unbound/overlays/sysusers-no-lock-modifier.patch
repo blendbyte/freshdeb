@@ -1,0 +1,6 @@
+diff -ruN a/debian/unbound.sysusers b/debian/unbound.sysusers
+--- a/debian/unbound.sysusers
++++ b/debian/unbound.sysusers
+@@ -1 +1 @@
+-u! unbound - "unbound" /var/lib/unbound /usr/sbin/nologin
++u unbound - "unbound" /var/lib/unbound /usr/sbin/nologin

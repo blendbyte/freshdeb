@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# This hook is the part of resolvconf+unbound integration which makes
+# unbound to use the upstream nameservers provided by the local network
+# instead of doing full recursive resolving starting with the root
+# name servers.
+#
+# Since unbound performs DNSSEC validation by default, such integration
+# can be problematic if the upstream nameservers do not perform DNSSEC
+# validation correctly. This also can be an issue if a "forward-zone"
+# declaration for the root zone has been configured by the administrator
+# in unbound.conf.
+#
+# This hook was disabled by default for several releases because of the
+# above reasons, by giving out the executable bits of this file, but it
+# is now enabled for new installs.
+#
+# You can enable or disable this hook by controlling the executable bits
+# of this script:
+#  chmod +x /etc/resolvconf/update.d/unbound
+# to enable it, or
+#  chmod -x /etc/resolvconf/update.d/unbound
+# to disable.
+#
+# An alternative way to disable this hook (provided the script is executable)
+# it is to specify
+#    USE_RESOLVCONF_FORWARDS=false
+# in /etc/default/unbound.
+#
+# There is also dnssec-trigger package which can help detecting upstream
+# nameservers with broken DNSSEC validation. When using dnssec-trigger,
+# this unbound resolvconf hook can probably be disabled too.
+#
+
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+command -v unbound-control >/dev/null || exit 0
+[ -x /lib/resolvconf/list-records ] || exit 0
+
+if [ -f /etc/default/unbound ]; then
+   USE_RESOLVCONF_FORWARDS=
+   . /etc/default/unbound
+   case "$USE_RESOLVCONF_FORWARDS" in
+     ( no | false | 0 ) exit 0 ;;
+   esac
+fi
+
+resolvconfs=$(/lib/resolvconf/list-records) || exit 1
+
+fwds=$(sed -rn 's/^\s*nameserver\s+//p' $resolvconfs /dev/null |
+       egrep -v '^(127\.|::1)')
+
+unbound-control -q forward ${fwds:-off}

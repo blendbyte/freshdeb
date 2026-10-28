@@ -1,0 +1,2 @@
+# this is ok: unbound-resolvconf is a special helper service:
+unbound: systemd-service-file-refers-to-unusual-wantedby-target unbound.service [*/systemd/system/unbound-resolvconf.service]

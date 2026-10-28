@@ -1,0 +1,3 @@
+# ignore libtool's *.la files
+usr/lib/${DEB_HOST_MULTIARCH}/libunbound.la
+usr/lib/python3/dist-packages/_unbound.la

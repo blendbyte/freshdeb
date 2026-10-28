@@ -1,0 +1,98 @@
+#! /bin/sh
+set -e
+
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+cd "$AUTOPKGTEST_TMP"
+
+doit() {
+  echo "-- $1: --"
+  shift
+  "$@"
+  echo "-- ok --"
+}
+
+#echo Checking unbound help text and version number:
+# it exits nonzero with -h
+#unbound -h || :
+#echo "---"
+
+doit "Checking www.debian.org with unbound-host and DNSSEC" \
+	unbound-host -D www.debian.org. -d -d 2>&1
+
+cat >unbound.conf <<EOF
+server:
+ verbosity: 2
+ directory: "$AUTOPKGTEST_TMP"
+ logfile: unbound.log
+ username: ""
+ chroot: ""
+ pidfile: unbound.pid
+ port: 1053
+ interface: 127.0.0.1
+ so-sndbuf: 0
+remote-control:
+  control-enable: yes
+  control-interface: "$AUTOPKGTEST_TMP/unbound.ctl"
+EOF
+
+doit "Checking config file with unbound-checkconf" \
+	unbound-checkconf unbound.conf
+
+> unbound.log
+> unbound.pid
+
+trap 'echo Cleaning up
+if [ -f unbound.pid ]; then
+  kill $(cat unbound.pid); sleep 1
+fi
+echo -- unbound.log:
+cat unbound.log
+' 0
+
+# If apparmor is available, run with unconfined profile
+aaexec=
+if command -v aa-exec >/dev/null; then
+  aaexec="aa-exec -p unconfined"
+fi
+
+doit "Attempting to start daemon" \
+	${aaexec} unbound -c unbound.conf
+sleep 1
+if [ -f unbound.pid ]; then
+  read pid < unbound.pid || :
+  echo unbound pid = $pid
+else
+  echo "Warning: no unbound.pid file, condinuing anyway"
+fi
+
+doit "Checking status of running daemon" \
+	unbound-control -c unbound.conf status
+
+doit "Checking for localhost. using dnsget" \
+	dnsget -o port:1053 -n 127.0.0.1 -v localhost.
+
+localhost_127() {
+  ip=$(dnsget -o port:1053 -n 127.0.0.1 -q localhost.)
+  case "$ip" in
+    127.0.0.1) echo "localhost is $ip" ;;
+    *) echo "localhost. is $ip which is NOT 127.0.0.1"; return 1;;
+  esac
+}
+doit "Checking for localhost. to be 127.0.0.1" \
+	localhost_127
+
+doit "Checking for www.debian.org with DNSSEC" \
+	dnsget -o port:1053 -n 127.0.0.1 -o do -v www.debian.org.
+
+nxdomain_dnsget() {
+  dnsget -o port:1053 -n 127.0.0.1 "$@" 2>&1 || [ $? = 100 ]
+}
+doit "Checking for unknown-nosuchname.debian.org, should be NXDOMAIN" \
+	nxdomain_dnsget -v unknown.debian.org.
+
+doit "Stopping the daemon" \
+	unbound-control -c unbound.conf stop
+
+trap "" 0
+
+exit 0

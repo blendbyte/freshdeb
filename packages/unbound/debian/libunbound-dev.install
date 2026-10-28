@@ -1,0 +1,5 @@
+usr/include/unbound.h
+usr/include/unbound-event.h
+usr/share/man/man3/*.3
+usr/lib/${DEB_HOST_MULTIARCH}/libunbound.so
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/libunbound.pc

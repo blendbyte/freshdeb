@@ -1,0 +1,37 @@
+# Unbound (https://nlnetlabs.nl/projects/unbound/), Debian's packaging.
+
+name: unbound
+description: "Unbound validating, recursive, caching DNS resolver"
+homepage: https://nlnetlabs.nl/projects/unbound/
+
+upstream:
+  git: https://github.com/NLnetLabs/unbound.git
+  # Release tags only (release-1.26.2); rc tags never match.
+  tag_regex: '^release-(?P<version>\d+\.\d+\.\d+)$'
+  # Debian builds from it too; sha256 matches upstream's .sha256 file.
+  tarball: https://nlnetlabs.nl/downloads/unbound/unbound-{version}.tar.gz
+
+packaging:
+  origin: https://salsa.debian.org/dns-team/unbound.git
+  ref: 8d5bece091c3d990d624eb1aaec7403c801ea05f  # 1.26.2-1, unstable
+
+# Upstream supports only its latest release. libunbound8 replaces the
+# distribution's: same soname, Debian's symbols file only adds symbols.
+tracks:
+  main:
+    tag: "release-1.26.2"
+    commit: f0cd7067d950921427c91ade4ecf060e944f88eb
+    sha256: d8ee7aa6bbb3ff1be7d9e57637d0d0ec2f18273a8efff1a0afe2c665858b96f7
+    revision: 1
+
+overlays:
+  # NEWS for the changes since the distributions' versions, and no
+  # autopkgtest that resolves www.debian.org over the internet (all releases).
+  - patch: overlays/news-and-offline-tests.patch
+  # debhelper 13.6 has no dh_installsysusers; create the user in postinst,
+  # as Debian did before 1.25.0-1.
+  - patch: overlays/legacy-sysusers.patch
+    codenames: [jammy]
+  # sysusers' "u!" modifier needs systemd 256 (bookworm 252, noble 255).
+  - patch: overlays/sysusers-no-lock-modifier.patch
+    codenames: [bookworm, noble]

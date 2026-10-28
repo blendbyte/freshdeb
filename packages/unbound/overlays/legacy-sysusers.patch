@@ -1,0 +1,39 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -9,7 +9,6 @@
+  autoconf,
+  bison,
+  dh-apparmor <!pkg.unbound.libonly>,
+- dh-sequence-installsysusers <!pkg.unbound.libonly>,
+  dh-sequence-python3 <!pkg.unbound.libonly>,
+  dpkg-dev (>= 1.16.1~),
+  flex,
+@@ -80,6 +79,7 @@
+ Architecture: any
+ Pre-Depends: ${misc:Pre-Depends}
+ Depends:
++ adduser,
+  ${misc:Depends},
+  ${shlibs:Depends},
+ Recommends:
+diff -ruN a/debian/unbound.postinst b/debian/unbound.postinst
+--- a/debian/unbound.postinst
++++ b/debian/unbound.postinst
+@@ -0,0 +1,16 @@
++#!/bin/sh
++set -e
++
++# freshdeb: this release's debhelper has no dh_installsysusers, so the user
++# is created here, as Debian did before 1.25.0-1.
++if [ configure = "$1" ]; then
++    if ! getent passwd unbound >/dev/null; then
++        adduser --quiet --system --group --no-create-home \
++            --home /var/lib/unbound unbound
++    fi
++    if ! dpkg-statoverride --list /var/lib/unbound >/dev/null 2>&1; then
++        chown unbound:unbound /var/lib/unbound
++    fi
++fi
++
++#DEBHELPER#

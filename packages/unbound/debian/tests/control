@@ -1,0 +1,4 @@
+Tests: runzones
+Depends: @, udns-utils, dns-root-data
+Restrictions: needs-internet
+

@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# /usr/lib/resolvconf/dpkg-event.d/unbound
+#
+# Resolvconf packaging event hook script for the unbound package
+#
+
+HELPER="/usr/libexec/unbound-helper"
+
+if invoke-rc.d unbound status 1>/dev/null 2>&1; then
+    if [ "$1" = "install" ]; then
+        test -x "$HELPER" && "$HELPER" resolvconf_start
+    fi
+fi

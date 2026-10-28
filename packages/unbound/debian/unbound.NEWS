@@ -1,0 +1,151 @@
+unbound (1.15.0-5) unstable; urgency=medium
+
+  With this version we switched from the control interface on localhost
+  port 8953 to a unix-domain socket /run/unbound.ctl. This interface
+  does not use the keys/certificates (/etc/unbound/unbound_control.key,
+  /etc/unbound/unbound_server.pem etc) which are set up by the
+  unbound-control-setup utility.
+
+  This change is done in the new config file fragment,
+  /etc/unbound/unbound.conf.d/remote-control.conf
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 28 Apr 2022 11:27:58 +0300
+
+unbound (1.15.0-2) unstable; urgency=medium
+
+  Starting with 1.15.0-2, we removed the debian-specific patch which
+  flipped the default value for the remote-control: control-enable
+  from "no" to "yes". Upstream default value for this parameter is "no"
+  but since Debian version 1.9.6-1, the default value in Debian was
+  set to "yes" (without mentioning this in NEWS and without fixing the
+  manual page). This was unexpected and confusing, and differs from the
+  upstream.  Starting 1.15.0-2, we're now back to the upstream default,
+  which means unbound-control will not work unless explicitly enabled
+  in the config file like this:
+
+     remote-control:
+       control-enable: yes
+
+  New /etc/unbound/unbound.conf.d/remote-control.conf includes this
+  change so with the default config it will be re-enabled automatically.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Mon, 18 Apr 2022 10:42:57 +0300
+
+unbound (1.11.0-1) unstable; urgency=medium
+
+  The default Debian config file shipped in the unbound package has changed
+  from using the "include:" directive to using the "include-toplevel:"
+  directive in order to include the config file fragments in
+  /etc/unbound/unbound.conf.d/*.conf into the unbound configuration.
+
+  The "include-toplevel:" directive has been newly introduced in unbound
+  1.11.0 and it requires that any included config file fragment begin its own
+  clause (e.g., "server:").
+
+  The existing "include:" directive that was used in previous Debian releases
+  of the unbound package only performed textual inclusion, and it was possible
+  to construct a set of config file fragments that depended on the presence or
+  ordering of specific config file fragments in order to parse correctly. For
+  instance, a config file fragment could have specified an option that can
+  only appear in the "server:" clause, and rely on a previously included
+  config file fragment to begin that clause. This behavior is no longer
+  allowed by the use of the "include-toplevel:" directive because it is not
+  robust against config file fragments being added, removed, or reordered.
+
+  If you are upgrading the unbound package and you have installed any config
+  file fragments into /etc/unbound/unbound.conf.d/ you should check that each
+  config file fragment begins its own clause (e.g., "server:") and update each
+  config file fragment as necessary to be compatible with the behavior of the
+  "include-toplevel:" directive.
+
+  If needed, the previous behavior can be restored by changing the following
+  line in /etc/unbound/unbound.conf:
+
+      include-toplevel: "/etc/unbound/unbound.conf.d/*.conf"
+
+  to its previous setting:
+
+      include: "/etc/unbound/unbound.conf.d/*.conf"
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 09 Aug 2020 19:39:01 -0400
+
+unbound (1.5.7-2) unstable; urgency=medium
+
+  The unbound package no longer ships an /etc/default/unbound conffile.
+  If modified, it will be renamed to /etc/default/unbound.dpkg-bak after
+  upgrading.
+
+  The /etc/default/unbound file, if it exists, will still be read and the
+  behavior of the package can be modified, but the defaults have been changed
+  to make it unnecessary for most users to need an /etc/default/unbound
+  file.
+
+  The following variables are still supported by the /etc/default/unbound
+  file, if it exists:
+
+    DAEMON_OPTS
+
+      If set, the value of this variable will be appended to the daemon
+      command-line.
+
+    RESOLVCONF
+
+      This variable now must be explicitly set to "false" to disable the
+      unbound package's resolvconf provider. Otherwise, it defaults to
+      enabled if unset.
+
+      In previous versions, this variable had to be explicitly set to "true"
+      to enable the resolvconf provider, but the /etc/default/unbound file
+      shipped with it explicitly enabled.
+
+    ROOT_TRUST_ANCHOR_FILE
+
+      This variable can be explicitly set to override the path used by the
+      root trust anchor update mechanism for the root trust anchor. Otherwise,
+      it defaults to /var/lib/unbound/root.key if unset.
+
+    ROOT_TRUST_ANCHOR_UPDATE
+
+      This variable now must be explicitly set to "false" to disable the root
+      trust anchor update mechanism. Otherwise, it defaults to enabled if
+      unset.
+
+      In previous versions, this variable had to be explicitly set to "true"
+      to enable the update mechanism, but the /etc/default/unbound file
+      shipped with it explicitly enabled.
+
+  The following variables are no longer supported by the /etc/default/unbound
+  file, but were present in previous versions:
+
+    UNBOUND_ENABLE
+
+      This variable controlled whether or not the init script would start the
+      Unbound daemon. Instead, use the standard Debian mechanisms for enabling
+      or disabling a service started by the init system.
+
+    RESOLVCONF_FORWARDERS
+
+      This variable controlled whether or not the upstream nameservers
+      supplied by resolvconf were configured into the running Unbound instance
+      with the "unbound-control forward" command, via a resolvconf update.d
+      hook.
+
+      This mechanism still exists, but the variable controlling it has been
+      removed. Instead, add or remove the executable bit from the
+      /etc/resolvconf/update.d/unbound file to enable or disable the hook.
+
+  This release also makes the following changes:
+
+    The resolvconf update.d hook can be problematic, especially if the
+    upstream nameservers do not perform DNSSEC validation, or if a
+    "forward-zone" declaration for the root zone has been statically
+    configured by the administrator. In previous versions, the hook was
+    enabled by default, but it is now disabled by default. It can be
+    explicitly enabled by running "chmod +x /etc/resolvconf/update.d/unbound".
+
+    The unbound package now depends on the dns-root-data package, and the root
+    trust anchor update mechanism has been enhanced to import the root trust
+    anchor from /usr/share/dns/root.key on new installations, or if the
+    /usr/share/dns/root.key file is newer than /var/lib/unbound/root.key.
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 21 Feb 2016 16:01:33 -0500

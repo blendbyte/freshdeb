@@ -1,0 +1,1450 @@
+unbound (1.26.2-1) unstable; urgency=medium
+
+  * d/control: drop now-redundant Priority: optional
+     and Rules-Requires-Root: no
+  * d/control: Capitalize Maintaier
+  * d/control: Standards-Version: 4.7.4 (no changes)
+  * new upstream security/bugfix release:
+   - CVE-2026-97206 - severity: HIGH
+     DoQ path-migration can lead to use-after-free o
+     n multi-threaded deployments.
+   - CVE-2026-50106 - severity: MEDIUM
+     Possible insecure NXDOMAIN for non-existing records under a
+     configured island trust anchor underneath an insecure parent.
+   - CVE-2026-96405 - severity: MEDIUM
+     Aggregate DNS name chained pointer decompression work
+     leads to degradation of service.
+   - CVE-2026-109125 - severity: MEDIUM
+     Possible cache poisoning vulnerability via a cache side-channel
+     exposed by 'unwanted-reply-threshold'.
+   - CVE-2026-35501 - severity: LOW
+     Bypass of a configured island trust anchor underneath an insecure
+     parent from an atacker-controlled NSEC record.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 21 Oct 2026 23:26:10 +0300
+
+unbound (1.26.1-1) unstable; urgency=medium
+
+  * new upstream security/bugfx release, including the following fixes:
+   - CVE-2026-81642 - severity: CRITICAL
+     Heap buffer overflow and possible Remote Code Execution
+     when digesting DNSKEY
+   - CVE-2026-81634 - severity: HIGH
+     Possible heap buffer overflow during DNSSEC canonicalization
+   - CVE-2026-82717 - severity: HIGH
+     CNAME synthesis could lead to heap corruption
+   - CVE-2026-77955 - severity: MEDIUM
+     Possible ZONEMD verification bypass window
+   - CVE-2026-78227 - severity: MEDIUM
+     Use-after-free in DoQ stream output buffer on reset re-transmission
+   - CVE-2026-80225 - severity: MEDIUM
+     Possible degradation of service from continuous queries
+     on the same TCP/DoT connection
+   - CVE-2026-82720 - severity: MEDIUM
+     Use-after-free in DoH stream cleanup code path
+   - CVE-2026-85501 - severity: MEDIUM
+     Retrap: Novel Vulnerabilities to launch
+     Algorithmic Complexity Attacks on DNSSEC
+   - CVE-2026-77860 - severity: LOW
+     'serve-expired' can bypass Unbound 'wait-limit'
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 16 Sep 2026 18:31:09 +0300
+
+unbound (1.26.0-2) unstable; urgency=medium
+
+  * replace-removed-Python-2-C-API-macros.patch from upstream
+    (Closes: #1145860)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Mon, 31 Aug 2026 07:18:21 +0300
+
+unbound (1.26.0-1) unstable; urgency=medium
+
+  * new upstream release
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Tue, 04 Aug 2026 11:31:02 +0300
+
+unbound (1.25.2-1) unstable; urgency=medium
+
+  * new upstream release addressing the following vulnerabilities:
+    o CVE-2026-32665 - severity: HIGH
+      Remote DNS-over-QUIC denial of service due to `quic-size` budget bypass
+    o CVE-2026-40691 - severity: HIGH
+      Packet of death for DNSCrypt over TCP
+    o CVE-2026-44690 - severity: HIGH
+      Cross-zone wildcard cache poisoning via RRSIG.labels manipulation
+    o CVE-2026-55973 - severity: HIGH
+      'dns-error-reporting: yes' leads to stack buffer overflow
+    o CVE-2026-14586 - severity: MEDIUM
+      Assertion in libngtcp2 when under pressure in high concurrency
+      DNS-over-QUIC environments
+    o CVE-2026-44621 - severity: MEDIUM
+      Libunbound applications configured with 'unwanted-reply-threshold'
+      could eventually be abruptly terminated
+    o CVE-2026-50045 - severity: MEDIUM
+      'max-global-quota' reset by DNSSEC validation restarts
+    o CVE-2026-50046 - severity: MEDIUM
+      Possible heap use-after-free in an error path when
+      a DoT forwarded query is jostled out
+    o CVE-2026-50243 - severity: MEDIUM
+      response-ip/rpz can rewrite BOGUS answers instead of returning SERVFAIL
+    o CVE-2026-50248 - severity: MEDIUM
+      BOGUS configured primary hostname accepted for XFR in auth/rpz zones
+    o CVE-2026-50251 - severity: MEDIUM
+      Attacker supplied 0.0.0.0/:: glue triggers defensive full-cache flush
+    o CVE-2026-50252 - severity: MEDIUM
+      Possible cache poisoning attack by mapping source port population
+      per thread
+    o CVE-2026-52863 - severity: MEDIUM
+      Memory corruption could lead to crash and denial of service
+    o CVE-2026-55717 - severity: MEDIUM
+      'serve-expired-client-timeout' and 'response-ip' CNAME redirect
+      could lead to a crash
+    o CVE-2026-55990 - severity: MEDIUM
+      Packet of death for a DNSCrypt misconfigured Unbound
+    o CVE-2026-55991 - severity: MEDIUM
+      Remote DNS-over-QUIC (DoQ) flow-control assertion failure in libngtcp2
+    o CVE-2026-56416 - severity: MEDIUM
+      Possible heap buffer overflow when validator canonicalizes RDATA
+      that contains domain name
+    o CVE-2026-56444 - severity: MEDIUM
+      Degradation of resolution service when 'discard-timeout' and
+      'serve-expired-client-timeout' are combined in unusual configuration
+    o CVE-2026-41637 - severity: LOW
+      Degradation of resolution service from improperly accounted
+      client-terminated DNS-over-QUIC queries
+    o CVE-2026-42955 - severity: LOW
+      Extra fix for CVE-2026-40622 to also clamp the TTL of A/AAAA records
+      disallowing a one-time 'ghost domain' delegation renewal via glue records
+    o CVE-2026-44687 - severity: LOW
+      Off-by-one error in 'harden-below-nxdomain' logic can shadow
+      a stub/forward zone by a legitimate parent's NXDOMAIN
+    o CVE-2026-46582 - severity: LOW
+      A wildcard replay, as another piece of data, triggers poisoning
+      in the serve expired reply path
+    o CVE-2026-54478 - severity: LOW
+      DNS Cookie bypass when combined with proxy-protocol use
+    o CVE-2026-55708 - severity: LOW
+      Privacy/configuration issue when adding local data in views
+      through 'unbound-control'
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 22 Jul 2026 22:13:25 +0300
+
+unbound (1.25.1-1) unstable; urgency=medium
+
+  * new upstream security/bugfix release (Closes: #1137187):
+    - Fix CVE-2026-33278, Possible remote code execution during DNSSEC
+      validation
+    - Fix CVE-2026-42944, Heap overflow and crash with multiple nsid, cookie,
+      padding EDNS options
+    - Fix CVE-2026-42959, Crash during DNSSEC validation of malicious content
+    - Fix CVE-2026-32792, Packet of death with DNSCrypt
+    - Fix CVE-2026-40622, "Ghost domain name" variant
+    - Fix CVE-2026-41292, Parsing a long list of incoming EDNS options degrades
+      performance
+    - Fix CVE-2026-42534, Jostle logic bypass degrades resolution performance
+    - Fix CVE-2026-42923, Degradation of service with unbounded NSEC3
+      hash calculations
+    - Fix CVE-2026-42960, Possible cache poisoning attack while following
+      delegation
+    - Fix CVE-2026-44390, Unbounded name compression in certain cases
+      causes degradation of service
+    - Fix CVE-2026-44608, Use after free and crash in RPZ code
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 20 May 2026 19:41:23 +0300
+
+unbound (1.25.0-1) unstable; urgency=medium
+
+  [ Michael Tokarev ]
+  * new upstream release
+  * replace-deprecated-function-by-new-action.patch: remove
+  * d/unbound.service: set empty DAEMON_OPTS= to avoid warning from systemd
+  * unbound-helper: do not update resolvconf if it is systemd-resolved
+    (Closes: #1106186)
+  * d/upstream/signing-key.asc: update with the new upstream key
+
+  [ Luca Boccassi ]
+  * Install and use sysusers.d/tmpfiles.d config files
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Tue, 05 May 2026 15:45:07 +0300
+
+unbound (1.24.2-1) unstable; urgency=medium
+
+  * new upstream security release:
+    Additional fix for CVE-2025-11411 (possible domain hijacking attack),
+    to include YXDOMAIN and non-referral nodata answers in the mitigation
+    as well, reported by TaoFei Guo from Peking University, Yang Luo
+    and JianJun Chen from Tsinghua University.
+    Closes: #1121446, CVE-2025-11411
+  * debian/upstream/signing-key.asc: merge two separate parts into one
+    (keeping the same two keys)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 26 Nov 2025 22:59:06 +0300
+
+unbound (1.24.1-2) unstable; urgency=medium
+
+  * replace-deprecated-function-by-new-action.patch:
+    fix build with new SWIG 4.4.0 (fix from upstream)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 30 Oct 2025 14:18:08 +0300
+
+unbound (1.24.1-1) unstable; urgency=medium
+
+  [ MichaIng ]
+  * d/unbound.conf.d/remote-control.conf: fix typo
+
+  [ Michael Tokarev ]
+  * d/upstream/signing-key.asc: add Yorgos Thessalonikefs key
+    (CFF3 344D 9087 A490)
+  * new upstream security/bugfix release
+    Closes: CVE-2025-11411 (possible domain hijacking attack)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 22 Oct 2025 13:41:36 +0300
+
+unbound (1.24.0-2) unstable; urgency=medium
+
+  * d/tests/runzones: set so-sndbuf to 0
+    unbound tries to set it to a large(ish) value which is not allowed
+    for a non-root.  And unbound complains to stderr, causing test failure.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Tue, 23 Sep 2025 17:40:14 +0300
+
+unbound (1.24.0-1) unstable; urgency=medium
+
+  * new upstream release
+  * d/rules,d/libunbound-dev.install: drop static library and deps
+    (Closes: #1096189)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 18 Sep 2025 20:55:14 +0300
+
+unbound (1.23.1-1) unstable; urgency=medium
+
+  * new upstream release
+  * d/apparmor-profile: remove sssd path which is in apparmor base
+    for a very long time
+  * Fix-RebirthDay-Attack-CVE-2025-5994.patch: remove
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sun, 24 Aug 2025 12:37:28 +0300
+
+unbound (1.22.0-2) unstable; urgency=medium
+
+  * add Fix-RebirthDay-Attack-CVE-2025-5994.patch from upstream
+    (Closes: #1109427, CVE-2025-5994)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 17 Jul 2025 19:05:22 +0300
+
+unbound (1.22.0-1) unstable; urgency=medium
+
+  * new upstream release (1.22.0)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sat, 19 Oct 2024 13:11:14 +0300
+
+unbound (1.21.1-1) unstable; urgency=medium
+
+  * new upstream release 1.21.1
+    Closes: #1078647, CVE-2024-43167 (NULL ptr deref in ub_ctx_set_fwd)
+    Closes: #1083282, CVE-2024-8508 (Unbounded name compression)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Fri, 04 Oct 2024 17:48:04 +0300
+
+unbound (1.20.0-1) unstable; urgency=medium
+
+  * new upstream release with some new features and many bugfixes
+    Closes: CVE-2024-33655 (DNSBomb issue)
+  * remove do-not-look-at-pidfile.patch now once upstream
+    stopped chowning the pidfile
+  * +spelling-overriden.patch
+  * d/rules: enable -j in MAKEFLAGS when parallel is in DEB_BUILD_OPTIONS
+  * d/control: Standards-Version: 4.6.0=>4.6.2
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 09 May 2024 14:47:04 +0300
+
+unbound (1.19.2-1) unstable; urgency=medium
+
+  * new upstream bugfix release. Closes: CVE-2024-1931,
+    denial of service when trimming EDE text on positive replies
+  * d/changelog: add the forgotten Closes for
+    #1063845, #1051817, #1051818, #1056631 to the previous
+    changelog entry
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 07 Mar 2024 23:35:52 +0300
+
+unbound (1.19.1-1) unstable; urgency=medium
+
+  * new upstream bugfix release (1.19.1) (Closes: #1063845):
+   o Fix CVE-2023-50387, DNSSEC verification complexity can be exploited
+     to exhaust CPU resources and stall DNS resolvers
+   o Fix CVE-2023-50868, NSEC3 closest encloser proof can exhaust CPU
+  * new upstream release (1.19.0) (Closes: #1051817, #1051818, #1056631)
+  * d/control: Build-Depends: pkg-config => pkgconf
+  * d/unbound.lintian-overrides: remove
+    package-supports-alternative-init-but-no-init.d-script
+  * d/unbound.lintian-overrides: adjust for /lib=>/usr/lib move
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Tue, 13 Feb 2024 22:40:40 +0300
+
+unbound (1.18.0-2) unstable; urgency=medium
+
+   * d/resolvconf-forwards: remove -e (Closes: #1035800), shorten sed expr
+   * d/changelog: mention #1013957 in previous changelog entry
+   * d/control, d/rules: switch from libnettle back to libssl once it is
+     GPL-compatible (#828699 is of no concern anymore).  This fixes libunbound
+     init failure.  Also Closes: #1007260
+   * d/control, d/rules: build daemon with --enable-cachedb --with-libhiredis,
+     build-depend on libhiredis-dev (Closes: #1014456)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 06 Sep 2023 16:34:32 +0300
+
+unbound (1.18.0-1) unstable; urgency=medium
+
+  * new upstream release
+    Closes: #1038243
+  * d/copyright: relicense debian/patches/* under ISC license
+    (Closes: #1013957)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Mon, 04 Sep 2023 09:41:58 +0300
+
+unbound (1.17.1-2) unstable; urgency=medium
+
+  * unbound-helper: return 0 explicitly in a few places
+    (Closes: #1019140)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sun, 09 Apr 2023 15:59:14 +0300
+
+unbound (1.17.1-1) unstable; urgency=medium
+
+  [ Michael Tokarev ]
+  * new upstream release. Release notes:
+
+    This release fixes a number of bugs. There are also new configuration
+    options that by default do not change the existing behaviour of Unbound.
+
+    With `statistics-inhibit-zero` the printout of zero values by stats can
+    be controlled. Similarly with `max-sent-count` and `max-query-restarts`
+    the iterator behaviour can be controlled. The maximum CNAME chain length
+    that is accepted can be changed by increasing the `max-query-restarts`
+    number. This takes more time to follow those elements.
+
+    The keep-cache option allows reloads to change configuration whilst
+    keeping the cache memory intact, making the cache hot for good response
+    times after the change has completed.
+
+    The release contains an additional fix for service downgrade due to
+    wrong hash values for wildcards in a hyperlocal zone, that was reported
+    by Sergey Kacheev.
+
+    Features
+    - Expose 'statistics-inhibit-zero' as a configuration option; the
+      default value retains Unbound's behavior.
+    - Expose 'max-sent-count' as a configuration option; the
+      default value retains Unbound's behavior.
+    - Merge #461 from Christian Allred: Add max-query-restarts option.
+      Exposes an internal configuration but the default value retains
+      Unbound's behavior.
+    - Merge #569 from JINMEI Tatuya: add keep-cache option to
+      'unbound-control reload' to keep caches.
+
+    Bug Fixes
+    - Merge #768 from fobser: Arithmetic on a pointer to void is a GNU
+      extension.
+    - In unit test, print python script name list correctly.
+    - testcode/dohclient sets log identity to its name.
+    - Clarify the use of MAX_SENT_COUNT in the iterator code.
+    - Fix that cachedb does not store failures in the external cache.
+    - Merge #767 from jonathangray: consistently use IPv4/IPv6 in
+      unbound.conf.5.
+    - Fix to ignore tcp events for closed comm points.
+    - Fix to make sure to not read again after a tcp comm point is closed.
+    - Fix #775: libunbound: subprocess reap causes parent process reap
+      to hang.
+    - iana portlist update.
+    - Complementary fix for distutils.sysconfig deprecation in Python 3.10
+      to commit 62c5039ab9da42713e006e840b7578e01d66e7f2.
+    - Fix #779: [doc] Missing documentation in ub_resolve_event() for
+      callback parameter was_ratelimited.
+    - Ignore expired error responses.
+    - Merge #720 from jonathangray: fix use after free when
+      WSACreateEvent() fails.
+    - Fix for the ignore of tcp events for closed comm points, preserve
+      the use after free protection features.
+    - Fix #782: Segmentation fault in stats.c:404.
+    - Add SVCB and HTTPS to the types removed by 'unbound-control flush'.
+    - Clear documentation for interactivity between the subnet module and
+      the serve-expired and prefetch configuration options.
+    - Fix #773: When used with systemd-networkd, unbound does not start
+      until systemd-networkd-wait-online.service times out.
+    - Merge #808: Wrap Makefile script's directory variables in quotes.
+    - Fix to wrap Makefile scripts directory in quotes for uninstall.
+    - Fix windows compile for libunbound subprocess reap comm point closes.
+    - Update github workflows to use checkout v3.
+    - Fix wildcard in hyperlocal zone service degradation, reported
+      by Sergey Kacheev.
+
+  * lintian-overrides fixes/additions
+
+  [ Helmut Grohne ]
+  * Fix FTCBFS: export _PYTHON_SYSCONFIGDATA_NAME. (Closes: #1024422)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 12 Jan 2023 18:28:54 +0300
+
+unbound (1.17.0-1) unstable; urgency=medium
+
+  * new upstream release
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 13 Oct 2022 14:01:15 +0300
+
+unbound (1.16.3-1) unstable; urgency=medium
+
+  * new upstream minor release with the following change:
+   - Patch for CVE-2022-3204 Non-Responsive Delegation Attack
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 21 Sep 2022 13:21:43 +0300
+
+unbound (1.16.2-1) unstable; urgency=medium
+
+  * new upstream minor release with many bugfixes and 2 features.
+    Closes: #1016493, CVE-2022-30698, CVE-2022-30699
+  * d/unbound.docs: install doc/Changelog file
+  * d/copyright: mark debian/patches/* as GPL-2 (#1013957)
+    (not closing the bug since it is more than d/patches/)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Fri, 12 Aug 2022 12:57:33 +0300
+
+unbound (1.16.0-2) unstable; urgency=medium
+
+  * revert the python path change in previous upload, and set python
+    module directory explicitly to /usr/lib/python3/dist-packages/.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 02 Jun 2022 19:35:26 +0300
+
+unbound (1.16.0-1) unstable; urgency=medium
+
+  * update to the new upstream release.
+    Highlight this time is basic support for EDE (RFC8914)
+  * removed patches applied upstream
+  * updated paths for python modules (usr/lib/python3.M/site-packages/)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 02 Jun 2022 18:28:14 +0300
+
+unbound (1.15.0-11) unstable; urgency=medium
+
+  [ Simon Deziel ]
+  * d/unbound.postinst: fix configure action to have unbound user/group created
+  * d/apparmor-profile: use profile name specifier
+
+  [ Michael Tokarev ]
+  * tests/runzones: add 1s delay after starting daemon:
+    apparently the pid file is created/written too late
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sun, 15 May 2022 22:22:19 +0300
+
+unbound (1.15.0-10) unstable; urgency=medium
+
+  * d/tests/: fix the test to not rely on presence of unbound.pid after
+    daemon start. Apparently unbound creates the pid file at a wrong time
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sun, 08 May 2022 10:17:45 +0300
+
+unbound (1.15.0-9) unstable; urgency=medium
+
+  * d/apparmor-profile: remove old /var/run/ alternatives for /run
+  * d/apparmor-profile: allow /etc/unbound/var/lib/unbound/ access too,
+    for chrooting to upstream-preferred /etc/unbound (Closes: #1010517)
+  * d/rules: stop explicitly exporting CFLAGS/LDFLAGS, dh_auto_* does this
+    automatically since dh-compat 9
+  * d/rules: do not enable --with-lto-server on kfreebsd (this fixes FTBFS)
+    It is a good candicate for an autoconf test.
+  * d/rules: add comments for --disable-lto, --with-libbsd
+  * d/tests/: add simple autopkgtest (verify www.debian.org record with DNSSEC)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sat, 07 May 2022 10:34:09 +0300
+
+unbound (1.15.0-8) unstable; urgency=medium
+
+  * fix the brown-paper bag bug in the previous upload. I did it again:
+    it is var += newvalue, not var := newvalue.  This made the previous
+    upload to built without many build options
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Fri, 29 Apr 2022 18:33:16 +0300
+
+unbound (1.15.0-7) unstable; urgency=medium
+
+  * unbound-resolvconf.service:
+   - do not (re)start it explicitly from the postinst script, it should
+     only be started as a part of unbound.service. Closes: #1009928
+   - add comments to this service file to clarify its purpose
+   - add lintian overrides for this service file
+  * /etc/resolvconf/update.d/unbound resolvconf hook script:
+   - ship it enabled for new installs. Closes: #1003135
+   - but do not re-enable it for previous installs
+   - add more comments to this file clarifying its purpose and possible issues
+   - add comments about various ways to enable/disable this hook,
+   - implement ability to disable it by setting USE_RESOLVCONF_FORWARDS=false
+     in /etc/default/unbound
+   - multiple other small changes and cleanups
+   - rename it in debian packaging from d/resolvconf to d/resolvconf-forwards
+     to make it's purpose more explicit
+  * use dns root.key stored in /usr/share/dns/ (as provided by dns-root-data
+    package) instead of the unbound-owned /var/lib/unbound/root.key (which is
+    managed by an untrusted user). This changes defaults for unbound-host and
+    unbound-anchor.  Add Recommends: dns-root-data for unbound-host so it can
+    find this root.key in the default install. Closes: #641704
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Fri, 29 Apr 2022 16:53:50 +0300
+
+unbound (1.15.0-6) unstable; urgency=medium
+
+  * actually install the forgotten remote-control.conf.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 28 Apr 2022 20:15:21 +0300
+
+unbound (1.15.0-5) unstable; urgency=medium
+
+  * use unix-domain socket /run/unbound.ctl for the control interface
+    instead of tcp localhost socket. This makes the keys/certs files
+    for the remote contol to be unnecessary, so stop running
+    unbound-control-setup in postinst too.
+    (Closes: #1010271)
+  * move remote-control section out of main unbound.conf file into
+    unbound.conf.d/remote-control.conf. Main file now becomes the
+    same as before version 1.15. There was no need to mess with the
+    main config file since the NEWS file already gives the user
+    enough information.
+  * do-not-chown-control-socket.patch: stop chowning control socket
+    to the unprivileged user, only group ownership is needed.
+  * do-not-look-at-pidfile.patch: stop messing up with the pidfile.
+    Unbound does not need to look at its pid file for the previous
+    instance, since it will not be able to open listening sockets
+    if the daemon is already running.  Remove whole reading of the
+    pid file, and especially remove setting ownership of the pid file
+    to the unprivileged user (done in order to be able to clean it up),
+    since this is a potential security issue.
+  * unbound.postrm: stop removing the unbound system user
+  * fix wording and reformat the previous unbound.NEWS entry, and merge
+    old NEWS file into unbound.NEWS, since all news in there are actually
+    about the unbound package, not about all other binary packages we build.
+  * a few more tweaks for d/unbound-helper, in do_resolvconf_{start|stop}.
+    Thank you Simon Deziel for the ideas.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 28 Apr 2022 19:15:23 +0300
+
+unbound (1.15.0-4) unstable; urgency=medium
+
+  * d/unbound.conf: move and fix the remote-control section
+    Move the remote-control section above the include directive so it is
+    possible to override it there, and fix comment.  Do this remote-control
+    section in unbound.conf directly (instead of in new unbound.conf.d/
+    fragment), so it is more obvious that the default were flipped and
+    the default value is changed.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 20 Apr 2022 10:52:26 +0300
+
+unbound (1.15.0-3) unstable; urgency=medium
+
+  * modify the default unbound.conf to include control-enale: yes so
+    the remote control is enabled by default even if the default value
+    is not flipped by a patch (upstream sets it to "no")
+  * d/control: use the right spelling for Recommends:
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 20 Apr 2022 00:37:17 +0300
+
+unbound (1.15.0-2) experimental; urgency=medium
+
+  [ Michael Stella ]
+  * Add clarifying description to resolvconf hook
+
+  [ Simon Deziel ]
+  * debian/unbound.init: ask start-stop-daemon to remove the PID file
+    when stopping the daemon. Closes: #947771
+
+  [ Michael Tokarev ]
+  * d/changelog: mention #1000201 closed by 1.15.0-1
+  * d/changelog: mention install-pkgconfig-in-lib-not-all.patch in 1.15.0-1
+  * stop resetting permissions of unbound resovconf hook from ancient
+    pre-jessie (<<1.5.8-1) version
+  * stop removing ancient pre-jessie (<<1.5.7-2) /etc/default/unbound conffile
+  * add DEP12 d/upstream/metadata
+  * d/rules: stop adding --as-needed linker flag (it is the default now)
+  * stop flipping default value for remote-control: control-enable to "yes"
+    (see the NEWS file) (Closes: #991017)
+  * enable TCP Fast-Open (TFO) for both client and server (Closes: #903390)
+    This can be configured in /proc/sys/net/ipv4/tcp_fastopen (bitmask):
+    0x01 is client-side (enabled by default), 0x02 is server-side (disabled).
+    To enable tfo for both client and server, enable both bits.
+  * enable DNS over HTTP (DoH) for the server. This adds libnghttp2-dev
+    to Build-Depends (Closes: #973793)
+  * add source lintian-override to shut up a false positive (windows binary)
+  * d/unbound-helper: rename from package-helper and move it from subdir in
+    /usr/lib/unbound/ to /usr/libexec/unbound-helper.
+  * d/unbound-helper: rework updating of the unbound copy of the root.key file:
+    copy it to /var/lib/unbound/root.key.tmp first and rename to ..../root.key
+    only when done.  Also do not do it as root in an untrusted directory.
+    (Closes: #989959)
+  * d/unbound-helper: do not perform chroot setup operations if chroot is
+    not configured in the config file
+  * d/unbound-helper: perform /run/systemd/notify bind-mount for any chroot
+    if configured, not only for non-standard chroot which needs a copy of
+    all config files.  Closes: #931583, Actually closes: #828699.
+  * d/unbound-helper: other cleanups
+  * d/unbound.init: set PATH={,/usr}/{,s}bin.  Closes: #900751
+  * d/unbound.init: stop hiding update_trust_anchor messages and use "unbound"
+    tag for logging them
+  * d/control: since unbound does not use unbound-anchor directly anymore,
+    drop the Depends
+  * d/control: move openssl from Depends to Recommends. It is used only to
+    generate remove-control keys for unbound-control, once, usually at the
+    install time (in postinst) and never used after install. Also check if
+    openssl is installed and print a friendly error message in
+    unbound-control-setup if it is not. This is done in a new patch,
+    unbound-control-setup-check-openssl.patch
+  * d/control: move dns-root-data from Depends to Recommends. It is only
+    used for root.key currently (in unbound-helper) and even there, once
+    it is initially copied to unbound library directory, this file will
+    be managed by unbound itself using RFC 5011 trust anchor tracking.
+    So this package can be removed if necessary, without harming unbound.
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Tue, 19 Apr 2022 20:39:12 +0300
+
+unbound (1.15.0-1) experimental; urgency=medium
+
+  * Acknowledge the NMU
+  * New upstream release (1.15.0)
+    Closes: #997694, #1001430, #1008918, #1000201
+  * remove python3.10-related patches (included upstream)
+  * add myself to Uploaders
+  * redo the whole packag build procedure
+   - switch to dh sequence
+   - switch to debhelper-compat=13
+   - switch to dh-sequence-python3
+   - move configure/build/install parts out of binary target
+     into the right places
+   - move different builds into subdirs of b/ to stop building
+     them one by one replacing results
+   - perform 2 builds, one main (daemon & tools) and one libunbound
+     --with-nettle (daemon can't be built with nettle);
+     when installing, install libunbound build on top of the main
+     install in d/tmp, replacing only the library
+   - use pkg.unbound.libonly build profile in d/rules
+   - use normal d/*.install way to install files instead of a lot
+     of custom renaming in d/rules (Closes: #632096)
+   - enable dh_missing (automatic with dh=13), with actual filelist
+     and two *.la files in d/not-installed
+   - include only required dpkg *.mk files (else it is slow)
+  * install all *.3 manpages (for individual functions too)
+  * install unbound-control-setup.8
+  * enable-python-build-in-subdir.patch: fix 2 probs with python
+    module building in a subdir (needs to go upstream)
+  * add install-pkgconfig-in-lib-not-all.patch to fix another small
+    install prob in Makefile.in (pkgconfig is installed in wrong place)
+  * d/onttrol: bump Standards-Version to 4.6.0 (no changes needed)
+  * d/control: add Pre-Depends: ${misc:Pre-Depends} to unbound package
+    to satisfy current dh_installsystemd & dh_installinit maintscript
+    fragments
+  * d/control: Rules-Requires-Root: no
+  * d/unbound.init: add short description to the init file
+  * added simple d/salsa-ci.yml file
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Mon, 18 Apr 2022 00:56:10 +0300
+
+unbound (1.13.1-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+
+  [ Rico Tzschichholz ]
+  * Cherry-pick upstream commits for Python 3.10 compatibility (Closes:
+    #1008641)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Wed, 06 Apr 2022 21:37:02 +0200
+
+unbound (1.13.1-1) unstable; urgency=medium
+
+  * New upstream version 1.13.1
+  * debian/gbp.conf: [import-orig] upstream-signatures = True
+  * Drop debian/patches/0002-Fix-358-Squelch-udp-connect-no-route-to-host-
+    errors-.patch (included in 1.13.1 release)
+  * debian/copyright: 2021
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 09 Feb 2021 17:53:57 -0500
+
+unbound (1.13.0-1) unstable; urgency=medium
+
+  * New upstream version 1.13.0
+    - Fix CVE-2020-28935: PID file vulnerability (Closes: #977165)
+  * debian/patches/0002-Fix-358-Squelch-udp-connect-no-route-to-host-
+    errors-.patch: Cherry-pick upstream commit
+    5906811ff19f005110b2edbda5aa144ad5fa05b1 to suppress UDP connect()
+    errors on low verbosity
+
+ -- Robert Edmonds <edmonds@debian.org>  Wed, 23 Dec 2020 19:34:24 -0500
+
+unbound (1.12.0-1) unstable; urgency=medium
+
+  * New upstream version 1.12.0
+
+ -- Robert Edmonds <edmonds@debian.org>  Mon, 19 Oct 2020 00:35:38 -0400
+
+unbound (1.11.0-1) unstable; urgency=medium
+
+  [ Simon Deziel ]
+  * systemd: don't create a PID file
+  * debian/package-helper: mount --bind systemd notify socket into chroot
+    (Closes: #867187)
+
+  [ Robert Edmonds ]
+  * New upstream version 1.11.0
+    - Merge PR #241 by Robert Edmonds: contrib/libunbound.pc.in: Do not use
+      "Requires:". (Closes: #958331)
+    - Introduce "include-toplevel:" configuration option.
+    - Adds its own implementation of Frame Streams for dnstap support.
+  * debian/control: Remove build dependency on libfstrm-dev
+  * debian/unbound.conf: Use "include-toplevel:" instead of "include:"
+    (Closes: #950754)
+  * debian/NEWS: Add entry for 1.11.0-1 regarding the change of
+    /etc/unbound/unbound.conf to using the "include-toplevel:" directive
+  * debian/patches/: Refresh patches
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 09 Aug 2020 20:57:15 -0400
+
+unbound (1.10.1-1) unstable; urgency=high
+
+  * New upstream version 1.10.1
+    - Fix CVE-2020-12662: Unbound can be tricked into amplifying an incoming
+      query into a large number of queries directed to a target.
+    - Fix CVE-2020-12663: Malformed answers from upstream name servers can be
+      used to make Unbound unresponsive.
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 19 May 2020 11:36:53 -0400
+
+unbound (1.10.0-1) unstable; urgency=medium
+
+  [ Robert Edmonds ]
+  * New upstream version 1.10.0
+  * Drop debian/patches/0002-Allow-use-of-libbsd-functions-with-configure-
+    option-.patch (applied upstream)
+
+  [ Stuart Prescott ]
+  * Drop Python 2 module package (Closes: #938752)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 18 Apr 2020 19:29:50 -0400
+
+unbound (1.9.6-2) unstable; urgency=medium
+
+  * debian/unbound.maintscript: Remove obsolete conffile
+    /etc/unbound/unbound.conf.d/qname-minimisation.conf (Closes: #950406)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 01 Feb 2020 14:44:39 -0500
+
+unbound (1.9.6-1) unstable; urgency=medium
+
+  [ Robert Edmonds ]
+  * New upstream version 1.9.6 (Closes: #948036)
+    - Fixes 'unbound crashes with "Assertion nread >= 0 failed in
+      evmap_io_del_"' (Closes: #930699)
+    - Fixes "unbound: Fails to answer TCP queries due to broken idle-timeout"
+      (Closes: #946421)
+  * debian/source/options: Remove 'single-debian-patch' option
+  * debian/unbound.service: Change ExecReload to send SIGHUP rather than
+    using unbound-control (Closes: #923314)
+  * Enable remote-control by default (Closes: #923314)
+  * Allow use of libbsd functions with configure option --with-libbsd
+  * Remove "qname-minimisation: yes" config file setting, since this is
+    now the default (Closes: #915056)
+  * debian/package-helper: No longer invoke unbound-anchor for root trust
+    anchor update (Closes: #910675)
+  * debian/control: Bump Standards-Version to 4.5.0 (no changes)
+  * debian/control: Remove build dependencies on autotools-dev, dh-
+    autoreconf
+  * debian/libunbound8.symbols: Add "* Build-Depends-Package: libunbound-
+    dev"
+  * Rename debian/NEWS.Debian -> debian/NEWS
+
+  [ Matthew Palmer ]
+  * Fix insecure use of start-stop-daemon --pidfile (Closes: #941573)
+
+  [ Simon Deziel ]
+  * Install Apparmor profile prior to service startup (Closes: #919511)
+
+  [ Debian Janitor ]
+  * Trim trailing whitespace.
+  * Drop use of autotools-dev debhelper.
+  * Bump debhelper from old 9 to 10.
+  * Set field Upstream-Name in debian/copyright.
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 26 Jan 2020 22:45:45 -0500
+
+unbound (1.9.4-2) unstable; urgency=medium
+
+  * Cherry-pick upstream commit ec021e0d, "fix build with nettle-3.5"
+    (Closes: #941041)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 26 Oct 2019 08:00:58 -0400
+
+unbound (1.9.4-1) unstable; urgency=high
+
+  * New upstream version 1.9.4
+    - Fix CVE-2019-16866: uninitialized memory access when parsing specially
+      crafted NOTIFY query.
+
+ -- Robert Edmonds <edmonds@debian.org>  Fri, 04 Oct 2019 00:43:19 -0400
+
+unbound (1.9.3-1) unstable; urgency=medium
+
+  * New upstream version 1.9.3
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 27 Aug 2019 14:24:11 -0400
+
+unbound (1.9.3~rc1-1) experimental; urgency=medium
+
+  * New upstream version 1.9.3~rc1
+  * debian/control: Bump Standards-Version to 4.4.0 (no changes)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 17 Aug 2019 18:01:56 -0400
+
+unbound (1.9.0-2) unstable; urgency=medium
+
+  [ Simon Deziel ]
+  * Disable chroot'ing (Closes: #921538)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 09 Feb 2019 21:10:52 -0500
+
+unbound (1.9.0-1) unstable; urgency=medium
+
+  * New upstream version 1.9.0
+  * Team upload
+  * Include dpkg/default.mk instead of only buildflags.mk
+  * Update d/watch to reflect new download location and add signature check
+
+ -- Ondřej Surý <ondrej@debian.org>  Tue, 05 Feb 2019 09:49:04 +0000
+
+unbound (1.8.1-1) unstable; urgency=medium
+
+  * New upstream version 1.8.1
+
+ -- Robert Edmonds <edmonds@debian.org>  Thu, 08 Nov 2018 16:50:36 -0500
+
+unbound (1.8.0-1) unstable; urgency=medium
+
+  * New upstream version 1.8.0
+  * debian/: libunbound2.symbols → libunbound8.symbols
+  * debian/rules: libunbound2 → libunbound8
+  * debian/control: libunbound2 → libunbound8
+  * daemon/daemon.c: Fix systemd service manager state change notification
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 15 Sep 2018 16:21:11 -0400
+
+unbound (1.7.3-1) unstable; urgency=medium
+
+  * New upstream version 1.7.3
+    - Don't count CNAME response types received during qname minimisation as
+      query restart. (Closes: #900800)
+
+ -- Robert Edmonds <edmonds@debian.org>  Thu, 21 Jun 2018 12:45:09 -0400
+
+unbound (1.7.2-1) unstable; urgency=medium
+
+  [ Robert Edmonds ]
+  * New upstream version 1.7.2
+  * debian/control: Update Maintainer field (Closes: #899758)
+
+  [ Vincent Bernat ]
+  * daemon/daemon.c: Fix reload hangs with systemd (Closes: #892914)
+
+ -- Robert Edmonds <edmonds@debian.org>  Wed, 20 Jun 2018 17:30:34 -0400
+
+unbound (1.7.1-1) unstable; urgency=medium
+
+  [ Robert Edmonds ]
+  * debian/control: Update Vcs-* links to use salsa.debian.org URLs
+  * New upstream version 1.7.1
+
+  [ Simon Deziel ]
+  * debian/apparmor-profile: Add capabilities to chown/chmod Unix control
+    socket (Closes: #891705)
+  * debian/apparmor-profile: Allow reading /var/lib/sss/mc/initgroups
+  * debian/apparmor-profile: Permit unbound to notify readiness to systemd
+    (Closes: #867186)
+  * debian/apparmor-profile: Let unbound r/w anywhere under
+    /var/lib/unbound (Closes: #882731)
+  * debian/apparmor-profile: Use attach_disconnected
+
+ -- Robert Edmonds <edmonds@debian.org>  Wed, 23 May 2018 15:41:54 -0400
+
+unbound (1.6.7-1) unstable; urgency=medium
+
+  * New upstream version 1.6.7
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 15 Oct 2017 17:46:46 -0400
+
+unbound (1.6.6-1) unstable; urgency=medium
+
+  * New upstream version 1.6.6
+  * debian/control: Drop obsolete build-depends on dh-systemd
+  * debian/control: Bump Standards-Version to 4.1.1 (no changes)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 07 Oct 2017 00:40:08 -0400
+
+unbound (1.6.5-1) unstable; urgency=high
+
+  [ Robert Edmonds ]
+  * New upstream version 1.6.5
+    - Fix install of trust anchor when two anchors are present, makes both
+      valid. Checks hash of DS but not signature of new key. This fixes
+      installs between sep11 and oct11 2017.
+  * debian/rules: Enable EDNS Client Subnet in daemon
+
+  [ Simon Deziel ]
+  * debian/unbound.service: Set PIDFile= (Closes: #867192)
+
+  [ Antony Antony ]
+  * debian/rules: Enable libevent for libunbound2 API (Closes: #871675)
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 22 Aug 2017 22:50:56 -0400
+
+unbound (1.6.4-1) unstable; urgency=medium
+
+  [ Robert Edmonds ]
+  * New upstream version 1.6.4
+    - Fixes 'malformed packet DoS when "use-caps-for-id" enabled'
+      (Closes: #864730)
+  * debian/copyright: Use https form of the copyright-format URL
+  * debian/copyright: Bump NLnet Labs copyright years through 2017
+  * debian/control: Bump Standards-Version to 4.0.0
+  * debian/: Enable systemd support
+  * debian/unbound.service: Use Type=notify process start-up type
+    (Closes: #866804)
+  * debian/: Enable experimental pluggable event base libunbound API
+    (Closes: #859584)
+  * debian/control: Add Depends on lsb-base to satisfy lintian's
+    "init.d-script-needs-depends-on-lsb-base"
+
+  [ Steve Langasek ]
+  * debian/control: Build-Depend on python '-dev' packages, not '-all-dev'
+    (Closes: #864334, #866770)
+
+  [ Steven Chamberlain ]
+  * Allow use of libbsd functions with configure option --with-libbsd
+  * debian/: Configure with --with-libbsd (Closes: #853751)
+
+ -- Robert Edmonds <edmonds@debian.org>  Mon, 03 Jul 2017 16:30:17 -0400
+
+unbound (1.6.0-3) unstable; urgency=medium
+
+  * Cherry-pick upstream commit svn r4000, "Include root trust anchor id
+    20326 in unbound-anchor". (Closes: #855484)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 19 Feb 2017 20:04:34 -0500
+
+unbound (1.6.0-2) unstable; urgency=high
+
+  [ Helmut Grohne ]
+  * Only use fake_dsa when HAVE_SSL is defined (Closes: #848339)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 18 Dec 2016 15:00:12 -0500
+
+unbound (1.6.0-1) unstable; urgency=medium
+
+  [ Robert Edmonds ]
+  * New upstream version 1.6.0
+
+  [ Helmut Grohne ]
+  * Add pkg.unbound.libonly build profile. (Closes: #847130)
+
+ -- Robert Edmonds <edmonds@debian.org>  Thu, 15 Dec 2016 15:26:15 -0500
+
+unbound (1.5.10-3) unstable; urgency=medium
+
+  [ Helmut Grohne ]
+  * Fix FTCBFS: (Closes: #845941)
+    + Convert python Build-Depends to cross-friendly ones.
+    + Let dh_auto_configure pass --host to ./configure.
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 27 Nov 2016 14:41:30 -0500
+
+unbound (1.5.10-2) unstable; urgency=medium
+
+  * debian/unbound.install: Install usr/sbin/unbound-checkconf
+    (Closes: #842797)
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 01 Nov 2016 16:37:52 -0400
+
+unbound (1.5.10-1) unstable; urgency=medium
+
+  * New upstream version 1.5.10
+    - Fixes FTBFS with OpenSSL 1.1.0 (Closes: #828584)
+  * debian/: Build libunbound against nettle (Closes: #828699)
+  * debian/: Support Python 3 (Closes: #835972)
+  * debian/rules: Install libunbound.pc into the libunbound-dev package
+  * debian/copyright: Update
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 04 Oct 2016 03:43:45 -0400
+
+unbound (1.5.9-3) unstable; urgency=medium
+
+  [ Nicolas Braud-Santoni ]
+  * debian/: Ship AppArmor profile (Closes: #518002)
+  * debian/control: Use HTTPS for Vcs-Git link
+  * debian/unbound.service: Add documentation to the systemd unit file
+  * debian/control: Bump Standards-Version to 3.9.8 (no changes)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 06 Aug 2016 14:51:52 -0400
+
+unbound (1.5.9-2) unstable; urgency=low
+
+  * debian/unbound.init: Call start-stop-daemon with --retry for 'stop'
+    action (based on patch from Julien Cristau)
+  * debian/: Add unbound.service, unbound-resolvconf.service
+    (Closes: #826241) (Thanks to Michael Biebl)
+  * debian/rules: Configure with --with-rootkey-file=/var/lib/unbound/root.key
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 24 Jul 2016 19:48:56 -0400
+
+unbound (1.5.9-1) unstable; urgency=medium
+
+  * Imported Upstream version 1.5.9
+    - Updated L-Root IPv6 address (Closes: #818292)
+  * debian/unbound.init: Add "pidfile" magic comment (Closes: #807132)
+  * debian/libunbound2.symbols: Add new symbol 'ub_ctx_create_ub_event'
+  * Enable DNS query name minimisation by default
+
+ -- Robert Edmonds <edmonds@debian.org>  Fri, 10 Jun 2016 23:01:15 -0400
+
+unbound (1.5.8-1) unstable; urgency=medium
+
+  * Imported Upstream version 1.5.8
+  * debian/libunbound2.symbols: Add new symbol 'ub_ctx_set_stub'
+  * debian/unbound.postinst: Clean up permissions on the resolvconf
+    forwarder hook on upgrades (Closes: #816425)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 06 Mar 2016 22:52:28 -0500
+
+unbound (1.5.7-2) unstable; urgency=medium
+
+  * debian/control: Add dh-python to Build-Depends
+  * debian/: Install contrib/update-anchor.sh, contrib/unbound_munin_
+    (Closes: #573329)
+  * Makefile.in: Pass PYTHON_CPPFLAGS to swig instead of CPPFLAGS (Closes:
+    #809055)
+  * debian/: Run "wrap-and-sort -sabt"
+  * debian/resolvconf: No longer use RESOLVCONF_FORWARDERS from
+    /etc/default/unbound
+  * debian/unbound.postinst: Remove unbound-anchor invocation
+  * debian/package-helper: Add helper script for init scripts and
+    resolvconf
+  * debian/unbound.init: Rewrite to use package-helper script
+  * debian/unbound.default: Remove
+  * debian/unbound.maintscript: Remove conffile /etc/default/unbound
+  * debian/resolvconf-package: Add resolvconf packaging-event hook script
+    (Closes: #777228)
+  * debian/control: unbound: Depend on dns-root-data, for root trust
+    anchor updates (Closes: #760461)
+  * debian/rules: Disable the resolvconf update.d hook by default
+  * debian/gbp.conf: Remove [dch] id-length
+  * debian/NEWS.Debian: Add NEWS entry for 1.5.7-2
+  * debian/unbound.postinst: Always chown /var/lib/unbound (Closes:
+    #763901)
+  * debian/package-helper: Invoke unbound-anchor as user/group unbound
+  * debian/: unbound.doc -> unbound.docs; Actually install upstream docs
+  * debian/unbound.docs: Install doc/README.DNS64
+  * debian/unbound.docs: Install debian/NEWS.Debian
+  * debian/package-helper: Clean old chroot files (Closes: #790392) (Patch
+    from Simon Deziel)
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 21 Feb 2016 16:22:23 -0500
+
+unbound (1.5.7-1) unstable; urgency=medium
+
+  * [3cf7971b] debian/control: Vcs-Browser should point to cgit
+    (Closes: #804437)
+  * [66955294] Imported Upstream version 1.5.7
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 12 Dec 2015 14:48:03 -0500
+
+unbound (1.5.6-1) unstable; urgency=medium
+
+  * [0d5117d5] Imported Upstream version 1.5.4
+  * [8327e145] Imported Upstream version 1.5.5
+  * [eb2adc8c] Imported Upstream version 1.5.6
+    - Closes: #796934, #803042.
+  * [5a973651] debian/control: Update Maintainer, Uploaders for pkg-dns
+  * [543459fa] debian/control: Update Vcs-Browser, Vcs-Git
+  * [b69e513f] debian/: Run "wrap-and-sort -sbt"
+  * [730f3622] debian/gbp.conf: Add [dch] section
+  * [6b383656] debian/: Enable dnstap support
+
+ -- Robert Edmonds <edmonds@debian.org>  Sun, 08 Nov 2015 01:26:27 -0500
+
+unbound (1.5.3-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 14 Mar 2015 14:16:27 -0400
+
+unbound (1.5.2-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Migrate pidfile from /var/run to /run; closes: #773247.
+  * Fix unbound-checkconf to recognize "python" in module-config;
+    closes: #777193.
+
+ -- Robert Edmonds <edmonds@debian.org>  Sat, 28 Feb 2015 21:04:03 -0500
+
+unbound (1.5.1-1) experimental; urgency=medium
+
+  * New upstream release.
+    - Fix CVE-2014-8602: denial of service by making resolver chase
+      endless series of delegations.
+
+ -- Robert Edmonds <edmonds@debian.org>  Mon, 08 Dec 2014 15:08:30 -0500
+
+unbound (1.5.0~rc1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Upload to experimental.
+
+ -- Robert Edmonds <edmonds@debian.org>  Tue, 11 Nov 2014 19:18:44 -0500
+
+unbound (1.4.22-2) unstable; urgency=medium
+
+  * Drop unneeded Build-Dependency on doxygen.
+  * Drop unneeded Build-Dependency on automake. (Unbound does not use
+    automake.)
+  * Use dh_autotools-dev_updateconfig to update the config.{guess,sub} files
+    at build time; closes: #746313.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 18 Aug 2014 16:20:28 -0400
+
+unbound (1.4.22-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop Build-Dependency on libldns-dev. Unbound no longer relies on
+    libldns.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 12 Mar 2014 13:21:58 -0400
+
+unbound (1.4.21-1) unstable; urgency=low
+
+  * New upstream release.
+  * Don't compress the example config file in /usr/share/doc/unbound;
+    closes: #722708.
+  * Fully enable hardening options; closes: #709837.
+    (Patch from Simon Deziel.)
+  * Add support for .d style configuration in /etc/unbound/unbound.conf.d;
+    closes: #656549.
+  * Move auto-trust-anchor-file configuration for the root into the new
+    /etc/unbound/unbound.conf.d directory.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Thu, 19 Sep 2013 21:45:39 -0400
+
+unbound (1.4.20-1) unstable; urgency=low
+
+  * New upstream release.
+    - Updates IPv4 address hint for D.ROOT-SERVERS.NET; closes: #697351.
+  * Correct exit code for "/etc/init.d/unbound status"; closes: #685052.
+    (Patch from micah anderson.)
+  * Finish dh_python2 conversion; closes: #697575.
+    (Patch from Micah Gersten.)
+  * Check for multiarch Python headers; closes: #697576.
+    (Patch from Micah Gersten.)
+  * Automatically set up the chroot directory if enabled; closes: #579622.
+    (Patch from Simon Deziel.)
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 13 Apr 2013 15:34:47 -0400
+
+unbound (1.4.19-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Fri, 14 Dec 2012 21:33:42 -0500
+
+unbound (1.4.18-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 05 Aug 2012 21:54:05 -0400
+
+unbound (1.4.17-2) unstable; urgency=low
+
+  * Build-depend on libldns-dev (>= 1.6.13~) for ECDSA support.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 28 May 2012 14:19:57 -0400
+
+unbound (1.4.17-1) unstable; urgency=low
+
+  * New upstream release; closes: #674434.
+  * Implement 'status' command in init script; closes: #666388.
+  * Fix build system bug that negated fully hardening the build;
+    closes: #658021. (Patch from Simon Ruderich.)
+  * Disable ECDSA support (for now) as this requires a newer ldns than is in
+    the archive.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 27 May 2012 16:41:41 -0400
+
+unbound (1.4.16-2) unstable; urgency=low
+
+  * Enable hardened build flags; closes: #658021.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 21 Apr 2012 15:35:16 -0400
+
+unbound (1.4.16-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 05 Feb 2012 20:02:24 -0500
+
+unbound (1.4.14-2) unstable; urgency=high
+
+  * Work around gcc bugs by disabling link time optimization on build
+    architectures that are not i386/amd64.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 21 Dec 2011 15:52:17 -0500
+
+unbound (1.4.14-1) unstable; urgency=high
+
+   * New upstream release.
+     - CVE-2011-4528.
+   * Call dh_python2 in debian/rules; closes: #652294.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 19 Dec 2011 11:00:46 -0500
+
+unbound (1.4.13-2) unstable; urgency=low
+
+  * Reduce the run-time dependencies of libunbound and the unbound-*
+    utilities.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 29 Oct 2011 16:16:19 -0400
+
+unbound (1.4.13-1) unstable; urgency=low
+
+  * New upstream release.
+  * Only install forwarders learned from resolvconf into unbound if
+    RESOLVCONF_FORWARDERS is enabled in /etc/default/unbound; closes: #637198.
+  * Split unbound-anchor utility into separate binary package.
+  * Support multi-arch.
+  * Fix FTBFS with dpkg-dev 1.16.1.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 23 Oct 2011 16:55:45 -0400
+
+unbound (1.4.12-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 18 Jul 2011 15:56:42 -0400
+
+unbound (1.4.11-1) unstable; urgency=low
+
+  * New upstream release.
+  * Fix FTBFS with default python >> 2.6; closes: #625520.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 03 Jul 2011 16:32:49 -0400
+
+unbound (1.4.10-1) unstable; urgency=low
+
+  * New upstream release:
+    - CVE-2011-1922.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 25 May 2011 15:48:34 -0700
+
+unbound (1.4.9-2) unstable; urgency=low
+
+  * Build-depend on libldns-dev (>= 1.6.9-2~) for GOST support.
+  * Configure without --disable-gost.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 03 Apr 2011 14:31:40 -0400
+
+unbound (1.4.9-1) unstable; urgency=low
+
+  * New upstream release.
+  * Convert packaging to git.
+  * Configure with --with-pythonmodule.
+  * Configure with --with-pyunbound.
+  * Build new python-unbound package; closes: #542094.
+  * Automatically create and remove remote control key material on package
+    configuration and package purge.
+  * Set default remote control port to 53953 to avoid conflicting with the
+    bind9 package's default use of port 953 for rndc.
+  * Securely fetch or update the root trust anchor at postinst and before
+    starting the unbound daemon if ROOT_TRUST_ANCHOR_UPDATE is set in
+    /etc/default/unbound; closes: #594911.
+  * If unbound is listening on a loopback address, provide this address as
+    a nameserver to resolvconf if RESOLVCONF is enabled in
+    /etc/default/unbound; closes: #562031.
+  * Configure resolvconf discovered nameservers as forwarders if
+    RESOLVCONF_FORWARDERS is enabled in /etc/default/unbound; closes: #567879.
+  * Don't exit from the init script with an error if UNBOUND_ENABLE is not
+    true; default UNBOUND_ENABLE to true if the default file is missing
+    entirely; closes: #618815.
+  * Support /etc/init.d/unbound reload; closes: #620256.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 02 Apr 2011 22:52:16 -0400
+
+unbound (1.4.8-2) unstable; urgency=low
+
+  * Add build-dependency on libexpat1-dev; closes: #612261.
+  * Install unbound-anchor utility in unbound package.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 07 Feb 2011 16:06:00 -0500
+
+unbound (1.4.8-1) unstable; urgency=low
+
+  * New upstream release; closes: #611527.
+  * Add /etc/insserv.conf.d/unbound file declaring unbound to be a name
+    daemon; closes: #596488, #600118.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 06 Feb 2011 23:33:04 -0500
+
+unbound (1.4.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 15 Aug 2010 18:26:43 -0400
+
+unbound (1.4.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add dependency on openssl to the unbound binary package; closes: #585808.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 20 Jun 2010 16:50:42 -0400
+
+unbound (1.4.4-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Thu, 22 Apr 2010 15:24:06 -0400
+
+unbound (1.4.3-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Thu, 11 Mar 2010 15:55:33 -0500
+
+unbound (1.4.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Tue, 09 Mar 2010 14:13:31 -0500
+
+unbound (1.4.1-2) unstable; urgency=low
+
+  * Invoke dh_installinit with --restart-after-upgrade; closes: #563033.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Tue, 29 Dec 2009 21:54:26 -0500
+
+unbound (1.4.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Document copyright status of util/configparser.c, util/configparser.h;
+    closes: #552066.
+  * Enable libev support; closes: #552424.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 26 Dec 2009 17:19:10 -0500
+
+unbound (1.4.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Fri, 04 Dec 2009 20:32:52 -0800
+
+unbound (1.3.4-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 07 Oct 2009 12:59:21 -0400
+
+unbound (1.3.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * Drop .la file from libunbound-dev; closes: #541640.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 23 Aug 2009 13:25:53 -0400
+
+unbound (1.3.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 13 Jul 2009 05:50:47 -0400
+
+unbound (1.3.0-1) unstable; urgency=low
+
+  * New upstream release; closes: #533613.
+  * Move pid file to /var/run; closes: #533611.
+  * Use "unbound-checkconf -o pidfile" in init script to determine pid file
+    location (thanks Michael Tokarev).
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 29 Jun 2009 01:10:00 -0400
+
+unbound (1.2.1-2) unstable; urgency=low
+
+  * Closes: #527753, #509535.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 09 May 2009 16:46:32 -0400
+
+unbound (1.2.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Remove init script chroot setup.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 28 Feb 2009 19:46:09 -0500
+
+unbound (1.0.2-1.2) unstable; urgency=low
+
+  * Enable unbound by default (Closes: #508884)
+  * Call dh_installinit with --error-handler=true (Closes: #500176)
+
+ -- Ondřej Surý <ondrej@debian.org>  Tue, 16 Dec 2008 11:54:15 +0100
+
+unbound (1.0.2-1.1) unstable; urgency=low
+
+  [ Hideki Yamane (Debian-JP) ]
+  * debian/{unbound.init,unbound.default}
+    + set not start by default, to avoid that port 53 blocking by other name
+      servers will cause install problems
+  * debian/unbound.prerm
+    + fix lintian "unbound: maintainer-script-hides-init-failure prerm:5" error
+
+  [ Ondřej Surý ]
+  * Non-maintainer upload.
+  * Minor tweaks to patched init.d file to make it work.
+
+ -- Ondřej Surý <ondrej@debian.org>  Mon, 15 Dec 2008 19:54:44 +0100
+
+unbound (1.0.2-1) unstable; urgency=low
+
+  * New upstream release;
+    + stricter filtering of DNS messages to combat cache poisoning
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 25 Aug 2008 01:03:59 -0400
+
+unbound (1.0.1-2) unstable; urgency=low
+
+  * unbound tries too hard to chroot(); ship a default config that doesn't
+    fail to start on new installs; closes: #492243.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sat, 02 Aug 2008 17:46:24 -0400
+
+unbound (1.0.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Drop 'return' from init script; closes: #488650.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 16 Jul 2008 12:38:55 -0400
+
+unbound (1.0.0-3) unstable; urgency=low
+
+  * Lintian clean; closes: #485438.
+  * Don't chroot by default; note manual syslog configuration in
+    README.Debian; closes: #486303.
+  * Update to policy 3.8.0.0.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 15 Jun 2008 17:25:04 -0400
+
+unbound (1.0.0-2) unstable; urgency=low
+
+  * Fix Build-Deps.
+  * Split unbound-host into a separate package.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Sun, 25 May 2008 16:12:21 -0400
+
+unbound (1.0.0-1) unstable; urgency=low
+
+  * Initial release; closes: #482277.
+
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 21 May 2008 14:13:28 -0400

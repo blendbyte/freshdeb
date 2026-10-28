@@ -1,0 +1,134 @@
+#!/usr/bin/make -f
+.NOTPARALLEL:
+#export DH_VERBOSE=1
+SHELL = /bin/sh -e
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# we build in a sub-subdir so strip that from file paths too
+export DEB_CFLAGS_MAINT_APPEND = -ffile-prefix-map=../../=
+
+# Fast version of dpkg/architecture.mk defining all vars in one go
+ifeq (${DEB_HOST_MULTIARCH},)
+   $(foreach d, $(shell dpkg-architecture | sed 's/=/?=/'), $(eval export $d))
+endif
+
+# DEB_BUILD_OPTIONS=parallel=N
+MAKEFLAGS += $(subst parallel=,-j,$(filter parallel=%,${DEB_BUILD_OPTIONS}))
+
+libonly := $(filter pkg.unbound.libonly,${DEB_BUILD_PROFILES})
+
+CONFIGURE_ARGS = \
+	--disable-rpath \
+	--with-pidfile=/run/unbound.pid \
+	--with-libevent \
+	--enable-tfo-client \
+
+# this is used by unbound-host and unbound-anchor
+CONFIGURE_ARGS += --with-rootkey-file=/usr/share/dns/root.key
+
+ifneq (${DEB_HOST_ARCH}, amd64)
+# Link-Time Optimization https://wiki.debian.org/ToolChain/LTO
+# can be disabled here but enabled globally in DEB_BUILD_MAINT_OPTIONS
+CONFIGURE_ARGS += --disable-flto
+endif
+
+ifneq (${DEB_HOST_ARCH_OS}, linux)
+# both kfreebsd and hurd have -lbsd (#853751)
+CONFIGURE_ARGS += --with-libbsd
+endif
+
+ifneq (${DEB_HOST_ARCH_OS}, kfreebsd)
+# tfo-server does not work on kfreebsd due to no TCP_FASTOPEN
+CONFIGURE_ARGS += --enable-tfo-server
+endif
+
+ifneq (${DEB_BUILD_ARCH},${DEB_HOST_ARCH})
+# #1024422
+export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__${DEB_HOST_MULTIARCH}
+endif
+
+build-arch build-indep build \
+install-arch install-indep install \
+binary-arch binary-indep binary \
+clean \
+: %:
+	dh $@
+
+# first build -- build unbound daemon, support progs and python library
+unbound-config: b/unbound/config.h
+b/unbound/config.h:
+	PYTHON_VERSION="$(shell py3versions -vd)" \
+	PYTHON_SITE_PKG=/usr/lib/python3/dist-packages \
+	    dh_auto_configure -Bb/unbound -- \
+		--with-pythonmodule \
+		--with-pyunbound \
+		--enable-subnet \
+		--enable-dnstap \
+		--enable-systemd \
+		--enable-cachedb --with-libhiredis \
+		--with-libnghttp2 \
+		--with-chroot-dir="" \
+		--with-dnstap-socket-path=/run/dnstap.sock \
+		${CONFIGURE_ARGS}
+unbound-build: b/unbound/build-stamp
+b/unbound/build-stamp: b/unbound/config.h
+	${MAKE} -Cb/unbound
+	touch $@
+
+# second build: libunbound only
+libunbound-config: b/libunbound/config.h
+b/libunbound/config.h:
+	    dh_auto_configure -Bb/libunbound -- \
+		--with-libunbound-only \
+		--without-pythonmodule \
+		--without-pyunbound \
+		--enable-event-api \
+		${CONFIGURE_ARGS}
+libunbound-build: b/libunbound/stamp-build
+b/libunbound/stamp-build: b/libunbound/config.h
+	${MAKE} -Cb/libunbound lib
+	touch $@
+
+override_dh_auto_configure: $(if ${libonly},, unbound-config) libunbound-config
+
+override_dh_auto_build: $(if ${libonly},, unbound-build) libunbound-build
+
+override_dh_auto_test: $(if ${libonly},, unbound-build)
+ifeq (,$(filter nocheck,${DEB_BUILD_OPTIONS}))
+	$(if ${libonly},, ${MAKE} -Cb/unbound test)
+endif
+
+override_dh_auto_install: override_dh_auto_build
+	$(if ${libonly},, ${MAKE} -Cb/unbound install DESTDIR=${CURDIR}/debian/tmp)
+	# this overrides the library (static & shared), headers and the manpages
+	${MAKE} -Cb/libunbound install-lib DESTDIR=${CURDIR}/debian/tmp
+# as of 1.23, ./configure does not honour --disable-static
+	rm -f debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/libunbound.a
+# drop static-build deps from the .pc file
+	sed -r -i '/^(Libs|Requires)\.private/D' \
+	    debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/libunbound.pc
+
+ifeq (,${libonly})
+	install -Dp -m 0644 debian/apparmor-profile debian/unbound/etc/apparmor.d/usr.sbin.unbound
+	dh_apparmor --profile-name=usr.sbin.unbound -punbound
+
+	dh_installsystemd -punbound
+	dh_installsystemd -punbound --name=unbound-resolvconf --no-start --no-stop-on-upgrade
+	dh_installinit --error-handler=true --restart-after-upgrade
+
+	install -d debian/unbound/etc/insserv.conf.d
+	echo '$$named unbound' > debian/unbound/etc/insserv.conf.d/unbound
+	install -Dp -m 0755 debian/resolvconf-forwards debian/unbound/etc/resolvconf/update.d/unbound
+	install -Dp -m 0755 debian/resolvconf-package debian/unbound/usr/lib/resolvconf/dpkg-event.d/unbound
+	install -Dp -m 0644 contrib/update-anchor.sh -t debian/unbound/usr/share/doc/unbound/contrib/
+	install -Dp -m 0755 contrib/unbound_munin_ -t debian/unbound/usr/share/munin/plugins/
+endif
+
+override_dh_installsystemd:
+override_dh_installinit:
+
+override_dh_compress:
+	dh_compress -Xusr/share/doc/unbound/examples/unbound.conf
+
+override_dh_auto_clean:
+	rm -rf b/
