@@ -1,0 +1,35 @@
+# bgpq4: https://github.com/bgp/bgpq4
+#
+# Packaging is Debian's (salsa.debian.org/debian/bgpq4); debian/ is an
+# unmodified import of the commit in packaging.ref, see README.md. Like
+# Debian, builds use the git tag (Debian's watch file takes GitHub's tag
+# archive): debhelper runs autoreconf, so the missing configure script is
+# no problem.
+#
+# Upstream maintains only its latest release, so there is one track, "main",
+# that follows every release (component main). Versions have two parts
+# (1.16); the regex skips the 0.0.x tags from before 1.0.
+
+name: bgpq4
+description: "bgpq4 BGP filter generator using IRR routing data"
+homepage: https://github.com/bgp/bgpq4
+
+upstream:
+  git: https://github.com/bgp/bgpq4.git
+  tag_regex: '^(?P<version>\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/debian/bgpq4.git
+  ref: b47bf5cb5d9bb10189a877d1464200648e92ec7a  # 1.16-1, unstable
+
+tracks:
+  main:
+    tag: "1.16"
+    commit: 28232089197ab4582d99da1c3b048259d3dbef70
+    revision: 1
+
+overlays:
+  # No network during the build and the tests: upstream's "make check" and
+  # Debian's autopkgtest query NTT's IRR server; the smoke test runs the
+  # same kind of queries against a local IRR server instead (all releases).
+  - patch: overlays/offline-tests.patch

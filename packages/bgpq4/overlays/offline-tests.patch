@@ -1,0 +1,20 @@
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -2,3 +2,11 @@
+ 
+ %:
+ 	dh $@
++
++# freshdeb: upstream's "make check" also queries NTT's IRR server (failures
++# ignored); builds stay offline. The smoke test checks the queries against
++# a local IRR server.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	./bgpq4 -v
++endif
+diff -ruN a/debian/tests/control b/debian/tests/control
+--- a/debian/tests/control
++++ b/debian/tests/control
+@@ -1 +0,0 @@
+-Test-Command: bgpq4 -Jl eltel-v4 AS20597

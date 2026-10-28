@@ -1,0 +1,78 @@
+bgpq4 (1.16-1) unstable; urgency=medium
+
+  * New upstream version.
+  * d/copyright: refresh.
+
+ -- Vincent Bernat <bernat@debian.org>  Sun, 15 Mar 2026 18:08:41 +0100
+
+bgpq4 (1.12-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Wed, 14 Feb 2024 08:02:03 +0100
+
+bgpq4 (1.11-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Tue, 20 Jun 2023 20:31:01 +0200
+
+bgpq4 (1.10-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 03 Jun 2023 16:27:00 +0200
+
+bgpq4 (1.9-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Sun, 05 Mar 2023 14:20:28 +0100
+
+bgpq4 (1.8-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Bump debhelper from old 12 to 13.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+  [ Vincent Bernat ]
+  * New upstream release.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 20 Jan 2023 22:12:15 +0100
+
+bgpq4 (1.7-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 03 Nov 2022 19:40:20 +0100
+
+bgpq4 (1.6-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Wed, 07 Sep 2022 15:38:33 +0200
+
+bgpq4 (1.5-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Tue, 26 Jul 2022 12:21:16 +0200
+
+bgpq4 (1.4-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 20 Aug 2021 19:18:33 +0200
+
+bgpq4 (0.0.6-2) unstable; urgency=medium
+
+  * d/tests: add an autopkgtest.
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 25 Jun 2020 07:16:53 +0200
+
+bgpq4 (0.0.6-1) unstable; urgency=medium
+
+  * Initial release. Closes: #958908.
+
+ -- Vincent Bernat <bernat@debian.org>  Sun, 26 Apr 2020 17:07:49 +0200
