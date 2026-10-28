@@ -1,0 +1,23 @@
+proftpd-mod-statsd (0.1-2) unstable; urgency=medium
+
+  * Remove override_dh_auto_build
+    - dh $@ ... --max-parallel=1 (just a precaution).
+  * d/rules: add "export DEB_BUILD_MAINT_OPTIONS = hardening=+all"
+    ...does not seem to be effective.
+  * Enable Reprotest on Salsa CI.
+  * Build using the default build flags (Closes: #1119534);
+    enable blhc test on Salsa CI.
+  * Remove useless content from 01_built_outside_tree.
+  * Move Make.rules from patches/01_built_outside_tree to subdir
+    "debian/".
+  * Remove libsodium-dev & libhiredis-dev from B-D.
+  * Bump Standards version, no changes needed.
+  * Lintian stuff.
+
+ -- Hilmar Preuße <hille42@debian.org>  Sun, 23 Nov 2025 10:16:53 +0100
+
+proftpd-mod-statsd (0.1-1) unstable; urgency=low
+
+  * Initial Release. (Closes: #969763)
+
+ -- Hilmar Preusse <hille42@web.de>  Mon, 17 Aug 2020 23:39:37 +0200

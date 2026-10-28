@@ -1,0 +1,106 @@
+#!/usr/bin/make -f
+
+PACKAGE=proftpd-core
+PACKAGE_DEV=proftpd-dev
+NAME=proftpd
+VERSION=$(shell grep PROFTPD_VERSION_TEXT $(CURDIR)/include/version.h|cut -d\" -f2)
+
+# Make build reproducible
+export SHELL=/bin/bash
+export CONFIG_SHELL=/bin/bash
+
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+
+# Some special build options
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+  DEVELOPT=--enable-devel=yes
+endif
+
+ifneq (,$(findstring verbose,$(DEB_BUILD_OPTIONS)))
+DH_VERBOSE=1
+export DH_VERBOSE
+endif
+
+ifeq (,$(filter test,$(LOCAL_BUILD_OPTIONS)))
+# Disable automated build tests
+override_dh_auto_test:
+endif
+
+include /usr/share/dpkg/architecture.mk
+
+# XAttr does not exist on KFreeBSD
+#
+XATTR_NOT_EXISTS := kfreebsd-amd64 kfreebsd-i386
+ifneq (,$(filter $(DEB_HOST_ARCH), $(XATTR_NOT_EXISTS)))
+  BUILDNOTXATTR=--disable-xattr
+endif
+
+# ADDL_CPPFLAGS = $(shell dpkg-buildflags --get CPPFLAGS)
+
+include /usr/share/dpkg/buildflags.mk
+
+DSOMODS1 = mod_unique_id:mod_site_misc:mod_load:mod_ban:mod_quotatab:mod_sql:mod_sql_mysql:mod_sql_postgres:mod_sql_sqlite:mod_sql_odbc:mod_dynmasq
+DSOMODS2 = mod_quotatab_sql:mod_ldap:mod_quotatab_ldap:mod_ratio:mod_tls:mod_rewrite:mod_radius:mod_wrap:mod_wrap2:mod_wrap2_file
+DSOMODS3 = mod_wrap2_sql:mod_quotatab_file:mod_quotatab_radius:mod_facl:mod_ctrls_admin:mod_copy:mod_deflate:mod_ifversion
+DSOMODS4 = mod_geoip:mod_exec:mod_sftp:mod_sftp_pam:mod_sftp_sql:mod_shaper:mod_sql_passwd:mod_ifsession:mod_auth_otp:mod_tls_redis
+DSOMODS5 = mod_wrap2_redis:mod_redis:mod_memcache:mod_tls_memcache:mod_readme:mod_snmp:mod_digest:mod_ident
+DSOMODS6 = mod_log_forensic:mod_qos:mod_statcache:mod_tls_fscache:mod_tls_shmcache:mod_dnsbl:mod_delay:mod_xfer:mod_ls
+CONF_ARGS := --prefix=/usr --with-pkgconfig=lib/pkgconfig \
+	     --with-includes=$(shell pg_config --includedir)$(shell mysql_config --include|sed -e 's/-I/:/g'|sed -e 's/ //') \
+	     --mandir=/usr/share/man --sysconfdir=/etc/$(NAME) --localstatedir=/run --libexecdir=/usr/lib/$(NAME) \
+	     --enable-sendfile --enable-facl --enable-dso --enable-autoshadow --enable-ctrls --enable-openssl \
+	     --enable-ipv6 --enable-nls --enable-memcache --with-lastlog=/var/log/lastlog --enable-pcre2 $(DEVELOPT) \
+	     --disable-strip --enable-redis $(BUILDNOTXATTR)
+
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+  CONF_ARGS += --build $(DEB_HOST_GNU_TYPE)
+else
+  CONF_ARGS += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
+# Following line is used in Post-Hook of "gbp import-orig"
+debian/control: debian/control.in
+	sed -e 's/@VERSION@/$(VERSION)/' $< >$@
+
+debian/proftpd-substvars: debian/proftpd-substvars.in
+	sed -e 's/@VERSION@/$(VERSION)/' $< >$@
+
+%:
+	dh $@ --without autoreconf
+
+override_dh_auto_configure:
+	dh_update_autotools_config
+
+	# upstream autotools stuff is old enough to miss --runstatedir option and break debhelper(>10)
+	# dh_auto_configure -- $(CONF_ARGS) --with-shared=$(DSOMODS1):$(DSOMODS2):$(DSOMODS3):$(DSOMODS4):$(DSOMODS5):$(DSOMODS6)
+	install_user=$$(id -un) install_group=$$(id -gn) ./configure --infodir=\${prefix}/share/info --disable-option-checking --disable-silent-rules --libdir=\${prefix}/lib/$(DEB_BUILD_GNU_TYPE) --disable-dependency-tracking \
+				$(CONF_ARGS) --with-shared=$(DSOMODS1):$(DSOMODS2):$(DSOMODS3):$(DSOMODS4):$(DSOMODS5):$(DSOMODS6)
+
+override_dh_auto_build: debian/proftpd-substvars
+	dh_auto_build
+
+override_dh_auto_install:
+	dh_auto_install
+	rm -f $(CURDIR)/debian/tmp/usr/sbin/in.proftpd
+
+override_dh_auto_clean:
+	dh_auto_clean
+	# A few surplus files are removed using debian/clean
+	rm -f $$(find . -type l) $$(find . -name "*~" -o -name "*.orig")
+	rm -rf debian/*.gz core
+
+override_dh_installchangelogs:
+	dh_installchangelogs ChangeLog
+
+override_dh_installpam:
+	dh_installpam --name=$(NAME)
+
+override_dh_installinit:
+	dh_installinit --name=$(NAME)
+
+override_dh_installsystemd:
+	dh_installsystemd -p$(PACKAGE) --no-enable --no-start --name=$(NAME) $(NAME).socket
+	dh_installsystemd -p$(PACKAGE) --name=$(NAME)@ $(NAME)@.service
+	dh_installsystemd -p$(PACKAGE) --name=$(NAME) $(NAME).service
+
+.PHONY: debian/proftpd-substvars debian/control

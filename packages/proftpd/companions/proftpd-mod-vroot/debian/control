@@ -1,0 +1,24 @@
+Source: proftpd-mod-vroot
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Build-Depends: debhelper-compat (= 13),
+	proftpd-dev,
+	libacl1-dev
+Standards-Version: 4.7.2
+Rules-Requires-Root: binary-targets
+Homepage: http://www.castaglia.org/proftpd/modules/mod_vroot.html
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-vroot.git
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-vroot
+
+Package: proftpd-mod-vroot
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${proftpd:Depends}
+Description: ProFTPD module mod_vroot
+ The purpose of this module to is to implement a virtual chroot
+ capability that does not require root privileges.
+ The mod_vroot module provides this capability by using ProFTPD's
+ FS API. It also allows one to map a directory out of the user chroot
+ as an alias in the chroot for sharing common directories.

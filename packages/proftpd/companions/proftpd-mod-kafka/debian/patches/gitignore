@@ -1,0 +1,9 @@
+./configure needs to be regarded as needed for build.
+---
+--- proftpd-mod-kafka.orig/.gitignore
++++ proftpd-mod-kafka/.gitignore
+@@ -1,4 +1,3 @@
+-configure
+ Makefile
+ config.log
+ config.status

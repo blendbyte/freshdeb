@@ -1,0 +1,363 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -4,7 +4,7 @@
+ Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+            Hilmar Preuße <hille42@debian.org>
+ Standards-Version: 4.7.4
+-Build-Depends: debhelper-compat (= 14),
++Build-Depends: debhelper-compat (= 13),
+                dh-exec,
+                dh-sequence-installsysusers,
+                libacl1-dev,
+@@ -42,7 +42,7 @@
+          ${misc:Depends},
+          ${shlibs:Depends}
+ Conflicts: ftp-server
+-Provides: ftp-server, proftpd, proftpd-basic, proftpd-abi-1.3.9e
++Provides: ftp-server, proftpd, proftpd-basic, ${proftpd:Abi}
+ Suggests: openbsd-inetd | inet-superserver,
+           openssl,
+           proftpd-mod-ldap,
+diff -ruN a/debian/control.in b/debian/control.in
+--- a/debian/control.in
++++ b/debian/control.in
+@@ -4,7 +4,7 @@
+ Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+            Hilmar Preuße <hille42@debian.org>
+ Standards-Version: 4.7.4
+-Build-Depends: debhelper-compat (= 14),
++Build-Depends: debhelper-compat (= 13),
+                dh-exec,
+                dh-sequence-installsysusers,
+                libacl1-dev,
+@@ -42,7 +42,7 @@
+          ${misc:Depends},
+          ${shlibs:Depends}
+ Conflicts: ftp-server
+-Provides: ftp-server, proftpd, proftpd-basic, proftpd-abi-@VERSION@
++Provides: ftp-server, proftpd, proftpd-basic, ${proftpd:Abi}
+ Suggests: openbsd-inetd | inet-superserver,
+           openssl,
+           proftpd-mod-ldap,
+diff -ruN a/debian/proftpd-core.NEWS b/debian/proftpd-core.NEWS
+--- a/debian/proftpd-core.NEWS
++++ b/debian/proftpd-core.NEWS
+@@ -1,199 +1,30 @@
+-proftpd-dfsg (1.3.9~dfsg-2) unstable; urgency=high
++proftpd-dfsg (1.3.9e-1) unstable; urgency=medium
+ 
+-    The modules mod_ls.c & mod_xfer.c are built as modules and are needed to
+-    run the Debian default configuration. We added code snippets to insert
+-    the LoadModule statements into /etc/proftpd/modules.conf. Please accept
+-    to overwrite the modules.conf, else the proftp server won't start after
+-    upgrade.
++  freshdeb: changes since the distributions' 1.3.7c/1.3.8 that may need a
++  look before or after upgrading:
++   * mod_ls and mod_xfer are now loadable modules (see the 1.3.9~dfsg-2
++     entry below). The postinst adds "LoadModule mod_ls.c" and
++     "LoadModule mod_xfer.c" to /etc/proftpd/modules.conf; here it also
++     does so when you keep a locally changed modules.conf, since proftpd
++     won't start without them. Keep both lines if you edit the file.
++   * TLSOptions NoCertRequest was removed and is now a configuration
++     error; MultilineRFC2228 is deprecated (a warning) and can go.
++   * mod_tls no longer requests TLS renegotiations by default
++     (TLSRenegotiate), and the minimum DH parameter size is 2048 bits.
++   * FSCachePolicy is now off by default.
++   * When started as root, proftpd drops all supplemental groups and keeps
++     only the configured User/Group.
++   * Clients are disconnected when they can't be added to the
++     ScoreboardFile; ScoreboardOptions AllowMissingEntry restores the old
++     behaviour.
++   * mod_sftp uses "strict KEX" against the Terrapin attack
++     (CVE-2023-48795); SFTPOptions NoStrictKex turns it off for clients
++     that can't cope.
++   * mod_auth_otp requires an entry for each user; AuthOTPOptions
++     OptionalTableEntry makes entries optional again.
++   * ftpasswd writes SHA-256 password hashes by default instead of MD5.
++  Upstream's release notes have every change:
++  /usr/share/doc/proftpd-core/RELEASE_NOTES.gz
+ 
+- -- Hilmar Preuße <hille42@debian.org>  Thu, 01 May 2025 23:14:44 +0200
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
+ 
+-proftpd-dfsg (1.3.8+dfsg-7) unstable; urgency=medium
+-
+-    If you upgrade from 1.3.8+dfsg-4 (i.e. th 12.0 edition of bookworm) note
+-    that you will need to 
+-        systemctl disable --now proftpd.socket
+-        systemctl enable --now proftpd.service
+-    after upgrade, if you run the proftpd in (default) standalone mode and you did not
+-    do that before. See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1038416
+-    for more information. For other information about inetd/standalone switching 
+-    see also the relevant section in /usr/share/doc/proftpd-core/README.Debian.gz.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Mon, 26 Jun 2023 12:57:24 +0200
+-
+-proftpd-dfsg (1.3.7a+dfsg-6) unstable; urgency=medium
+-
+-    The default method of installation is the traditional standalone
+-    (i.e. daemon) mode, but inet/xinetd/socket configurations are now
+-    supported again, at the admin's will. More information about that are
+-    provided in README.Debian. Note that the standalone installation
+-    is now via systemd, even if the traditional sysv init script
+-    is still provided (but not used), for people that eventually would
+-    prefer to use it.
+-
+-    Starting from this release, a few modules related to libwrap and
+-    TLS/SSL moved to new proftpd-mod-crypto and proftpd-mod-wrap,
+-    in order to reduce the number of libraries to depend on. A transitional
+-    package ensure to avoid breakage of existing configurations in upgrade.
+-    New installations need to take the new layout in consideration and usually
+-    install proftpd-core instead of proftpd-basic, with strictly required
+-    add-on packages, as well.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Mon, 14 Dec 2020 11:05:01 +0100
+-
+-proftpd-dfsg (1.3.6-1) unstable; urgency=medium
+-
+-    mod_readme is now build as module instead of compiled in. Make sure it is
+-    loaded if you need it (this is the default).
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Mon, 15 Jan 2018 21:14:17 +0100
+-
+-proftpd-dfsg (1.3.5d-1) unstable; urgency=medium
+-
+-    Starting from this version, proftpd works by default in standalone mode at
+-    its first install. It is still possible to use inetd/xinetd mode, but the
+-    admin has to manage that manually by update-inetd or configuring xinetd.
+-    Some information about that are provided in the accompanying doc
+-    /usr/share/doc/proftpd-basic/README.Debian.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Fri, 27 Jan 2017 14:44:31 +0100
+-
+-proftpd-dfsg (1.3.4~rc2-4) unstable; urgency=low
+-
+-    The mod_ldap 2.9 version introduced in 1.3.4 series changed completely
+-    configuration settings. See the Changes section in README.LDAP for
+-    new configuration directives to be used and DO NOT assume you can simply
+-    use your current configuration.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Thu, 01 Sep 2011 14:10:09 +0200
+-
+-proftpd-dfsg (1.3.4~rc2-2) unstable; urgency=low
+-
+-    Starting from this version the core package does not provide the
+-    still experimental non-core mod_vroot package. You need to install the separate
+-    proftpd-mod-vroot package explicitly instead, or to comment the mod_vroot.c
+-    loading in /etc/proftpd/modules.conf.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Wed, 20 Apr 2011 17:46:30 +0200
+-
+-proftpd-dfsg (1.3.3d-4) unstable; urgency=low
+-
+-    Starting from this version /etc/proftpd/proftpd.conf also includes
+-    all files present at /etc/proftpd/conf.d/ to allow a better customization
+-    without need of changing the main system files.
+-
+-    This version adds the useful contributed module mod_vroot, which is still not
+-    part of the standard modules. It can be used for providing shared
+-    directories under chrooted environments, among other useful features.
+-    A new template 'virtuals.conf' is provided also to keep things
+-    ordered about vhosts/vroots and show some examples.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Tue, 15 Feb 2011 13:45:18 +0100
+-
+-proftpd-dfsg (1.3.2e-3) unstable; urgency=low
+-
+-    This version adds the useful contributed module mod_vroot, which is still not
+-    part of the standard modules. It can be used for providing shared
+-    directories under chrooted environments, among other useful features.
+-    A new template 'virtuals.conf' is provided also to keep things
+-    ordered about vhosts/vroots and show some examples.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Tue, 16 Mar 2010 12:13:00 +0100
+-
+-proftpd-dfsg (1.3.2e-1) unstable; urgency=low
+-
+-    A new contributed module mod_vroot has been added to the provided modules pool.
+-    Note that it is *still* experimental, so use it at your own risk.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Mon, 19 Apr 2010 13:13:45 +0200
+-
+-proftpd-dfsg (1.3.2b-2) unstable; urgency=low
+-
+-    This version stops client-initiated TLS renegotiations by default. This is
+-    a side effect of fixing CVE-2009-3555 in OpenSSL protocol. Unfortunately
+-    that could break some clients until a better approach is adopted to fix
+-    this protocol issue globally. In order to avoid connection losses in
+-    those cases a new directive has been adopted:
+-
+-    TLSOption AllowClientRenegotiations
+-
+-    which can be added to tls.conf. It is currently commented out in Debian
+-    provided configuration as in default ProFTPD setting.
+-    See also http://bugs.proftpd.org/show_bug.cgi?id=3324 for more information.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Fri, 11 Dec 2009 10:00:02 +0100
+-
+-proftpd-dfsg (1.3.2a-1) unstable; urgency=low
+-
+-    The traditional monthly cron job to collect statistics has been removed
+-    and ftpstats is now run at logrotate execution as a post rotation job.
+-    You can safely remove the /etc/cron.monthly/proftpd{-basic}.disabled
+-    script(s) after upgrading and customize the /etc/logrotate.d/proftpd-basic
+-    instead as you prefer. Note that until release 1.3.2-1 the log rotation was
+-    also performed without using logrotate, and it has been introduced to be
+-    more homogeneous with other services.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Fri, 17 Jul 2009 13:21:01 +0200
+-
+-proftpd-dfsg (1.3.2-1) unstable; urgency=low
+-
+-    Starting from 1.3.2 ProFTPD supports external DSO modules development.
+-    External modules can be built using proftpd-dev package and its utilities
+-    and files, prxs and pkg-config specifically. If you'd like some contributed
+-    modules were distributed, but they are not distributed with the main
+-    package, feel free to ask with a RFP and I will evaluate if the module is
+-    in shape and potentially useful for that.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Sun, 17 Feb 2009 11:19:44 +0100
+-
+-proftpd-dfsg (1.3.1-12) unstable; urgency=low
+-
+-    Starting from this version, exotic authentication modules have been
+-    splitted into different binary packages to reduce the number of
+-    dependencies. For compatibility they are all installed in upgrading,
+-    but you can remove both all unused proftpd-mod-* modules and the
+-    pseudo-package proftpd, now used only for migration.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Thu, 19 Jun 2008 15:24:22 +0200
+-
+-proftpd-dfsg (1.3.1-10) unstable; urgency=low
+-
+-     A new tiny `proftpd-gencert` script is now provided to create SSL/TLS
+-     self-signed certificate. The resulting key and certificate can be
+-     used along with the tls.conf template to provide ftps connections.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Mon, 19 May 2008 18:03:49 +0200
+-
+-proftpd-dfsg (1.3.1-4) unstable; urgency=low
+-
+-     Starting from this version a few example set of directives used
+-     for exotic authentications are splitted out in a few separate
+-     .conf files (currently LDAP, SQL and TLS related) which need
+-     to be included by the main proftpd.conf file.
+-     Their use is optional but strongly suggested. All directives
+-     are commented out by default.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Thu, 03 Jan 2008 17:35:56 +0100
+-
+-proftpd-dfsg (1.3.0-1) unstable; urgency=low
+-
+-     Starting from 1.3.0 proftpd support  DSO and debian packaging moved
+-     to  a single  package  style, in  respect  with the  multi-binaries
+-     package  previously used.  The  list of  modules  (all modules  are
+-     enabled per default) is  visibile in /etc/proftpd/modules.conf. You
+-     could  also need  to  comment  out the  unused  SQL backend  module
+-     loading (mod_sql_mysql  or mod_sql_postgres) in that  file in order
+-     to  have  the right  SQL  engine  working. Another  possibility  is
+-     specifying a suitable AuthOrder in your configuration file.
+-
+-     mod_sql_mysql should handle old MySQL password format more
+-     gracefully.  Starting with MySQL 4.1.1, the format for passwords stored
+-     using the MySQL PASSWORD() function changed.  This format change causes
+-     issues for sites that have passwords stored in the older format.  Users
+-     of mod_sql+mod_sql_mysql would see this as users being unable to login.
+-     Now, if compiled against MySQL 4.1.1 or later, mod_sql_mysql will first
+-     check the password using the current MySQL format; if that fails it
+-     will fall back to checking the old format.  Note that this only affects
+-     sites which have "SQLAuthTypes Backend" in their proftpd.conf.
+-
+- -- Francesco Paolo Lovergine <frankie@debian.org>  Mon, 6 Jun 2005 14:39:04 +0200
+diff -ruN a/debian/proftpd-core.postinst b/debian/proftpd-core.postinst
+--- a/debian/proftpd-core.postinst
++++ b/debian/proftpd-core.postinst
+@@ -84,22 +84,31 @@
+     fi
+ }
+ 
+-add_mod_ls()
++# freshdeb: also matches indented or commented lines (Debian's pattern
++# matched any line starting with a space), and works without ModulePath.
++load_module()
+ {
+-    if [ -f $MODULES_NEW ] ; then
+-	if ! egrep -qi "^[[:space:]]|#*LoadModule mod_ls.c" $MODULES_NEW ; then
+-		perl -pi -e "s{^(ModulePath .*)}{\1\n# Debian #1103154: needed to make default config executable\n#\nLoadModule mod_ls.c\n}i;" $MODULES_NEW
+-	fi
++    file=$1
++    mod=$2
++    [ -f "$file" ] || return 0
++    if grep -Eqi "^[[:space:]]*#*[[:space:]]*LoadModule[[:space:]]+$mod" "$file" ; then
++	return 0
++    fi
++    if grep -Eqi "^[[:space:]]*ModulePath[[:space:]]" "$file" ; then
++	perl -pi -e "s{^([[:space:]]*ModulePath .*)}{\1\n# Debian #1103154: needed to make default config executable\n#\nLoadModule $mod\n}i;" "$file"
++    else
++	printf '\n# Debian #1103154: needed to make default config executable\n#\nLoadModule %s\n' "$mod" >>"$file"
+     fi
+ }
+ 
++add_mod_ls()
++{
++    load_module $MODULES_NEW mod_ls.c
++}
++
+ add_mod_xfer()
+ {
+-    if [ -f $MODULES_NEW ] ; then
+-	if ! egrep -qi "^[[:space:]]|#*LoadModule mod_xfer.c" $MODULES_NEW ; then
+-		perl -pi -e "s{^(ModulePath .*)}{\1\n# Debian #1103154: needed to make default config executable\n#\nLoadModule mod_xfer.c\n}i;" $MODULES_NEW
+-	fi
+-    fi
++    load_module $MODULES_NEW mod_xfer.c
+ }
+ 
+ replace_file () {
+@@ -186,6 +195,14 @@
+     # propose maintainer changes to user
+     do_update /etc/proftpd/proftpd.conf
+     do_update /etc/proftpd/modules.conf
++    # freshdeb: proftpd won't start without these, so add them even when
++    # ucf kept a locally changed modules.conf.
++    for mod in mod_ls.c mod_xfer.c ; do
++	if ! grep -Eqi "^[[:space:]]*#*[[:space:]]*LoadModule[[:space:]]+$mod" $MODULES ; then
++	    load_module $MODULES $mod
++	    echo "proftpd-core: added LoadModule $mod to $MODULES"
++	fi
++    done
+     do_update /etc/proftpd/tls.conf
+     do_update /etc/proftpd/sql.conf
+     do_update /etc/proftpd/ldap.conf
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -103,4 +103,9 @@
+ 	dh_installsystemd -p$(PACKAGE) --name=$(NAME)@ $(NAME)@.service
+ 	dh_installsystemd -p$(PACKAGE) --name=$(NAME) $(NAME).service
+ 
++# freshdeb: the ABI version comes from include/version.h, like
++# proftpd-substvars, so a new upstream version needs no control edit.
++execute_before_dh_gencontrol:
++	echo "proftpd:Abi=proftpd-abi-$(VERSION)" >> debian/$(PACKAGE).substvars
++
+ .PHONY: debian/proftpd-substvars debian/control
+diff -ruN a/debian/tests/control b/debian/tests/control
+--- a/debian/tests/control
++++ b/debian/tests/control
+@@ -1,14 +1,3 @@
+-Tests: test-suite
+-Depends: @builddeps@,
+-	check,
+-	libtest-unit-perl,
+-	libnet-address-ip-local-perl,
+-	libnet-inet6glue-perl,
+-	libnet-telnet-perl,
+-	libhttp-message-perl,
+-	redis-server
+-Restrictions: allow-stderr
+-
+ Tests: sftp-connection
+ Depends: @, adduser, openssh-client, openssh-server
+ Restrictions: allow-stderr, needs-root, isolation-machine

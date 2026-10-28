@@ -1,0 +1,15 @@
+Description: Disable inet_connect_ipv4 test.
+Author: Hilmar Preusse <hille42@web.de>
+Forwarded: not needed
+
+--- proftpd.orig/tests/api/inet.c
++++ proftpd/tests/api/inet.c
+@@ -1427,7 +1427,7 @@
+   tcase_add_test(testcase, inet_set_socket_opts_test);
+   tcase_add_test(testcase, inet_set_socket_opts2_test);
+   tcase_add_test(testcase, inet_listen_test);
+-  tcase_add_test(testcase, inet_connect_ipv4_test);
++  /* tcase_add_test(testcase, inet_connect_ipv4_test); */
+   tcase_add_test(testcase, inet_connect_ipv6_test);
+   tcase_add_test(testcase, inet_connect_nowait_test);
+   tcase_add_test(testcase, inet_accept_test);

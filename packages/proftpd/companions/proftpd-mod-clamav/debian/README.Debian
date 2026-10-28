@@ -1,0 +1,7 @@
+Add-on mod_clamav module for ProFTPD in Debian
+----------------------------------------------
+
+Note that the Debian version of this module is patched to avoid changing
+the mod_core ProFTPD module and to work better with mod_sftp. Thanks
+TJ Saunders and the ProFTPD team about that.
+

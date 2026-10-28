@@ -1,0 +1,9 @@
+Document: proftpd-mod-statsd
+Title: Documentation for the mod_statsd ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-statsd/mod_statsd.html
+Files: /usr/share/doc/proftpd-mod-statsd/*.html

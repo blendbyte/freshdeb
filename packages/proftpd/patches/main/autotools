@@ -1,0 +1,102 @@
+Description: Do not touch config.h.in and stamp-h.in. Also export dpkg build flags.
+Author: Francesco Paolo Lovergine <frankie@debian.org>
+Forwarded: not needed
+
+--- proftpd.orig/Makefile.in
++++ proftpd/Makefile.in
+@@ -272,10 +272,10 @@
+ 	chmod a+x configure config.sub install-sh modules/glue.sh
+ 
+ # autoheader might not change config.h.in, so touch a stamp file.
+-${srcdir}/config.h.in: stamp-h.in
+-${srcdir}/stamp-h.in: configure.in acconfig.h
+-	cd ${srcdir} && autoheader
+-	echo timestamp > ${srcdir}/stamp-h.in
++#${srcdir}/config.h.in: stamp-h.in
++#${srcdir}/stamp-h.in: configure.in acconfig.h
++#	cd ${srcdir} && autoheader
++#	echo timestamp > ${srcdir}/stamp-h.in
+ 
+ config.h: stamp-h
+ stamp-h: config.h.in config.status
+--- proftpd.orig/Make.rules.in
++++ proftpd/Make.rules.in
+@@ -16,7 +16,7 @@
+ AR=@AR@
+ CC=@CC@
+ PLATFORM=@OSREL@ @OSTYPE@
+-LDFLAGS=@LDFLAGS@ @LIBDIRS@
++LDFLAGS=@LDFLAGS@ @LIBDIRS@ $(shell dpkg-buildflags --get LDFLAGS)
+ LIBEXECDIR=@LIBEXECDIR@
+ LIBS=@LIBS@ @LIBRARIES@ @LIBADD_DL@
+ LIBTOOL=@LIBTOOL@
+@@ -50,12 +50,12 @@
+ 
+ # Preprocessor compilation flags.
+ #
+-CPPFLAGS=@CPPFLAGS@ -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
++CPPFLAGS=@CPPFLAGS@ -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES) $(shell dpkg-buildflags --get CPPFLAGS)
+ ADDL_CPPFLAGS=@ADDL_CPPFLAGS@
+ 
+ # Our compiler flags.
+ #
+-CFLAGS=@CFLAGS@
++CFLAGS=@CFLAGS@ $(shell dpkg-buildflags --get CFLAGS)
+ DEFINES=$(PLATFORM)
+ 
+ # Module-specific libraries to link against.  These libraries may be
+--- proftpd.orig/contrib/mod_dnsbl/Makefile.in
++++ proftpd/contrib/mod_dnsbl/Makefile.in
+@@ -21,7 +21,7 @@
+ # Necessary redefinitions
+ INCLUDES=-I. -I../.. -I../../include -I$(top_srcdir)/../../include @INCLUDES@
+ CPPFLAGS=$(ADDL_CPPFLAGS) -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
+-LDFLAGS=-L../../lib @LDFLAGS@
++LDFLAGS=-L../../lib @LDFLAGS@ $(shell dpkg-buildflags --get LDFLAGS)
+ 
+ .c.o:
+ 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+--- proftpd.orig/contrib/mod_load/Makefile.in
++++ proftpd/contrib/mod_load/Makefile.in
+@@ -22,7 +22,7 @@
+ # Necessary redefinitions
+ INCLUDES=-I. -I../.. -I../../include -I$(top_srcdir)/../../include @INCLUDES@
+ CPPFLAGS=$(ADDL_CPPFLAGS) -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
+-LDFLAGS=-L../../lib @LDFLAGS@
++LDFLAGS=-L../../lib @LDFLAGS@ $(shell dpkg-buildflags --get LDFLAGS)
+ 
+ .c.o:
+ 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+--- proftpd.orig/contrib/mod_sftp/Makefile.in
++++ proftpd/contrib/mod_sftp/Makefile.in
+@@ -31,7 +31,7 @@
+ # Necessary redefinitions
+ INCLUDES=-I. -I../.. -I../../include -I$(top_srcdir)/../../include @INCLUDES@
+ CPPFLAGS=$(ADDL_CPPFLAGS) -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
+-LDFLAGS=-L../../lib @LDFLAGS@
++LDFLAGS=-L../../lib @LDFLAGS@ $(shell dpkg-buildflags --get LDFLAGS)
+ 
+ # We special-case the building of umac128.o in order to use preprocessor
+ # tricks to get the implementation, rather than making it be all in runtime.
+--- proftpd.orig/contrib/mod_snmp/Makefile.in
++++ proftpd/contrib/mod_snmp/Makefile.in
+@@ -21,7 +21,7 @@
+ # Necessary redefinitions
+ INCLUDES=-I. -I../.. -I../../include -I$(top_srcdir)/../../include @INCLUDES@
+ CPPFLAGS=$(ADDL_CPPFLAGS) -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
+-LDFLAGS=-L../../lib @LDFLAGS@
++LDFLAGS=-L../../lib @LDFLAGS@ $(shell dpkg-buildflags --get LDFLAGS)
+ 
+ .c.o:
+ 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+--- proftpd.orig/contrib/mod_wrap2/Makefile.in
++++ proftpd/contrib/mod_wrap2/Makefile.in
+@@ -21,7 +21,7 @@
+ # Necessary redefinitions
+ INCLUDES=-I. -I../.. -I../../include -I$(top_srcdir)/../../include @INCLUDES@
+ CPPFLAGS=$(ADDL_CPPFLAGS) -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
+-LDFLAGS=-L../../lib @LDFLAGS@
++LDFLAGS=-L../../lib @LDFLAGS@ $(shell dpkg-buildflags --get LDFLAGS)
+ 
+ .c.o:
+ 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<

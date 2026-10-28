@@ -1,0 +1,2 @@
+etc/proftpd/PROFTPD-MIB.txt
+usr/lib/proftpd/mod_snmp.so

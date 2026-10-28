@@ -1,0 +1,9 @@
+usr/lib/proftpd/mod_sftp.so
+usr/lib/proftpd/mod_sftp_pam.so
+usr/lib/proftpd/mod_sftp_sql.so
+usr/lib/proftpd/mod_sql_passwd.so
+usr/lib/proftpd/mod_tls.so
+usr/lib/proftpd/mod_tls_fscache.so
+usr/lib/proftpd/mod_tls_memcache.so
+usr/lib/proftpd/mod_tls_redis.so
+usr/lib/proftpd/mod_tls_shmcache.so

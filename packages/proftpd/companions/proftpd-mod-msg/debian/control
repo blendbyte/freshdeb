@@ -1,0 +1,22 @@
+Source: proftpd-mod-msg
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Build-Depends: debhelper-compat (= 13),
+	proftpd-dev
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+Homepage: http://www.castaglia.org/proftpd/modules/mod_msg.html
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-msg
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-msg.git
+
+Package: proftpd-mod-msg
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${proftpd:Depends}
+Description: ProFTPD module mod_msg
+ The mod_msg module allows system users to send messages to connected
+ clients via the ftpdctl program. The module works by creating a SysV
+ message queue, which is used to pass messages from the daemon process
+ to session processes.

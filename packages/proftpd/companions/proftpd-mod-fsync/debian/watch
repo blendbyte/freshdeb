@@ -1,0 +1,3 @@
+version=3
+opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/proftpd-mod_fsync-$1\.tar\.gz/ \
+  https://github.com/Castaglia/proftpd-mod_fsync/tags .*/v?(\d\S*)\.tar\.gz

@@ -1,0 +1,12 @@
+Document: proftpd-mod-prometheus
+Title: Documentation for the mod_prometheus ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-prometheus/mod_prometheus.html
+Files: /usr/share/doc/proftpd-mod-prometheus/*.html
+
+Format: Text
+Files: /usr/share/doc/proftpd-mod-prometheus/*

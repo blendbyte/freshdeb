@@ -1,0 +1,277 @@
+Source: proftpd-dfsg
+Section: net
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Standards-Version: 4.7.4
+Build-Depends: debhelper-compat (= 14),
+               dh-exec,
+               dh-sequence-installsysusers,
+               libacl1-dev,
+               libcap-dev [linux-any],
+               libldap-dev,
+               libmariadb-dev-compat,
+               libnsl-dev,
+               libcrypt-dev,
+               libncurses-dev,
+               libpam-dev,
+               libpcre2-dev,
+               libpq-dev,
+               libsqlite3-dev,
+               libssl-dev,
+               libwrap0-dev,
+               unixodbc-dev,
+               zlib1g-dev,
+               libgeoip-dev,
+               libmemcached-dev,
+               libhiredis-dev,
+               libsodium-dev,
+               libmd-dev,
+               libidn2-dev,
+               libidn-dev
+Homepage: http://www.proftpd.org/
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd.git
+
+Package: proftpd-core
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libpam-runtime,
+         netbase,
+         ucf,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Conflicts: ftp-server
+Provides: ftp-server, proftpd, proftpd-basic, proftpd-abi-@VERSION@
+Suggests: openbsd-inetd | inet-superserver,
+          openssl,
+          proftpd-mod-ldap,
+          proftpd-mod-mysql,
+          proftpd-mod-odbc,
+          proftpd-mod-pgsql,
+          proftpd-mod-sqlite,
+          proftpd-mod-geoip,
+          proftpd-mod-snmp,
+		proftpd-mod-crypto,
+		proftpd-mod-wrap
+Recommends: proftpd-doc, proftpd-mod-procfs
+Description: Versatile, virtual-hosting FTP daemon - binaries
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package contains the daemon and all main modules used for
+ common configurations. If you need database-centric authentication
+ install the suitable proftpd-mod suggested package.
+
+Package: proftpd-dev
+Architecture: any
+Depends: libacl1-dev,
+         libpcre2-dev,
+         libssl-dev,
+         libtool,
+         libtool-bin,
+         proftpd-core (=${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: pkgconf
+Description: Versatile, virtual-hosting FTP daemon - development files
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package contains all files required to develop third-parties
+ modules that can be loaded at run-time by means of DSO support.
+
+Package: proftpd-doc
+Architecture: all
+Multi-Arch: foreign
+Suggests: proftpd-core
+Section: doc
+Depends: ${misc:Depends}
+Description: Versatile, virtual-hosting FTP daemon - documentation
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package contains the software documentation.
+Homepage: http://www.proftpd.org/docs
+
+Package: proftpd-mod-mysql
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - MySQL module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package provides MySQL based authentication.
+
+Package: proftpd-mod-pgsql
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - PostgreSQL module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package provides PostgreSQL based authentication.
+
+Package: proftpd-mod-ldap
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - LDAP module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package provides LDAP based authentication.
+
+Package: proftpd-mod-odbc
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - ODBC module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package provides ODBC based authentication.
+
+Package: proftpd-mod-sqlite
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - SQLite3 module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package provides SQLite based authentication.
+
+Package: proftpd-mod-geoip
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - GeoIP module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This package provides GeoIP functionalities.
+
+Package: proftpd-mod-snmp
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - SNMP module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ The mod_snmp module implements SNMPv1 and SNMPv2, for monitoring of
+ proftpd statistics via SNMP.
+
+Package: proftpd-mod-crypto
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - TLS/SSL/SFTP modules
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ The proftpd-mod-crypto package carries some proftp modules having to do
+ with crypto technologies. These modules are linked with libsodium, which
+ is not needed by the main binary:
+  - mod_sftp.so
+  - mod_sql_passwd.so
+  - mod_tls.so
+
+Package: proftpd-mod-wrap
+Architecture: any
+Depends: proftpd-core (=${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Enhances: proftpd-core
+Description: Versatile, virtual-hosting FTP daemon - tcpwrapper module
+ ProFTPD is a powerful modular FTP/SFTP/FTPS server. This File Transfer
+ Protocol daemon supports also hidden directories, virtual hosts, and
+ per-directory ".ftpaccess" files. It uses a single main configuration
+ file, with a syntax similar to Apache.
+ .
+ Because of the advanced design, anonymous-FTP directories can have
+ an arbitrary internal structure (bin, lib, etc, and special files are
+ not needed). Advanced features such as multiple password files and
+ upload/download ratios are also supported.
+ .
+ This module is contained in the contrib/mod_wrap.c file for ProFTPD 1.2+. It
+ enables the daemon to use the common tcpwrappers access control library while
+ in standalone mode, and in a very configurable manner.

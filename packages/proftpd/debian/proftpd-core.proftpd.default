@@ -1,0 +1,8 @@
+# Defaults for proftpd initscript
+
+# Main configuration file
+CONFIG_FILE=/etc/proftpd/proftpd.conf
+
+# Default options.
+# For more exhaustive logging, try "-d 3".
+OPTIONS=""

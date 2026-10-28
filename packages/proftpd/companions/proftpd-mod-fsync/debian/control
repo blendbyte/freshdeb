@@ -1,0 +1,24 @@
+Source: proftpd-mod-fsync
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preusse <hille42@web.de>
+Build-Depends: debhelper-compat (= 13),
+	proftpd-dev
+Standards-Version: 4.5.0
+Rules-Requires-Root: no
+Homepage: http://www.castaglia.org/proftpd/modules/mod_fsync.html
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-fsync
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-fsync.git
+
+Package: proftpd-mod-fsync
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${proftpd:Depends}
+Description: ProFTPD module mod_fsync
+ The mod_fsync module attempts to prevent such bottlenecks by forcibly
+ flushing to disk the buffers used for files open for writing after a
+ certain number of bytes have been written (for example, after 128 KB
+ has been written to a file). This prevents the buffer cache from being
+ dominated by data from files being written, freeing up space for data
+ for files being read.

@@ -1,0 +1,22 @@
+Source: proftpd-mod-proxy
+Section: net
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Build-Depends: debhelper-compat (= 13),
+	proftpd-dev,
+	libsqlite3-dev,
+	libsodium-dev,
+	zlib1g-dev
+Standards-Version: 4.7.4
+Rules-Requires-Root: binary-targets
+Homepage: https://github.com/Castaglia/proftpd-mod_proxy
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-proxy.git
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-proxy
+
+Package: proftpd-mod-proxy
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${proftpd:Depends}
+Description: ProFTPD module mod_proxy
+ The mod_proxy module for ProFTPD proxies FTP/FTPS connections, supporting both
+ forward and reverse proxy configurations.

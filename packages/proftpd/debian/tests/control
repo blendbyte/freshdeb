@@ -1,0 +1,14 @@
+Tests: test-suite
+Depends: @builddeps@,
+	check,
+	libtest-unit-perl,
+	libnet-address-ip-local-perl,
+	libnet-inet6glue-perl,
+	libnet-telnet-perl,
+	libhttp-message-perl,
+	redis-server
+Restrictions: allow-stderr
+
+Tests: sftp-connection
+Depends: @, adduser, openssh-client, openssh-server
+Restrictions: allow-stderr, needs-root, isolation-machine

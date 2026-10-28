@@ -1,0 +1,17 @@
+Description: avoid builtin paranoid checking in libwrap.
+Author: Francesco Paolo Lovergine <frankie@debian.org>
+Forwarded: not needed
+Bug-Debian: http://bugs.debian.org/366397
+
+--- proftpd.orig/contrib/mod_wrap.c
++++ proftpd/contrib/mod_wrap.c
+@@ -952,8 +952,7 @@
+ 
+   fromhost(&request);
+ 
+-  if (STR_EQ(eval_hostname(request.client), paranoid) ||
+-      !hosts_access(&request)) {
++  if (!hosts_access(&request)) {
+     char *denymsg = NULL;
+ 
+     /* log the denied connection */

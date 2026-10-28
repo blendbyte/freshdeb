@@ -1,0 +1,37 @@
+Required changes to build module outside of proftp source tree.
+
+--- proftpd-mod-sftp-ldap.orig/Makefile.in
++++ proftpd-mod-sftp-ldap/Makefile.in
+@@ -2,12 +2,13 @@
+ top_srcdir=../..
+ srcdir=@srcdir@
+ 
+-include $(top_srcdir)/Make.rules
++include debian/Make.rules
+ 
+ .SUFFIXES: .la .lo
+ 
+ SHARED_CFLAGS=-DPR_SHARED_MODULE
+ SHARED_LDFLAGS=-avoid-version -export-dynamic -module
++SHARED_LDFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
+ VPATH=@srcdir@
+ 
+ MODULE_NAME=mod_sftp_ldap
+@@ -18,7 +19,7 @@
+   keys.lo
+ 
+ # Necessary redefinitions
+-INCLUDES=-I. -I./include -I../.. -I../../include @INCLUDES@
++INCLUDES=-I. -I../.. -I../../include -I/usr/include/proftpd @INCLUDES@
+ CPPFLAGS= $(ADDL_CPPFLAGS) -DHAVE_CONFIG_H $(DEFAULT_PATHS) $(PLATFORM) $(INCLUDES)
+ LDFLAGS=-L../../lib @LIBDIRS@
+ 
+@@ -29,7 +30,7 @@
+ 	$(LIBTOOL) --mode=compile --tag=CC $(CC) $(CPPFLAGS) $(CFLAGS) $(SHARED_CFLAGS) -c $< -o $@
+ 
+ shared: $(SHARED_MODULE_OBJS)
+-	$(LIBTOOL) --mode=link --tag=CC $(CC) -o $(MODULE_NAME).la $(SHARED_MODULE_OBJS) -rpath $(LIBEXECDIR) $(LDFLAGS) $(SHARED_LDFLAGS) $(SHARED_MODULE_LIBS) `cat $(MODULE_NAME).c | grep '$$Libraries:' | sed -e 's/^.*\$$Libraries: \(.*\)\\$$/\1/'`
++	$(LIBTOOL) --mode=link --tag=CC $(CC) -o $(MODULE_NAME).la $(SHARED_MODULE_OBJS) -rpath $(LIBEXECDIR) $(SHARED_LDFLAGS) $(SHARED_MODULE_LIBS) `cat $(MODULE_NAME).c | grep '$$Libraries:' | sed -e 's/^.*\$$Libraries: \(.*\)\\$$/\1/'`
+ 
+ static: $(MODULE_OBJS)
+ 	$(AR) rc $(MODULE_NAME).a $(MODULE_OBJS)

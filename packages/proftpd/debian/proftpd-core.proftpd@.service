@@ -1,0 +1,8 @@
+[Unit]
+Description=ProFTPD FTP Server
+Documentation=man:proftpd(8)
+After=network-online.target
+
+[Service]
+ExecStart=-/usr/sbin/in.proftpd
+StandardInput=socket

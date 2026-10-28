@@ -1,0 +1,9 @@
+Document: proftpd-doc
+Title: Documentation for the ProFTPD server
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-doc/index.html
+Files: /usr/share/doc/proftpd-doc/*.html /usr/share/doc/proftpd-doc/contrib/*.html /usr/share/doc/proftpd-doc/howto/*.html /usr/share/doc/proftpd-doc/modules/*.html

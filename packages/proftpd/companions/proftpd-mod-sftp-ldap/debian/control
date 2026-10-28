@@ -1,0 +1,21 @@
+Source: proftpd-mod-sftp-ldap
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Mahyuddin Susanto <udienz@ubuntu.com>,
+           Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Build-Depends: debhelper-compat (=13),
+	proftpd-dev
+Standards-Version: 4.7.2
+Rules-Requires-Root: binary-targets
+Homepage: http://www.castaglia.org/proftpd/modules/mod_sftp-ldap.html
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-sftp-ldap.git
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-sftp-ldap
+
+Package: proftpd-mod-sftp-ldap
+Architecture: any
+Depends: ${misc:Depends}, ${proftpd:Depends}, ${shlibs:Depends}
+Description: ProFTPD module mod_sftp-ldap
+ The mod_sftp_ldap module for ProFTPD supports retrieving/using user SSH
+ public keys from LDAP directories, for use by the mod_sftp module.

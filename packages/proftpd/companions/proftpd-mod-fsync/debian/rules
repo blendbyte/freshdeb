@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+export DH_VERBOSE=1
+MODULE_NAME=mod_fsync
+DEBNAME=proftpd-mod-fsync
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	DESTDIR=$(CURDIR)/debian/$(DEBNAME) prxs -c $(MODULE_NAME).c
+
+override_dh_auto_install:
+	DESTDIR=$(CURDIR)/debian/$(DEBNAME) prxs -i -c $(MODULE_NAME).c
+	rm -f $(CURDIR)/debian/$(DEBNAME)/usr/lib/proftpd/*.la \
+		$(CURDIR)/debian/$(DEBNAME)/usr/lib/proftpd/*.a
+
+override_dh_gencontrol:
+	cat /usr/share/proftpd/proftpd-substvars >> $(CURDIR)/debian/$(DEBNAME).substvars
+	dh_gencontrol
+
+override_dh_auto_clean:
+	DESTDIR=$(CURDIR)/debian/$(DEBNAME) prxs -d $(MODULE_NAME).c

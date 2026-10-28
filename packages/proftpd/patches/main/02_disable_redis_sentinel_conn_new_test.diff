@@ -1,0 +1,15 @@
+Description: Disable redis_sentinel_conn_new_test test.
+Author: Hilmar Preusse <hille42@web.de>
+Forwarded: not needed
+
+--- proftpd.orig/tests/api/redis.c
++++ proftpd/tests/api/redis.c
+@@ -4913,7 +4913,7 @@
+ 
+   tcase_add_test(testcase, redis_sentinel_get_master_addr_test);
+   tcase_add_test(testcase, redis_sentinel_get_masters_test);
+-  tcase_add_test(testcase, redis_sentinel_conn_new_test);
++  /* tcase_add_test(testcase, redis_sentinel_conn_new_test); */
+ 
+   tcase_add_test(testcase, redis_remove_test);
+   tcase_add_test(testcase, redis_add_test);

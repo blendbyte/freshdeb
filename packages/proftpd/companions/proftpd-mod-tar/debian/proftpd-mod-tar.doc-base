@@ -1,0 +1,9 @@
+Document: proftpd-mod-tar
+Title: Documentation for the mod_tar ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-tar/mod_tar.html
+Files: /usr/share/doc/proftpd-mod-tar/*.html

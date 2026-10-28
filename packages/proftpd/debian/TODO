@@ -1,0 +1,5 @@
+Fix for #740177 needs to be implemented AFAICT. We need to
+integrate proftp w/ systemd, i.e. to create a service file.
+
+On the other hand #870624 tells that everything is OK w/
+systemd. Not clear what is going on there.

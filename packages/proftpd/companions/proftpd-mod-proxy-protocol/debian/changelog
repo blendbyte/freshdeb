@@ -1,0 +1,6 @@
+proftpd-mod-proxy-protocol (0.6-1) unstable; urgency=medium
+
+  [ Dmitry Smirnov ]
+  * Initial release (Closes: #1106873).
+
+ -- Hilmar Preuße <hille42@debian.org>  Fri, 30 May 2025 23:44:32 +0200

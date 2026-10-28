@@ -1,0 +1,9 @@
+Document: proftpd-mod-procfs
+Title: Documentation for the mod_procfs ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-procfs/mod_procfs.html
+Files: /usr/share/doc/proftpd-mod-procfs/*.html

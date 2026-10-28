@@ -1,0 +1,5 @@
+Version: 5
+
+Source: https://github.com/Castaglia/proftpd-mod_geoip2/tags
+Matching-Pattern: .*/v?(\d\S*)\.tar\.gz
+Filename-Mangle: s/.+\/v?(\d\S*)\.geoip2\.gz/proftpd-mod_geoip2-$1\.geoip2\.gz/

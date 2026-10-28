@@ -1,0 +1,13 @@
+Fix spelling error.
+
+--- proftpd-mod-prometheus.orig/mod_prometheus.c
++++ proftpd-mod-prometheus/mod_prometheus.c
+@@ -1450,7 +1450,7 @@
+ 
+   metric = prom_metric_create(prometheus_pool, "directory_list", dbh);
+   prom_metric_add_counter(metric, "total",
+-    "Number of succesful directory listings");
++    "Number of successful directory listings");
+   prom_metric_add_gauge(metric, "count", "Current count of directory listings");
+   res = prom_registry_add_metric(prometheus_registry, metric);
+   if (res < 0) {

@@ -1,0 +1,22 @@
+diff --git a/mod_tar.c b/mod_tar.c
+index 4774755..3b7108b 100644
+--- a/mod_tar.c
++++ b/mod_tar.c
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_tar
+- * Copyright (c) 2009-2021 TJ Saunders
++ * Copyright (c) 2009-2022 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -1082,8 +1082,7 @@ static int tar_sess_init(void) {
+ }
+ 
+ static int tar_init(void) {
+-  pr_log_debug(DEBUG0, MOD_TAR_VERSION ": using libarchive %s",
+-    archive_version_string());
++  pr_log_debug(DEBUG0, MOD_TAR_VERSION ": using %s", archive_version_string());
+   return 0;
+ }
+ 

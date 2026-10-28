@@ -1,0 +1,9 @@
+Document: proftpd-mod-sftp-ldap
+Title: Documentation for the mod_sftp_ldap ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-sftp-ldap/mod_sftp_ldap.html
+Files: /usr/share/doc/proftpd-mod-sftp-ldap/*.html

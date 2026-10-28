@@ -1,0 +1,59 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -6,7 +6,6 @@
+ Standards-Version: 4.7.4
+ Build-Depends: debhelper-compat (= 13),
+                dh-exec,
+-               dh-sequence-installsysusers,
+                libacl1-dev,
+                libcap-dev [linux-any],
+                libldap-dev,
+@@ -36,7 +35,8 @@
+ Package: proftpd-core
+ Architecture: any
+ Pre-Depends: ${misc:Pre-Depends}
+-Depends: libpam-runtime,
++Depends: adduser,
++         libpam-runtime,
+          netbase,
+          ucf,
+          ${misc:Depends},
+diff -ruN a/debian/proftpd-core.postinst b/debian/proftpd-core.postinst
+--- a/debian/proftpd-core.postinst
++++ b/debian/proftpd-core.postinst
+@@ -23,6 +23,18 @@
+ MODULES=$ETC_DIR/modules.conf
+ MODULES_NEW=$ETC_DIR/modules.conf.proftpd-new
+ 
++# freshdeb: this release's debhelper has no dh_installsysusers, so the users
++# are created here, as Debian did before 1.3.9a~dfsg-1.
++add_sysusers()
++{
++    if ! getent passwd ftp > /dev/null ; then
++	adduser --quiet --system --home /srv/ftp ftp
++    fi
++    if ! getent passwd proftpd > /dev/null ; then
++	adduser --quiet --system --disabled-login --no-create-home --home /run/proftpd proftpd
++    fi
++}
++
+ installftp()
+ {
+     if [ -f /usr/share/proftpd/templates/welcome.msg ] ; then
+@@ -176,6 +188,7 @@
+     	$UPDATE_INETD --group STANDARD --add '#<off># ftp	stream	tcp	nowait	root /usr/sbin/tcpd /usr/sbin/proftpd'
+     fi
+ 
++    add_sysusers
+     installftp
+ 
+     # do mandatory changes
+@@ -221,7 +234,6 @@
+ fi
+ 
+ if [ ! -d /run/systemd/system/ ] && [ -e "/etc/init.d/proftpd" ]; then
+-    systemd-sysusers ${DPKG_ROOT:+--root="$DPKG_ROOT"} proftpd-core.conf
+     set +e
+     proftpd -t >/dev/null 2>&1
+     if [ $? = 0 ]; then

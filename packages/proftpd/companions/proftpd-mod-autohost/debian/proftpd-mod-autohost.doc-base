@@ -1,0 +1,9 @@
+Document: proftpd-mod-autohost
+Title: Documentation for the mod_autohost ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-autohost/mod_autohost.html
+Files: /usr/share/doc/proftpd-mod-autohost/*.html

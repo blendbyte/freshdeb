@@ -1,0 +1,17 @@
+@subheading @anchor{MySQLRatios} MySQLRatios
+
+@format
+Syntax: MySQLRatios on
+Syntax: MySQLRatios frate-field fcred-field brate-field bcred-field
+Default: off, or (@samp{frate fcred brate bcred}) if fields unspecified.
+Context: server config
+Compatibility: only available with the Debian package.
+@end format
+
+Activates support for retrieving per-user ratios from the database.  To
+use this feature, @samp{SQLUserTable} (mod_sql) and @samp{Ratios on}
+(mod_ratios) directives are needed.
+
+For this to work you need to compile with -DMOD_MYSQL_RATIOS, and use
+mod_ratio version 2.0 or better.  The latest version is not included
+with stock ProFTPD, but the Debian package has it compiled in.

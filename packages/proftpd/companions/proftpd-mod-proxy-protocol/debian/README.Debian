@@ -1,0 +1,10 @@
+To activate this module, make sure to enable it in the
+"/etc/proftpd/modules.conf" file as follows:
+
+    LoadModule mod_proxy_protocol.c
+
+Example configuration file
+
+    /usr/share/doc/proftpd-mod-proxy-protocol/examples/mod_proxy_protocol.conf
+
+(modified as required) can be copied to "/etc/proftpd/conf.d/".

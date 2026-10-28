@@ -1,0 +1,99 @@
+.\" Copyright (C) 1999 Darren Benham
+.\"
+.\" This manual page is free software.  It is distributed under the
+.\" terms of the GNU General Public License as published by the Free
+.\" Software Foundation; either version 2 of the License, or (at your
+.\" option) any later version.
+.\"
+.\" This manual page is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this manual page; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+.\" USA
+.\"
+.TH FTPSTATS 8 "October 30, 2002" "Debian GNU/Linux"
+
+.SH NAME
+ftpstats \- FTP Log summarizer
+.SH SYNOPSIS
+.B ftpstats
+.RI [ options ] 
+.SH DESCRIPTION
+.PP
+Ftpstats dissects the defined ftp log and reports various 
+statistics as requested.
+This manual page was written for the Debian GNU/Linux distribution
+because the original program does not have a manual page.
+.P
+.SH OPTIONS
+.P
+.TP
+.BR \-f " filename"
+Use
+.IR filename
+rather than the default
+.IR /var/log/xferlog
+.
+.TP
+.BR \-r
+Include real users.
+.TP
+.BR \-a
+Include anonymous users.
+.TP
+.BR \-h
+Include report on hourly traffic.
+.TP
+.BR \-d
+Include report on domain traffic.
+.TP
+.BR \-t
+Report on total traffic by section.
+.TP
+.BR \-i
+Report on incoming traffic only (uploads).
+.TP
+.BR \-o
+Report on outgoing traffic only (downloads).
+.TP
+.BR \-D "domain"
+Report only on traffic from
+.IR domain
+.  
+This option leads to problems with the local domain:  e.g. test.com is
+encountered under test and not recognized under com, \-D com will give you only
+stats about com excluding test.com!  Use \-A com for correct results.
+.TP
+.BR \-A "address"
+Report only on traffic from addresses whose end matches
+.IR address
+e.g. \-A test.domain.com will report on address ending with test.domain.com
+.TP
+.BR \-l "depth"
+Depth of path detail for sections
+.TP
+.BR \-s "section"
+Section to report on.  e.g. \-s /pub will report only on paths under /pub
+.SH BUGS
+No known bugs at this time.
+If you discover any bugs, please report at http://bugs.proftpd.org/
+For help/support, try the ProFTPD mailing lists, detailed on
+http://www.proftpd.org/lists.html
+.br
+.SH SEE ALSO
+.BR proftpd (8), proftpd.conf (5), xferlog (5)
+.SH AUTHORS
+ProFTPD is written and maintained by a number of people, full credits
+can be found on http://www.proftpd.org/credits.html
+.br
+.SH CREDITS
+This manual page was written by
+Francesco P. Lovergine <frankie@debian.org> and other Debian developers,
+for the Debian GNU/Linux system (but may be used by others).
+.br
+Please use the most appropriate mailing list listed on
+http://www.proftpd.org/lists.html for ftpstats related comments.

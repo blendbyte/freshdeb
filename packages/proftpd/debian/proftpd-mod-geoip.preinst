@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "install" ] || [ "$1" = "upgrade" ]
+then
+	if dpkg --compare-versions "$2" lt-nl "0.3-1+deb7u1"
+	then
+		rm -fv $(dpkg-query --control-path proftpd-mod-geoip postrm)
+	fi
+fi
+
+#DEBHELPER#

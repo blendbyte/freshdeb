@@ -1,0 +1,21 @@
+proftpd-mod-kafka (0.1-2) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on proftpd-dev.
+    + proftpd-mod-kafka: Drop versioned constraint on proftpd-basic in Breaks.
+
+  * Enable Reprotest on Salsa CI.
+  * Build using the default build flags (Closes: #1119532);
+    enable blhc test on Salsa CI.
+  * Move Make.rules to debian/; clean up that file.
+  * Remove libsodium-dev from B-D.
+  * Bump Standards version, no changes needed.
+
+ -- Hilmar Preuße <hille42@debian.org>  Sun, 23 Nov 2025 15:00:15 +0100
+
+proftpd-mod-kafka (0.1-1) unstable; urgency=medium
+
+  * Initial Release. (Closes: #1009887)
+
+ -- Hilmar Preusse <hille42@web.de>  Wed, 20 Apr 2022 00:19:31 +0200

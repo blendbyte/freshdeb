@@ -1,0 +1,128 @@
+.TH FTPQUOTA "8" "August 2005" "Proftpd" "Proftpd Utilities"
+.SH NAME
+ftpquota \- An utility to manage Proftpd quotas
+.SH SYNOPSIS
+usage: ftpquota [options]
+.SH DESCRIPTION
+This utility can be used to create quota tables and manage their records
+in order to control the mod_quotatab module behavior in Proftpd.
+.SH OPTIONS
+.PP
+The following options describe the type of operation to be performed:
+.TP
+\fB\-\-add\-record\fR
+Create a new record with the specified limits.  Any
+limits left unspecified with have their default
+values.  This option requires the \fB\-\-name\fR and
+\fB\-\-quota\-type\fR options.
+.TP
+\fB\-\-create\-table\fR
+Create the table if not present.  Used to initialize
+a table.  The default limit table path is
+"./ftpquota.limittab".  The default tally table path is
+"./ftpquota.tallytab".
+.TP
+\fB\-\-delete\-record\fR
+Deletes a quota record from the table.  This option
+requires the \fB\-\-name\fR and \fB\-\-quote\-type\fR options.
+.TP
+\fB\-\-show\-records\fR
+Prints out all of the quota records in the table in
+a legible format.
+.TP
+\fB\-\-update\-record\fR
+Updates a quota record with the specified limits.  Any
+limits left unspecified will be updated with their
+default value.  This option requires the \fB\-\-name\fR and
+\fB\-\-quota\-type\fR options.
+.PP
+The following option describes the type of table on which to operate:
+.TP
+\fB\-\-type\fR
+Specifies a table type to use.  The allowable options
+are: "limit" or "tally".  This is required.
+.IP
+The following options are used to specify specific quota limits:
+.TP
+\fB\-\-Bu\fR, \fB\-\-bytes\-upload\fR
+Specifies the limit of the number of bytes that may be
+uploaded.  Defaults to \fB\-1\fR (unlimited).
+.TP
+\fB\-\-Bd\fR, \fB\-\-bytes\-download\fR
+Specifies the limit of the number of bytes that may be
+downloaded.  Defaults to \fB\-1\fR (unlimited).
+.TP
+\fB\-\-Bx\fR, \fB\-\-bytes\-xfer\fR
+Specifies the limit of the number of bytes that may be
+transferred.  Note that this total includes uploads,
+downloads, AND directory listings.  Defaults to
+\fB\-1\fR (unlimited).
+.TP
+\fB\-\-Fu\fR, \fB\-\-files\-upload\fR
+Specifies the limit of the number of files that may be
+uploaded.  Defaults to \fB\-1\fR (unlimited).
+.TP
+\fB\-\-Fd\fR, \fB\-\-files\-download\fR
+Specifies the limit of the number of files that may be
+downloaded.  Defaults to \fB\-1\fR (unlimited).
+.TP
+\fB\-\-Fx\fR, \fB\-\-files\-xfer\fR
+Specifies the limit of the number of files that may be
+transferred, including uploads and downloads.  Defaults
+to \fB\-1\fR (unlimited).
+.TP
+\fB\-L\fR, \fB\-\-limit\-type\fR
+Specifies the type of limit, "hard" or "soft", of
+the bytes limits.  If "hard", any uploaded files that
+push the bytes used counter past the limit will be
+automatically deleted; if "soft", those extra bytes
+will be allowed, but future uploads will be denied.
+This option only makes sense if \fB\-\-type\fR is "limit".
+.TP
+\fB\-N\fR, \fB\-\-name\fR
+Specifies a name for the quota record.  This name
+will be the user/login name, group name, or class
+name, depending on the quota type.  This option
+is ignored if the quota type specified is "all".
+.HP
+\fB\-P\fR, \fB\-\-per\-session\fR
+Specifies that the quota limit is to be applied only
+to each session, rather than persisting across
+sessions.  By default, quotas are persistent.
+Specifies a "quota type" for this record, where
+.TP
+\fB\-Q\fR, \fB\-\-quota\-type\fR
+the type means to which category of FTP users this
+quota will apply.  The quota type must be one of:
+"user", "group", "class", or "all".
+.PP
+The following options are miscellaneous:
+.TP
+\fB\-\-help\fR
+Displays this message.
+.TP
+\fB\-\-table\-path\fR
+Specifies the path to a quota table file to use.
+.TP
+\fB\-\-units\fR
+Specifies whether to treats bytes as is, in kilobytes,
+megabytes, or gigabytes.  Allowable options are:
+"B" or "byte", "Kb" or "kilo", "Mb" or "mega",
+and "Gb" or "giga".  Defaults to "byte".
+.TP
+\fB\-\-verbose\fR
+Toggles more verbose information about the doings of
+the tool as it works.
+.SH AUTHORS
+The Proftpd team. See http://www.proftpd.org/ for information.
+.SH COPYRIGHT
+Copyright (C) 2000-2002 TJ Saunders <tj@castaglia.org>.
+.P
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version. 
+.SH NOTES
+Manual page written for Debian GNU/Linux by
+Francesco P. Lovergine <frankie@debian.org>, Aug 2005
+

@@ -1,0 +1,30 @@
+This module is contained in the mod_pgsql.c file, and is not compiled in
+by default.  It provides the backend support to connect to Postgresql
+databases.
+
+Postgres Database Directives
+============================
+
+PostgresInfo
+------------
+
+Syntax: PostgresInfo host user pass dbname
+Syntax: PostgresInfo host dbname
+Default: none
+Context: server config, virtual host
+
+   Configures the Posgresql database driver (the database may be
+remote).  A connection isn't made until use of a SQL feature requires
+it, after which it may be held open for the lifetime of the FTP session
+depending on the directives in use.
+
+PostgresPort
+------------
+
+Syntax: PostgresPort [num]
+Default: 5432
+Context: server config, virtual host
+
+   Specifies which TCP/IP port to use for connecting.  Default is 5432,
+or UNIX socket for localhost.
+

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+if [ -d /var/lib/proftpd/snmp/empty ]; then
+       rm -r /var/lib/proftpd/snmp/empty
+fi
+
+rm -f /var/lib/proftpd/snmp/*
+
+#DEBHELPER#

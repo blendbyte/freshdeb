@@ -1,0 +1,273 @@
+From 37f3e5a07469f75ce3bb732ea4a503c795ff04ca Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Thu, 7 Sep 2023 20:31:29 -0700
+Subject: [PATCH] Update the module due to changes in the `mod_sftp` keystore
+ API upstream.
+
+This is caused by https://github.com/proftpd/proftpd/issues/1118
+---
+ keys.c             |  2 +-
+ keys.h             |  4 ++--
+ mod_sftp_ldap.c    | 22 ++++++++++++++++------
+ mod_sftp_ldap.h.in |  4 ++--
+ t/api/keys.c       | 34 +++++++++++++++++++++-------------
+ 5 files changed, 42 insertions(+), 24 deletions(-)
+
+diff --git a/keys.c b/keys.c
+index 42bfd11..09954ca 100644
+--- a/keys.c
++++ b/keys.c
+@@ -316,7 +316,7 @@ static void find_key_start(char **line, size_t *linelen) {
+ }
+ 
+ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
+-    unsigned char **key_data, uint32_t *key_datalen) {
++    unsigned char **key_data, uint32_t *key_datalen, pr_table_t *headers) {
+   char *line;
+   BIO *bio = NULL;
+   int had_key_data = FALSE, res = -1;
+diff --git a/keys.h b/keys.h
+index e21fc2d..2204f70 100644
+--- a/keys.h
++++ b/keys.h
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_sftp_ldap keys
+- * Copyright (c) 2016 TJ Saunders
++ * Copyright (c) 2016-2023 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -31,6 +31,6 @@ int sftp_ldap_keys_parse_raw(pool *p, char **blob, size_t *bloblen,
+   unsigned char **key_data, uint32_t *key_datalen);
+ 
+ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
+-  unsigned char **key_data, uint32_t *key_datalen);
++  unsigned char **key_data, uint32_t *key_datalen, pr_table_t *headers);
+ 
+ #endif /* MOD_SFTP_LDAP_KEYS_H */
+diff --git a/mod_sftp_ldap.c b/mod_sftp_ldap.c
+index 18ebb89..077fbcf 100644
+--- a/mod_sftp_ldap.c
++++ b/mod_sftp_ldap.c
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD: mod_sftp_ldap -- LDAP backend module for retrieving authorized keys
+- * Copyright (c) 2010-2016 TJ Saunders
++ * Copyright (c) 2010-2023 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -66,13 +66,14 @@ static int ldapstore_verify_key_raw(pool *p, int nrow, char *ldap_data,
+ }
+ 
+ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
+-    size_t ldap_datalen, unsigned char *key_data, uint32_t key_datalen) {
++    size_t ldap_datalen, unsigned char *key_data, uint32_t key_datalen,
++    pr_table_t *headers) {
+   unsigned char *parsed_data = NULL;
+   uint32_t parsed_datalen = 0;
+   int res;
+ 
+   res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen, &parsed_data,
+-    &parsed_datalen);
++    &parsed_datalen, headers);
+   while (res == 0) {
+     pr_signals_handle();
+ 
+@@ -86,7 +87,7 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
+       parsed_data = NULL;
+       parsed_datalen = 0;
+       res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
+-        &parsed_data, &parsed_datalen);
++        &parsed_data, &parsed_datalen, headers);
+       continue;
+ 
+     } else if (res == FALSE) {
+@@ -96,7 +97,7 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
+       parsed_data = NULL;
+       parsed_datalen = 0;
+       res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
+-        &parsed_data, &parsed_datalen);
++        &parsed_data, &parsed_datalen, headers);
+       continue;
+     }
+ 
+@@ -106,14 +107,23 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
+   return -1;
+ }
+ 
++#if PROFTPD_VERSION_NUMBER >= 0x0001030901
++static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
++    const char *user, unsigned char *key_data, uint32_t key_datalen,
++    pr_table_t *headers) {
++#else
+ static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
+     const char *user, unsigned char *key_data, uint32_t key_datalen) {
++#endif /* Prior to ProFTPD 1.3.9rc1 */
+   register unsigned int i;
+   pool *tmp_pool;
+   cmdtable *ldap_cmdtab;
+   cmd_rec *ldap_cmd;
+   modret_t *ldap_res;
+   array_header *ldap_keys;
++#if PROFTPD_VERSION_NUMBER < 0x0001030901
++  pr_table_t *headers = NULL;
++#endif /* Prior to ProFTPD 1.3.9rc1 */
+   char **values;
+   int res;
+ 
+@@ -168,7 +178,7 @@ static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
+     ldap_datalen = strlen(values[i]);
+ 
+     res = ldapstore_verify_key_rfc4716(p, i, ldap_data, ldap_datalen, key_data,
+-      key_datalen);
++      key_datalen, headers);
+     if (res == 0) {
+       pr_trace_msg(trace_channel, 10, "found matching RFC4716 public key "
+         "(row %u) for user '%s'", i+1, user);
+diff --git a/mod_sftp_ldap.h.in b/mod_sftp_ldap.h.in
+index 572c198..f30a0b3 100644
+--- a/mod_sftp_ldap.h.in
++++ b/mod_sftp_ldap.h.in
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_sftp_ldap
+- * Copyright (c) 2016 TJ Saunders
++ * Copyright (c) 2016-2023 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -28,7 +28,7 @@
+ #include "conf.h"
+ #include "mod_sftp.h"
+ 
+-#define MOD_SFTP_LDAP_VERSION			"mod_sftp_ldap/0.2"
++#define MOD_SFTP_LDAP_VERSION			"mod_sftp_ldap/0.3"
+ 
+ /* Make sure the version of proftpd is as necessary. */
+ #if PROFTPD_VERSION_NUMBER < 0x0001030602
+diff --git a/t/api/keys.c b/t/api/keys.c
+index 072fd3e..d80e7ce 100644
+--- a/t/api/keys.c
++++ b/t/api/keys.c
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_sftp_ldap testsuite
+- * Copyright (c) 2016 TJ Saunders <tj@castaglia.org>
++ * Copyright (c) 2016-2023 TJ Saunders <tj@castaglia.org>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -167,27 +167,27 @@ START_TEST (keys_parse_rfc4716_invalid_params_test) {
+   size_t bloblen = 0;
+   unsigned char *key_data = NULL;
+ 
+-  res = sftp_ldap_keys_parse_rfc4716(NULL, NULL, NULL, NULL, NULL);
++  res = sftp_ldap_keys_parse_rfc4716(NULL, NULL, NULL, NULL, NULL, NULL);
+   fail_unless(res < 0, "Failed to handle null pool");
+   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+     strerror(errno), errno);
+ 
+-  res = sftp_ldap_keys_parse_rfc4716(p, NULL, NULL, NULL, NULL);
++  res = sftp_ldap_keys_parse_rfc4716(p, NULL, NULL, NULL, NULL, NULL);
+   fail_unless(res < 0, "Failed to handle null blob");
+   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+     strerror(errno), errno);
+ 
+-  res = sftp_ldap_keys_parse_rfc4716(p, &blob, NULL, NULL, NULL);
++  res = sftp_ldap_keys_parse_rfc4716(p, &blob, NULL, NULL, NULL, NULL);
+   fail_unless(res < 0, "Failed to handle null bloblen");
+   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+     strerror(errno), errno);
+ 
+-  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, NULL, NULL);
++  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, NULL, NULL, NULL);
+   fail_unless(res < 0, "Failed to handle null key data");
+   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+     strerror(errno), errno);
+ 
+-  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data, NULL);
++  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data, NULL, NULL);
+   fail_unless(res < 0, "Failed to handle null key datalen");
+   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+     strerror(errno), errno);
+@@ -200,39 +200,47 @@ START_TEST (keys_parse_rfc4716_single_line_test) {
+   size_t bloblen;
+   unsigned char *key_data = NULL;
+   uint32_t key_datalen = 0;
++  pr_table_t *headers = NULL;
+ 
++  mark_point();
+   blob = "foo\n";
+   bloblen = strlen(blob);
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, NULL);
+   fail_unless(res < 0, "Failed to handle invalid RFC 4716 key");
+   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+     strerror(errno), errno);
+ 
++  mark_point();
+   blob = pstrdup(p, rfc4716_single_line_key_with_comment);
+   bloblen = strlen(rfc4716_single_line_key_with_comment);
+   key_data = NULL;
+   key_datalen = 0;
++  headers = pr_table_nalloc(p, 0, 1);
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, headers);
+   fail_unless(res == 0,
+     "Failed to handle RFC 4716 key with Comment header: %s", strerror(errno));
+ 
++  mark_point();
+   blob = pstrdup(p, rfc4716_single_line_key_with_xtag);
+   bloblen = strlen(rfc4716_single_line_key_with_xtag);
+   key_data = NULL;
+   key_datalen = 0;
++  headers = pr_table_nalloc(p, 0, 1);
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, headers);
+   fail_unless(res == 0,
+     "Failed to handle RFC 4716 key with X-Tag header: %s", strerror(errno));
+ 
++  mark_point();
+   blob = pstrdup(p, rfc4716_single_line_key);
+   bloblen = strlen(rfc4716_single_line_key);
+   key_data = NULL;
+   key_datalen = 0;
++  headers = pr_table_nalloc(p, 0, 1);
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, headers);
+   fail_unless(res == 0, "Failed to handle valid RFC 4716 key: %s",
+     strerror(errno));
+ }
+@@ -248,7 +256,7 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
+   blob = "foo\n";
+   bloblen = strlen(blob);
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, NULL);
+   fail_unless(res < 0, "Failed to handle invalid RFC 4716 key");
+   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+     strerror(errno), errno);
+@@ -258,7 +266,7 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
+   key_data = NULL;
+   key_datalen = 0;
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, NULL);
+   fail_unless(res == 0,
+     "Failed to handle RFC 4716 key with Comment header: %s", strerror(errno));
+ 
+@@ -267,7 +275,7 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
+   key_data = NULL;
+   key_datalen = 0;
+   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+-    &key_datalen);
++    &key_datalen, NULL);
+   fail_unless(res == 0, "Failed to handle valid RFC 4716 key: %s",
+     strerror(errno));
+ }

@@ -1,0 +1,36 @@
+#!/bin/sh 
+
+set -e
+
+if [ "$1" = "disappear" -o "$1" = "remove" ]
+then
+	if [ ! -z `command -v update-inetd` ]
+    then
+        update-inetd --disable ftp
+    fi
+fi
+
+if [ "$1" = "purge" ]
+then
+	# remove ucf hashes on purge
+	if [ -x "/usr/bin/ucf" ]
+	then
+		ucf --purge /etc/proftpd/proftpd.conf
+		ucf --purge /etc/proftpd/modules.conf
+		ucf --purge /etc/proftpd/tls.conf
+		ucf --purge /etc/proftpd/sql.conf
+		ucf --purge /etc/proftpd/ldap.conf
+		ucf --purge /etc/proftpd/virtuals.conf
+		ucf --purge /etc/proftpd/sftp.conf
+		ucf --purge /etc/proftpd/geoip.conf
+		ucf --purge /etc/proftpd/snmp.conf
+	fi
+    rm -rf /etc/proftpd 
+    rm -rf /var/log/proftpd
+    rm -f /etc/logrotate.d/proftpd-core
+    rm -f /srv/ftp/welcome.msg
+    rmdir --ignore-fail-on-non-empty /srv/ftp
+fi
+
+#DEBHELPER#
+

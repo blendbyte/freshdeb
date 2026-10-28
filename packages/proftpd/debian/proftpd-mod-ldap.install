@@ -1,0 +1,2 @@
+usr/lib/proftpd/mod_ldap.so
+usr/lib/proftpd/mod_quotatab_ldap.so

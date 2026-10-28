@@ -1,0 +1,229 @@
+#!/bin/sh -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package> <new-version>
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see /usr/share/doc/packaging-manual/
+#
+# quoting from the policy:
+#     Any necessary prompting should almost always be confined to the
+#     post-installation script, and should be protected with a conditional
+#     so that unnecessary prompting doesn't happen if a package's
+#     installation fails and the `postinst' is called with `abort-upgrade',
+#     `abort-remove' or `abort-deconfigure'.
+
+
+ETC_DIR="/etc/proftpd"
+CONF=$ETC_DIR/proftpd.conf
+CONF_NEW=$ETC_DIR/proftpd.conf.proftpd-new
+MODULES=$ETC_DIR/modules.conf
+MODULES_NEW=$ETC_DIR/modules.conf.proftpd-new
+
+installftp()
+{
+    if [ -f /usr/share/proftpd/templates/welcome.msg ] ; then
+        mkdir -p /srv/ftp
+        cp -p -v /usr/share/proftpd/templates/welcome.msg /srv/ftp/welcome.msg.proftpd-new || true
+        do_update /srv/ftp/welcome.msg || true
+    fi
+}
+
+list_options()
+{
+    if [ -f $CONF_NEW ] ; then
+	sed -i -e "s/lsdefaultoptions/ListOptions/i" $CONF_NEW
+    fi
+}
+
+tcpwin_options()
+{
+    if [ -f $CONF_NEW ] ; then
+	sed -i -e "s/tcpreceivewindow/SocketOptions rcvbuf/i" \
+            -e "s/tcpsendwindow/SocketOptions sndbuf/i" $CONF_NEW
+    fi
+}
+
+scoreboard()
+{
+    if [ -f $CONF_NEW ] ; then
+	sed -i -e "s/\(scoreboardpath.*\)/#\n#ScoreboardPath is deprecated in 1.2.9, use ScoreboardFile instead\n#\1\n#\n#ScoreboardFile\t\/run\/proftpd\/proftpd.scoreboard\n#/i" \
+	$CONF_NEW
+    fi
+}
+
+include_modules()
+{
+    if [ -f $CONF_NEW ] ; then
+	if ! egrep -qi "^[[:space:]]*Include.*/etc/proftpd/modules.conf" $CONF_NEW ; then
+	    printf "#\n# Includes required DSO modules. This is mandatory in proftpd 1.3\n#\nInclude\t/etc/proftpd/modules.conf\n\n" >$CONF_NEW.tmp.$$
+	    cat $CONF_NEW >>$CONF_NEW.tmp.$$
+	    mv -f $CONF_NEW.tmp.$$ $CONF_NEW
+	fi
+    fi
+}
+
+identlookups()
+{
+    if [ -f $CONF_NEW ] ; then
+	if ! egrep -qi "^[[:space:]]*<IfModule mod_ident.c>" $CONF_NEW ; then
+		perl -pi -e "s{^(.*IdentLookups.*)}{<IfModule mod_ident.c>\n\1\n</IfModule>\n}i;" $CONF_NEW
+	fi
+    fi
+}
+
+add_mod_ident()
+{
+    if [ -f $MODULES_NEW ] ; then
+	if ! egrep -qi "^[[:space:]]|#*LoadModule mod_ident.c" $MODULES_NEW ; then
+		perl -pi -e "s{^(ModulePath .*)}{\1\n\n#\n# Added at upgrade time\n#\nLoadModule mod_ident.c\n}i;" $MODULES_NEW
+	fi
+    fi
+}
+
+add_mod_ls()
+{
+    if [ -f $MODULES_NEW ] ; then
+	if ! egrep -qi "^[[:space:]]|#*LoadModule mod_ls.c" $MODULES_NEW ; then
+		perl -pi -e "s{^(ModulePath .*)}{\1\n# Debian #1103154: needed to make default config executable\n#\nLoadModule mod_ls.c\n}i;" $MODULES_NEW
+	fi
+    fi
+}
+
+add_mod_xfer()
+{
+    if [ -f $MODULES_NEW ] ; then
+	if ! egrep -qi "^[[:space:]]|#*LoadModule mod_xfer.c" $MODULES_NEW ; then
+		perl -pi -e "s{^(ModulePath .*)}{\1\n# Debian #1103154: needed to make default config executable\n#\nLoadModule mod_xfer.c\n}i;" $MODULES_NEW
+	fi
+    fi
+}
+
+replace_file () {
+    file=$1
+    if [ ! -f ${file} ] ; then
+	mv ${file}.proftpd-new ${file}
+    else
+	cp $file ${file}.proftpd-old
+	ucf ${file}.proftpd-new $file
+    fi
+}
+
+do_update () {
+    file=$1
+    if diff -q ${file} ${file}.proftpd-new >/dev/null 2>&1; then
+	# Old file and new file are identical
+	rm -f ${file}.proftpd-new
+    else
+	replace_file $file
+    fi
+}
+
+disable_script () {
+    file=$1
+    if [ -x ${file} ]; then
+	cp ${file} ${file}.disabled
+	cat >${file}.disabled <<EOF
+#!/bin/sh
+# This script has been disabled at upgrade time
+
+exit 0
+
+EOF
+	cat ${file} >>${file}.disabled
+	rm -f ${file}
+    fi
+}
+
+# update-inetd is used if found, else you are on your own
+if [ ! -z `command -v update-inetd` ]; then
+    UPDATE_INETD=update-inetd
+else
+    UPDATE_INETD=/bin/true
+fi
+
+if [ "$1" = "configure" ]; then
+
+    # mv eventual old configuration in the new location
+    if [ -f /etc/proftpd.conf -a ! -f $CONF ]; then
+    	mv /etc/proftpd.conf $CONF
+    fi
+
+    # use current configuration files or generate new ones from scratch
+    for name in proftpd modules sql ldap tls virtuals sftp geoip snmp
+    do
+      if [ ! -f $ETC_DIR/$name.conf ]; then
+          cp /usr/share/proftpd/templates/$name.conf $ETC_DIR/$name.conf.proftpd-new
+      else
+          cp $ETC_DIR/$name.conf $ETC_DIR/$name.conf.proftpd-new
+      fi
+    done
+
+    # update-inetd does not manage hostlist prefix to service, at least avoid to add a duplicated line
+    if [ -f /etc/inetd.conf -a $(grep -qs '^([[:alnum:],.]+)?:?ftp[[:space:]]+' /etc/inetd.conf|wc -l) -eq 0 ]; then
+    	$UPDATE_INETD --group STANDARD --add '#<off># ftp	stream	tcp	nowait	root /usr/sbin/tcpd /usr/sbin/proftpd'
+    fi
+
+    installftp
+
+    # do mandatory changes
+    list_options
+    tcpwin_options
+    scoreboard
+    include_modules
+    identlookups
+    add_mod_ident
+    add_mod_ls
+    add_mod_xfer
+
+    # disable old cron jobs if needed
+    disable_script /etc/cron.monthly/proftpd
+    disable_script /etc/cron.monthly/proftpd-basic
+
+    # propose maintainer changes to user
+    do_update /etc/proftpd/proftpd.conf
+    do_update /etc/proftpd/modules.conf
+    do_update /etc/proftpd/tls.conf
+    do_update /etc/proftpd/sql.conf
+    do_update /etc/proftpd/ldap.conf
+    do_update /etc/proftpd/virtuals.conf
+    do_update /etc/proftpd/sftp.conf
+    do_update /etc/proftpd/geoip.conf
+    do_update /etc/proftpd/snmp.conf
+
+    # be safe and change permissions for .conf files where passwords should
+    # potentially be present
+    chmod 600 /etc/proftpd/sql.conf* /etc/proftpd/ldap.conf* || true
+
+    # clean run files (pidfile and scoreboard)
+    rm -f /run/proftpd/proftpd* /run/proftpd.pid
+
+fi
+
+if [ ! -d /run/systemd/system/ ] && [ -e "/etc/init.d/proftpd" ]; then
+    systemd-sysusers ${DPKG_ROOT:+--root="$DPKG_ROOT"} proftpd-core.conf
+    set +e
+    proftpd -t >/dev/null 2>&1
+    if [ $? = 0 ]; then
+	set -e
+    else
+	echo "Cannot start proftpd, please check syntax of your configuration file $CONF"
+    fi
+fi
+
+# Check if we are standalone, before trying to start via systemd.
+
+if [ "$1" = "configure" ]; then
+    if egrep -qi "^[[:space:]]*ServerType.*standalone" /etc/proftpd/proftpd.conf
+    then
+        echo "Server configured as standalone."
+    else
+        echo "Server not configured as standalone, exiting."
+        exit 0
+    fi
+fi
+
+#DEBHELPER#

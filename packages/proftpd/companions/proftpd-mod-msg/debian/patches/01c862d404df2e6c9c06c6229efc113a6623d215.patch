@@ -1,0 +1,97 @@
+From 01c862d404df2e6c9c06c6229efc113a6623d215 Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Wed, 11 Apr 2018 07:06:41 -0700
+Subject: [PATCH] Address compiler warnings about signedness mismatches.
+
+---
+ mod_msg.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/mod_msg.c b/mod_msg.c
+index 7567253..757a53f 100644
+--- a/mod_msg.c
++++ b/mod_msg.c
+@@ -509,7 +509,7 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+ 
+   /* Handle 'msg user' requests. */
+   if (strcmp(reqargv[0], "user") == 0) {
+-    register unsigned int i = 0;
++    register int i = 0;
+     pr_scoreboard_entry_t *score = NULL;
+     const char *user, *msgstr = "";
+     size_t msglen;
+@@ -530,9 +530,10 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+      * be a maximum length on this strength, depending on the maximum msg
+      * size allowed for SysV message queues.
+      */
+-    for (i = 2; i < reqargc; i++)
++    for (i = 2; i < reqargc; i++) {
+       msgstr = pstrcat(ctrl->ctrls_tmp_pool, msgstr, *msgstr ? " " : "",
+         reqargv[i], NULL);
++    }
+ 
+     msglen = strlen(msgstr) + 1;
+ 
+@@ -577,7 +578,7 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+ 
+   /* Handle 'msg host' requests. */
+   } else if (strcmp(reqargv[0], "host") == 0) {
+-    register unsigned int i = 0;
++    register int i = 0;
+     pr_scoreboard_entry_t *score = NULL;
+     const char *addr, *msgstr = "";
+     const pr_netaddr_t *na;
+@@ -596,9 +597,10 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+      * be a maximum length on this strength, depending on the maximum msg
+      * size allowed for SysV message queues.
+      */
+-    for (i = 2; i < reqargc; i++)
++    for (i = 2; i < reqargc; i++) {
+       msgstr = pstrcat(ctrl->ctrls_tmp_pool, msgstr, *msgstr ? " " : "",
+         reqargv[i], NULL);
++    }
+ 
+     if (strlen(msgstr) >= MSGMAX) {
+       pr_ctrls_add_response(ctrl, "message exceeds maximum length (%u). "
+@@ -645,7 +647,7 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+ 
+   /* Handle 'msg class' requests. */
+   } else if (strcmp(reqargv[0], "class") == 0) {
+-    register unsigned int i = 0;
++    register int i = 0;
+     pr_scoreboard_entry_t *score;
+     const char *class = reqargv[1], *msgstr = "";
+ 
+@@ -663,9 +665,10 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+      * be a maximum length on this strength, depending on the maximum msg
+      * size allowed for SysV message queues.
+      */
+-    for (i = 2; i < reqargc; i++)
++    for (i = 2; i < reqargc; i++) {
+       msgstr = pstrcat(ctrl->ctrls_tmp_pool, msgstr, *msgstr ? " " : "",
+         reqargv[i], NULL);
++    }
+ 
+     if (strlen(msgstr) >= MSGMAX) {
+       pr_ctrls_add_response(ctrl, "message exceeds maximum length (%u). "
+@@ -700,7 +703,7 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+ 
+   /* Handle 'msg all' requests. */
+   } else if (strcmp(reqargv[0], "all") == 0) {
+-    register unsigned int i = 0;
++    register int i = 0;
+     pr_scoreboard_entry_t *score;
+     const char *msgstr = "";
+ 
+@@ -713,9 +716,10 @@ static int msg_handle_msg(pr_ctrls_t *ctrl, int reqargc, char **reqargv) {
+      * be a maximum length on this strength, depending on the maximum msg
+      * size allowed for SysV message queues.
+      */
+-    for (i = 1; i < reqargc; i++)
++    for (i = 1; i < reqargc; i++) {
+       msgstr = pstrcat(ctrl->ctrls_tmp_pool, msgstr, *msgstr ? " " : "",
+         reqargv[i], NULL);
++    }
+ 
+     if (strlen(msgstr) >= MSGMAX) {
+       pr_ctrls_add_response(ctrl, "message exceeds maximum length (%u). "

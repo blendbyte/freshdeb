@@ -1,0 +1,9 @@
+Document: proftpd-mod-geoip2
+Title: Documentation for the mod_geoip2 ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-geoip2/mod_geoip2.html
+Files: /usr/share/doc/proftpd-mod-geoip2/*.html

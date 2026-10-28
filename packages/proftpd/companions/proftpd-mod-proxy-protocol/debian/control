@@ -1,0 +1,21 @@
+Source: proftpd-mod-proxy-protocol
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>,
+           Dmitry Smirnov <onlyjob@debian.org>
+Build-Depends: debhelper-compat (= 13),
+               proftpd-dev,
+Standards-Version: 4.6.2
+Rules-Requires-Root: binary-targets
+Homepage: https://github.com/Castaglia/proftpd-mod_proxy_protocol
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-proxy-protocol.git
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-proxy-protocol
+
+Package: proftpd-mod-proxy-protocol
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${proftpd:Depends}
+Description: ProFTPD module mod_proxy_protocol
+ The mod_proxy_protocol module for ProFTPD handles protocols that are used
+ for conveying connection information via proxies such as haproxy.

@@ -1,0 +1,11 @@
+Version: 5
+
+Source: https://github.com/proftpd/proftpd/tags
+Matching-Pattern: .*/v?(\d\.\d\.\d[a-z]?)\.tar\.gz
+Repack: yes
+Compression: gz
+Repacksuffix: ~dfsg
+Dversion-Mangle: s/\~dfsg//
+Uversion-Mangle: s/(\d)[_\.\-\+]?((RC|rc|pre|dev|beta|alpha)\d*)$/$1~$2/
+Pgp-Sig-Url-Mangle: s@.*archive/refs/tags@ftp://ftp.proftpd.org/distrib/source@;s@v([^\/]+)\.tar\.gz@proftpd-$1\.tar\.gz@;s/$/.asc/
+Update-Script: uupdate

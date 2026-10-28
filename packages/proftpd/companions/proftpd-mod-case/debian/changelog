@@ -1,0 +1,92 @@
+proftpd-mod-case (0.9.1-1) unstable; urgency=medium
+
+  [ Hilmar Preuße ]
+  * New upstream version.
+    - Can be built using gcc 15 (Closes: #1097656).
+  * Bump Standards Version 4.7.2, no changes needed.
+  * Lintian cleanup.
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on proftpd-dev.
+  * debian/copyright: use spaces rather than tabs to start continuation lines.
+
+ -- Hilmar Preuße <hille42@debian.org>  Wed, 05 Mar 2025 19:29:28 +0100
+
+proftpd-mod-case (0.9-1) unstable; urgency=low
+
+  [ Debian Janitor ]
+  * Use versioned copyright format URI.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+  [ Hilmar Preusse ]
+  * New upstream release, disable spelling fix patch.
+  * Add me to copyright holders of debian/* files.
+  * Standards version 4.6.0, no changes needed.
+
+ -- Hilmar Preusse <hille42@web.de>  Mon, 23 Aug 2021 10:54:46 +0200
+
+proftpd-mod-case (0.7+git73896501cf-2) unstable; urgency=medium
+
+  * d/watch points to github
+  * d/rules: replace override_dh_clean by override_dh_auto_clean
+  * Add me to uploaders.
+  * Lintian:
+    - W: spelling-error-in-changelog
+    - W: package-uses-deprecated-debhelper-compat-version 9
+    - W: no-newline-at-end debian/rules
+    - out-of-date-standards-version, no changes needed
+    - rules-requires-root-missing
+
+ -- Hilmar Preusse <hille42@web.de>  Thu, 20 Aug 2020 10:21:47 +0200
+
+proftpd-mod-case (0.7+git73896501cf-1) unstable; urgency=medium
+
+  * New Upstream snapshot
+  * d/control:
+    - Policy bump to 3.9.5.
+    - Remove absolute DMUA.
+  * d/rules: add hardening rules.
+
+  [ Hilmar Preuße ]
+
+  * Remove explicit dep on proftpd-basic (>= x.y.z), leave that job
+    to ${proftpd:Depends}.
+  * d/copyright
+    - fix location of format definition
+    - change order: Statement for debian/* files goes at bottom
+  * d/rules: add export DH_VERBOSE=1 statement
+  * d/control: Updated maintenance team list for migration from alioth.
+
+  Lintian Warnings
+  * debhelper compat level 9
+  * Standards-Version 4.1.3, no changes needed
+  * priority-extra-is-replaced-by-priority-optional
+  * debian-watch-file-uses-deprecated-githubredir
+  * ...we're now on salsa
+
+  [ Francesco Paolo Lovergine ]
+
+  * Removed obsolete autotools-dev b-d.
+  * Policy bumped to 4.1.4 without changes.
+
+ -- Francesco Paolo Lovergine <frankie@debian.org>  Tue, 01 May 2018 10:14:27 +0200
+
+proftpd-mod-case (0.7-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: Removing libacl1-dev as BD and increasing proftpd-dev
+    to >= 1.3.4~rc3-2~.
+  * debian/copyright: updated
+  * debian/rules:
+    - Use dh_clean instead of dh_autoclean.
+    - Do not install *.{la,a} files.
+
+ -- Mahyuddin Susanto <udienz@ubuntu.com>  Tue, 27 Dec 2011 00:34:07 +0700
+
+proftpd-mod-case (0.4-1) unstable; urgency=low
+
+  * Initial release. (Closes: #622953)
+
+ -- Mahyuddin Susanto <udienz@ubuntu.com>  Sat, 16 Apr 2011 13:14:21 +0700

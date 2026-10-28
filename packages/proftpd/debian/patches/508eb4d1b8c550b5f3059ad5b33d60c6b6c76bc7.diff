@@ -1,0 +1,41 @@
+From 508eb4d1b8c550b5f3059ad5b33d60c6b6c76bc7 Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Sun, 10 May 2026 09:37:17 -0700
+Subject: [PATCH] Issue #2056: Initial testing with OpenSSL 3.5.5 shows that
+ the prior changes for Issue #1963 were insufficient; adding a manual refcount
+ increment works.
+
+---
+ contrib/mod_tls.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/contrib/mod_tls.c b/contrib/mod_tls.c
+index e78e4c17b..fede5b8cd 100644
+--- a/contrib/mod_tls.c
++++ b/contrib/mod_tls.c
+@@ -9095,9 +9095,23 @@ static void tls_end_sess(SSL *ssl, conn_t *conn, int flags) {
+      */
+     pr_trace_msg(trace_channel, 29,
+       "data SSL %p being ended has same SSL_SESSION %p as control SSL, "
+-      "clearing the data SSL pointer manually (Issue #1963)", ssl,
++      "clearing the data SSL pointer manually (see Issue #1963)", ssl,
+       SSL_get_session(ssl));
+-    SSL_set_session(ssl, NULL);
++    if (SSL_set_session(ssl, NULL) != 1) {
++      pr_trace_msg(trace_channel, 29,
++        "error setting NULL session on SSL %p: %s", ssl, tls_get_errors());
++    }
++
++    /* Note that, per findings in Issue #2056, we also need to manually
++     * increment the refcount of the ctrl_ssl session, lest we still
++     * inadvertently corrupt the OpenSSL internal session cache state.
++     * Sigh.
++     */
++    if (SSL_SESSION_up_ref(SSL_get_session(ctrl_ssl)) != 1) {
++      pr_trace_msg(trace_channel, 29,
++        "error incrementing session refcount on SSL %p: %s", ctrl_ssl,
++        tls_get_errors());
++    }
+   }
+ 
+   SSL_free(ssl);

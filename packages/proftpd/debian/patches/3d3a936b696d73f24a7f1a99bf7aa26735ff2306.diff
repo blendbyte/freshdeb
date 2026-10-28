@@ -1,0 +1,66 @@
+From 3d3a936b696d73f24a7f1a99bf7aa26735ff2306 Mon Sep 17 00:00:00 2001
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date: Wed, 27 Aug 2025 16:20:02 +0200
+Subject: [PATCH] Fix GNU/Hurd build (#1975)
+Origin: https://github.com/proftpd/proftpd/commit/3d3a936b696d73f24a7f1a99bf7aa26735ff2306
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+GNU/Hurd uses the same glibc as Linux, and as such also follows posix by
+making the 2nd parameter of iconv() a char**.
+
+Otherwise, we get:
+```
+encode.c: In function ‘str_convert’:
+encode.c:71:25: error: passing argument 2 of ‘iconv’ from incompatible pointer type [-Wincompatible-pointer-types]
+   71 |     nconv = iconv(conv, &inbuf, inbuflen, &outbuf, outbuflen);
+      |                         ^~~~~~
+      |                         |
+      |                         const char **
+In file included from encode.c:32:
+/usr/include/iconv.h:49:54: note: expected ‘char ** restrict’ but argument is of type ‘const char **’
+   49 | extern size_t iconv (iconv_t __cd, char **__restrict __inbuf,
+      |                                    ~~~~~~~~~~~~~~~~~~^~~~~~~
+```
+---
+ contrib/mod_sftp/utf8.c | 4 ++--
+ src/encode.c            | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/contrib/mod_sftp/utf8.c b/contrib/mod_sftp/utf8.c
+index d8078239b..021aa2739 100644
+--- a/contrib/mod_sftp/utf8.c
++++ b/contrib/mod_sftp/utf8.c
+@@ -52,11 +52,11 @@ static int utf8_convert(iconv_t conv, const char *inbuf, size_t *inbuflen,
+     pr_signals_handle();
+ 
+     /* Solaris/FreeBSD's iconv(3) takes a const char ** for the input buffer,
+-     * whereas Linux/Mac OSX iconv(3) use char ** for the input buffer.
++     * whereas Linux/Mac OSX/GNU iconv(3) use char ** for the input buffer.
+      */
+ #if defined(LINUX) || defined(DARWIN6) || defined(DARWIN7) || \
+     defined(DARWIN8) || defined(DARWIN9) || defined(DARWIN10) || \
+-    defined(DARWIN11) || defined(DARWIN12)
++    defined(DARWIN11) || defined(DARWIN12) || defined(GNU)
+ 
+     nconv = iconv(conv, (char **) &inbuf, inbuflen, &outbuf, outbuflen);
+ #else
+diff --git a/src/encode.c b/src/encode.c
+index 245b2d43a..3af7fad50 100644
+--- a/src/encode.c
++++ b/src/encode.c
+@@ -60,11 +60,11 @@ static int str_convert(iconv_t conv, const char *inbuf, size_t *inbuflen,
+     pr_signals_handle();
+ 
+     /* Solaris/FreeBSD's iconv(3) takes a const char ** for the input buffer,
+-     * whereas Linux/Mac OSX iconv(3) use char ** for the input buffer.
++     * whereas Linux/Mac OSX/GNU iconv(3) use char ** for the input buffer.
+      */
+ #if defined(LINUX) || defined(DARWIN6) || defined(DARWIN7) || \
+     defined(DARWIN8) || defined(DARWIN9) || defined(DARWIN10) || \
+-    defined(DARWIN11) || defined(DARWIN12)
++    defined(DARWIN11) || defined(DARWIN12) || defined(GNU)
+ 
+     nconv = iconv(conv, (char **) &inbuf, inbuflen, &outbuf, outbuflen);
+ #else

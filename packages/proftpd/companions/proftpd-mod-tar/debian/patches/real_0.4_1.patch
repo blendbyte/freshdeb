@@ -1,0 +1,21 @@
+diff --git a/mod_tar.c b/mod_tar.c
+index ba6ce5f..4774755 100644
+--- a/mod_tar.c
++++ b/mod_tar.c
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_tar
+- * Copyright (c) 2009-2017 TJ Saunders
++ * Copyright (c) 2009-2021 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -987,7 +987,7 @@ MODRET tar_pre_retr(cmd_rec *cmd) {
+ }
+ 
+ MODRET tar_log_retr(cmd_rec *cmd) {
+-  char *path;
++  const char *path;
+ 
+   if (tar_engine == FALSE) {
+     return PR_DECLINED(cmd);

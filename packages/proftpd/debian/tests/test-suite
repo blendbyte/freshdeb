@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+
+# Temporary fix for LP: #2071468
+eval "$(dpkg-buildflags --export=sh)"
+
+./configure --disable-option-checking --disable-silent-rules --disable-dependency-tracking \
+	    --prefix=/usr --with-pkgconfig=lib/pkgconfig LIBS="-lm -lrt -pthread -lsubunit" \
+	    --with-includes=$(pg_config --includedir)$(mysql_config --include|sed -e 's/-I/:/g'|sed -e 's/ //') \
+	    --mandir=/usr/share/man --localstatedir=/run --libexecdir=/usr/lib/proftpd \
+	    --enable-sendfile --enable-facl --enable-dso --enable-autoshadow --enable-ctrls --enable-openssl \
+	    --enable-ipv6 --enable-nls --enable-memcache --enable-pcre2 \
+	    --disable-strip --enable-redis --enable-tests
+
+make check-api

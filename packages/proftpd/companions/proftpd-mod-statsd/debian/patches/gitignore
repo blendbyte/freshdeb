@@ -1,0 +1,9 @@
+./configure needs to be regarded as needed for build.
+---
+--- proftpd-mod-statsd.orig/.gitignore
++++ proftpd-mod-statsd/.gitignore
+@@ -1,4 +1,3 @@
+-configure
+ Makefile
+ config.status
+ autom4te.cache

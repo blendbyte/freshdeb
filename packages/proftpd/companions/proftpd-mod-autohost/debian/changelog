@@ -1,0 +1,48 @@
+proftpd-mod-autohost (0.6-2) unstable; urgency=medium
+
+  * Add patch for Upstream issue #8 "Fix the build, broken by API changes
+    in ProFTPD 1.3.7b.". Bump BD version to 1.3.7b.
+
+ -- Hilmar Preusse <hille42@web.de>  Mon, 20 Sep 2021 09:11:13 +0200
+
+proftpd-mod-autohost (0.6-1) unstable; urgency=medium
+
+  * New upstream release (bump B-D Version of proftpd to 1.3.6-1).
+  * Add me to d/copyright und Uploaders in d/control.
+  * Let d/watch point to github.
+  * Standards Version 4.5.0:
+    - Add "Rules-Requires-Root: no" to d/control
+  * Lintian:
+    - W: spelling-error-in-changelog
+    - W: package-uses-deprecated-debhelper-compat-version 9
+
+ -- Hilmar Preusse <hille42@web.de>  Wed, 19 Aug 2020 21:21:50 +0200
+
+proftpd-mod-autohost (0.4-2) unstable; urgency=low
+
+  * Policy bumped to 4.1.4, with no changes.
+  * Removing libacl1-dev as BD and increasing proftpd-dev to (>= 1.3.4~rc3-2~)
+  * Removing now obsolete autotools-dev b-d, changed debhelper versioning.
+
+  [Hilmar Preuße]
+  * Fix override in debian/rules (override_dh_autoclean ->
+    override_dh_auto_clean) (Closes: #834657). Thanks to Chris Lamb.
+  * d/rules: remove *la and *a file after installation
+  * d/control: Updated maintenance team list for migration from alioth.
+  * Remove explicit dep on proftpd-basic (>= x.y.z), leave that job
+    to ${proftpd:Depends}.
+  * Remove d/proftpd-mod-autohost.docs, redundant to d/docs
+  * Fix Vcs-Browser & Vcs-Git URL.
+  * Lintian
+    - priority-extra-is-replaced-by-priority-optional
+    - dm-upload-allowed-is-obsolete
+    - package-uses-deprecated-debhelper-compat-version
+    - Standards Version 4.1.3, no changes needed
+
+ -- Francesco Paolo Lovergine <frankie@debian.org>  Tue, 01 May 2018 09:59:43 +0200
+
+proftpd-mod-autohost (0.4-1) unstable; urgency=low
+
+  * Initial release. (Closes: #617454)
+
+ -- Mahyuddin Susanto <udienz@ubuntu.com>  Wed, 13 Apr 2011 06:51:46 +0700

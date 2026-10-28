@@ -1,0 +1,11 @@
+# Debian's active patches, plus the fix for FTPS over TLSv1.3 with older OpenSSL.
+autotools
+change_pam_name
+ftpasswd.cracklib.location
+mod_sql_mysql.c
+mod_wrap_noparanoid
+ftpstats
+odbc
+01_disable_inet_connect_ipv4_test.diff
+02_disable_redis_sentinel_conn_new_test.diff
+2416-tls13-data-session-tickets.diff

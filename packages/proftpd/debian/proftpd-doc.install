@@ -1,0 +1,11 @@
+README.md usr/share/doc/proftpd-doc/misc
+RELEASE_NOTES usr/share/doc/proftpd-doc
+CREDITS usr/share/doc/proftpd-doc
+NEWS usr/share/doc/proftpd-doc
+debian/index.html usr/share/doc/proftpd-doc
+debian/*.txt usr/share/doc/proftpd-doc/misc
+doc/howto usr/share/doc/proftpd-doc
+doc/contrib usr/share/doc/proftpd-doc
+doc/modules usr/share/doc/proftpd-doc
+doc/faq.html usr/share/doc/proftpd-doc
+doc/directives usr/share/doc/proftpd-doc

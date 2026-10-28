@@ -1,0 +1,9 @@
+Document: proftpd-mod-counter
+Title: Documentation for the mod_counter ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-counter/mod_counter.html
+Files: /usr/share/doc/proftpd-mod-counter/*.html

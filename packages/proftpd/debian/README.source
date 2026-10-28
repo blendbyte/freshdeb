@@ -1,0 +1,39 @@
+ProFTPD source for Debian
+-------------------------
+
+This source is created by pre-stripping RFC documents generally
+included in upstream tarballs. A good set of functional fixes taken
+from upstream git repository are also included by means of quilt (see
+/usr/share/doc/quilt/README.gz for details about the program). Debian
+patches are named after the related bug ID on bugzilla.proftpd.org,
+in order to simplify checking of merged changes at every new upstream
+release: by comparing changelog.Debian and upstream NEWS files
+superfluous patches are easily found.
+
+Note that since 1.3.2, upstream git repository has a proper stable
+branch which should be followed instead of master for useful fixes.
+
+ -- Francesco Paolo Lovergine <frankie@debian.org>  Fri Jan  5 10:04:28 CET 2018
+
+With 1.3.7a we introduced the extension +dfsg to the orig.tar.gz file to
+document that the file we upload to Debian is modified. Unfortunately this gives
+issues w/ version comparing: 1.3.8a+dfsg is considered to be an earlier version
+than 1.3.8+dfsg: dpkg --compare-versions 1.3.8a+dfsg lt 1.3.8+dfsg . For the time
+being we introduce a "." between minor number and letter to avoid this issue.
+Starting with 1.3.9, we will use extension ~dfsg, which does not cause the issue.
+I won't change the naming of the orig.tar.gz in the pristine-tar branch, simply
+create a soft link to get the source package.
+
+  -- Hilmar Preusse <hille42@web.de>  Sat, 11 Nov 2023 23:28:15 +0100
+
+For now the signatures of the upstream tar balls are only on FTP, not on github
+any more. d/watch has been adapted, in addition the work around described in
+#1116646 is needed.
+
+  -- Hilmar Preusse <hille42@web.de>  Sun, 07 Jun 2026 20:11:57 +0200
+
+We add proftpd-mod-procfs to the Recommends of proftpd-core. As of proftp 1.3.10
+that module will be fixed part of proftp so we'll drop that module again:
+https://github.com/proftpd/proftpd/commit/67369361cca760933ce3007edb953cf14904294d
+
+  -- Hilmar Preusse <hille42@web.de>  Thu, 30 Jul 2026 00:09:32 +0200

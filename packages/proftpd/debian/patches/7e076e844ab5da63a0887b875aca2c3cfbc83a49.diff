@@ -1,0 +1,31 @@
+From 7e076e844ab5da63a0887b875aca2c3cfbc83a49 Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Thu, 7 May 2026 09:15:08 -0700
+Subject: [PATCH] Issue #2052: It is possible that some environment values come
+ from user-supplied text, so we should always escape `%{env:...}` variables,
+ too.
+
+---
+ contrib/mod_sql.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/contrib/mod_sql.c b/contrib/mod_sql.c
+index bafe175ff..b90725942 100644
+--- a/contrib/mod_sql.c
++++ b/contrib/mod_sql.c
+@@ -984,6 +984,7 @@ static int sql_resolve_on_meta(pool *p, pr_jot_ctx_t *jot_ctx,
+       case LOGFMT_META_COMMAND:
+       case LOGFMT_META_DIR_NAME:
+       case LOGFMT_META_DIR_PATH:
++      case LOGFMT_META_ENV_VAR:
+       case LOGFMT_META_FILENAME:
+       case LOGFMT_META_IDENT_USER:
+       case LOGFMT_META_METHOD:
+@@ -1010,7 +1011,6 @@ static int sql_resolve_on_meta(pool *p, pr_jot_ctx_t *jot_ctx,
+       }
+ 
+       case LOGFMT_META_CLASS:
+-      case LOGFMT_META_ENV_VAR:
+       case LOGFMT_META_EOS_REASON:
+       case LOGFMT_META_GROUP:
+       case LOGFMT_META_ISO8601:

@@ -1,0 +1,5 @@
+usr/bin/prxs
+usr/lib/proftpd/*.a
+usr/include/proftpd/*
+usr/lib/pkgconfig/proftpd.pc usr/share/pkgconfig
+debian/proftpd-substvars usr/share/proftpd/

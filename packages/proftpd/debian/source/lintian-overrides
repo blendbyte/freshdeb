@@ -1,0 +1,5 @@
+# BTDT. The upstream author releases versions patch versions 1.3.9a, 1.3.9b
+# etc. When using the + sign as delimiter dpkg things that 1.3.9+ is higher
+# than 1.3.9a+. Therefore I use the ~ here.
+# See: dpkg --compare-versions 1.3.9+ lt 1.3.9a+ && echo true
+proftpd-dfsg source: dfsg-version-with-tilde

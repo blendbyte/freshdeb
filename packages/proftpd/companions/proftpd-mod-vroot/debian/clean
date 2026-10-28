@@ -1,0 +1,5 @@
+t/Makefile
+config.log
+config.status
+Makefile
+mod_vroot.h

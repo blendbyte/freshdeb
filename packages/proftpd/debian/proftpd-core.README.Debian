@@ -1,0 +1,152 @@
+ProFTPD Server for Debian
+-------------------------
+
+** Debian is different
+
+Current maintainers of proftpd on Debian have the questionable
+habit to integrate many cvs-stolen intermediate patches to the official
+proftpd release, to fix known issues and provide preview features.
+The result is that the released program can be quite far from the
+original tarball, so do not bother upstream team with bug reporting
+about Debian proftpd, without pre-check with the maintainer. At the same
+time, do not desume that some known specific problems are not fixed on
+the basis of the declared upstream version: that could be not true. 
+Read the maintainer changelog before reporting.
+
+** Different authorization layers
+
+The most exotic authorization and add-on layers (based on MySQL,
+PostgreSQL, LDAP, etc.) are split in different independent packages,
+named proftpd-mod-* and you need to install the required add-on package
+in order to use those types of authentication modes with the proftpd-basic
+package, where all other main modules live. See also Dynamic Modules in
+this document below.
+
+In order to use those modules you have to decomment
+the appropriate lines in /etc/proftpd/modules.conf and include that file
+from /etc/proftpd/proftpd.conf, as shown in basic templates stored in
+the /usr/share/proftpd/templates directory. Note that there are
+some implicit inter-dependencies in shared modules and the order used
+in /etc/proftpd/proftpd.conf is NOT casual. If you got some weird
+segfaults at run-time, you are probably using a wrong configuration:
+consider that currently proftpd is quite weak in managing DSO anomalies,
+so be careful.
+
+** IPv6 issue:
+
+In standalone mode proftpd binds both IPv4 and IPv6 addresses. That
+causes a quite annoying message at startup on IPv4-only boxes, such as:
+
+	IPv6 getaddrinfo 'your_host_name' error: Name or service not known
+
+That can be avoided by keeping an IPv6 mapping for your_host_name in your /etc/hosts file, such as:
+
+	::1 ip6-localhost ip6-loopback your_host_name
+
+or also
+
+	::fff:A.B.C.D	your_host_name
+
+when you got a static IPv4 address A.B.C.D. The same is required for all IP4/6 addresses, just
+in case your nameserver does not map your hostname and IPs.
+
+Debian proftpd since 1.3.0-14 is also patched to disable IPv6 at run-time using the
+
+UseIPv6 off
+
+directive in /etc/proftpd/proftpd.conf file or using the following options:
+
+-4, --ipv4     Support IPv4 functionality only
+-6, --ipv6     Support IPv6 functionality
+
+Starting from 1.3.2, upstream default has become having IPv6 off, but Debian has still
+it on by default to be consistent with the past.
+
+** Dynamic modules
+
+Starting from 1.3.0 version proftpd supports DSO modules, which are loaded at run time
+consulting the Debian-specific /etc/proftpd/modules.conf file, which must be included
+in your /etc/proftpd/proftpd.conf configuration file.
+
+Note that in case of SQL modules you need to comment out the unused back-end module 
+(e.g. mod_sql_mysql if you use mod_sql_postgres or viceversa) in order to have the right 
+authentication module working, or to change the auth order in your config file.
+Alternatively, you should use the explicit 'SQLBackend' directive, as shown in the default 
+configuration file. Note that the SQL auth layer requires that both mod_sql.c _and one_ 
+specific backend (e.g. mod_sql_mysql.c) are loaded in that order to work correctly.
+
+As always, your old proftpd.conf is NOT ensured to work smoothly with the current release:
+that can be due to changes in directives and defaults for core or contributed modules.
+You are strongly advised to consult documentation in order to upgrade your existent
+configuration.
+
+** IPv6 and CIDR notation considerations:
+
+Keep attention to the use of CIDR notation in Allow/Deny directives with IPv6 address space!
+A naive approach would be writing something like:
+
+	Allow ::ffff:A.B.C.D/24
+	Deny all
+
+to allow your own IPv4 subnet and deny all the rest. 
+That's definitively WRONG! IPv6 CIDR are considered on a 128 bits range, therefore that directive 
+would allow access to the whole IPv4 address space instead! So a proper directive in that
+case is
+
+	Allow ::ffff:A.B.C.D/120
+	Deny all
+
+** Running proftpd in non standalone configuration
+
+It is strongly preferred using proftpd as a daemon for any serious
+use. In some cases, the admin could be interested in using one of the
+superservers (inetd/xinetd) or systemd socket to run proftpd instances. 
+
+That could be done by running 
+
+	systemctl disable --now proftpd.service
+
+then changing from 'standalone' to 'inetd' the ServerType entry in
+/etc/proftpd/proftpd.conf, and: 
+
+  - enabling the service in /etc/inetd.conf by running
+
+	update-inetd --enable proftpd
+
+  - or adding the proper xinetd snippet under /etc/xinet.d. For example:
+
+    add /etc/xinet.d/proftpd:
+		service ftp
+		{
+			disable = no
+			type = INTERNAL
+			socket_type = stream
+			protocol = tcp
+			user = root
+			wait = no
+			server = /usr/sbin/proftpd
+		}
+    and restart xinetd.
+
+  - or using systemd support for socket. To do that run:
+
+	systemctl enable --now proftpd.socket
+
+** Other information
+
+Please, read accurately the NEWS, README and changelog file in /usr/share/doc/proftpd-basic
+to find novelties of this version if you are upgrading from a pre-1.3.1 release.
+It is also extremely useful installing the proftpd-doc package for additional information
+and HOWTOs. Read specifically documentation about the now mandatory AuthOrder specification 
+for all 'exotic' authorization engines. That is specifically important before reporting
+bugs. If after that you still thought to have found a bug, please follow the mini-howto
+
+http://www.castaglia.org/proftpd/doc/contrib/ProFTPD-mini-HOWTO-Debugging.html
+
+to report properly all required information. Without that, your report is very unlikely
+to be considered by both maintainer and upstreams. Also, do not presume soon to have
+found a bug, please think twice before reporting on the Debian BTS, thanks.
+
+If you were more inclined you can try to contact on-line the maintainer or the
+ProFTPD team in the #proftpd channel on irc.freenode.net.
+

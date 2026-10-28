@@ -1,0 +1,27 @@
+From 1a5ce6467756e92f42f89c53f0f370dc0f0206d7 Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Tue, 19 May 2026 08:01:11 -0700
+Subject: [PATCH] Issue #2052: Address another avenue for SQL injection, via
+ custom SQLUserInfo queries.
+
+---
+ contrib/mod_sql.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/contrib/mod_sql.c b/contrib/mod_sql.c
+index b90725942..d28b483d1 100644
+--- a/contrib/mod_sql.c
++++ b/contrib/mod_sql.c
+@@ -1999,8 +1999,11 @@ static struct passwd *sql_getpasswd(cmd_rec *cmd, struct passwd *p) {
+       }
+ 
+     } else {
++      /* The username has been escaped according to the backend database' rules
++       * at this point.
++       */
+       mr = sql_lookup(sql_make_cmd(cmd->tmp_pool, 3, MOD_SQL_DEF_CONN_NAME,
+-        cmap.usercustom, realname ? realname : "NULL"));
++        cmap.usercustom, username ? username : "NULL"));
+ 
+       if (check_response(mr, 0) < 0) {
+         return NULL;

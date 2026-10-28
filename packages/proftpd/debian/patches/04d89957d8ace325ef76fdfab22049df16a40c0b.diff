@@ -1,0 +1,30 @@
+From 04d89957d8ace325ef76fdfab22049df16a40c0b Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Tue, 5 May 2026 17:22:18 -0700
+Subject: [PATCH] Issue #2052: It is possible that some note values come from
+ client-supplied text, and as such, they should always be escaped as well.
+
+---
+ contrib/mod_sql.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/contrib/mod_sql.c b/contrib/mod_sql.c
+index 4872f5fa6..bafe175ff 100644
+--- a/contrib/mod_sql.c
++++ b/contrib/mod_sql.c
+@@ -987,6 +987,7 @@ static int sql_resolve_on_meta(pool *p, pr_jot_ctx_t *jot_ctx,
+       case LOGFMT_META_FILENAME:
+       case LOGFMT_META_IDENT_USER:
+       case LOGFMT_META_METHOD:
++      case LOGFMT_META_NOTE_VAR:
+       case LOGFMT_META_ORIGINAL_USER:
+       case LOGFMT_META_RESPONSE_STR:
+       case LOGFMT_META_REMOTE_HOST:
+@@ -1016,7 +1017,6 @@ static int sql_resolve_on_meta(pool *p, pr_jot_ctx_t *jot_ctx,
+       case LOGFMT_META_LOCAL_FQDN:
+       case LOGFMT_META_LOCAL_IP:
+       case LOGFMT_META_LOCAL_NAME:
+-      case LOGFMT_META_NOTE_VAR:
+       case LOGFMT_META_PROTOCOL:
+       case LOGFMT_META_REMOTE_IP:
+       case LOGFMT_META_VERSION:

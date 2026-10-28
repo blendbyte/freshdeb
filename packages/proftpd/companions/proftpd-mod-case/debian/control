@@ -1,0 +1,27 @@
+Source: proftpd-mod-case
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Mahyuddin Susanto <udienz@gmail.com>,
+           Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Build-Depends: debhelper-compat (= 13),
+               proftpd-dev
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: http://www.castaglia.org/proftpd/modules/mod_case.html
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-case
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-case.git
+
+Package: proftpd-mod-case
+Architecture: any
+Depends: ${misc:Depends}, ${proftpd:Depends}, ${shlibs:Depends}
+Description: ProFTPD module mod_case
+ The mod_case module is designed to help ProFTPD be case-insensitive, for
+ those sites that may need it (e.g. those that are migrating from a Windows
+ environment or have mounted Windows filesystems).
+ .
+ mod_case works by performing two checks on the filename used in FTP commands.
+ First, mod_case will scan the directory to see if there is already a file
+ whose name exactly matches the given filename. If not, mod_case will scan the
+ directory again, this time looking for case-insensitive matches.

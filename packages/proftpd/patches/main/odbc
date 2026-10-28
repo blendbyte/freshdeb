@@ -1,0 +1,17 @@
+Description: Manage automagically unixodbc library linking
+Author: Francesco Paolo Lovergine <frankie@debian.org>
+Forwarded: not needed
+Bug-Debian: No Debian bug, introduced in 1.3.2-2.
+
+Index: proftpd-dfsg/contrib/mod_sql_odbc.c
+===================================================================
+--- proftpd-dfsg.orig/contrib/mod_sql_odbc.c	2018-01-14 23:24:03.000000000 +0100
++++ proftpd-dfsg/contrib/mod_sql_odbc.c	2018-01-15 20:49:02.000000000 +0100
+@@ -19,6 +19,7 @@
+  * As a special exemption, TJ Saunders gives permission to link this program
+  * with OpenSSL, and distribute the resulting executable, without including
+  * the source code for OpenSSL in the source distribution.
++ * $Libraries: -lodbc $
+  */
+ 
+ #include "conf.h"

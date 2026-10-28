@@ -1,0 +1,23 @@
+proftpd-mod-geoip2 (0.1.1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository-Browse.
+  * Update standards version to 4.6.1, no changes needed.
+
+  * Enable Reprotest on Salsa CI.
+  * Stop building the module twice.
+  * Update d/watch file to version 5.
+  * SALSA_CI_DISABLE_USCAN: 1
+  * Lintian overrides + fixes
+  * Bump Standards version.
+  * gbp.conf: handle pristine-tar upon pull / pull / import-orig
+
+ -- Hilmar Preuße <hille42@debian.org>  Sat, 23 May 2026 10:51:31 +0200
+
+proftpd-mod-geoip2 (0.1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #969764)
+
+ -- Hilmar Preusse <hille42@web.de>  Sun, 06 Sep 2020 23:57:28 +0200

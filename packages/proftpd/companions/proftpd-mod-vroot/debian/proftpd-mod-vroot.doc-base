@@ -1,0 +1,9 @@
+Document: proftpd-mod-vroot
+Title: Documentation for the mod_vroot ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-vroot/mod_vroot.html
+Files: /usr/share/doc/proftpd-mod-vroot/*.html

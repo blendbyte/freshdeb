@@ -1,0 +1,13 @@
+proftpd-mod-prometheus (0.2-2) unstable; urgency=medium
+
+  * Move Make.rules from patches/01_built_outside_tree to subdir
+    "debian/".
+  * Enable full harderning, enable blhc test on Salsa CI.
+
+ -- Hilmar Preuße <hille42@debian.org>  Tue, 25 Nov 2025 08:21:20 +0100
+
+proftpd-mod-prometheus (0.2-1) unstable; urgency=medium
+
+  * Initial release (Closes: #1107292).
+
+ -- Hilmar Preuße <hille42@debian.org>  Tue, 24 Jun 2025 22:31:08 +0200

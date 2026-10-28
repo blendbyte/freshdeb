@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -x
+
+# Add local user
+adduser --disabled-password --gecos "" sftp-user
+
+# Configure SFTP
+cat <<EOF >/etc/proftpd/conf.d/sftp.conf
+<IfModule mod_sftp.c>
+  SFTPEngine on
+  Port 2222
+  SFTPLog /var/log/proftpd/sftp.log
+  SFTPHostKey /etc/ssh/ssh_host_rsa_key
+  SFTPAuthMethods publickey
+  SFTPAuthorizedUserKeys file:/etc/proftpd/authorized_keys/%u
+  DefaultRoot ~
+  RequireValidShell off
+  SFTPCompression delayed
+</IfModule>
+EOF
+
+# Restart service
+systemctl restart proftpd
+
+# Generate a key
+su - sftp-user -c "mkdir -p /home/sftp-user/.ssh"
+su - sftp-user -c "ssh-keygen -t rsa -b 4096 -N '' -f /home/sftp-user/.ssh/id_rsa"
+
+# Convert key to the correct format
+mkdir -p /etc/proftpd/authorized_keys/
+ssh-keygen -e -m RFC4716 -f /home/sftp-user/.ssh/id_rsa.pub | tee /etc/proftpd/authorized_keys/sftp-user
+
+# Try to connect via SFTP
+sftp -i /home/sftp-user/.ssh/id_rsa -o StrictHostKeyChecking=no -P 2222 sftp-user@localhost

@@ -1,0 +1,962 @@
+From 536608f849dddd2b551e7c1e4fd930a50a527ffe Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Sun, 23 Mar 2025 12:47:04 -0700
+Subject: [PATCH] Issue #1886: Fix the handling of SCP target paths that might
+ contain spaces.
+Origin: https://github.com/proftpd/proftpd/commit/b8acdd8754a0dbb13af105c9ffe98e9be4118bbc
+
+---
+ contrib/mod_sftp/scp.c                        | 229 +++++-----
+ tests/t/lib/ProFTPD/Tests/Modules/mod_sftp.pm | 399 +++++++++++++++---
+ 2 files changed, 475 insertions(+), 153 deletions(-)
+
+diff --git a/contrib/mod_sftp/scp.c b/contrib/mod_sftp/scp.c
+index 397cea41c..ea8154343 100644
+--- a/contrib/mod_sftp/scp.c
++++ b/contrib/mod_sftp/scp.c
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_sftp SCP
+- * Copyright (c) 2008-2023 TJ Saunders
++ * Copyright (c) 2008-2025 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -2458,13 +2458,36 @@ int sftp_scp_handle_packet(pool *p, void *ssh2, uint32_t channel_id,
+   return 0;
+ }
+ 
++static char *scp_canonicalize_target(pool *p, char *target) {
++  size_t target_len;
++
++  target_len = strlen(target);
++
++  /* Remove any enclosing shell quotations, e.g. single and double quotation
++   * marks.  Some SCP clients (i.e. newer libssh2) will quote the paths,
++   * assuming that the handling server (us) uses a shell to handle the
++   * command.  Sigh.
++   */
++
++  if ((target[0] == '\'' &&
++       target[target_len-1] == '\'') ||
++      (target[0] == '"' &&
++       target[target_len-1] == '"')) {
++    target[target_len-1] = '\0';
++    return pstrdup(p, target + 1);
++  }
++
++  return target;
++}
++
+ int sftp_scp_set_params(pool *p, uint32_t channel_id, array_header *req) {
+   register unsigned int i;
+   int optc, use_glob = TRUE;
+-  char **reqargv;
++  char **reqargv, *target_path = NULL;
+   const char *opts = "dfprtv";
+   config_rec *c;
+   struct scp_paths *paths;
++  struct scp_path *sp;
+ 
+   if (!(sftp_services & SFTP_SERVICE_FL_SCP)) {
+     (void) pr_log_writefile(sftp_logfd, MOD_SFTP_VERSION,
+@@ -2487,13 +2510,13 @@ int sftp_scp_set_params(pool *p, uint32_t channel_id, array_header *req) {
+ 
+   reqargv = (char **) req->elts;
+   for (i = 0; i < req->nelts; i++) {
+-    if (reqargv[i]) {
++    if (reqargv[i] != NULL) {
+       pr_trace_msg(trace_channel, 5, "reqargv[%u] = '%s'", i, reqargv[i]);
+     }
+   }
+ 
+   c = find_config(main_server->conf, CONF_PARAM, "UseGlobbing", FALSE);
+-  if (c) {
++  if (c != NULL) {
+     use_glob = *((unsigned char *) c->argv[0]);
+   }
+ 
+@@ -2546,128 +2569,130 @@ int sftp_scp_set_params(pool *p, uint32_t channel_id, array_header *req) {
+     return -1;
+   }
+ 
+-  /* Make a copy of the remaining paths, for later handling. */
++  /* Make a copy of the remaining paths, for later handling.
++   *
++   * Normally there's only one path, but we might be handling a glob which
++   * matches multiple paths.
++   */
+   paths->paths = make_array(paths->pool, 1, sizeof(struct scp_path *));
+   paths->path_idx = 0;
+ 
++  /* First concatenate any remaining command-line arguments, using spaces,
++   * in order to handle paths that contain spaces; see Issue #1886.
++   */
+   for (i = optind; i < req->nelts; i++) {
+     pr_signals_handle();
+ 
+-    if (reqargv[i]) {
+-      struct scp_path *sp;
+-      size_t pathlen;
+-      char *glob_path;
++    if (reqargv[i] != NULL) {
++      size_t reqarg_len;
+ 
+-      if (use_glob &&
+-          (scp_opts & SFTP_SCP_OPT_ISSRC) &&
+-          strpbrk(reqargv[i], "{[*?") != NULL) {
+-        int res, xerrno;
+-        glob_t gl;
++      /* Note that we might be dealing with an empty-length argument, which
++       * we get from pr_str_get_word() parsing the client-provided string,
++       * which might have spaces.  Watch for them.
++       */
+ 
+-        /* Whee, glob characters.  Need to expand the pattern to the
+-         * list of matching files, just as the shell would do.
+-         */
++      reqarg_len = strlen(reqargv[i]);
++      if (reqarg_len == 0) {
++        continue;
++      }
+ 
+-        memset(&gl, 0, sizeof(gl));
++      if (target_path != NULL) {
++        target_path = pstrcat(p, target_path, " ", reqargv[i], NULL);
+ 
+-        glob_path = pstrdup(paths->pool, reqargv[i]);
+-        pathlen = strlen(glob_path);
++      } else {
++        target_path = pstrdup(p, reqargv[i]);
++      }
++    }
++  }
+ 
+-        /* Remove any enclosing shell quotations, e.g. single and double
+-         * quotation marks.  Some SCP clients (i.e. newer libssh2) will
+-         * quote the paths, assuming that the handling server (us) uses
+-         * a shell to handle the command.  Sigh.
+-         */
+-        if ((glob_path[0] == '\'' &&
+-             glob_path[pathlen-1] == '\'') ||
+-            (glob_path[0] == '"' &&
+-             glob_path[pathlen-1] == '"')) {
+-          glob_path[pathlen-1] = '\0';
+-          glob_path = (glob_path + 1);
+-        }
++  target_path = scp_canonicalize_target(p, target_path);
+ 
+-        res = pr_fs_glob(glob_path, GLOB_NOSORT|GLOB_BRACE, NULL, &gl);
+-        switch (res) {
+-          case 0: {
+-            register unsigned int j;
++  if (use_glob == TRUE &&
++      (scp_opts & SFTP_SCP_OPT_ISSRC) &&
++      strpbrk(target_path, "{[*?") != NULL) {
++    int res, xerrno;
++    char *glob_path;
++    size_t path_len;
++    glob_t gl;
+ 
+-            for (j = 0; j < gl.gl_pathc; j++) {
+-              pr_signals_handle();
++    /* Whee, glob characters.  Need to expand the pattern to the
++     * list of matching files, just as the shell would do.
++     */
+ 
+-              sp = pcalloc(paths->pool, sizeof(struct scp_path));
+-              sp->path = pstrdup(paths->pool, gl.gl_pathv[j]);
+-              pathlen = strlen(sp->path);
++    memset(&gl, 0, sizeof(gl));
+ 
+-              /* Trim any trailing path separators.  It's important. */
+-              while (pathlen > 1 &&
+-                     sp->path[pathlen-1] == '/') {
+-                pr_signals_handle();
+-                sp->path[--pathlen] = '\0';
+-              }
++    glob_path = pstrdup(paths->pool, target_path);
++    path_len = strlen(glob_path);
+ 
+-              sp->orig_path = pstrdup(paths->pool, sp->path);
++    res = pr_fs_glob(glob_path, GLOB_NOSORT|GLOB_BRACE, NULL, &gl);
++    switch (res) {
++      case 0: {
++        register unsigned int j;
+ 
+-              if (pathlen > 0) {
+-                *((struct scp_path **) push_array(paths->paths)) = sp;
+-              }
+-            }
++        for (j = 0; j < gl.gl_pathc; j++) {
++          pr_signals_handle();
+ 
+-            break;
++          sp = pcalloc(paths->pool, sizeof(struct scp_path));
++          sp->path = pstrdup(paths->pool, gl.gl_pathv[j]);
++          path_len = strlen(sp->path);
++
++          /* Trim any trailing path separators.  It's important. */
++          while (path_len > 1 &&
++                 sp->path[path_len-1] == '/') {
++            pr_signals_handle();
++            sp->path[--path_len] = '\0';
+           }
+ 
+-          case GLOB_NOSPACE:
+-            xerrno = errno;
+-            pr_trace_msg(trace_channel, 1, "error globbing '%s': Not "
+-              "enough memory (%s)", reqargv[i], strerror(xerrno));
+-            write_confirm(p, channel_id, 1, pstrcat(p, reqargv[i], ": ",
+-              strerror(xerrno), NULL));
+-            errno = xerrno;
+-            return 0;
+-
+-          case GLOB_NOMATCH:
+-            xerrno = ENOENT;
+-            pr_trace_msg(trace_channel, 1, "error globbing '%s': No "
+-              "matches found (%s)", reqargv[i], strerror(xerrno));
+-            write_confirm(p, channel_id, 1, pstrcat(p, reqargv[i], ": ",
+-              strerror(xerrno), NULL));
+-            errno = xerrno;
+-            return 0;
++          sp->orig_path = pstrdup(paths->pool, sp->path);
++
++          if (path_len > 0) {
++            *((struct scp_path **) push_array(paths->paths)) = sp;
++          }
+         }
+ 
+-        pr_fs_globfree(&gl);
++        break;
++      }
+ 
+-      } else {
+-        sp = pcalloc(paths->pool, sizeof(struct scp_path));
+-        sp->path = pstrdup(paths->pool, reqargv[i]);
+-        pathlen = strlen(sp->path);
+-
+-        /* Remove any enclosing shell quotations, e.g. single and double
+-         * quotation marks.  Some SCP clients (i.e. newer libssh2) will
+-         * quote the paths, assuming that the handling server (us) uses
+-         * a shell to handle the command.  Sigh.
+-         */
+-        if ((sp->path[0] == '\'' &&
+-             sp->path[pathlen-1] == '\'') ||
+-            (sp->path[0] == '"' &&
+-             sp->path[pathlen-1] == '"')) {
+-          sp->path[pathlen-1] = '\0';
+-          sp->path = (sp->path + 1);
+-          pathlen -= 2;
+-        }
++      case GLOB_NOSPACE:
++        xerrno = errno;
++        pr_trace_msg(trace_channel, 1, "error globbing '%s': Not "
++          "enough memory (%s)", reqargv[i], strerror(xerrno));
++        write_confirm(p, channel_id, 1, pstrcat(p, target_path, ": ",
++          strerror(xerrno), NULL));
++        errno = xerrno;
++        return 0;
+ 
+-        /* Trim any trailing path separators.  It's important. */
+-        while (pathlen > 1 &&
+-               sp->path[pathlen-1] == '/') {
+-          pr_signals_handle();
+-          sp->path[--pathlen] = '\0';
+-        }
++      case GLOB_NOMATCH:
++        xerrno = ENOENT;
++        pr_trace_msg(trace_channel, 1, "error globbing '%s': No "
++          "matches found (%s)", reqargv[i], strerror(xerrno));
++        write_confirm(p, channel_id, 1, pstrcat(p, target_path, ": ",
++          strerror(xerrno), NULL));
++        errno = xerrno;
++        return 0;
++    }
+ 
+-        sp->orig_path = pstrdup(paths->pool, sp->path);
++    pr_fs_globfree(&gl);
+ 
+-        if (pathlen > 0) {
+-          *((struct scp_path **) push_array(paths->paths)) = sp;
+-        }
+-      }
++  } else {
++    size_t path_len;
++
++    sp = pcalloc(paths->pool, sizeof(struct scp_path));
++    sp->path = pstrdup(paths->pool, target_path);
++
++    path_len = strlen(sp->path);
++
++    /* Trim any trailing path separators.  It's important. */
++    while (path_len > 1 &&
++           sp->path[path_len-1] == '/') {
++      pr_signals_handle();
++      sp->path[--path_len] = '\0';
++    }
++
++    sp->orig_path = pstrdup(paths->pool, sp->path);
++
++    if (path_len > 0) {
++      *((struct scp_path **) push_array(paths->paths)) = sp;
+     }
+   }
+ 
+@@ -2687,8 +2712,8 @@ int sftp_scp_set_params(pool *p, uint32_t channel_id, array_header *req) {
+     struct scp_path *sp;
+ 
+     sp = ((struct scp_path **) paths->paths->elts)[i];
+-    if (sp) {
+-      pr_trace_msg(trace_channel, 5, "scp_path[%u] = '%s'", i, sp->path);
++    if (sp != NULL) {
++      pr_trace_msg(trace_channel, 5, "scp path[%u] = '%s'", i, sp->path);
+     }
+   }
+ 
+diff --git a/tests/t/lib/ProFTPD/Tests/Modules/mod_sftp.pm b/tests/t/lib/ProFTPD/Tests/Modules/mod_sftp.pm
+index be37f1eb3..c445399ff 100644
+--- a/tests/t/lib/ProFTPD/Tests/Modules/mod_sftp.pm
++++ b/tests/t/lib/ProFTPD/Tests/Modules/mod_sftp.pm
+@@ -1676,6 +1676,11 @@ my $TESTS = {
+     test_class => [qw(forking scp ssh2)],
+   },
+ 
++  scp_upload_filename_with_spaces_issue1886 => {
++    order => ++$order,
++    test_class => [qw(bug forking scp ssh2)],
++  },
++
+   scp_upload_abs_symlink => {
+     order => ++$order,
+     test_class => [qw(forking scp ssh2)],
+@@ -1806,6 +1811,11 @@ my $TESTS = {
+     test_class => [qw(bug forking rootprivs scp ssh2)],
+   },
+ 
++  scp_download_filename_with_spaces_issue1886 => {
++    order => ++$order,
++    test_class => [qw(bug forking scp ssh2)],
++  },
++
+   scp_ext_download_bug3544 => {
+     order => ++$order,
+     test_class => [qw(bug forking scp ssh2)],
+@@ -56731,6 +56741,166 @@ sub scp_upload_largefile {
+   test_cleanup($setup->{log_file}, $ex);
+ }
+ 
++sub scp_upload_filename_with_spaces_issue1886 {
++  my $self = shift;
++  my $tmpdir = $self->{tmpdir};
++  my $setup = test_setup($tmpdir, 'scp');
++
++  my $src_file = File::Spec->rel2abs("$tmpdir/src.txt");
++  if (open(my $fh, "> $src_file")) {
++    print $fh "ABCDefgh" x 32;
++    unless (close($fh)) {
++      die("Can't write $src_file: $!");
++    }
++
++  } else {
++    die("Can't open $src_file: $!");
++  }
++
++  # Calculate the MD5 checksum of this file, for comparison with the
++  # downloaded file.
++  my $ctx = Digest::MD5->new();
++  my $expected_md5;
++
++  if (open(my $fh, "< $src_file")) {
++    binmode($fh);
++    $ctx->addfile($fh);
++    $expected_md5 = $ctx->hexdigest();
++    close($fh);
++
++  } else {
++    die("Can't read $src_file: $!");
++  }
++
++  my $dst_file = File::Spec->rel2abs("$tmpdir/test filename with spaces.txt");
++
++  my $rsa_host_key = File::Spec->rel2abs('t/etc/modules/mod_sftp/ssh_host_rsa_key');
++  my $dsa_host_key = File::Spec->rel2abs('t/etc/modules/mod_sftp/ssh_host_dsa_key');
++
++  my $config = {
++    PidFile => $setup->{pid_file},
++    ScoreboardFile => $setup->{scoreboard_file},
++    SystemLog => $setup->{log_file},
++    TraceLog => $setup->{log_file},
++    Trace => 'ssh2:10 scp:30',
++
++    AuthUserFile => $setup->{auth_user_file},
++    AuthGroupFile => $setup->{auth_group_file},
++    AuthOrder => 'mod_auth_file.c',
++
++    IfModules => {
++      'mod_delay.c' => {
++        DelayEngine => 'off',
++      },
++
++      'mod_sftp.c' => [
++        "SFTPEngine on",
++        "SFTPLog $setup->{log_file}",
++        "SFTPHostKey $rsa_host_key",
++        "SFTPHostKey $dsa_host_key",
++      ],
++    },
++  };
++
++  my ($port, $config_user, $config_group) = config_write($setup->{config_file},
++    $config);
++
++  # Open pipes, for use between the parent and child processes.  Specifically,
++  # the child will indicate when it's done with its test by writing a message
++  # to the parent.
++  my ($rfh, $wfh);
++  unless (pipe($rfh, $wfh)) {
++    die("Can't open pipe: $!");
++  }
++
++  require Net::SSH2;
++
++  my $ex;
++
++  # Ignore SIGPIPE
++  local $SIG{PIPE} = sub { };
++
++  # Fork child
++  $self->handle_sigchld();
++  defined(my $pid = fork()) or die("Can't fork: $!");
++  if ($pid) {
++    eval {
++      my $ssh2 = Net::SSH2->new();
++
++      sleep(1);
++
++      unless ($ssh2->connect('127.0.0.1', $port)) {
++        my ($err_code, $err_name, $err_str) = $ssh2->error();
++        die("Can't connect to SSH2 server: [$err_name] ($err_code) $err_str");
++      }
++
++      unless ($ssh2->auth_password($setup->{user}, $setup->{passwd})) {
++        my ($err_code, $err_name, $err_str) = $ssh2->error();
++        die("Can't login to SSH2 server: [$err_name] ($err_code) $err_str");
++      }
++
++      my $res = $ssh2->scp_put($src_file, 'test filename with spaces.txt');
++      unless ($res) {
++        my ($err_code, $err_name, $err_str) = $ssh2->error();
++        die("Can't upload to server: [$err_name] ($err_code) $err_str");
++      }
++
++      $ssh2->disconnect();
++
++      $self->assert(-f $dst_file,
++        test_msg("File '$dst_file' does not exist as expected"));
++    };
++    if ($@) {
++      $ex = $@;
++    }
++
++    $wfh->print("done\n");
++    $wfh->flush();
++
++  } else {
++    eval { server_wait($setup->{config_file}, $rfh) };
++    if ($@) {
++      warn($@);
++      exit 1;
++    }
++
++    exit 0;
++  }
++
++  # Stop server
++  server_stop($setup->{pid_file});
++  $self->assert_child_ok($pid);
++
++  if ($ex) {
++    test_cleanup($setup->{log_file}, $ex);
++  }
++
++  # Calculate the MD5 checksum of the uploaded file, for comparison with the
++  # file that was uploaded.
++  $ctx->reset();
++  my $md5;
++
++  eval {
++    if (open(my $fh, "< $dst_file")) {
++      binmode($fh);
++      $ctx->addfile($fh);
++      $md5 = $ctx->hexdigest();
++      close($fh);
++
++    } else {
++      die("Can't read $dst_file: $!");
++    }
++
++    $self->assert($expected_md5 eq $md5,
++      test_msg("Expected '$expected_md5', got '$md5'"));
++  };
++  if ($@) {
++    $ex = $@;
++  }
++
++  test_cleanup($setup->{log_file}, $ex);
++}
++
+ sub scp_upload_abs_symlink {
+   my $self = shift;
+   my $tmpdir = $self->{tmpdir};
+@@ -58019,7 +58189,8 @@ sub scp_ext_null_ptr_issue1043 {
+         '-oStrictHostKeyChecking=no',
+         '-oUserKnownHostsFile=/dev/null',
+         "$setup->{user}\@127.0.0.1",
+-        'scp'
++        'scp',
++        '-O'
+       );
+ 
+       my $scp_rh = IO::Handle->new();
+@@ -58305,6 +58476,7 @@ sub scp_ext_upload_recursive_dir_bug3447 {
+         'scp',
+         '-r',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -58606,6 +58778,7 @@ sub scp_ext_upload_recursive_dir_bug3792 {
+         '-r',
+         '-v',
+         '-p',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -58922,6 +59095,7 @@ sub scp_ext_upload_recursive_dir_bug4004 {
+         '-r',
+         '-p',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -59183,6 +59357,7 @@ sub scp_ext_upload_recursive_dirs_bug4257 {
+         '-r',
+         '-p',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -59407,6 +59582,7 @@ sub scp_ext_upload_different_name_bug3425 {
+       my @cmd = (
+         'scp',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -59607,6 +59783,7 @@ sub scp_ext_upload_recursive_empty_dir {
+         'scp',
+         '-r',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -59830,6 +60007,7 @@ sub scp_ext_upload_shorter_file_bug4013 {
+       my @cmd = (
+         'scp',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -59928,22 +60106,7 @@ sub scp_ext_upload_shorter_file_bug4013 {
+ sub scp_ext_upload_file_with_timestamp_bug4026 {
+   my $self = shift;
+   my $tmpdir = $self->{tmpdir};
+-
+-  my $config_file = "$tmpdir/sftp.conf";
+-  my $pid_file = File::Spec->rel2abs("$tmpdir/sftp.pid");
+-  my $scoreboard_file = File::Spec->rel2abs("$tmpdir/sftp.scoreboard");
+-
+-  my $log_file = test_get_logfile();
+-
+-  my $auth_user_file = File::Spec->rel2abs("$tmpdir/sftp.passwd");
+-  my $auth_group_file = File::Spec->rel2abs("$tmpdir/sftp.group");
+-
+-  my $user = 'proftpd';
+-  my $passwd = 'test';
+-  my $group = 'ftpd';
+-  my $home_dir = File::Spec->rel2abs($tmpdir);
+-  my $uid = 500;
+-  my $gid = 500;
++  my $setup = test_setup($tmpdir, 'scp');
+ 
+   my $sub_dir = File::Spec->rel2abs("$tmpdir/sub.d");
+   mkpath($sub_dir);
+@@ -59951,19 +60114,15 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+   # Make sure that, if we're running as root, that the home directory has
+   # permissions/privs set for the account we create
+   if ($< == 0) {
+-    unless (chmod(0755, $home_dir, $sub_dir)) {
+-      die("Can't set perms on $home_dir to 0755: $!");
++    unless (chmod(0755, $sub_dir)) {
++      die("Can't set perms on $sub_dir to 0755: $!");
+     }
+ 
+-    unless (chown($uid, $gid, $home_dir, $sub_dir)) {
+-      die("Can't set owner of $home_dir to $uid/$gid: $!");
++    unless (chown($setup->{uid}, $setup->{gid}, $sub_dir)) {
++      die("Can't set owner of $sub_dir to $setup->{uid}/$setup->{gid}: $!");
+     }
+   }
+ 
+-  auth_user_write($auth_user_file, $user, $passwd, $uid, $gid, $home_dir,
+-    '/bin/bash');
+-  auth_group_write($auth_group_file, $group, $gid, $user);
+-
+   my $rsa_host_key = File::Spec->rel2abs('t/etc/modules/mod_sftp/ssh_host_rsa_key');
+   my $dsa_host_key = File::Spec->rel2abs('t/etc/modules/mod_sftp/ssh_host_dsa_key');
+ 
+@@ -59994,18 +60153,18 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+   my $dst_file = File::Spec->rel2abs("$sub_dir/dst.txt");
+ 
+   my $config = {
+-    PidFile => $pid_file,
+-    ScoreboardFile => $scoreboard_file,
+-    SystemLog => $log_file,
+-    TraceLog => $log_file,
+-    Trace => 'DEFAULT:10 ssh2:20 sftp:20 scp:20',
++    PidFile => $setup->{pid_file},
++    ScoreboardFile => $setup->{scoreboard_file},
++    SystemLog => $setup->{log_file},
++    TraceLog => $setup->{log_file},
++    Trace => 'ssh2:20 sftp:20 scp:20',
+ 
+-    AuthUserFile => $auth_user_file,
+-    AuthGroupFile => $auth_group_file,
++    AuthUserFile => $setup->{auth_user_file},
++    AuthGroupFile => $setup->{auth_group_file},
+     AuthOrder => 'mod_auth_file.c',
+ 
+     AllowOverwrite => 'on',
+-    DefaultRoot => '~',
++#    DefaultRoot => '~',
+ 
+     IfModules => {
+       'mod_delay.c' => {
+@@ -60014,7 +60173,7 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+ 
+       'mod_sftp.c' => [
+         "SFTPEngine on",
+-        "SFTPLog $log_file",
++        "SFTPLog $setup->{log_file}",
+         "SFTPHostKey $rsa_host_key",
+         "SFTPHostKey $dsa_host_key",
+         "SFTPAuthorizedUserKeys file:~/.authorized_keys",
+@@ -60022,7 +60181,8 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+     },
+   };
+ 
+-  my ($port, $config_user, $config_group) = config_write($config_file, $config);
++  my ($port, $config_user, $config_group) = config_write($setup->{config_file},
++    $config);
+ 
+   # Open pipes, for use between the parent and child processes.  Specifically,
+   # the child will indicate when it's done with its test by writing a message
+@@ -60046,8 +60206,9 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+     eval {
+       my @cmd = (
+         'scp',
+-        '-v',
++        '-vvv',
+         '-p',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -60056,7 +60217,7 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+         '-oStrictHostKeyChecking=no',
+         '-oUserKnownHostsFile=/dev/null',
+         "$src_file",
+-        "$user\@127.0.0.1:sub.d/dst.txt",
++        "$setup->{user}\@127.0.0.1:sub.d/dst.txt",
+       );
+ 
+       my $scp_rh = IO::Handle->new();
+@@ -60102,6 +60263,10 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+         $res = 1;
+       }
+ 
++if ($ENV{TEST_VERBOSE}) {
++  print STDERR "# Errstr:\n$errstr\n";
++}
++
+       unless ($res == 0) {
+         die("Can't upload $src_file to server: $errstr");
+       }
+@@ -60113,7 +60278,6 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+       $self->assert($atime == 0, test_msg("Expected atime 0, got $atime"));
+       $self->assert($mtime == 0, test_msg("Expected mtime 0, got $mtime"));
+     };
+-
+     if ($@) {
+       $ex = $@;
+     }
+@@ -60122,7 +60286,7 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+     $wfh->flush();
+ 
+   } else {
+-    eval { server_wait($config_file, $rfh) };
++    eval { server_wait($setup->{config_file}, $rfh) };
+     if ($@) {
+       warn($@);
+       exit 1;
+@@ -60132,18 +60296,10 @@ sub scp_ext_upload_file_with_timestamp_bug4026 {
+   }
+ 
+   # Stop server
+-  server_stop($pid_file);
+-
++  server_stop($setup->{pid_file});
+   $self->assert_child_ok($pid);
+ 
+-  if ($ex) {
+-    test_append_logfile($log_file, $ex);
+-    unlink($log_file);
+-
+-    die($ex);
+-  }
+-
+-  unlink($log_file);
++  test_cleanup($setup->{log_file}, $ex);
+ }
+ 
+ sub scp_download {
+@@ -60161,7 +60317,7 @@ sub scp_download {
+     ScoreboardFile => $setup->{scoreboard_file},
+     SystemLog => $setup->{log_file},
+     TraceLog => $setup->{log_file},
+-    Trace => 'DEFAULT:10 ssh2:20 sftp:20 scp:20',
++    Trace => 'ssh2:20 sftp:20 scp:20',
+ 
+     AuthUserFile => $setup->{auth_user_file},
+     AuthGroupFile => $setup->{auth_group_file},
+@@ -61488,6 +61644,139 @@ sub scp_download_rel_symlink_chrooted_bug4219 {
+   test_cleanup($setup->{log_file}, $ex);
+ }
+ 
++sub scp_download_filename_with_spaces_issue1886 {
++  my $self = shift;
++  my $tmpdir = $self->{tmpdir};
++  my $setup = test_setup($tmpdir, 'scp');
++
++  my $src_file = File::Spec->rel2abs("$tmpdir/src.txt");
++  if (open(my $fh, "> $src_file")) {
++    print $fh "ABCDefgh" x 32;
++    unless (close($fh)) {
++      die("Can't write $src_file: $!");
++    }
++
++  } else {
++    die("Can't open $src_file: $!");
++  }
++
++  # Calculate the MD5 checksum of this file, for comparison with the
++  # downloaded file.
++  my $ctx = Digest::MD5->new();
++  my $expected_md5;
++
++  if (open(my $fh, "< $src_file")) {
++    binmode($fh);
++    $ctx->addfile($fh);
++    $expected_md5 = $ctx->hexdigest();
++    close($fh);
++
++  } else {
++    die("Can't read $src_file: $!");
++  }
++
++  my $dst_file = File::Spec->rel2abs("$tmpdir/test filename with spaces.txt");
++
++  my $rsa_host_key = File::Spec->rel2abs('t/etc/modules/mod_sftp/ssh_host_rsa_key');
++  my $dsa_host_key = File::Spec->rel2abs('t/etc/modules/mod_sftp/ssh_host_dsa_key');
++
++  my $config = {
++    PidFile => $setup->{pid_file},
++    ScoreboardFile => $setup->{scoreboard_file},
++    SystemLog => $setup->{log_file},
++    TraceLog => $setup->{log_file},
++    Trace => 'ssh2:10 scp:20',
++
++    AuthUserFile => $setup->{auth_user_file},
++    AuthGroupFile => $setup->{auth_group_file},
++    AuthOrder => 'mod_auth_file.c',
++
++    IfModules => {
++      'mod_delay.c' => {
++        DelayEngine => 'off',
++      },
++
++      'mod_sftp.c' => [
++        "SFTPEngine on",
++        "SFTPLog $setup->{log_file}",
++        "SFTPHostKey $rsa_host_key",
++        "SFTPHostKey $dsa_host_key",
++      ],
++    },
++  };
++
++  my ($port, $config_user, $config_group) = config_write($setup->{config_file},
++    $config);
++
++  # Open pipes, for use between the parent and child processes.  Specifically,
++  # the child will indicate when it's done with its test by writing a message
++  # to the parent.
++  my ($rfh, $wfh);
++  unless (pipe($rfh, $wfh)) {
++    die("Can't open pipe: $!");
++  }
++
++  require Net::SSH2;
++
++  my $ex;
++
++  # Ignore SIGPIPE
++  local $SIG{PIPE} = sub { };
++
++  # Fork child
++  $self->handle_sigchld();
++  defined(my $pid = fork()) or die("Can't fork: $!");
++  if ($pid) {
++    eval {
++      my $ssh2 = Net::SSH2->new();
++
++      sleep(1);
++
++      unless ($ssh2->connect('127.0.0.1', $port)) {
++        my ($err_code, $err_name, $err_str) = $ssh2->error();
++        die("Can't connect to SSH2 server: [$err_name] ($err_code) $err_str");
++      }
++
++      unless ($ssh2->auth_password($setup->{user}, $setup->{passwd})) {
++        my ($err_code, $err_name, $err_str) = $ssh2->error();
++        die("Can't login to SSH2 server: [$err_name] ($err_code) $err_str");
++      }
++
++      my $res = $ssh2->scp_get('src.txt', $dst_file);
++      unless ($res) {
++        my ($err_code, $err_name, $err_str) = $ssh2->error();
++        die("Can't download $src_file from server: [$err_name] ($err_code) $err_str");
++      }
++
++      $ssh2->disconnect();
++
++      $self->assert(-f $dst_file,
++        test_msg("File $dst_file file does not exist"));
++    };
++    if ($@) {
++      $ex = $@;
++    }
++
++    $wfh->print("done\n");
++    $wfh->flush();
++
++  } else {
++    eval { server_wait($setup->{config_file}, $rfh) };
++    if ($@) {
++      warn($@);
++      exit 1;
++    }
++
++    exit 0;
++  }
++
++  # Stop server
++  server_stop($setup->{pid_file});
++  $self->assert_child_ok($pid);
++
++  test_cleanup($setup->{log_file}, $ex);
++}
++
+ sub scp_ext_download_bug3544 {
+   my $self = shift;
+   my $tmpdir = $self->{tmpdir};
+@@ -61545,7 +61834,7 @@ sub scp_ext_download_bug3544 {
+     ScoreboardFile => $scoreboard_file,
+     SystemLog => $log_file,
+     TraceLog => $log_file,
+-    Trace => 'DEFAULT:10 ssh2:20 sftp:20 scp:20',
++    Trace => 'ssh2:20 sftp:20 scp:20',
+ 
+     AuthUserFile => $auth_user_file,
+     AuthGroupFile => $auth_group_file,
+@@ -61562,6 +61851,7 @@ sub scp_ext_download_bug3544 {
+         "SFTPHostKey $rsa_host_key",
+         "SFTPHostKey $dsa_host_key",
+         "SFTPAuthorizedUserKeys file:~/.authorized_keys",
++'SFTPTrafficPolicy none',
+       ],
+     },
+   };
+@@ -61591,6 +61881,7 @@ sub scp_ext_download_bug3544 {
+       my @cmd = (
+         'scp',
+         '-vvv',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -61789,6 +62080,7 @@ sub scp_ext_download_bug3798 {
+       my @cmd = (
+         'scp',
+         '-vvv',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -61988,6 +62280,7 @@ sub scp_ext_download_glob_single_match_bug3904 {
+       my @cmd = (
+         'scp',
+         '-vvv',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -62216,6 +62509,7 @@ sub scp_ext_download_glob_multiple_matches_bug3904 {
+       my @cmd = (
+         'scp',
+         '-vvv',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -62506,6 +62800,7 @@ sub scp_ext_download_recursive_dir_bug3456 {
+         'scp',
+         '-r',
+         '-vvv',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -62733,6 +63028,7 @@ sub scp_ext_download_recursive_empty_dir {
+         'scp',
+         '-r',
+         '-v',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",
+@@ -62935,6 +63231,7 @@ sub scp_ext_download_glob_no_matches_bug3935 {
+       my @cmd = (
+         'scp',
+         '-vvv',
++        '-O',
+         '-oBatchMode=yes',
+         '-oCheckHostIP=no',
+         "-oPort=$port",

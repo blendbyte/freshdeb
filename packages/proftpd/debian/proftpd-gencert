@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# This script (re)creates a self-signed SSL certificate to be used for FTP/SSL protocol.
+#
+# Copyright (C) Francesco P. Lovergine <frankie@debian.org>
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2, 
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+#
+
+DAYS=365
+BITS=2048
+KEYDIR=/etc/ssl/private
+CERTDIR=/etc/ssl/certs
+KEY=$KEYDIR/proftpd.key
+CERT=$CERTDIR/proftpd.crt
+
+if [ ! -x /usr/bin/openssl ]; then
+	echo "Openssl utility not found"
+	exit 1
+fi
+
+if [ $(id -u) -ne 0 ]; then
+	echo "Run this script as root"
+	exit 2
+fi
+
+if [ ! -d $KEYDIR -o  ! -d $CERTDIR ]; then
+	echo "Target dirs not found"
+	exit 3
+fi
+
+rm -f $KEY $CERT
+/usr/bin/openssl req -x509 -newkey rsa:$BITS \
+          -keyout $KEY -out $CERT \
+          -nodes -days $DAYS
+if [ $? -eq 0 ]; then
+chmod 0600 $KEY 
+chmod 0644 $CERT
+cat <<EOF
+
+Use the following information in your ProFTPD configuration:
+
+TLSRSACertificateFile    $CERT
+TLSRSACertificateKeyFile $KEY
+
+See /etc/proftpd/tls.conf for suggested TLS related configuration
+items and include that file in your /etc/proftpd/proftpd.conf file.
+
+EOF
+else 
+	echo "Key generation failed"
+	exit 4
+fi
+
+exit 0

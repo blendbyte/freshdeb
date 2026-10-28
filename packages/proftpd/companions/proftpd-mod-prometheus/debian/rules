@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DH_VERBOSE=1
+MODULE_NAME=mod_prometheus
+DEBNAME=proftpd-mod-prometheus
+
+%:
+	dh $@ --without autoreconf --max-parallel=1
+
+override_dh_auto_configure:
+	./configure --with-modules=$(MODULE_NAME) --enable-dso
+
+override_dh_auto_install:
+	#DESTDIR=$(CURDIR)/debian/$(DEBNAME) prxs -i -c $(MODULE_NAME).c
+	make install DESTDIR=$(CURDIR)/debian/$(DEBNAME)
+	rm -f $(CURDIR)/debian/$(DEBNAME)/usr/lib/proftpd/*.la \
+		$(CURDIR)/debian/$(DEBNAME)/usr/lib/proftpd/*.a
+
+override_dh_gencontrol:
+	cat /usr/share/proftpd/proftpd-substvars >> $(CURDIR)/debian/$(DEBNAME).substvars
+	dh_gencontrol
+
+override_dh_auto_clean:
+	find lib -name \*.o | xargs rm -f
+	find lib -name \*.lo | xargs rm -f
+	DESTDIR=$(CURDIR)/debian/$(DEBNAME) prxs -d $(MODULE_NAME).c
+
+override_dh_auto_test:

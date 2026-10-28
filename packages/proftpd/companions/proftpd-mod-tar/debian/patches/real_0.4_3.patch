@@ -1,0 +1,61 @@
+diff --git a/mod_tar.c b/mod_tar.c
+index 2a17275..80e569f 100644
+--- a/mod_tar.c
++++ b/mod_tar.c
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD - mod_tar
+- * Copyright (c) 2009-2022 TJ Saunders
++ * Copyright (c) 2009-2025 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -671,38 +671,40 @@ static char *tar_get_flags(char *path, size_t path_len, unsigned long *flags) {
+ 
+ /* usage: TarEnable on|off */
+ MODRET set_tarenable(cmd_rec *cmd) {
+-  int bool = -1;
++  int enabled = -1;
+   config_rec *c;
+ 
+   CHECK_ARGS(cmd, 1);
+   CHECK_CONF(cmd, CONF_DIR|CONF_DYNDIR);
+ 
+-  bool = get_boolean(cmd, 1);
+-  if (bool == -1)
++  enabled = get_boolean(cmd, 1);
++  if (enabled == -1) {
+     CONF_ERROR(cmd, "expected Boolean parameter");
++  }
+ 
+   c = add_config_param(cmd->argv[0], 1, NULL);
+   c->argv[0] = palloc(c->pool, sizeof(int));
+-  *((int *) c->argv[0]) = bool;
++  *((int *) c->argv[0]) = enabled;
+ 
+   return PR_HANDLED(cmd);
+ }
+ 
+ /* usage: TarEngine on|off */
+ MODRET set_tarengine(cmd_rec *cmd) {
+-  int bool = -1;
++  int engine = -1;
+   config_rec *c;
+ 
+   CHECK_ARGS(cmd, 1);
+   CHECK_CONF(cmd, CONF_ROOT|CONF_VIRTUAL|CONF_GLOBAL|CONF_ANON);
+ 
+-  bool = get_boolean(cmd, 1);
+-  if (bool == -1)
++  engine = get_boolean(cmd, 1);
++  if (engine == -1) {
+     CONF_ERROR(cmd, "expected Boolean parameter");
++  }
+ 
+   c = add_config_param(cmd->argv[0], 1, NULL);
+   c->argv[0] = palloc(c->pool, sizeof(int));
+-  *((int *) c->argv[0]) = bool;
++  *((int *) c->argv[0]) = engine;
+ 
+   c->flags |= CF_MERGEDOWN;
+   return PR_HANDLED(cmd);

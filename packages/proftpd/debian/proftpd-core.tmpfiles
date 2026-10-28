@@ -1,0 +1,4 @@
+d /run/proftpd 0755 root root - -
+d /srv/ftp 0755 ftp nogroup - -
+C /srv/ftp/welcome.msg - - - - /usr/share/proftpd/templates/welcome.msg
+Z /srv/ftp 0755 ftp nogroup - -

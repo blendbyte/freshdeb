@@ -1,0 +1,2 @@
+u! ftp - "FTP User" /srv/ftp
+u! proftpd - "ProFTPD" /run/proftpd

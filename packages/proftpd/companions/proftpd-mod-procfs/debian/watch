@@ -1,0 +1,6 @@
+Version: 5
+
+Source: https://github.com/Castaglia/proftpd-mod_procfs/tags
+Matching-Pattern: .*/v?(\d\S*)\.tar\.gz
+Filename-Mangle: s/.+\/v?(\d\S*)\.tar\.gz/proftpd-mod_procfs-$1\.tar\.gz/
+Update-Script: uupdate

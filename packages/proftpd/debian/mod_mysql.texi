@@ -1,0 +1,19 @@
+This module is contained in the mod_mysql.c file, and is not compiled in
+by default.  It provides the backend support to connect to MySQL
+databases.
+
+@heading MySQL Database Directives
+
+@subheading @anchor{MySQLInfo} MySQLInfo
+
+@format
+Syntax: MySQLInfo host user pass dbname
+Default: none
+Context: server config, virtual host
+@end format
+
+Configures the MySQL database driver (the database may be remote).  A
+connection isn't made until use of a SQL feature requires it, after
+which it may be held open for the lifetime of the FTP session
+depending on the directives in use.  Use @kbd{""} to specify a null
+password.

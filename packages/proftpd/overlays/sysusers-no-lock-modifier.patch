@@ -1,0 +1,8 @@
+diff -ruN a/debian/proftpd-core.sysusers b/debian/proftpd-core.sysusers
+--- a/debian/proftpd-core.sysusers
++++ b/debian/proftpd-core.sysusers
+@@ -1,2 +1,2 @@
+-u! ftp - "FTP User" /srv/ftp
+-u! proftpd - "ProFTPD" /run/proftpd
++u ftp - "FTP User" /srv/ftp
++u proftpd - "ProFTPD" /run/proftpd

@@ -1,0 +1,55 @@
+#!/usr/bin/dh-exec
+usr/sbin/*
+usr/bin/ftpcount
+usr/bin/ftpdctl
+usr/bin/ftptop
+usr/bin/ftpwho
+etc/proftpd/blacklist.dat
+etc/proftpd/dhparams.pem
+usr/lib/proftpd/mod_auth_otp.so
+usr/lib/proftpd/mod_ban.so
+usr/lib/proftpd/mod_copy.so
+usr/lib/proftpd/mod_ctrls_admin.so
+usr/lib/proftpd/mod_deflate.so
+usr/lib/proftpd/mod_delay.so
+usr/lib/proftpd/mod_digest.so
+usr/lib/proftpd/mod_dnsbl.so
+usr/lib/proftpd/mod_dynmasq.so
+usr/lib/proftpd/mod_exec.so
+usr/lib/proftpd/mod_facl.so
+usr/lib/proftpd/mod_ifsession.so
+usr/lib/proftpd/mod_ident.so
+usr/lib/proftpd/mod_ifversion.so
+usr/lib/proftpd/mod_ls.so
+usr/lib/proftpd/mod_load.so
+usr/lib/proftpd/mod_log_forensic.so
+usr/lib/proftpd/mod_memcache.so
+usr/lib/proftpd/mod_qos.so
+usr/lib/proftpd/mod_quotatab.so
+usr/lib/proftpd/mod_quotatab_file.so
+usr/lib/proftpd/mod_quotatab_radius.so
+usr/lib/proftpd/mod_quotatab_sql.so
+usr/lib/proftpd/mod_radius.so
+usr/lib/proftpd/mod_ratio.so
+usr/lib/proftpd/mod_redis.so
+usr/lib/proftpd/mod_readme.so
+usr/lib/proftpd/mod_rewrite.so
+usr/lib/proftpd/mod_shaper.so
+usr/lib/proftpd/mod_site_misc.so
+usr/lib/proftpd/mod_sql.so
+usr/lib/proftpd/mod_statcache.so
+usr/lib/proftpd/mod_unique_id.so
+usr/lib/proftpd/mod_wrap2.so
+usr/lib/proftpd/mod_wrap2_file.so
+usr/lib/proftpd/mod_wrap2_redis.so
+usr/lib/proftpd/mod_wrap2_sql.so
+usr/lib/proftpd/mod_xfer.so
+usr/share/locale/*
+debian/proftpd-gencert usr/sbin/
+usr/bin/ftpasswd usr/sbin/
+usr/bin/ftpquota usr/sbin/
+usr/bin/ftpmail usr/sbin/
+contrib/xferstats.holger-preiss => usr/sbin/ftpstats
+debian/templates/ftpusers etc/
+debian/templates/*.conf usr/share/proftpd/templates/
+debian/templates/welcome.msg usr/share/proftpd/templates/

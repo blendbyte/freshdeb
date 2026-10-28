@@ -1,0 +1,12 @@
+Document: proftpd-mod-proxy-protocol
+Title: Documentation for the mod_proxy_protocol ProFTPD
+Author: 
+Abstract: Configuration reference, modules documentation, FAQs and HOWTOs
+Section: System/Administration
+
+Format: HTML
+Index: /usr/share/doc/proftpd-mod-proxy-protocol/mod_proxy_protocol.html
+Files: /usr/share/doc/proftpd-mod-proxy-protocol/*.html
+
+Format: Text
+Files: /usr/share/doc/proftpd-mod-proxy-protocol/*

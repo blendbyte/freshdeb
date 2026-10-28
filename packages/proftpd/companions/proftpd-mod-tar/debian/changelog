@@ -1,0 +1,71 @@
+proftpd-mod-tar (0.4-3) unstable; urgency=medium
+
+  [ Hilmar Preuße ]
+  * Add patches from upstream to fix build using GCC 15 (Closes: #1097659).
+  * Bump Standards version, no changes needed.
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on proftpd-dev.
+
+ -- Hilmar Preuße <hille42@debian.org>  Thu, 06 Mar 2025 23:54:22 +0100
+
+proftpd-mod-tar (0.4-2) unstable; urgency=medium
+
+  [ Hilmar Preusse ]
+  * Lintian:
+    - W: proftpd-mod-tar source:
+      package-uses-deprecated-debhelper-compat-version 9
+    - P: proftpd-mod-tar source: silent-on-rules-requiring-root
+    - P: proftpd-mod-tar source: trailing-whitespace debian/changelog (line 39)
+    - P: proftpd-mod-tar source: unversioned-copyright-format-uri
+      http://dep.debian.net/deps/dep5/
+    - Standards version to 4.5.1, no changes needed.
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * Update standards version to 4.5.0, no changes needed.
+
+ -- Hilmar Preusse <hille42@web.de>  Tue, 16 Feb 2021 12:19:55 +0100
+
+proftpd-mod-tar (0.4-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fixes FTBFS on Hurd (Closes: #897383).
+    - Uses libarchive-dev instead of libtar-dev.
+  * Bump Standards Version to 4.4.0. No changes needed.
+  * Remove Fabrizio Regalli <fabreg@fabreg.it> from uploaders.
+    (Closes: #761896)
+  * Add me to list of Uploaders.
+
+ -- Hilmar Preusse <hille42@web.de>  Sat, 20 Jul 2019 14:13:15 +0200
+
+proftpd-mod-tar (0.3.3-2) unstable; urgency=low
+
+  * Removing libacl1-dev as BD and increasing proftpd-dev to (>= 1.3.4~rc3-2~)
+
+  [ Hilmar Preuße ]
+  * d/control: Remove "DM-Upload-Allowed" field
+  * d/rules: add --without python-support to dh call
+  * d/rules: overhaul clean target to make it work
+  * package-uses-deprecated-debhelper-compat-version 7
+  * ancient-standards-version 3.9.2
+  * Remove explicit dep on proftpd-basic (>= x.y.z), leave that job
+    to ${proftpd:Depends}.
+
+  [ Francesco Paolo Lovergine ]
+  * Updated Vcs-* fields
+  * Policy bumped to 4.1.4. No changes needed.
+
+ -- Francesco Paolo Lovergine <frankie@debian.org>  Tue, 01 May 2018 12:05:07 +0200
+
+proftpd-mod-tar (0.3.3-1) unstable; urgency=low
+
+  * Initial Release. (closes: #618520)
+  * Pushed policy version to 3.9.2, without changes.
+  * Fixed for correct substvars file name.
+  * Added doc-base
+  * Added dh_clean to d/rules
+
+ -- Fabrizio Regalli <fabreg@fabreg.it>  Sat, 16 Apr 2011 11:24:20 +0200

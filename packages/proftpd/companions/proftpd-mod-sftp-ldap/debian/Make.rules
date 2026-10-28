@@ -1,0 +1,54 @@
+# This file has been copied from proftp build dir after running configure.
+# It contains some variables needed to build the module; it is read by the
+# top-level Makefile. There is probably still surplus stuff in it.
+
+prefix=/usr
+exec_prefix=/usr
+bindir=${exec_prefix}/bin
+datadir=${datarootdir}
+libdir=${prefix}/lib/x86_64-linux-gnu
+datarootdir=${prefix}/share
+sbindir=${exec_prefix}/sbin
+sysconfdir=/etc/proftpd
+includedir=${prefix}/include
+libexecdir=/usr/lib/proftpd
+localedir=${datarootdir}/locale
+localstatedir=/run
+pkgconfigdir=${prefix}/lib/x86_64-linux-gnu/pkgconfig
+mandir=/usr/share/man
+
+AR=ar
+CC=gcc
+PLATFORM=-DLINUX
+LIBEXECDIR=/usr/lib/proftpd
+LIBTOOL=libtool
+MAKEDEPEND=makedepend -Y
+RANLIB=ranlib
+
+INSTALL=/usr/bin/install -c
+INSTALL_STRIP=
+INSTALL_USER=root
+INSTALL_GROUP=root
+INSTALL_BIN=$(INSTALL) $(INSTALL_STRIP) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755
+INSTALL_SBIN=$(INSTALL) $(INSTALL_STRIP) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755
+INSTALL_MAN=$(INSTALL) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0644
+
+RM=rm -f
+SHELL=/bin/bash
+
+ENABLE_NLS=1
+ENABLE_TESTS=""
+
+# Directory include paths.
+#
+INCLUDES=-I.. -I$(top_srcdir)/include -I$(top_builddir)/include -I/usr/include/proftpd
+
+# Preprocessor compilation flags.
+#
+ADDL_CPPFLAGS=$(shell dpkg-buildflags --get CPPFLAGS)
+
+# Our additional compiler flags.
+#
+CFLAGS=-Wall -fno-omit-frame-pointer
+CFLAGS += $(shell dpkg-buildflags --get CFLAGS)
+DEFINES=$(PLATFORM)

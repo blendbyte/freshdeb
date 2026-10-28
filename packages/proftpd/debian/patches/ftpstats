@@ -1,0 +1,16 @@
+Description: Fixes default xferlog pathname in ftpstats
+Author: Francesco Paolo Lovergine <frankie@debian.org>
+Forwarded: not needed
+Bug-Debian: http://bugs.debian.org/378826
+
+--- proftpd-dfsg-1.3.6c.orig/contrib/xferstats.holger-preiss
++++ proftpd-dfsg-1.3.6c/contrib/xferstats.holger-preiss
+@@ -56,7 +56,7 @@
+ # $mydom2 = "org";
+ 
+ # edit the next line to customize for your default log file
+-$usage_file = "/var/log/xferlog";
++$usage_file = "/var/log/proftpd/xferlog";
+ 
+ # Edit the following lines for default report settings.
+ # Entries defined here will be over-ridden by the command line.

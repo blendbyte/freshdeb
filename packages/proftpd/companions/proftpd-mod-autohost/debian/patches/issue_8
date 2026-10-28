@@ -1,0 +1,529 @@
+From dc46dde78b8f9288efd8ea516da2fde9ed8f8f51 Mon Sep 17 00:00:00 2001
+From: TJ Saunders <tj@castaglia.org>
+Date: Wed, 16 Jun 2021 20:49:36 -0700
+Subject: [PATCH] Issue #8: Fix the build, broken by API changes in ProFTPD 1.3.7b.
+
+Index: proftpd-mod-autohost/mod_autohost.c
+===================================================================
+--- proftpd-mod-autohost.orig/mod_autohost.c	2020-08-18 20:46:01.608645323 +0200
++++ proftpd-mod-autohost/mod_autohost.c	2021-09-20 08:50:00.005619649 +0200
+@@ -1,6 +1,6 @@
+ /*
+  * ProFTPD: mod_autohost -- a module for mass virtual hosting
+- * Copyright (c) 2004-2020 TJ Saunders
++ * Copyright (c) 2004-2021 TJ Saunders
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -118,13 +118,20 @@
+ }
+ 
+ /* Largely borrowed/copied from src/bindings.c. */
+-static unsigned int process_serveralias(server_rec *s) {
++static unsigned int process_serveralias(server_rec *s, pr_ipbind_t *ipbind) {
+   unsigned namebind_count = 0;
+   config_rec *c;
+ 
+   /* If there is no ipbind already for this server, we cannot associate
+    * any ServerAlias-based namebinds to it.
++   *
++   * Keep in mind that there may be multiple ipbinds pointed at this server:
++   *
++   *  <VirtualHost 1.2.3.4 5.6.7.8>
++   *    ServerAlias alias
++   *  </VirtualHost>
+    */
++
+   if (pr_ipbind_get_server(s->addr, s->ServerPort) == NULL) {
+     return 0;
+   }
+@@ -133,9 +140,11 @@
+   while (c != NULL) {
+     int res;
+ 
+-    pr_signals_handle();
+-
++#if PROFTPD_VERSION_NUMBER < 0x0001030707
+     res = pr_namebind_create(s, c->argv[0], s->addr, s->ServerPort);
++#else
++    res = pr_namebind_create(s, c->argv[0], ipbind, s->addr, s->ServerPort);
++#endif /* ProFTPD 1.3.7b and later */
+     if (res == 0) {
+       namebind_count++;
+ 
+@@ -163,14 +172,13 @@
+ 
+ static int autohost_parse_config(conn_t *conn, const char *path) {
+   server_rec *s;
+-  pr_ipbind_t *binding;
++  pr_ipbind_t *ipbind;
+ 
+   /* We use session.pool here, rather than autohost_pool, because
+    * we'll be destroying autohost_pool once the server_rec has
+    * been created and bound.
+    */
+   pr_parser_prepare(session.pool, &autohost_server_list);
+-
+   pr_parser_server_ctxt_open(pr_netaddr_get_ipstr(conn->local_addr));
+ 
+   /* XXX: some things, like Port, <VirtualHost>, etc in the autohost.conf
+@@ -182,14 +190,13 @@
+   }
+ 
+   pr_parser_server_ctxt_close();
+-
+   pr_parser_cleanup();
+ 
+   if (fixup_servers(autohost_server_list) < 0) {
+     int xerrno = errno;
+ 
+     (void) pr_log_writefile(autohost_logfd, MOD_AUTOHOST_VERSION,
+-      "error fixing up autohost: %s", strerror(xerrno));
++      "error fixing up autohost config '%s': %s", path, strerror(xerrno));
+ 
+     errno = xerrno;
+     return -1;
+@@ -198,17 +205,18 @@
+   s = (server_rec *) autohost_server_list->xas_list;
+   s->ServerPort = conn->local_port;
+ 
++  ipbind = pr_ipbind_find(conn->local_addr, conn->local_port, TRUE);
++
+   /* Now that we have a valid server_rec, we need to bind it to
+    * the address to which the client connected.
+    */
+-  process_serveralias(s);
++  process_serveralias(s, ipbind);
+ 
+-  binding = pr_ipbind_find(conn->local_addr, conn->local_port, TRUE);
+-  if (binding != NULL) {
++  if (ipbind != NULL) {
+     /* If we already have a binding in place, we need to replace the
+      * server_rec to which that binding points with our new server_rec.
+      */
+-    binding->ib_server = s;
++    ipbind->ib_server = s;
+ 
+     return 0;
+   }
+@@ -418,8 +426,6 @@
+ 
+   pr_trace_msg(trace_channel, 9, "found using autohost for %s#%u",
+     pr_netaddr_get_ipstr(conn->local_addr), conn->local_port);
+-
+-  return;
+ }
+ 
+ #if defined(PR_SHARED_MODULE)
+@@ -465,8 +471,6 @@
+   pr_trace_msg(trace_channel, 9, "TLS SNI '%s' found using autohost for %s#%u",
+     server_name, pr_netaddr_get_ipstr(session.c->local_addr),
+     session.c->local_port);
+-
+-  return;
+ }
+ 
+ static void autohost_postparse_ev(const void *event_data, void *user_data) {
+@@ -550,6 +554,11 @@
+      */
+ 
+     for (i = 0; i < port_list->nelts; i++) {
++      /* If this port duplicates the existing Port, skip it. */
++      if (ports[i] == main_server->ServerPort) {
++        continue;
++      }
++
+       if (pr_ipbind_find(main_server->addr, ports[i], TRUE) == NULL) {
+         int res;
+         conn_t *listener;
+@@ -590,8 +599,6 @@
+       }
+     }
+   }
+-
+-  return;
+ }
+ 
+ /* Initialization routines
+Index: proftpd-mod-autohost/t/lib/ProFTPD/Tests/Modules/mod_autohost.pm
+===================================================================
+--- proftpd-mod-autohost.orig/t/lib/ProFTPD/Tests/Modules/mod_autohost.pm	2020-08-18 20:46:01.608645323 +0200
++++ proftpd-mod-autohost/t/lib/ProFTPD/Tests/Modules/mod_autohost.pm	2021-09-20 08:50:00.009619605 +0200
+@@ -339,48 +339,16 @@
+ sub autohost_ports {
+   my $self = shift;
+   my $tmpdir = $self->{tmpdir};
+-
+-  my $config_file = "$tmpdir/autohost.conf";
+-  my $pid_file = File::Spec->rel2abs("$tmpdir/autohost.pid");
+-  my $scoreboard_file = File::Spec->rel2abs("$tmpdir/autohost.scoreboard");
+-
+-  my $log_file = File::Spec->rel2abs('tests.log');
+-
+-  my $auth_user_file = File::Spec->rel2abs("$tmpdir/autohost.passwd");
+-  my $auth_group_file = File::Spec->rel2abs("$tmpdir/autohost.group");
+-
+-  my $user = 'proftpd';
+-  my $passwd = 'test';
+-  my $group = 'ftpd';
+-  my $home_dir = File::Spec->rel2abs("$tmpdir/home");
+-  mkpath($home_dir);
+-  my $uid = 500;
+-  my $gid = 500;
+-
+-  # Make sure that, if we're running as root, that the home directory has
+-  # permissions/privs set for the account we create
+-  if ($< == 0) {
+-    unless (chmod(0755, $home_dir)) {
+-      die("Can't set perms on $home_dir to 0755: $!");
+-    }
+-
+-    unless (chown($uid, $gid, $home_dir)) {
+-      die("Can't set owner of $home_dir to $uid/$gid: $!");
+-    }
+-  }
+-
+-  auth_user_write($auth_user_file, $user, $passwd, $uid, $gid, $home_dir,
+-    '/bin/bash');
+-  auth_group_write($auth_group_file, $group, $gid, $user);
++  my $setup = test_setup($tmpdir, 'autohost');
+ 
+   my $test_root = File::Spec->rel2abs($tmpdir);
+ 
+   my $config = {
+-    PidFile => $pid_file,
+-    ScoreboardFile => $scoreboard_file,
+-    SystemLog => $log_file,
+-    TraceLog => $log_file,
+-    Trace => 'DEFAULT:10',
++    PidFile => $setup->{pid_file},
++    ScoreboardFile => $setup->{scoreboard_file},
++    SystemLog => $setup->{log_file},
++    TraceLog => $setup->{log_file},
++    Trace => 'DEFAULT:10 binding:20 autohost:20',
+ 
+     IfModules => {
+       'mod_delay.c' => {
+@@ -389,34 +357,36 @@
+     },
+   };
+ 
+-  my ($port, $config_user, $config_group) = config_write($config_file, $config);
++  my ($port, $config_user, $config_group) = config_write($setup->{config_file},
++    $config);
+ 
+-  if (open(my $fh, ">> $config_file")) {
++  my $autohost_port = $port + 21;
++  if (open(my $fh, ">> $setup->{config_file}")) {
+     print $fh <<EOC;
+ <IfModule mod_autohost.c>
+   AutoHostEngine on
+-  AutoHostLog $log_file
++  AutoHostLog $setup->{log_file}
+   AutoHostConfig $test_root/conf.d/%0:%p.conf
+-  AutoHostPorts $port
++  AutoHostPorts $autohost_port
+ </IfModule>
+ EOC
+     unless (close($fh)) {
+-      die("Can't write $config_file: $!");
++      die("Can't write $setup->{config_file}: $!");
+     }
+ 
+   } else {
+-    die("Can't open $config_file: $!");
++    die("Can't open $setup->{config_file}: $!");
+   }
+ 
+   mkpath("$tmpdir/conf.d");
+-  my $auto_config = File::Spec->rel2abs("$tmpdir/conf.d/127.0.0.1:$port.conf");
++  my $auto_config = File::Spec->rel2abs("$tmpdir/conf.d/127.0.0.1:$autohost_port.conf");
+   if (open(my $fh, "> $auto_config")) {
+     print $fh <<EOC;
+ ServerName "AutoHost Server"
+-AuthUserFile $auth_user_file
+-AuthGroupFile $auth_group_file
+-ServerLog $log_file
++AuthUserFile $setup->{auth_user_file}
++AuthGroupFile $setup->{auth_group_file}
+ RequireValidShell off
++ServerLog $setup->{log_file}
+ EOC
+     unless (close($fh)) {
+       die("Can't write $auto_config: $!");
+@@ -441,12 +411,10 @@
+   defined(my $pid = fork()) or die("Can't fork: $!");
+   if ($pid) {
+     eval {
+-      my $client = ProFTPD::TestSuite::FTP->new('127.0.0.1', $port);
+-
+-      $client->login($user, $passwd);
++      my $client = ProFTPD::TestSuite::FTP->new('127.0.0.1', $autohost_port);
++      $client->login($setup->{user}, $setup->{passwd});
+       $client->quit();
+     };
+-
+     if ($@) {
+       $ex = $@;
+     }
+@@ -455,7 +423,7 @@
+     $wfh->flush();
+ 
+   } else {
+-    eval { server_wait($config_file, $rfh) };
++    eval { server_wait($setup->{config_file}, $rfh) };
+     if ($@) {
+       warn($@);
+       exit 1;
+@@ -465,15 +433,10 @@
+   }
+ 
+   # Stop server
+-  server_stop($pid_file);
+-
++  server_stop($setup->{pid_file});
+   $self->assert_child_ok($pid);
+ 
+-  if ($ex) {
+-    die($ex);
+-  }
+-
+-  unlink($log_file);
++  test_cleanup($setup->{log_file}, $ex);
+ }
+ 
+ sub autohost_extlog_var_p {
+@@ -489,7 +452,7 @@
+     ScoreboardFile => $setup->{scoreboard_file},
+     SystemLog => $setup->{log_file},
+     TraceLog => $setup->{log_file},
+-    Trace => 'DEFAULT:10',
++    Trace => 'DEFAULT:10 autohost:20',
+ 
+     LogFormat => 'custom "%p"',
+ 
+@@ -503,13 +466,15 @@
+   my ($port, $config_user, $config_group) = config_write($setup->{config_file},
+     $config);
+ 
++  my $autohost_port = $port + 11;
++
+   if (open(my $fh, ">> $setup->{config_file}")) {
+     print $fh <<EOC;
+ <IfModule mod_autohost.c>
+   AutoHostEngine on
+   AutoHostLog $setup->{log_file}
+   AutoHostConfig $test_root/conf.d/%0:%p.conf
+-  AutoHostPorts $port
++  AutoHostPorts $autohost_port
+ </IfModule>
+ EOC
+     unless (close($fh)) {
+@@ -521,7 +486,7 @@
+   }
+ 
+   mkpath("$tmpdir/conf.d");
+-  my $auto_config = File::Spec->rel2abs("$tmpdir/conf.d/127.0.0.1:$port.conf");
++  my $auto_config = File::Spec->rel2abs("$tmpdir/conf.d/127.0.0.1:$autohost_port.conf");
+   if (open(my $fh, "> $auto_config")) {
+     print $fh <<EOC;
+ ServerName "AutoHost Server"
+@@ -554,7 +519,7 @@
+   defined(my $pid = fork()) or die("Can't fork: $!");
+   if ($pid) {
+     eval {
+-      my $client = ProFTPD::TestSuite::FTP->new('127.0.0.1', $port);
++      my $client = ProFTPD::TestSuite::FTP->new('127.0.0.1', $autohost_port);
+       $client->login($setup->{user}, $setup->{passwd});
+       $client->quit();
+     };
+@@ -596,8 +561,8 @@
+         print STDERR "# $line\n";
+       }
+ 
+-      $self->assert($port eq $line,
+-        test_msg("Expected '$port', got '$line'"));
++      $self->assert($autohost_port eq $line,
++        test_msg("Expected '$autohost_port', got '$line'"));
+ 
+     } else {
+       die("Can't read $ext_log: $!");
+@@ -613,49 +578,17 @@
+ sub autohost_global_config {
+   my $self = shift;
+   my $tmpdir = $self->{tmpdir};
+-
+-  my $config_file = "$tmpdir/autohost.conf";
+-  my $pid_file = File::Spec->rel2abs("$tmpdir/autohost.pid");
+-  my $scoreboard_file = File::Spec->rel2abs("$tmpdir/autohost.scoreboard");
+-
+-  my $log_file = File::Spec->rel2abs('tests.log');
+-
+-  my $auth_user_file = File::Spec->rel2abs("$tmpdir/autohost.passwd");
+-  my $auth_group_file = File::Spec->rel2abs("$tmpdir/autohost.group");
+-
+-  my $user = 'proftpd';
+-  my $passwd = 'test';
+-  my $group = 'ftpd';
+-  my $home_dir = File::Spec->rel2abs("$tmpdir/home");
+-  mkpath($home_dir);
+-  my $uid = 500;
+-  my $gid = 500;
+-
+-  # Make sure that, if we're running as root, that the home directory has
+-  # permissions/privs set for the account we create
+-  if ($< == 0) {
+-    unless (chmod(0755, $home_dir)) {
+-      die("Can't set perms on $home_dir to 0755: $!");
+-    }
+-
+-    unless (chown($uid, $gid, $home_dir)) {
+-      die("Can't set owner of $home_dir to $uid/$gid: $!");
+-    }
+-  }
+-
+-  auth_user_write($auth_user_file, $user, $passwd, $uid, $gid, $home_dir,
+-    '/bin/bash');
+-  auth_group_write($auth_group_file, $group, $gid, $user);
++  my $setup = test_setup($tmpdir, 'autohost');
+ 
+   my $test_root = File::Spec->rel2abs($tmpdir);
+   my $ext_log = File::Spec->rel2abs("$tmpdir/custom.log");
+ 
+   my $config = {
+-    PidFile => $pid_file,
+-    ScoreboardFile => $scoreboard_file,
+-    SystemLog => $log_file,
+-    TraceLog => $log_file,
+-    Trace => 'DEFAULT:10',
++    PidFile => $setup->{pid_file},
++    ScoreboardFile => $setup->{scoreboard_file},
++    SystemLog => $setup->{log_file},
++    TraceLog => $setup->{log_file},
++    Trace => 'DEFAULT:10 autohost:20',
+ 
+     LogFormat => 'custom "%p"',
+ 
+@@ -670,33 +603,36 @@
+     },
+   };
+ 
+-  my ($port, $config_user, $config_group) = config_write($config_file, $config);
++  my ($port, $config_user, $config_group) = config_write($setup->{config_file},
++    $config);
+ 
+-  if (open(my $fh, ">> $config_file")) {
++  my $autohost_port = $port + 7;
++
++  if (open(my $fh, ">> $setup->{config_file}")) {
+     print $fh <<EOC;
+ <IfModule mod_autohost.c>
+   AutoHostEngine on
+-  AutoHostLog $log_file
++  AutoHostLog $setup->{log_file}
+   AutoHostConfig $test_root/conf.d/%0:%p.conf
+-  AutoHostPorts $port
++  AutoHostPorts $autohost_port
+ </IfModule>
+ EOC
+     unless (close($fh)) {
+-      die("Can't write $config_file: $!");
++      die("Can't write $setup->{config_file}: $!");
+     }
+ 
+   } else {
+-    die("Can't open $config_file: $!");
++    die("Can't open $setup->{config_file}: $!");
+   }
+ 
+   mkpath("$tmpdir/conf.d");
+-  my $auto_config = File::Spec->rel2abs("$tmpdir/conf.d/127.0.0.1:$port.conf");
++  my $auto_config = File::Spec->rel2abs("$tmpdir/conf.d/127.0.0.1:$autohost_port.conf");
+   if (open(my $fh, "> $auto_config")) {
+     print $fh <<EOC;
+ ServerName "AutoHost Server"
+-AuthUserFile $auth_user_file
+-AuthGroupFile $auth_group_file
+-ServerLog $log_file
++AuthUserFile $setup->{auth_user_file}
++AuthGroupFile $setup->{auth_group_file}
++ServerLog $setup->{log_file}
+ RequireValidShell off
+ EOC
+     unless (close($fh)) {
+@@ -722,11 +658,10 @@
+   defined(my $pid = fork()) or die("Can't fork: $!");
+   if ($pid) {
+     eval {
+-      my $client = ProFTPD::TestSuite::FTP->new('127.0.0.1', $port);
+-      $client->login($user, $passwd);
++      my $client = ProFTPD::TestSuite::FTP->new('127.0.0.1', $autohost_port);
++      $client->login($setup->{user}, $setup->{passwd});
+       $client->quit();
+     };
+-
+     if ($@) {
+       $ex = $@;
+     }
+@@ -735,7 +670,7 @@
+     $wfh->flush();
+ 
+   } else {
+-    eval { server_wait($config_file, $rfh) };
++    eval { server_wait($setup->{config_file}, $rfh) };
+     if ($@) {
+       warn($@);
+       exit 1;
+@@ -745,29 +680,38 @@
+   }
+ 
+   # Stop server
+-  server_stop($pid_file);
+-
++  server_stop($setup->{pid_file});
+   $self->assert_child_ok($pid);
+ 
+   if ($ex) {
+-    die($ex);
++    test_cleanup($setup->{log_file}, $ex);
++    return;
+   }
+ 
+-  # Now, read in the ExtendedLog, and see whether the %p variable was
+-  # properly written out.
+-  if (open(my $fh, "< $ext_log")) {
+-    my $line = <$fh>;
+-    chomp($line);
+-    close($fh);
++  eval {
++    # Now, read in the ExtendedLog, and see whether the %p variable was
++    # properly written out.
++    if (open(my $fh, "< $ext_log")) {
++      my $line = <$fh>;
++      chomp($line);
++      close($fh);
+ 
+-    $self->assert($port eq $line,
+-      test_msg("Expected '$port', got '$line'"));
++      if ($ENV{TEST_VERBOSE}) {
++        print STDERR "# $line\n";
++      }
+ 
+-  } else {
+-    die("Can't read $ext_log: $!");
++      $self->assert($autohost_port eq $line,
++        test_msg("Expected '$autohost_port', got '$line'"));
++
++    } else {
++      die("Can't read $ext_log: $!");
++    }
++  };
++  if ($@) {
++    $ex;
+   }
+ 
+-  unlink($log_file);
++  test_cleanup($setup->{log_file}, $ex);
+ }
+ 
+ 1;

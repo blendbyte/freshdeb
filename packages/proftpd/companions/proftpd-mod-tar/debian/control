@@ -1,0 +1,24 @@
+Source: proftpd-mod-tar
+Section: net
+Priority: optional
+Maintainer: ProFTPD Maintainance Team <pkg-proftpd-maintainers@alioth-lists.debian.net>
+Uploaders: Francesco Paolo Lovergine <frankie@debian.org>,
+           Hilmar Preuße <hille42@debian.org>
+Build-Depends: debhelper-compat (= 13),
+ proftpd-dev,
+ libbz2-dev,
+ zlib1g-dev,
+ libarchive-dev
+Rules-Requires-Root: no
+Standards-Version: 4.7.2
+Homepage: http://www.castaglia.org/proftpd/modules/mod_tar.html
+Vcs-Browser: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-tar
+Vcs-Git: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-tar.git
+
+Package: proftpd-mod-tar
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${proftpd:Depends}
+Description: ProFTPD module mod_tar
+ The mod_tar module supports on-the-fly creation of tar files,
+ Whenever a client attempts to download a directory as a tar file,
+ the mod_tar module will automatically create a tar file of that directory.

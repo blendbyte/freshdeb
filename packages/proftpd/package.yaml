@@ -1,0 +1,173 @@
+# ProFTPD, Debian's packaging (debian-proftpd-team), plus every third-party module the distributions ship, built against it.
+
+name: proftpd
+description: "ProFTPD FTP/FTPS/SFTP server and its modules"
+homepage: http://www.proftpd.org/
+
+upstream:
+  git: https://github.com/proftpd/proftpd.git
+  # Patch releases are letters (1.3.9e); rcs are skipped.
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+[a-z]?)$'
+
+packaging:
+  origin: https://salsa.debian.org/debian-proftpd-team/proftpd.git
+  ref: 8c50beef5088e792f3e5bc29bf2997f97f2d948c  # 1.3.9e~dfsg-1, unstable
+  source: proftpd-dfsg  # Debian repacks without doc/rfc; we build from the tag
+
+# The distributions' module packages depend on their core's exact ABI
+# (proftpd-abi-<version>): they are rebuilt here against ours, or apt would
+# keep proftpd back for anyone using one.
+companions:
+  proftpd-mod-autohost:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_autohost.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-autohost.git
+      ref: 83e6c50f95a89b66ac8a8d6db4aab6a0ce089668
+  proftpd-mod-case:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_case.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-case.git
+      ref: aa560a4cd4a6f76d44a576dd8ee653118de3ec56
+  proftpd-mod-clamav:
+    upstream:
+      git: https://github.com/jbenden/mod_clamav.git
+      # Only release candidates for years; a final 0.14 sorts below 0.14rc2 here: bump by hand.
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?(?:rc\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-clamav.git
+      ref: 4df3ac5bfca5d42f03afe626eb1000e500033265
+  proftpd-mod-counter:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_counter.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-counter.git
+      ref: ea681d7501456cb0654e02b3c9a5ec8ddd9d5b8a
+  proftpd-mod-fsync:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_fsync.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-fsync.git
+      ref: 56e79570e431c6cb3aa410e1116e1f0f17f53bec
+  proftpd-mod-geoip2:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_geoip2.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-geoip2.git
+      ref: c64e998c8ca7555af73ec0352e51c86f2a23fa34
+  proftpd-mod-kafka:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_kafka.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-kafka.git
+      ref: ffcbe9cac7349ee8c21828b5b51ac6bfe8466c97
+  proftpd-mod-msg:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_msg.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-msg.git
+      ref: fbba1ea42da1dcd99cfdc3fd09d467efca0fa6a8
+  proftpd-mod-prometheus:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_prometheus.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-prometheus.git
+      ref: d57a14ef5976ee77134079710573f303d79986d8
+  # Only in Debian so far, but proftpd-core recommends it: without it, apt keeps proftpd back.
+  proftpd-mod-procfs:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_procfs.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-procfs.git
+      ref: 21cbf9648003193e74e1fb62acaf9bcb869e53f5
+    overlays:
+      # debhelper compat 13 (no release has 14).
+      - patch: overlays/procfs-debhelper-13.patch
+  proftpd-mod-proxy:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_proxy.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-proxy.git
+      ref: b4fa6c19336ca7c75df0cf1e66053a41cbcb5574
+  proftpd-mod-proxy-protocol:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_proxy_protocol.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-proxy-protocol.git
+      ref: 05169d6cbfcda8a3e15c5b1fd00daa1ddec44c07
+  proftpd-mod-sftp-ldap:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_sftp_ldap.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-sftp-ldap.git
+      ref: 916e44fa9793bf8f586bfb131d05778b3f8fd24e
+  proftpd-mod-statsd:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_statsd.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-statsd.git
+      ref: a4bbed694c7cffffec4335f438508f8ffa360d36
+  proftpd-mod-tar:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_tar.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-tar.git
+      ref: 86411933dc854dbee3db361a9c8e698a16517962
+  proftpd-mod-vroot:
+    upstream:
+      git: https://github.com/Castaglia/proftpd-mod_vroot.git
+      tag_regex: '^v(?P<version>\d+\.\d+(?:\.\d+)?)$'
+    packaging:
+      origin: https://salsa.debian.org/debian-proftpd-team/proftpd-mod-vroot.git
+      ref: 77984a2eff9db5a4f0e63af5585cb946d99e4e4c
+
+# Upstream supports its latest release; 1.3.10 becomes main when it is out.
+tracks:
+  main:
+    tag: "v1.3.9e"
+    commit: fc3f908a0d07fa3b17fbe1e3054b7520806bc75a
+    revision: 1
+    patches: patches/main  # Debian's, plus upstream PR 2417: FTPS over TLSv1.3 broke with OpenSSL < 3.5 in 1.3.9e
+    companions:
+      proftpd-mod-autohost: {tag: "v0.6", commit: d05feed332055831adcf27791d7c48c24667ccb4}
+      proftpd-mod-case: {tag: "v0.9.1", commit: 1170c50dae90d74e25f77018ecb1d8b7d6af563b}
+      proftpd-mod-clamav: {tag: "v0.14rc2", commit: c8586c7be89894eb4325246acf6a1d8879ffb662}
+      proftpd-mod-counter: {tag: "v0.6.2", commit: 98b6f9e98940bc4c1ed3f766a7e56493a921667c}
+      proftpd-mod-fsync: {tag: "v0.3", commit: 8835ce4bc4a8ab626365558237d9f97c0c63adfd}
+      proftpd-mod-geoip2: {tag: "v0.1.1", commit: 2e8ab021a2cf85dc2da3c49dc238b0f3b53e5b5c}
+      proftpd-mod-kafka: {tag: "v0.1", commit: d7537f359e212647df93af4743fb9819cd7d8c9d}
+      proftpd-mod-msg: {tag: "v0.5.1", commit: 60e41538e4dea012e82a56e851824ef44a24a1e2}
+      proftpd-mod-prometheus: {tag: "v0.2", commit: fdd3002816aa5d44e7639a80600817e8a81080c3}
+      proftpd-mod-procfs: {tag: "v0.3", commit: b41f0929f3a736c0e1aee3ca392d808ecbfd8136}
+      proftpd-mod-proxy: {tag: "v0.9.7", commit: 68885f7cd474b16eef0b6ea6dfd4df83536b48c7}
+      proftpd-mod-proxy-protocol: {tag: "v0.6", commit: 7682710ad969aafd4bfaf0b8b825a23ca8dc79d2}
+      proftpd-mod-sftp-ldap: {tag: "v0.2", commit: 450f9b4bc7c2e7a5cb9f0e2165064cb75714e256}
+      proftpd-mod-statsd: {tag: "v0.1", commit: 4e3da69338120be9a05735d60ef8a19fb96d6ce0}
+      proftpd-mod-tar: {tag: "v0.4", commit: 4a6d4f4ceff3f9f01c8c13671f3fe4c2934bc827}
+      proftpd-mod-vroot: {tag: "v0.9.12", commit: abcc817f322e1fa670b469ef0bc09419336b1d56}
+
+overlays:
+  # debhelper compat 13, the ABI as a substvar so it follows the version, NEWS, mod_ls/mod_xfer
+  # LoadModule kept in edited modules.conf, and no upstream test suite as autopkgtest (all releases).
+  - patch: overlays/freshdeb.patch
+  # debhelper 13.6 has no dh_installsysusers: create the users in postinst.
+  - patch: overlays/legacy-sysusers.patch
+    codenames: [jammy]
+  # sysusers' "u!" modifier needs systemd 256 (bookworm 252, noble 255).
+  - patch: overlays/sysusers-no-lock-modifier.patch
+    codenames: [bookworm, noble]
