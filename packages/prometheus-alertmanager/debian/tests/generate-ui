@@ -1,0 +1,87 @@
+#!/bin/sh
+# autopkgtest: regenerate the legacy Elm UI via generate-ui.sh.
+#
+# Exit-code contract with /usr/share/prometheus/alertmanager/generate-ui.sh:
+#   0     success
+#   77    the `elm make` build failed
+#   other any other failure (apt install, copy, ...)
+#
+# `elm make` fails on 32-bit architectures (armhf, armel, i386) because the
+# Debian elm-compiler's Haskell Int is 32-bit there and cannot parse the
+# literal 0xFFFFFFFF in elm/core's src/Array.elm. See
+# https://bugs.debian.org/1023481
+# On those architectures an elm build failure is expected, so we report it
+# as a SKIP (needs Restrictions: skippable in debian/tests/control) and it
+# does not block migration to testing.
+#
+# REMOVE THIS WORKAROUND (and the skippable restriction) once Debian bug
+# #1023481 is resolved, i.e. when elm-compiler can build elm/core on
+# 32-bit architectures. The 32-bit check below must stay in place so a
+# genuine elm build regression on 64-bit architectures still FAILs.
+set -e
+
+echo "Running generate-ui.sh..."
+set +e
+bash /usr/share/prometheus/alertmanager/generate-ui.sh
+rc=$?
+set -e
+
+if [ "$rc" -ne 0 ]; then
+    case "$(dpkg --print-architecture)" in
+        armhf|armel|i386)
+            if [ "$rc" -eq 77 ]; then
+                echo "SKIP: elm make failed on a 32-bit architecture; expected until Debian bug #1023481 is fixed" >&2
+                exit 77
+            fi
+            ;;
+    esac
+    if [ "$rc" -eq 77 ]; then
+        echo "FAIL: elm make failed on $(dpkg --print-architecture); the UI build is genuinely broken" >&2
+    else
+        echo "FAIL: generate-ui.sh exited with status $rc" >&2
+    fi
+    exit 1
+fi
+
+echo "Verifying generated files exist..."
+DSTDIR=/usr/share/prometheus/alertmanager/ui
+if [ ! -s "$DSTDIR/script.js" ]; then
+    echo "ERROR: script.js is missing or empty!"
+    exit 1
+fi
+if [ ! -s "$DSTDIR/index.html" ]; then
+    echo "ERROR: index.html is missing or empty!"
+    exit 1
+fi
+if [ ! -s "$DSTDIR/favicon.ico" ]; then
+    echo "ERROR: favicon.ico is missing or empty!"
+    exit 1
+fi
+
+echo "Restarting prometheus-alertmanager..."
+systemctl restart prometheus-alertmanager
+systemctl is-active prometheus-alertmanager
+
+echo "Waiting for service to listen on 9093..."
+for i in $(seq 1 10); do
+    if curl -s http://localhost:9093/-/ready > /dev/null; then
+        echo "Alertmanager is ready!"
+        break
+    fi
+    echo "Waiting for Alertmanager..."
+    sleep 1
+done
+
+echo "Verifying UI is served..."
+# Alertmanager serves the UI on / (or /#/alerts). We verify that script.js is reachable.
+if ! curl -s -f http://localhost:9093/script.js > /dev/null; then
+    echo "ERROR: Failed to fetch script.js via HTTP!"
+    exit 1
+fi
+
+if ! curl -s -f http://localhost:9093/ > /dev/null; then
+    echo "ERROR: Failed to fetch index.html via HTTP!"
+    exit 1
+fi
+
+echo "Autopkgtest generate-ui completed successfully."

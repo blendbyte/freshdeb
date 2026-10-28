@@ -1,0 +1,202 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Sun, 5 Jul 2026 06:02:20 -0400
+Subject: Disable Kafka integration to avoid franz-go dependency
+
+---
+ eventrecorder/kafka.go           |  2 ++
+ eventrecorder/kafka_stub.go      | 46 ++++++++++++++++++++++++++++++++++++++++
+ eventrecorder/kafka_stub_test.go | 23 ++++++++++++++++++++
+ eventrecorder/kafka_test.go      |  2 ++
+ kafka/broker.go                  |  2 ++
+ kafka/broker_test.go             |  2 ++
+ kafka/client.go                  |  2 ++
+ kafka/client_test.go             |  2 ++
+ kafka/errors.go                  |  2 ++
+ kafka/errors_test.go             |  2 ++
+ kafka/kafka.go                   |  2 ++
+ kafka/kafka_test.go              |  2 ++
+ 12 files changed, 89 insertions(+)
+ create mode 100644 eventrecorder/kafka_stub.go
+ create mode 100644 eventrecorder/kafka_stub_test.go
+
+diff --git a/eventrecorder/kafka.go b/eventrecorder/kafka.go
+index d60f708..647456d 100644
+--- a/eventrecorder/kafka.go
++++ b/eventrecorder/kafka.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/eventrecorder/kafka_stub.go b/eventrecorder/kafka_stub.go
+new file mode 100644
+index 0000000..bb2abf5
+--- /dev/null
++++ b/eventrecorder/kafka_stub.go
+@@ -0,0 +1,46 @@
++package eventrecorder
++
++import (
++	"errors"
++	"log/slog"
++
++	"github.com/prometheus/client_golang/prometheus"
++	commoncfg "github.com/prometheus/common/config"
++	"github.com/prometheus/alertmanager/eventrecorder/eventrecorderpb"
++)
++
++type KafkaOutputConfig struct {
++	Brokers     []string `yaml:"brokers" json:"brokers"`
++	Topic       string   `yaml:"topic" json:"topic"`
++	ClientID    string   `yaml:"client_id,omitempty" json:"client_id,omitempty"`
++	Format      string   `yaml:"format,omitempty" json:"format,omitempty"`
++	Acks        string   `yaml:"acks,omitempty" json:"acks,omitempty"`
++	Compression string   `yaml:"compression,omitempty" json:"compression,omitempty"`
++	BufferSize  int      `yaml:"buffer_size,omitempty" json:"buffer_size,omitempty"`
++	TLSConfig   *commoncfg.TLSConfig `yaml:"tls_config,omitempty" json:"tls_config,omitempty"`
++}
++
++func (c *KafkaOutputConfig) UnmarshalYAML(unmarshal func(any) error) error {
++	type plain KafkaOutputConfig
++	return unmarshal((*plain)(c))
++}
++
++func (c KafkaOutputConfig) equal(o KafkaOutputConfig) bool {
++	return true
++}
++
++type KafkaOutput struct {}
++
++func NewKafkaOutput(
++	cfg KafkaOutputConfig,
++	instance string,
++	dropsCounter *prometheus.CounterVec,
++	produceErrors *prometheus.CounterVec,
++	logger *slog.Logger,
++) (*KafkaOutput, error) {
++	return nil, errors.New("Kafka integration is disabled in Debian builds")
++}
++
++func (ko *KafkaOutput) Name() string { return "disabled-kafka" }
++func (ko *KafkaOutput) SendEvent(event *eventrecorderpb.Event) (int, error) { return 0, errors.New("disabled") }
++func (ko *KafkaOutput) Close() error { return nil }
+diff --git a/eventrecorder/kafka_stub_test.go b/eventrecorder/kafka_stub_test.go
+new file mode 100644
+index 0000000..e82c1a1
+--- /dev/null
++++ b/eventrecorder/kafka_stub_test.go
+@@ -0,0 +1,23 @@
++package eventrecorder
++
++import (
++	"time"
++
++	"github.com/prometheus/alertmanager/eventrecorder/eventrecorderpb"
++	"google.golang.org/protobuf/types/known/timestamppb"
++)
++
++func sampleEvent() *eventrecorderpb.Event {
++	return &eventrecorderpb.Event{
++		Timestamp: timestamppb.New(time.Unix(1700000000, 0)),
++		Instance:  "test-host",
++		Data: &eventrecorderpb.EventData{
++			EventType: &eventrecorderpb.EventData_AlertmanagerStartupEvent{
++				AlertmanagerStartupEvent: &eventrecorderpb.AlertmanagerStartupEvent{
++					Version:      "v-test",
++					BuildContext: "test-build",
++				},
++			},
++		},
++	}
++}
+diff --git a/eventrecorder/kafka_test.go b/eventrecorder/kafka_test.go
+index 9fac564..115e227 100644
+--- a/eventrecorder/kafka_test.go
++++ b/eventrecorder/kafka_test.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/broker.go b/kafka/broker.go
+index 4f7e71f..3e7ce44 100644
+--- a/kafka/broker.go
++++ b/kafka/broker.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/broker_test.go b/kafka/broker_test.go
+index fb0569f..44d8ad0 100644
+--- a/kafka/broker_test.go
++++ b/kafka/broker_test.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/client.go b/kafka/client.go
+index 2a8fc5d..4da0683 100644
+--- a/kafka/client.go
++++ b/kafka/client.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/client_test.go b/kafka/client_test.go
+index 762f09d..d3cde53 100644
+--- a/kafka/client_test.go
++++ b/kafka/client_test.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/errors.go b/kafka/errors.go
+index 871013e..4af7a45 100644
+--- a/kafka/errors.go
++++ b/kafka/errors.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/errors_test.go b/kafka/errors_test.go
+index 2620c2d..b8e16d1 100644
+--- a/kafka/errors_test.go
++++ b/kafka/errors_test.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/kafka.go b/kafka/kafka.go
+index e49d36e..30f6cdf 100644
+--- a/kafka/kafka.go
++++ b/kafka/kafka.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+diff --git a/kafka/kafka_test.go b/kafka/kafka_test.go
+index 8d82cef..2f9e663 100644
+--- a/kafka/kafka_test.go
++++ b/kafka/kafka_test.go
+@@ -1,3 +1,5 @@
++//go:build ignore
++
+ // Copyright The Prometheus Authors
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.

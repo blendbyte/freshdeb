@@ -1,0 +1,36 @@
+From: freshdeb <packages@freshdeb.com>
+Subject: Accept and ignore Debian's --web.ui-path flag
+
+Debian's packages served a separately built web UI from the directory in
+--web.ui-path. The UI is built in again, so the flag does nothing, but
+settings that still pass it must not stop Alertmanager from starting.
+
+Forwarded: not-needed
+---
+ cmd/alertmanager/main.go | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
+--- a/cmd/alertmanager/main.go
++++ b/cmd/alertmanager/main.go
+@@ -65,6 +65,9 @@ func run() int {
+ 		routePrefix    = kingpin.Flag("web.route-prefix", "Prefix for the internal routes of web endpoints. Defaults to path of --web.external-url.").String()
+ 		getConcurrency = kingpin.Flag("web.get-concurrency", "Maximum number of GET requests processed concurrently. If negative or zero, the limit is GOMAXPROC or 8, whichever is larger.").Default("0").Int()
+ 		httpTimeout    = kingpin.Flag("web.timeout", "Timeout for HTTP requests. If negative or zero, no timeout is set.").Default("0").Duration()
++		// Debian's packages had this flag for a separately built web UI; the
++		// UI is built in now. Accepted so that existing settings still start.
++		uiPath = kingpin.Flag("web.ui-path", "Ignored: the web UI is built in.").Hidden().String()
+ 
+ 		memlimitRatio = kingpin.Flag("auto-gomemlimit.ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value must be greater than 0 and less than or equal to 1.").
+ 				Default("0.9").Float64()
+@@ -99,6 +102,10 @@ func run() int {
+ 
+ 	logger := promslog.New(&promslogConfig)
+ 
++	if *uiPath != "" {
++		logger.Warn("--web.ui-path is ignored: the web UI is built in", "path", *uiPath)
++	}
++
+ 	prometheus.MustRegister(versioncollector.NewCollector("alertmanager"))
+ 
+ 	ff, err := featurecontrol.NewFlags(logger, *featureFlags)

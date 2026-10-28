@@ -1,0 +1,344 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Sat, 26 Aug 2023 15:39:44 +0200
+Subject: Revert kingpin.v2 import path
+
+Forwarded: not-needed
+Last-Update: 2023-08-26
+
+Revert path to comply with current golang-gopkg-alecthomas-kingpin.v2-dev
+package paths.
+---
+ cli/alert.go              | 2 +-
+ cli/alert_add.go          | 2 +-
+ cli/alert_query.go        | 2 +-
+ cli/check_config.go       | 2 +-
+ cli/cluster.go            | 2 +-
+ cli/config.go             | 2 +-
+ cli/config/config.go      | 2 +-
+ cli/config/config_test.go | 2 +-
+ cli/format/format.go      | 2 +-
+ cli/root.go               | 2 +-
+ cli/routing.go            | 2 +-
+ cli/silence.go            | 2 +-
+ cli/silence_add.go        | 2 +-
+ cli/silence_expire.go     | 2 +-
+ cli/silence_import.go     | 2 +-
+ cli/silence_query.go      | 2 +-
+ cli/silence_update.go     | 2 +-
+ cli/template.go           | 2 +-
+ cli/template_render.go    | 2 +-
+ cli/test_routing.go       | 2 +-
+ cli/utils.go              | 2 +-
+ cmd/alertmanager/main.go  | 2 +-
+ 22 files changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/cli/alert.go b/cli/alert.go
+index d50d618..0b6026c 100644
+--- a/cli/alert.go
++++ b/cli/alert.go
+@@ -14,7 +14,7 @@
+ package cli
+ 
+ import (
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ func configureAlertCmd(app *kingpin.Application) {
+diff --git a/cli/alert_add.go b/cli/alert_add.go
+index 2890946..55eb73d 100644
+--- a/cli/alert_add.go
++++ b/cli/alert_add.go
+@@ -20,8 +20,8 @@ import (
+ 	"strconv"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/go-openapi/strfmt"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/alert"
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+diff --git a/cli/alert_query.go b/cli/alert_query.go
+index de42ed0..d433c90 100644
+--- a/cli/alert_query.go
++++ b/cli/alert_query.go
+@@ -19,7 +19,7 @@ import (
+ 	"fmt"
+ 	"strconv"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/alert"
+ 	"github.com/prometheus/alertmanager/cli/format"
+diff --git a/cli/check_config.go b/cli/check_config.go
+index f3b5ae2..b9d0d18 100644
+--- a/cli/check_config.go
++++ b/cli/check_config.go
+@@ -17,7 +17,7 @@ import (
+ 	"fmt"
+ 	"os"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/config"
+ 	"github.com/prometheus/alertmanager/template"
+diff --git a/cli/cluster.go b/cli/cluster.go
+index eefc729..d74edf3 100644
+--- a/cli/cluster.go
++++ b/cli/cluster.go
+@@ -17,7 +17,7 @@ import (
+ 	"context"
+ 	"errors"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/cli/format"
+ )
+diff --git a/cli/config.go b/cli/config.go
+index 4fd9368..a4f8d74 100644
+--- a/cli/config.go
++++ b/cli/config.go
+@@ -17,7 +17,7 @@ import (
+ 	"context"
+ 	"errors"
+ 
+-	kingpin "github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/cli/format"
+ )
+diff --git a/cli/config/config.go b/cli/config/config.go
+index 59969f3..52b5bd2 100644
+--- a/cli/config/config.go
++++ b/cli/config/config.go
+@@ -16,7 +16,7 @@ package config
+ import (
+ 	"os"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 	"gopkg.in/yaml.v2"
+ )
+ 
+diff --git a/cli/config/config_test.go b/cli/config/config_test.go
+index b62bb86..9679e4c 100644
+--- a/cli/config/config_test.go
++++ b/cli/config/config_test.go
+@@ -17,7 +17,7 @@ import (
+ 	"io"
+ 	"testing"
+ 
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/cli/format/format.go b/cli/format/format.go
+index 7bab337..efda7ba 100644
+--- a/cli/format/format.go
++++ b/cli/format/format.go
+@@ -17,8 +17,8 @@ import (
+ 	"io"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/go-openapi/strfmt"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+ 	"github.com/prometheus/alertmanager/pkg/labels"
+diff --git a/cli/root.go b/cli/root.go
+index fe1bed7..3958006 100644
+--- a/cli/root.go
++++ b/cli/root.go
+@@ -21,13 +21,13 @@ import (
+ 	"strings"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	clientruntime "github.com/go-openapi/runtime/client"
+ 	"github.com/go-openapi/strfmt"
+ 	promconfig "github.com/prometheus/common/config"
+ 	"github.com/prometheus/common/promslog"
+ 	"github.com/prometheus/common/version"
+ 	"golang.org/x/mod/semver"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client"
+ 	"github.com/prometheus/alertmanager/cli/config"
+diff --git a/cli/routing.go b/cli/routing.go
+index b2f69af..00e90da 100644
+--- a/cli/routing.go
++++ b/cli/routing.go
+@@ -18,8 +18,8 @@ import (
+ 	"context"
+ 	"fmt"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/xlab/treeprint"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+ 	"github.com/prometheus/alertmanager/dispatch"
+diff --git a/cli/silence.go b/cli/silence.go
+index d7ed2ce..648e098 100644
+--- a/cli/silence.go
++++ b/cli/silence.go
+@@ -14,7 +14,7 @@
+ package cli
+ 
+ import (
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ // configureSilenceCmd represents the silence command.
+diff --git a/cli/silence_add.go b/cli/silence_add.go
+index 92da02e..8f6502f 100644
+--- a/cli/silence_add.go
++++ b/cli/silence_add.go
+@@ -21,9 +21,9 @@ import (
+ 	"strconv"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/go-openapi/strfmt"
+ 	"github.com/prometheus/common/model"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/silence"
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+diff --git a/cli/silence_expire.go b/cli/silence_expire.go
+index d9dc4bf..d2e7357 100644
+--- a/cli/silence_expire.go
++++ b/cli/silence_expire.go
+@@ -17,8 +17,8 @@ import (
+ 	"context"
+ 	"errors"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/go-openapi/strfmt"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/silence"
+ )
+diff --git a/cli/silence_import.go b/cli/silence_import.go
+index 17e7c30..464939b 100644
+--- a/cli/silence_import.go
++++ b/cli/silence_import.go
+@@ -21,7 +21,7 @@ import (
+ 	"os"
+ 	"sync"
+ 
+-	kingpin "github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/silence"
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+diff --git a/cli/silence_query.go b/cli/silence_query.go
+index ba5f01e..5037cdc 100644
+--- a/cli/silence_query.go
++++ b/cli/silence_query.go
+@@ -20,7 +20,7 @@ import (
+ 	"strconv"
+ 	"time"
+ 
+-	kingpin "github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/silence"
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+diff --git a/cli/silence_update.go b/cli/silence_update.go
+index 48d8d15..e4bfab2 100644
+--- a/cli/silence_update.go
++++ b/cli/silence_update.go
+@@ -19,9 +19,9 @@ import (
+ 	"fmt"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/go-openapi/strfmt"
+ 	"github.com/prometheus/common/model"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/silence"
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+diff --git a/cli/template.go b/cli/template.go
+index 38d389d..7bb2e7c 100644
+--- a/cli/template.go
++++ b/cli/template.go
+@@ -14,7 +14,7 @@
+ package cli
+ 
+ import (
+-	"github.com/alecthomas/kingpin/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ // configureTemplateCmd represents the template command.
+diff --git a/cli/template_render.go b/cli/template_render.go
+index 11a7d20..932e048 100644
+--- a/cli/template_render.go
++++ b/cli/template_render.go
+@@ -21,8 +21,8 @@ import (
+ 	"os"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/common/model"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/template"
+ )
+diff --git a/cli/test_routing.go b/cli/test_routing.go
+index 163dce3..6393cd6 100644
+--- a/cli/test_routing.go
++++ b/cli/test_routing.go
+@@ -19,8 +19,8 @@ import (
+ 	"os"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/xlab/treeprint"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+ 	"github.com/prometheus/alertmanager/dispatch"
+diff --git a/cli/utils.go b/cli/utils.go
+index 7215220..b6dbe9f 100644
+--- a/cli/utils.go
++++ b/cli/utils.go
+@@ -20,8 +20,8 @@ import (
+ 	"net/url"
+ 	"os"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/common/model"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/api/v2/client/general"
+ 	"github.com/prometheus/alertmanager/api/v2/models"
+diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
+index 420a605..c63771b 100644
+--- a/cmd/alertmanager/main.go
++++ b/cmd/alertmanager/main.go
+@@ -32,7 +32,6 @@ import (
+ 	"time"
+ 
+ 	"github.com/KimMachineGun/automemlimit/memlimit"
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
+ 	"github.com/prometheus/client_golang/prometheus/promauto"
+@@ -44,6 +43,7 @@ import (
+ 	"github.com/prometheus/common/version"
+ 	"github.com/prometheus/exporter-toolkit/web"
+ 	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/alertmanager/alert"
+ 	"github.com/prometheus/alertmanager/api"

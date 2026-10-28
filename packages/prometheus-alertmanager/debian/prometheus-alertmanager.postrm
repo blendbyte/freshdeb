@@ -1,0 +1,16 @@
+#!/bin/sh
+# postrm script for prometheus
+# Script executed after the package is removed.
+
+set -e
+
+case "$1" in
+  purge)
+        rm -rf /var/log/prometheus/prometheus-alertmanager.log* \
+            /run/prometheus/prometheus-alertmanager.pid \
+            /var/lib/prometheus/alertmanager/
+	# We do NOT remove the system user.
+	;;
+esac
+
+#DEBHELPER#

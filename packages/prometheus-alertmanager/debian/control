@@ -1,0 +1,135 @@
+Source: prometheus-alertmanager
+Section: golang
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders:
+ Martina Ferrari <tina@debian.org>,
+ Daniel Swarbrick <dswarbrick@debian.org>,
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-bash-completion,
+ dh-sequence-golang,
+ golang-any,
+ golang-github-alecthomas-units-dev,
+ golang-github-aws-aws-sdk-go-v2-dev,
+ golang-github-aws-smithy-go-dev,
+ golang-github-cenkalti-backoff-v4-dev,
+ golang-github-cespare-xxhash-dev,
+ golang-github-coder-quartz-dev (>= 0.3.0),
+ golang-github-emersion-go-sasl-dev,
+ golang-github-emersion-go-smtp-dev,
+ golang-github-go-openapi-analysis-dev,
+ golang-github-go-openapi-errors-dev (>= 0.19.5~),
+ golang-github-go-openapi-loads-dev,
+ golang-github-go-openapi-runtime-dev (>= 0.25.0~),
+ golang-github-go-openapi-spec-dev,
+ golang-github-go-openapi-strfmt-dev (>= 0.19.0~),
+ golang-github-go-openapi-swag-dev,
+ golang-github-go-openapi-validate-dev (>= 0.20.3~),
+ golang-github-gogo-protobuf-dev,
+ golang-github-google-uuid-dev,
+ golang-github-hashicorp-go-sockaddr-dev,
+ golang-github-hashicorp-golang-lru-v2-dev,
+ golang-github-hashicorp-memberlist-dev,
+ golang-github-jessevdk-go-flags-dev,
+ golang-github-kimmachinegun-automemlimit-dev,
+ golang-github-oklog-run-dev,
+ golang-github-oklog-ulid-dev,
+ golang-github-prometheus-client-golang-dev (>= 1.19.0),
+ golang-github-prometheus-common-dev (>= 0.63.0),
+ golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+ golang-github-prometheus-sigv4-dev,
+ golang-github-rs-cors-dev,
+ golang-github-stretchr-testify-dev,
+ golang-github-xlab-treeprint-dev (>= 0.0~git20180615),
+ golang-golang-x-mod-dev,
+ golang-golang-x-net-dev,
+ golang-golang-x-text-dev,
+ golang-google-grpc-dev,
+ golang-gopkg-alecthomas-kingpin.v2-dev,
+ golang-gopkg-telebot.v3-dev,
+ golang-gopkg-yaml.v2-dev,
+ golang-opentelemetry-contrib-dev,
+ golang-opentelemetry-otel-dev (>= 1.46.0~),
+ golang-protobuf-extensions-dev,
+ golang-uber-automaxprocs-dev,
+ tzdata,
+Testsuite: autopkgtest-pkg-go
+Standards-Version: 4.7.4
+Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-alertmanager
+Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-alertmanager.git
+Homepage: https://github.com/prometheus/alertmanager
+XS-Go-Import-Path: github.com/prometheus/alertmanager
+
+Package: prometheus-alertmanager
+Section: net
+Architecture: any
+Pre-Depends:
+ ${misc:Pre-Depends},
+Depends:
+ adduser,
+ tzdata,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Static-Built-Using: ${misc:Static-Built-Using}
+Description: handle and deliver alerts created by Prometheus
+ The Alertmanager handles alerts sent by client applications such as the
+ Prometheus server. It takes care of deduplicating, grouping, and routing them
+ to the correct receiver integration such as email, PagerDuty, or OpsGenie. It
+ also takes care of silencing and inhibition of alerts.
+
+Package: golang-github-prometheus-alertmanager-dev
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ golang-github-alecthomas-units-dev,
+ golang-github-aws-aws-sdk-go-v2-dev,
+ golang-github-aws-smithy-go-dev,
+ golang-github-cenkalti-backoff-v4-dev,
+ golang-github-cespare-xxhash-dev,
+ golang-github-coder-quartz-dev (>= 0.3.0),
+ golang-github-emersion-go-sasl-dev,
+ golang-github-emersion-go-smtp-dev,
+ golang-github-go-openapi-analysis-dev,
+ golang-github-go-openapi-errors-dev (>= 0.19.5~),
+ golang-github-go-openapi-loads-dev,
+ golang-github-go-openapi-runtime-dev (>= 0.25.0~),
+ golang-github-go-openapi-spec-dev,
+ golang-github-go-openapi-strfmt-dev (>= 0.19.0~),
+ golang-github-go-openapi-swag-dev,
+ golang-github-go-openapi-validate-dev (>= 0.20.3~),
+ golang-github-gogo-protobuf-dev,
+ golang-github-google-uuid-dev,
+ golang-github-hashicorp-go-sockaddr-dev,
+ golang-github-hashicorp-golang-lru-v2-dev,
+ golang-github-hashicorp-memberlist-dev,
+ golang-github-jessevdk-go-flags-dev,
+ golang-github-kimmachinegun-automemlimit-dev,
+ golang-github-oklog-run-dev,
+ golang-github-oklog-ulid-dev,
+ golang-github-prometheus-client-golang-dev (>= 1.19.0),
+ golang-github-prometheus-common-dev (>= 0.63.0),
+ golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+ golang-github-prometheus-sigv4-dev,
+ golang-github-rs-cors-dev,
+ golang-github-stretchr-testify-dev,
+ golang-github-xlab-treeprint-dev (>= 0.0~git20180615),
+ golang-golang-x-mod-dev,
+ golang-golang-x-net-dev,
+ golang-golang-x-text-dev,
+ golang-google-grpc-dev,
+ golang-gopkg-alecthomas-kingpin.v2-dev,
+ golang-gopkg-telebot.v3-dev,
+ golang-gopkg-yaml.v2-dev,
+ golang-opentelemetry-contrib-dev,
+ golang-opentelemetry-otel-dev (>= 1.46.0~),
+ golang-protobuf-extensions-dev,
+ golang-uber-automaxprocs-dev,
+ tzdata,
+ ${misc:Depends},
+Description: handle and deliver alerts created by Prometheus -- source
+ The Alertmanager handles alerts sent by client applications such as the
+ Prometheus server. It takes care of deduplicating, grouping, and routing them
+ to the correct receiver integration such as email, PagerDuty, or OpsGenie. It
+ also takes care of silencing and inhibition of alerts.
+ .
+ This package provides the source code to be used as a library.

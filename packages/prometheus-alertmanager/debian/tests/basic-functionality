@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+echo "Starting prometheus-alertmanager..."
+systemctl start prometheus-alertmanager
+systemctl is-active prometheus-alertmanager
+
+echo "Waiting for service to listen on 9093..."
+for i in $(seq 1 10); do
+    if curl -s http://localhost:9093/-/ready > /dev/null; then
+        echo "Alertmanager is ready!"
+        break
+    fi
+    echo "Waiting for Alertmanager..."
+    sleep 1
+done
+
+echo "Testing amtool config show..."
+amtool --alertmanager.url=http://localhost:9093 config show
+
+echo "Autopkgtest completed successfully."

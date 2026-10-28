@@ -1,0 +1,26 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Tue, 20 Sep 2022 03:09:45 +0200
+Subject: Disable network tests
+
+Forwarded: not-needed
+Last-Update: 2022-09-20
+
+The buildd documentation states that most of them have no network access
+available, and a package's build+test process must not attempt to use the
+network or assume that any network interface is available.
+---
+ cluster/tls_transport_test.go | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/cluster/tls_transport_test.go b/cluster/tls_transport_test.go
+index c0c12d3..3f4d5f9 100644
+--- a/cluster/tls_transport_test.go
++++ b/cluster/tls_transport_test.go
+@@ -127,7 +127,6 @@ func TestFinalAdvertiseAddr(t *testing.T) {
+ 	}{
+ 		{bindAddr: localhost, bindPort: ports[0], inputIP: "10.0.0.5", inputPort: 54231, expectedIP: "10.0.0.5", expectedPort: 54231},
+ 		{bindAddr: localhost, bindPort: ports[1], inputIP: "invalid", inputPort: 54231, expectedError: "failed to parse advertise address \"invalid\""},
+-		{bindAddr: "0.0.0.0", bindPort: 0, inputIP: "", inputPort: 0, expectedIP: "random"},
+ 		{bindAddr: localhost, bindPort: 0, inputIP: "", inputPort: 0, expectedIP: localhost},
+ 		{bindAddr: localhost, bindPort: ports[2], inputIP: "", inputPort: 0, expectedIP: localhost, expectedPort: ports[2]},
+ 	}

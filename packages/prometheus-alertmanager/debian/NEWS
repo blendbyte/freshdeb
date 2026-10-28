@@ -1,0 +1,41 @@
+prometheus-alertmanager (0.24.0-5) unstable; urgency=medium
+
+  This release removes the --template.default flag, which was introduced by a
+  Debian patch in version 0.15.3+ds-3 to de-blob the default embedded
+  notification templates.
+
+  The correct way to specify files from which custom notification templates are
+  read is via the global "templates" option in the alertmanager.yml config file.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 03 Feb 2023 02:21:22 +0000
+
+prometheus-alertmanager (0.19.0+ds-1) unstable; urgency=medium
+
+  This release includes a script to simplify the building and deployment of the
+  Alertmanager UI, which can't be distributed in Debian at the moment.
+
+  Just executing /usr/share/prometheus/alertmanager/generate-ui.sh as root
+  should be enough to get a working dynamic web UI.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 29 Oct 2019 19:04:40 +0000
+
+prometheus-alertmanager (0.15.0~rc.2-1) experimental; urgency=medium
+
+  The Debian package of the alertmanager does not include a web application.
+
+  Please, use the amtool command-line application to obtain equivalent
+  functionality.
+
+  Alternatively, you can deploy your own files to be served by the embedded web
+  server, by placing them in /usr/share/prometheus/alertmanager/ui/, or by
+  using the --web.local-assets option to point to a different path. Note that
+  the web server will only serve files in the lib and app sub-directories.
+
+  You can still use the HTTP API, and the special handlers:
+
+    /metrics
+    /-/reload
+    /-/healthy
+    /-/ready
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 19 May 2018 17:27:10 +0000

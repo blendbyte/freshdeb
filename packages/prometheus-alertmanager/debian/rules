@@ -1,0 +1,98 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/pkg-info.mk
+
+# Uncomment this to enable verbose mode.
+#export DH_VERBOSE := 1
+
+# Acceptance tests need to be run separately.
+export DH_GOPKG := \
+	github.com/prometheus/alertmanager
+
+export DH_GOLANG_EXCLUDES := \
+	asset \
+	examples \
+	notify/jira \
+	test/.*/acceptance \
+	# EOL
+
+export DH_GOLANG_EXCLUDES_ALL := 0
+
+export DH_GOLANG_INSTALL_EXTRA := \
+	notify/opsgenie/api_key_file \
+	template/default.tmpl \
+	template/email.tmpl \
+	ui/app \
+	# EOL
+
+METAPKG := github.com/prometheus/common
+
+BRANCH     := debian/sid
+USER       := team+pkg-go@tracker.debian.org
+BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+    +%Y%m%d-%H:%M:%S)
+GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+BUILDFLAGS  = -ldflags \
+  " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Branch=$(BRANCH)\
+    -X $(METAPKG)/version.BuildUser=$(USER)\
+    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+
+%:
+	dh $@ --builddir=_build --buildsystem=golang
+
+MANAGER_BINNAME := $(DEB_SOURCE)
+TOOL_BINNAME := amtool
+
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+	# Rename the binary to match the debian package.
+	mv -v _build/bin/alertmanager _build/bin/$(MANAGER_BINNAME)
+	# Build bash completion scripts.
+	mkdir -vp _build/bash_completion.d
+	_build/bin/$(TOOL_BINNAME) --completion-script-bash > _build/bash_completion.d/$(TOOL_BINNAME)
+
+MAN_WHATIS_MANAGER := $(MANAGER_BINNAME) \\- the Prometheus alert manager
+MAN_WHATIS_TOOL := $(TOOL_BINNAME) \\- Tooling for the Prometheus alert manager
+MAN_PROG_MANAGER := $(shell echo $(MANAGER_BINNAME) | tr [:lower:] [:upper:])
+MAN_PROG_TOOL := $(shell echo $(TOOL_BINNAME) | tr [:lower:] [:upper:])
+MAN_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' '+%B %Y')
+
+execute_before_dh_installman:
+	_build/bin/$(MANAGER_BINNAME) --help-man > _build/$(MANAGER_BINNAME).1
+	_build/bin/$(TOOL_BINNAME) --help-man > _build/$(TOOL_BINNAME).1
+	# Fix title header and footers.
+	sed -i '/^.TH .*/c.TH $(MAN_PROG_MANAGER) "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        _build/$(MANAGER_BINNAME).1
+	sed -i '/^.TH .*/c.TH $(MAN_PROG_TOOL) "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        _build/$(TOOL_BINNAME).1
+	# Remove build user/build date/go version headers, which is ugly.
+	sed -i '/^  /d' _build/*.1
+	# Fix whatis entries.
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n$(MAN_WHATIS_MANAGER)' _build/$(MANAGER_BINNAME).1
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n$(MAN_WHATIS_TOOL)' _build/$(TOOL_BINNAME).1
+	# Remove default values, as they create unwieldy long lines.
+	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' _build/*.1
+	# Fix executable path in amtool examples
+	sed -i 's/\.\/amtool/amtool/' _build/$(TOOL_BINNAME).1
+
+# FIXME:
+# go: warning: "github.com/prometheus/alertmanager/test/with_api_v1/acceptance/..." matched no packages
+#         cd _build && go test -vet=off -v -p 2
+# FAIL    _/tmp/autopkgtest-lxc.n2r3y7za/downtmp/autopkgtest_tmp/_build [setup failed]
+# # _/tmp/autopkgtest-lxc.n2r3y7za/downtmp/autopkgtest_tmp/_build
+# package .: no Go files in /tmp/autopkgtest-lxc.n2r3y7za/downtmp/autopkgtest_tmp/_build
+# dh_auto_test: error: cd _build && go test -vet=off -v -p 2 returned exit code 1
+#
+# execute_after_dh_auto_test:
+# 	# Don't abort if acceptance tests fail, as they are too sensitive to
+# 	# timing issues.
+# 	( for pkg in cli/acceptance with_api_v1/acceptance \
+# 	    with_api_v2/acceptance; do \
+# 	    DH_GOLANG_EXCLUDES= DH_GOPKG=$(DH_GOPKG)/test/$$pkg \
+# 	    dh_auto_test || { \
+# 		echo "*** Acceptance tests failed ***"; \
+# 		exit 1; \
+# 		}; \
+# 	  done; ) || true

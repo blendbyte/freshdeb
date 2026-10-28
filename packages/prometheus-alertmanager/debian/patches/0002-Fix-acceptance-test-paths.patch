@@ -1,0 +1,61 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Tue, 12 Jul 2016 03:23:14 +0000
+Subject: Fix acceptance test paths
+
+Forwarded: not-needed
+Last-Update: 2024-03-06
+
+Upstream uses a different build mechanism, which somehow makes the original
+code work.
+---
+ test/cli/acceptance.go       | 5 +++--
+ test/testutils/acceptance.go | 4 +++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/test/cli/acceptance.go b/test/cli/acceptance.go
+index 2ed9543..ccf5ce7 100644
+--- a/test/cli/acceptance.go
++++ b/test/cli/acceptance.go
+@@ -19,6 +19,7 @@ import (
+ 	"maps"
+ 	"os"
+ 	"os/exec"
++	"path/filepath"
+ 	"regexp"
+ 	"strings"
+ 	"testing"
+@@ -31,10 +32,10 @@ import (
+ 	"github.com/prometheus/alertmanager/test/testutils"
+ )
+ 
+-const (
++var (
+ 	// nolint:godot
+ 	// amtool is the relative path to local amtool binary.
+-	amtool = "../../../amtool"
++	amtool = filepath.Join(os.Getenv("GOPATH"), "bin/amtool")
+ )
+ 
+ // Re-export common types from testutils.
+diff --git a/test/testutils/acceptance.go b/test/testutils/acceptance.go
+index e0c1594..37f478e 100644
+--- a/test/testutils/acceptance.go
++++ b/test/testutils/acceptance.go
+@@ -361,6 +361,7 @@ func (am *Alertmanager) Start(additionalArg []string) error {
+ 		"--config.file", am.confFile.Name(),
+ 		"--log.level", "debug",
+ 		"--web.listen-address", "127.0.0.1:0",
++		"--web.ui-path", filepath.Join(os.Getenv("GOPATH"), "src/github.com/prometheus/alertmanager/ui/app"),
+ 		"--storage.path", am.dir,
+ 		"--cluster.listen-address", "127.0.0.1:0",
+ 		"--cluster.settle-timeout", "0s",
+@@ -373,7 +374,8 @@ func (am *Alertmanager) Start(additionalArg []string) error {
+ 	}
+ 	args = append(args, additionalArg...)
+ 
+-	cmd := exec.Command("../../../alertmanager", args...)
++	bin := filepath.Join(os.Getenv("GOPATH"), "bin/prometheus-alertmanager")
++	cmd := exec.Command(bin, args...)
+ 
+ 	if am.cmd == nil {
+ 		var outb, errb buffer

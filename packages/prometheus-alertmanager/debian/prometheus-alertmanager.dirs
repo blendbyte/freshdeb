@@ -1,0 +1,3 @@
+usr/share/prometheus/alertmanager/ui
+var/lib/prometheus/alertmanager
+var/log/prometheus

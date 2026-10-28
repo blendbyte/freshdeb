@@ -1,0 +1,26 @@
+From: =?utf-8?q?Juan_Manuel_M=C3=A9ndez_Rey?= <juan.mendezr@proton.me>
+Date: Mon, 14 Sep 2026 23:17:07 +0200
+Subject: Update otel semconv version to v1.43.0
+
+go.opentelemetry.io/otel/sdk/resource 1.46.0 uses semconv v1.43.0; the
+resource schema URLs must match or tracer provider setup fails with
+"conflicting Schema URL".
+
+Forwarded: not-needed
+---
+ tracing/tracing.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tracing/tracing.go b/tracing/tracing.go
+index 77a8684..4ca3a48 100644
+--- a/tracing/tracing.go
++++ b/tracing/tracing.go
+@@ -31,7 +31,7 @@ import (
+ 	"go.opentelemetry.io/otel/propagation"
+ 	"go.opentelemetry.io/otel/sdk/resource"
+ 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+-	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
++	semconv "go.opentelemetry.io/otel/semconv/v1.43.0"
+ 	"go.opentelemetry.io/otel/trace"
+ 	"go.opentelemetry.io/otel/trace/noop"
+ 	"google.golang.org/grpc/credentials"

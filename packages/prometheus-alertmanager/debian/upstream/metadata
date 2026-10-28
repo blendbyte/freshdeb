@@ -1,0 +1,6 @@
+---
+Bug-Database: https://github.com/prometheus/alertmanager/issues
+Bug-Submit: https://github.com/prometheus/alertmanager/issues/new
+Repository: https://github.com/prometheus/alertmanager.git
+Repository-Browse: https://github.com/prometheus/alertmanager
+Security-Contact: https://github.com/prometheus/alertmanager/tree/HEAD/SECURITY.md

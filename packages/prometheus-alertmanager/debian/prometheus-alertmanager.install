@@ -1,0 +1,8 @@
+debian/README.templates etc/prometheus/alertmanager_templates/
+debian/alertmanager.yml etc/prometheus/
+debian/generate-ui.sh   usr/share/prometheus/alertmanager
+debian/index.html       usr/share/prometheus/alertmanager/no-ui/
+template/default.tmpl   usr/share/prometheus/alertmanager
+template/email.tmpl     usr/share/prometheus/alertmanager
+ui/app/public/favicon.ico      usr/share/prometheus/alertmanager/no-ui/
+usr/bin

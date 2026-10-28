@@ -1,0 +1,524 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -7,53 +7,7 @@
+ Build-Depends:
+  debhelper-compat (= 13),
+  dh-sequence-bash-completion,
+- dh-sequence-golang,
+- golang-any,
+- golang-github-alecthomas-units-dev,
+- golang-github-aws-aws-sdk-go-v2-dev,
+- golang-github-aws-smithy-go-dev,
+- golang-github-cenkalti-backoff-v4-dev,
+- golang-github-cespare-xxhash-dev,
+- golang-github-coder-quartz-dev (>= 0.3.0),
+- golang-github-emersion-go-sasl-dev,
+- golang-github-emersion-go-smtp-dev,
+- golang-github-go-openapi-analysis-dev,
+- golang-github-go-openapi-errors-dev (>= 0.19.5~),
+- golang-github-go-openapi-loads-dev,
+- golang-github-go-openapi-runtime-dev (>= 0.25.0~),
+- golang-github-go-openapi-spec-dev,
+- golang-github-go-openapi-strfmt-dev (>= 0.19.0~),
+- golang-github-go-openapi-swag-dev,
+- golang-github-go-openapi-validate-dev (>= 0.20.3~),
+- golang-github-gogo-protobuf-dev,
+- golang-github-google-uuid-dev,
+- golang-github-hashicorp-go-sockaddr-dev,
+- golang-github-hashicorp-golang-lru-v2-dev,
+- golang-github-hashicorp-memberlist-dev,
+- golang-github-jessevdk-go-flags-dev,
+- golang-github-kimmachinegun-automemlimit-dev,
+- golang-github-oklog-run-dev,
+- golang-github-oklog-ulid-dev,
+- golang-github-prometheus-client-golang-dev (>= 1.19.0),
+- golang-github-prometheus-common-dev (>= 0.63.0),
+- golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+- golang-github-prometheus-sigv4-dev,
+- golang-github-rs-cors-dev,
+- golang-github-stretchr-testify-dev,
+- golang-github-xlab-treeprint-dev (>= 0.0~git20180615),
+- golang-golang-x-mod-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-text-dev,
+- golang-google-grpc-dev,
+- golang-gopkg-alecthomas-kingpin.v2-dev,
+- golang-gopkg-telebot.v3-dev,
+- golang-gopkg-yaml.v2-dev,
+- golang-opentelemetry-contrib-dev,
+- golang-opentelemetry-otel-dev (>= 1.46.0~),
+- golang-protobuf-extensions-dev,
+- golang-uber-automaxprocs-dev,
+  tzdata,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-alertmanager
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-alertmanager.git
+@@ -70,66 +24,8 @@
+  tzdata,
+  ${misc:Depends},
+  ${shlibs:Depends},
+-Static-Built-Using: ${misc:Static-Built-Using}
+ Description: handle and deliver alerts created by Prometheus
+  The Alertmanager handles alerts sent by client applications such as the
+  Prometheus server. It takes care of deduplicating, grouping, and routing them
+  to the correct receiver integration such as email, PagerDuty, or OpsGenie. It
+  also takes care of silencing and inhibition of alerts.
+-
+-Package: golang-github-prometheus-alertmanager-dev
+-Architecture: all
+-Multi-Arch: foreign
+-Depends:
+- golang-github-alecthomas-units-dev,
+- golang-github-aws-aws-sdk-go-v2-dev,
+- golang-github-aws-smithy-go-dev,
+- golang-github-cenkalti-backoff-v4-dev,
+- golang-github-cespare-xxhash-dev,
+- golang-github-coder-quartz-dev (>= 0.3.0),
+- golang-github-emersion-go-sasl-dev,
+- golang-github-emersion-go-smtp-dev,
+- golang-github-go-openapi-analysis-dev,
+- golang-github-go-openapi-errors-dev (>= 0.19.5~),
+- golang-github-go-openapi-loads-dev,
+- golang-github-go-openapi-runtime-dev (>= 0.25.0~),
+- golang-github-go-openapi-spec-dev,
+- golang-github-go-openapi-strfmt-dev (>= 0.19.0~),
+- golang-github-go-openapi-swag-dev,
+- golang-github-go-openapi-validate-dev (>= 0.20.3~),
+- golang-github-gogo-protobuf-dev,
+- golang-github-google-uuid-dev,
+- golang-github-hashicorp-go-sockaddr-dev,
+- golang-github-hashicorp-golang-lru-v2-dev,
+- golang-github-hashicorp-memberlist-dev,
+- golang-github-jessevdk-go-flags-dev,
+- golang-github-kimmachinegun-automemlimit-dev,
+- golang-github-oklog-run-dev,
+- golang-github-oklog-ulid-dev,
+- golang-github-prometheus-client-golang-dev (>= 1.19.0),
+- golang-github-prometheus-common-dev (>= 0.63.0),
+- golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+- golang-github-prometheus-sigv4-dev,
+- golang-github-rs-cors-dev,
+- golang-github-stretchr-testify-dev,
+- golang-github-xlab-treeprint-dev (>= 0.0~git20180615),
+- golang-golang-x-mod-dev,
+- golang-golang-x-net-dev,
+- golang-golang-x-text-dev,
+- golang-google-grpc-dev,
+- golang-gopkg-alecthomas-kingpin.v2-dev,
+- golang-gopkg-telebot.v3-dev,
+- golang-gopkg-yaml.v2-dev,
+- golang-opentelemetry-contrib-dev,
+- golang-opentelemetry-otel-dev (>= 1.46.0~),
+- golang-protobuf-extensions-dev,
+- golang-uber-automaxprocs-dev,
+- tzdata,
+- ${misc:Depends},
+-Description: handle and deliver alerts created by Prometheus -- source
+- The Alertmanager handles alerts sent by client applications such as the
+- Prometheus server. It takes care of deduplicating, grouping, and routing them
+- to the correct receiver integration such as email, PagerDuty, or OpsGenie. It
+- also takes care of silencing and inhibition of alerts.
+- .
+- This package provides the source code to be used as a library.
+diff -ruN a/debian/generate-ui.sh b/debian/generate-ui.sh
+--- a/debian/generate-ui.sh
++++ b/debian/generate-ui.sh
+@@ -1,40 +0,0 @@
+-#!/bin/bash
+-
+-set -e
+-
+-SRCDIR=/usr/share/gocode/src/github.com/prometheus/alertmanager/ui/app
+-DSTDIR=/usr/share/prometheus/alertmanager/ui
+-
+-ASROOT=sudo
+-
+-echo "Installing dependencies..." >&2
+-$ASROOT apt install --update -y --no-install-recommends elm-compiler libjs-bootstrap4 \
+-    fonts-font-awesome curl uglifyjs golang-github-prometheus-alertmanager-dev ca-certificates
+-
+-TMPDIR=$(mktemp -d)
+-trap "rm -rf $TMPDIR" EXIT
+-
+-echo "Compiling source code..." >&2
+-ln -s $SRCDIR/src $SRCDIR/elm.json $TMPDIR
+-# Exit 77 specifically when the elm build fails. debian/tests/generate-ui
+-# relies on this code to distinguish an expected elm/core build failure on
+-# 32-bit architectures (Debian bug #1023481) from any other kind of failure.
+-if ! (cd "$TMPDIR" && elm make src/Main.elm --optimize --output "$TMPDIR/app.js"); then
+-    echo "ERROR: elm make failed (expected on 32-bit architectures; see Debian bug #1023481)" >&2
+-    exit 77
+-fi
+-
+-echo "Optimising source code..." >&2
+-uglifyjs $TMPDIR/app.js \
+-    --compress 'pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",pure_getters,keep_fargs=false,unsafe_comps,unsafe' \
+-    --mangle --output $TMPDIR/script.js
+-
+-echo "Installing in Alertmanager directory..." >&2
+-$ASROOT mkdir -p $DSTDIR $DSTDIR/lib
+-$ASROOT cp $TMPDIR/script.js $SRCDIR/index.html $SRCDIR/public/favicon.ico $DSTDIR
+-test -L $DSTDIR/lib/font-awesome || \
+-    $ASROOT ln -s -T /usr/share/fonts-font-awesome $DSTDIR/lib/font-awesome
+-test -L $DSTDIR/lib/bootstrap || \
+-    $ASROOT ln -s -T /usr/share/nodejs/bootstrap/dist $DSTDIR/lib/bootstrap
+-
+-echo "Finished! Please, restart prometheus-alertmanager to activate UI." >&2
+diff -ruN a/debian/golang-github-prometheus-alertmanager-dev.install b/debian/golang-github-prometheus-alertmanager-dev.install
+--- a/debian/golang-github-prometheus-alertmanager-dev.install
++++ b/debian/golang-github-prometheus-alertmanager-dev.install
+@@ -1 +0,0 @@
+-usr/share
+diff -ruN a/debian/golang-github-prometheus-alertmanager-dev.lintian-overrides b/debian/golang-github-prometheus-alertmanager-dev.lintian-overrides
+--- a/debian/golang-github-prometheus-alertmanager-dev.lintian-overrides
++++ b/debian/golang-github-prometheus-alertmanager-dev.lintian-overrides
+@@ -1,2 +0,0 @@
+-# The .gitignore is part of the Elm frontend code which is shipped as part of the source package in the -dev package for completeness/building.
+-golang-github-prometheus-alertmanager-dev: package-contains-vcs-control-file [usr/share/gocode/src/github.com/prometheus/alertmanager/ui/app/.gitignore]
+diff -ruN a/debian/index.html b/debian/index.html
+--- a/debian/index.html
++++ b/debian/index.html
+@@ -1,34 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="en">
+-    <head>
+-        <meta charset="utf-8">
+-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+-        <title>Alertmanager</title>
+-    </head>
+-    <body>
+-        <h1>Alertmanager</h1>
+-
+-        <p>The Debian package of the alertmanager does not include a web
+-        application.</p>
+-
+-        <p>Please, use the <code>amtool</code> command-line application to obtain
+-        equivalent functionality.</p>
+-
+-        <p>Alternatively, you can build and deploy the UI yourself, by placing
+-        the generated files in
+-        <code>/usr/share/prometheus/alertmanager/ui/</code>, or by using the
+-        <code>--web.ui-path</code> option to point to a different path.
+-        The script located at
+-        <code>/usr/share/prometheus/alertmanager/generate-ui.sh</code> can
+-        automatically build and deply the UI.</p>
+-
+-        <p>You can still use the HTTP API, and the special handlers:</p>
+-
+-        <ul>
+-            <li><a href="metrics">/metrics</a></li>
+-            <li><a href="-/reload">/-/reload</a></li>
+-            <li><a href="-/healthy">/-/healthy</a></li>
+-            <li><a href="-/ready">/-/ready</a></li>
+-        </ul>
+-    </body>
+-</html>
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,3 +1,22 @@
++prometheus-alertmanager (0.29.0-1) unstable; urgency=medium
++
++  freshdeb: this Alertmanager is built like upstream's release binaries,
++  so unlike the distributions' packages it includes the web UI (served on
++  port 9093, as with upstream), the Jira receiver and the event recorder's
++  Kafka output. The UI is built in: generate-ui.sh is gone, and
++  --web.ui-path is accepted but ignored, so existing settings in ARGS keep
++  working.
++
++  Alertmanager 0.27 removed the old /api/v1 API; those endpoints now answer
++  with HTTP 410. The Prometheus versions these distributions ship already
++  send alerts to /api/v2, and so do amtool and the web UI, but other tools
++  that still call /api/v1 need updating.
++
++  Silences and the notification log in /var/lib/prometheus/alertmanager
++  and the configuration in /etc/prometheus/alertmanager.yml are kept.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
+ prometheus-alertmanager (0.24.0-5) unstable; urgency=medium
+ 
+   This release removes the --template.default flag, which was introduced by a
+diff -ruN a/debian/prometheus-alertmanager.dirs b/debian/prometheus-alertmanager.dirs
+--- a/debian/prometheus-alertmanager.dirs
++++ b/debian/prometheus-alertmanager.dirs
+@@ -1,3 +1,2 @@
+-usr/share/prometheus/alertmanager/ui
+ var/lib/prometheus/alertmanager
+ var/log/prometheus
+diff -ruN a/debian/prometheus-alertmanager.init b/debian/prometheus-alertmanager.init
+--- a/debian/prometheus-alertmanager.init
++++ b/debian/prometheus-alertmanager.init
+@@ -28,6 +28,10 @@
+ DAEMON=/usr/bin/$NAME
+ PIDFILE=/run/prometheus/$NAME.pid
+ LOGFILE=/var/log/prometheus/$NAME.log
++# freshdeb: the kernel keeps only 15 characters of the process name, so
++# matching by name finds nothing and "reload" fails; match by pidfile and
++# executable only.
++COMMAND_NAME=none
+ 
+ START_ARGS="--no-close --background --make-pidfile"
+ STOP_ARGS="--remove-pidfile"
+diff -ruN a/debian/prometheus-alertmanager.install b/debian/prometheus-alertmanager.install
+--- a/debian/prometheus-alertmanager.install
++++ b/debian/prometheus-alertmanager.install
+@@ -1,8 +1,5 @@
+ debian/README.templates etc/prometheus/alertmanager_templates/
+ debian/alertmanager.yml etc/prometheus/
+-debian/generate-ui.sh   usr/share/prometheus/alertmanager
+-debian/index.html       usr/share/prometheus/alertmanager/no-ui/
+ template/default.tmpl   usr/share/prometheus/alertmanager
+ template/email.tmpl     usr/share/prometheus/alertmanager
+-ui/app/public/favicon.ico      usr/share/prometheus/alertmanager/no-ui/
+ usr/bin
+diff -ruN a/debian/prometheus-alertmanager.lintian-overrides b/debian/prometheus-alertmanager.lintian-overrides
+--- a/debian/prometheus-alertmanager.lintian-overrides
++++ b/debian/prometheus-alertmanager.lintian-overrides
+@@ -1,2 +0,0 @@
+-# Intentionally empty directory for end-user to optionally generate full web UI
+-prometheus-alertmanager: package-contains-empty-directory [usr/share/prometheus/alertmanager/ui/]
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -1,54 +1,51 @@
+ #!/usr/bin/make -f
+ include /usr/share/dpkg/pkg-info.mk
+ 
+-# Uncomment this to enable verbose mode.
+-#export DH_VERBOSE := 1
+-
+-# Acceptance tests need to be run separately.
+-export DH_GOPKG := \
+-	github.com/prometheus/alertmanager
+-
+-export DH_GOLANG_EXCLUDES := \
+-	asset \
+-	examples \
+-	notify/jira \
+-	test/.*/acceptance \
+-	# EOL
+-
+-export DH_GOLANG_EXCLUDES_ALL := 0
+-
+-export DH_GOLANG_INSTALL_EXTRA := \
+-	notify/opsgenie/api_key_file \
+-	template/default.tmpl \
+-	template/email.tmpl \
+-	ui/app \
+-	# EOL
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have. That also brings back what Debian has to leave out
++# for lack of packaged libraries or build tools: the event recorder's Kafka
++# output and the web UI, upstream's prebuilt release asset (pinned by sha256
++# in package.yaml), embedded the way upstream's release build does. Same tags
++# and version stamps as upstream's binaries. The toolchain, offline mode
++# (GOFLAGS=-mod=vendor, GOPROXY=off) and caches come from the build
++# environment.
++export CGO_ENABLED := 0
+ 
+ METAPKG := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
+ BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+     +%Y%m%d-%H:%M:%S)
+-GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+-BUILDFLAGS  = -ldflags \
++BUILDFLAGS  = -tags netgo -ldflags \
+   " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
++    -X $(METAPKG)/version.Revision=$(REVISION)\
++    -X $(METAPKG)/version.Branch=HEAD\
++    -X $(METAPKG)/version.BuildUser=freshdeb\
++    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)"
+ 
+ %:
+-	dh $@ --builddir=_build --buildsystem=golang
++	dh $@
+ 
+ MANAGER_BINNAME := $(DEB_SOURCE)
+ TOOL_BINNAME := amtool
+ 
++override_dh_auto_configure:
++
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
+-	# Rename the binary to match the debian package.
+-	mv -v _build/bin/alertmanager _build/bin/$(MANAGER_BINNAME)
++	go version
++	# Web UI: upstream's release tarball of the built UI (dist/, the files
++	# upstream's own build embeds from ui/app/dist).
++	tar -xzf freshdeb-assets/web-ui.tar.gz -C ui/app
++	test -f ui/app/dist/index.html.gz
++	# Upstream's names: its acceptance tests run the binaries from the top
++	# of the source tree.
++	go build $(BUILDFLAGS) -o alertmanager ./cmd/alertmanager
++	go build $(BUILDFLAGS) -o amtool ./cmd/amtool
++	mkdir -vp _build/bin
++	cp -v alertmanager _build/bin/$(MANAGER_BINNAME)
++	cp -v amtool _build/bin/$(TOOL_BINNAME)
+ 	# Build bash completion scripts.
+ 	mkdir -vp _build/bash_completion.d
+ 	_build/bin/$(TOOL_BINNAME) --completion-script-bash > _build/bash_completion.d/$(TOOL_BINNAME)
+@@ -77,22 +74,19 @@
+ 	# Fix executable path in amtool examples
+ 	sed -i 's/\.\/amtool/amtool/' _build/$(TOOL_BINNAME).1
+ 
+-# FIXME:
+-# go: warning: "github.com/prometheus/alertmanager/test/with_api_v1/acceptance/..." matched no packages
+-#         cd _build && go test -vet=off -v -p 2
+-# FAIL    _/tmp/autopkgtest-lxc.n2r3y7za/downtmp/autopkgtest_tmp/_build [setup failed]
+-# # _/tmp/autopkgtest-lxc.n2r3y7za/downtmp/autopkgtest_tmp/_build
+-# package .: no Go files in /tmp/autopkgtest-lxc.n2r3y7za/downtmp/autopkgtest_tmp/_build
+-# dh_auto_test: error: cd _build && go test -vet=off -v -p 2 returned exit code 1
+-#
+-# execute_after_dh_auto_test:
+-# 	# Don't abort if acceptance tests fail, as they are too sensitive to
+-# 	# timing issues.
+-# 	( for pkg in cli/acceptance with_api_v1/acceptance \
+-# 	    with_api_v2/acceptance; do \
+-# 	    DH_GOLANG_EXCLUDES= DH_GOPKG=$(DH_GOPKG)/test/$$pkg \
+-# 	    dh_auto_test || { \
+-# 		echo "*** Acceptance tests failed ***"; \
+-# 		exit 1; \
+-# 		}; \
+-# 	  done; ) || true
++# Upstream's test suite, as upstream's "make test" runs it, including the
++# acceptance tests against the binaries built above.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	go test $(BUILDFLAGS) ./...
++endif
++
++override_dh_auto_install:
++	install -D -m 0755 _build/bin/$(MANAGER_BINNAME) debian/tmp/usr/bin/$(MANAGER_BINNAME)
++	install -D -m 0755 _build/bin/$(TOOL_BINNAME) debian/tmp/usr/bin/$(TOOL_BINNAME)
++
++# Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf _build alertmanager amtool ui/app/dist
+diff -ruN a/debian/tests/control b/debian/tests/control
+--- a/debian/tests/control
++++ b/debian/tests/control
+@@ -4,17 +4,5 @@
+  curl,
+  @,
+ Restrictions:
+- isolation-container,
++ isolation-machine,
+  needs-root,
+-
+-Tests:
+- generate-ui,
+-Depends:
+- curl,
+- sudo,
+- @,
+-Restrictions:
+- allow-stderr,
+- isolation-container,
+- needs-root,
+- skippable,
+diff -ruN a/debian/tests/generate-ui b/debian/tests/generate-ui
+--- a/debian/tests/generate-ui
++++ b/debian/tests/generate-ui
+@@ -1,87 +0,0 @@
+-#!/bin/sh
+-# autopkgtest: regenerate the legacy Elm UI via generate-ui.sh.
+-#
+-# Exit-code contract with /usr/share/prometheus/alertmanager/generate-ui.sh:
+-#   0     success
+-#   77    the `elm make` build failed
+-#   other any other failure (apt install, copy, ...)
+-#
+-# `elm make` fails on 32-bit architectures (armhf, armel, i386) because the
+-# Debian elm-compiler's Haskell Int is 32-bit there and cannot parse the
+-# literal 0xFFFFFFFF in elm/core's src/Array.elm. See
+-# https://bugs.debian.org/1023481
+-# On those architectures an elm build failure is expected, so we report it
+-# as a SKIP (needs Restrictions: skippable in debian/tests/control) and it
+-# does not block migration to testing.
+-#
+-# REMOVE THIS WORKAROUND (and the skippable restriction) once Debian bug
+-# #1023481 is resolved, i.e. when elm-compiler can build elm/core on
+-# 32-bit architectures. The 32-bit check below must stay in place so a
+-# genuine elm build regression on 64-bit architectures still FAILs.
+-set -e
+-
+-echo "Running generate-ui.sh..."
+-set +e
+-bash /usr/share/prometheus/alertmanager/generate-ui.sh
+-rc=$?
+-set -e
+-
+-if [ "$rc" -ne 0 ]; then
+-    case "$(dpkg --print-architecture)" in
+-        armhf|armel|i386)
+-            if [ "$rc" -eq 77 ]; then
+-                echo "SKIP: elm make failed on a 32-bit architecture; expected until Debian bug #1023481 is fixed" >&2
+-                exit 77
+-            fi
+-            ;;
+-    esac
+-    if [ "$rc" -eq 77 ]; then
+-        echo "FAIL: elm make failed on $(dpkg --print-architecture); the UI build is genuinely broken" >&2
+-    else
+-        echo "FAIL: generate-ui.sh exited with status $rc" >&2
+-    fi
+-    exit 1
+-fi
+-
+-echo "Verifying generated files exist..."
+-DSTDIR=/usr/share/prometheus/alertmanager/ui
+-if [ ! -s "$DSTDIR/script.js" ]; then
+-    echo "ERROR: script.js is missing or empty!"
+-    exit 1
+-fi
+-if [ ! -s "$DSTDIR/index.html" ]; then
+-    echo "ERROR: index.html is missing or empty!"
+-    exit 1
+-fi
+-if [ ! -s "$DSTDIR/favicon.ico" ]; then
+-    echo "ERROR: favicon.ico is missing or empty!"
+-    exit 1
+-fi
+-
+-echo "Restarting prometheus-alertmanager..."
+-systemctl restart prometheus-alertmanager
+-systemctl is-active prometheus-alertmanager
+-
+-echo "Waiting for service to listen on 9093..."
+-for i in $(seq 1 10); do
+-    if curl -s http://localhost:9093/-/ready > /dev/null; then
+-        echo "Alertmanager is ready!"
+-        break
+-    fi
+-    echo "Waiting for Alertmanager..."
+-    sleep 1
+-done
+-
+-echo "Verifying UI is served..."
+-# Alertmanager serves the UI on / (or /#/alerts). We verify that script.js is reachable.
+-if ! curl -s -f http://localhost:9093/script.js > /dev/null; then
+-    echo "ERROR: Failed to fetch script.js via HTTP!"
+-    exit 1
+-fi
+-
+-if ! curl -s -f http://localhost:9093/ > /dev/null; then
+-    echo "ERROR: Failed to fetch index.html via HTTP!"
+-    exit 1
+-fi
+-
+-echo "Autopkgtest generate-ui completed successfully."

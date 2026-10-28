@@ -1,0 +1,97 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Tue, 12 Jul 2016 03:23:14 +0000
+Subject: Debian defaults
+
+Forwarded: not-needed
+Last-Update: 2019-10-29
+---
+ README.md                | 2 +-
+ cli/root.go              | 8 ++++----
+ cli/silence_add.go       | 5 ++++-
+ cmd/alertmanager/main.go | 4 ++--
+ 4 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/README.md b/README.md
+index ab7576d..489e359 100644
+--- a/README.md
++++ b/README.md
+@@ -296,7 +296,7 @@ amtool template render --template.glob='/foo/bar/*.tmpl' --template.text='{{ tem
+ 
+ ### Configuration
+ 
+-`amtool` allows a configuration file to specify some options for convenience. The default configuration file paths are `$HOME/.config/amtool/config.yml` or `/etc/amtool/config.yml`
++`amtool` allows a configuration file to specify some options for convenience. The default configuration file paths are `$HOME/.config/prometheus/amtool/config.yml` or `/etc/prometheus/amtool/config.yml`
+ 
+ An example configuration file might look like the following:
+ 
+diff --git a/cli/root.go b/cli/root.go
+index 572f173..fe1bed7 100644
+--- a/cli/root.go
++++ b/cli/root.go
+@@ -45,7 +45,7 @@ var (
+ 	versionCheck    bool
+ 	featureFlags    string
+ 
+-	configFiles = []string{os.ExpandEnv("$HOME/.config/amtool/config.yml"), "/etc/amtool/config.yml"}
++	configFiles = []string{os.ExpandEnv("$HOME/.config/prometheus/amtool.yml"), "/etc/prometheus/amtool.yml"}
+ 	legacyFlags = map[string]string{"comment_required": "require-comment"}
+ )
+ 
+@@ -151,7 +151,7 @@ func Execute() {
+ 	format.InitFormatFlags(app)
+ 
+ 	app.Flag("verbose", "Verbose running information").Short('v').BoolVar(&verbose)
+-	app.Flag("alertmanager.url", "Alertmanager to talk to").URLVar(&alertmanagerURL)
++	app.Flag("alertmanager.url", "Alertmanager to talk to").Default("http://localhost:9093/").URLVar(&alertmanagerURL)
+ 	app.Flag("output", "Output formatter (simple, extended, json)").Short('o').Default("simple").EnumVar(&output, "simple", "extended", "json")
+ 	app.Flag("timeout", "Timeout for the executed command").Default("30s").DurationVar(&timeout)
+ 	app.Flag("http.config.file", "HTTP client configuration file for amtool to connect to Alertmanager.").PlaceHolder("<filename>").ExistingFileVar(&httpConfigFile)
+@@ -192,8 +192,8 @@ const (
+ 
+ Config File:
+ The alertmanager tool will read a config file in YAML format from one of two
+-default config locations: $HOME/.config/amtool/config.yml or
+-/etc/amtool/config.yml
++default config locations: $HOME/.config/prometheus/amtool.yml or
++/etc/prometheus/amtool.yml
+ 
+ All flags can be given in the config file, but the following are the suited for
+ static configuration:
+diff --git a/cli/silence_add.go b/cli/silence_add.go
+index 0ef3c3a..92da02e 100644
+--- a/cli/silence_add.go
++++ b/cli/silence_add.go
+@@ -79,7 +79,7 @@ func configureSilenceAddCmd(cc *kingpin.CmdClause) {
+ 		c      = &silenceAddCmd{}
+ 		addCmd = cc.Command("add", silenceAddHelp)
+ 	)
+-	addCmd.Flag("author", "Username for CreatedBy field").Short('a').Default(username()).StringVar(&c.author)
++	addCmd.Flag("author", "Username for CreatedBy field").Short('a').StringVar(&c.author)
+ 	addCmd.Flag("require-comment", "Require comment to be set").Hidden().Default("true").BoolVar(&c.requireComment)
+ 	addCmd.Flag("duration", "Duration of silence").Short('d').Default("1h").StringVar(&c.duration)
+ 	addCmd.Flag("start", "Set when the silence should start. RFC3339 format 2006-01-02T15:04:05-07:00").StringVar(&c.start)
+@@ -126,6 +126,9 @@ func (c *silenceAddCmd) add(ctx context.Context, _ *kingpin.ParseContext) error
+ 		startsAt = time.Now().UTC()
+ 	}
+ 
++	if c.author == "" {
++		c.author = username()
++	}
+ 	var endsAt time.Time
+ 	if c.end != "" {
+ 		endsAt, err = time.Parse(time.RFC3339, c.end)
+diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
+index 3d447f0..420a605 100644
+--- a/cmd/alertmanager/main.go
++++ b/cmd/alertmanager/main.go
+@@ -140,8 +140,8 @@ func run() int {
+ 	}
+ 
+ 	var (
+-		configFile                  = kingpin.Flag("config.file", "Alertmanager configuration file name.").Default("alertmanager.yml").String()
+-		dataDir                     = kingpin.Flag("storage.path", "Base path for data storage.").Default("data/").String()
++		configFile                  = kingpin.Flag("config.file", "Alertmanager configuration file name.").Default("/etc/prometheus/alertmanager.yml").String()
++		dataDir                     = kingpin.Flag("storage.path", "Base path for data storage.").Default("/var/lib/prometheus/alertmanager/").String()
+ 		retention                   = kingpin.Flag("data.retention", "How long to keep data for.").Default("120h").Duration()
+ 		maintenanceInterval         = kingpin.Flag("data.maintenance-interval", "Interval between garbage collection and snapshotting to disk of the silences and the notification logs.").Default("15m").Duration()
+ 		maxSilences                 = kingpin.Flag("silences.max-silences", "Maximum number of silences, including expired silences. If negative or zero, no limit is set.").Default("0").Int()

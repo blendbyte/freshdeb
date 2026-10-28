@@ -1,0 +1,10 @@
+0001-Do-not-embed-blobs.patch
+0002-Fix-acceptance-test-paths.patch
+0003-Debian-defaults.patch
+0004-Disable-network-tests.patch
+0005-Revert-kingpin.v2-import-path.patch
+0006-Disable-Kafka-integration-to-avoid-franz-go-dependen.patch
+0007-skip-flaky-maintenance-test.patch.patch
+0008-Skip-flaky-timeout-tests-on-slow-architectures.patch
+0009-Skip-flaky-scheduler-dependent-CAS-contention-test-o.patch
+0010-Update-otel-semconv-version.patch

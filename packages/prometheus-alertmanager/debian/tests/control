@@ -1,0 +1,20 @@
+Tests:
+ basic-functionality,
+Depends:
+ curl,
+ @,
+Restrictions:
+ isolation-container,
+ needs-root,
+
+Tests:
+ generate-ui,
+Depends:
+ curl,
+ sudo,
+ @,
+Restrictions:
+ allow-stderr,
+ isolation-container,
+ needs-root,
+ skippable,

@@ -1,0 +1,432 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Tue, 12 Jul 2016 03:23:14 +0000
+Subject: Do not embed blobs
+
+Forwarded: not-needed
+Last-Update: 2023-02-03
+
+Upstream is interested in keeping the resources embedded, this patch is to
+comply with Debian policy.
+---
+ cli/check_config.go        |  2 +-
+ cli/template_render.go     |  2 +-
+ cmd/alertmanager/main.go   |  5 ++--
+ notify/email/email_test.go |  2 +-
+ notify/slack/slack_test.go |  2 +-
+ notify/sns/sns_test.go     |  2 +-
+ notify/test/test.go        |  2 +-
+ template/template.go       | 11 +++++---
+ template/template_test.go  |  8 +++---
+ ui/app/src/Views.elm       |  1 +
+ ui/web.go                  | 35 ++++++++++++++++++------
+ ui/web_test.go             | 66 +++++++++++++++++++++++++++++++++++++---------
+ 12 files changed, 102 insertions(+), 36 deletions(-)
+
+diff --git a/cli/check_config.go b/cli/check_config.go
+index c024c27..f3b5ae2 100644
+--- a/cli/check_config.go
++++ b/cli/check_config.go
+@@ -84,7 +84,7 @@ func CheckConfig(args []string) error {
+ 			fmt.Printf(" - %d receivers\n", len(cfg.Receivers))
+ 			fmt.Printf(" - %d templates\n", len(cfg.Templates))
+ 			if len(cfg.Templates) > 0 {
+-				_, err = template.FromGlobs(cfg.Templates)
++				_, err = template.FromGlobs("", cfg.Templates)
+ 				if err != nil {
+ 					fmt.Printf("  FAILED: %s\n", err)
+ 					failed++
+diff --git a/cli/template_render.go b/cli/template_render.go
+index b02df7c..11a7d20 100644
+--- a/cli/template_render.go
++++ b/cli/template_render.go
+@@ -108,7 +108,7 @@ func configureTemplateRenderCmd(cc *kingpin.CmdClause) {
+ }
+ 
+ func (c *templateRenderCmd) render(ctx context.Context, _ *kingpin.ParseContext) error {
+-	tmpl, err := template.FromGlobs(c.templateFilesGlobs)
++	tmpl, err := template.FromGlobs("", c.templateFilesGlobs)
+ 	if err != nil {
+ 		return err
+ 	}
+diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
+index 0e5142e..3d447f0 100644
+--- a/cmd/alertmanager/main.go
++++ b/cmd/alertmanager/main.go
+@@ -157,6 +157,7 @@ func run() int {
+ 		routePrefix    = kingpin.Flag("web.route-prefix", "Prefix for the internal routes of web endpoints. Defaults to path of --web.external-url.").String()
+ 		getConcurrency = kingpin.Flag("web.get-concurrency", "Maximum number of GET requests processed concurrently. If negative or zero, the limit is GOMAXPROC or 8, whichever is larger.").Default("0").Int()
+ 		httpTimeout    = kingpin.Flag("web.timeout", "Timeout for HTTP requests. If negative or zero, no timeout is set.").Default("0").Duration()
++		uiPath = kingpin.Flag("web.ui-path", "Path to static UI directory.").Default("/usr/share/prometheus/alertmanager/ui/").String()
+ 
+ 		memlimitRatio = kingpin.Flag("auto-gomemlimit.ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value must be greater than 0 and less than or equal to 1.").
+ 				Default("0.9").Float64()
+@@ -465,7 +466,7 @@ func run() int {
+ 		// dispatcher) go to the new outputs.
+ 		eventRec.ApplyConfig(conf.EventRecorder)
+ 
+-		tmpl, err = template.FromGlobs(conf.Templates)
++		tmpl, err = template.FromGlobs("/usr/share/prometheus/alertmanager", conf.Templates)
+ 		if err != nil {
+ 			return fmt.Errorf("failed to parse templates: %w", err)
+ 		}
+@@ -624,7 +625,7 @@ func run() int {
+ 
+ 	webReload := make(chan chan error)
+ 
+-	ui.Register(router)
++	ui.Register(router, *uiPath)
+ 	httpserver.Register(router, webReload)
+ 
+ 	mux := api.Register(router, *routePrefix)
+diff --git a/notify/email/email_test.go b/notify/email/email_test.go
+index 9e7d8f3..90af1bf 100644
+--- a/notify/email/email_test.go
++++ b/notify/email/email_test.go
+@@ -213,7 +213,7 @@ func prepare(cfg *config.EmailConfig) (*template.Template, *types.Alert, error)
+ 		cfg.Headers = make(map[string]string)
+ 	}
+ 
+-	tmpl, err := template.FromGlobs([]string{})
++	tmpl, err := template.FromGlobs("../../template", []string{})
+ 	if err != nil {
+ 		return nil, nil, err
+ 	}
+diff --git a/notify/slack/slack_test.go b/notify/slack/slack_test.go
+index 68924f7..6cb996d 100644
+--- a/notify/slack/slack_test.go
++++ b/notify/slack/slack_test.go
+@@ -333,7 +333,7 @@ func TestSlackMessageField(t *testing.T) {
+ 		HTTPConfig:  &commoncfg.HTTPClientConfig{},
+ 	}
+ 
+-	tmpl, err := template.FromGlobs([]string{})
++	tmpl, err := template.FromGlobs("../../template", []string{})
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/notify/sns/sns_test.go b/notify/sns/sns_test.go
+index 7bafdc7..47bd507 100644
+--- a/notify/sns/sns_test.go
++++ b/notify/sns/sns_test.go
+@@ -141,7 +141,7 @@ func TestNotifyWithInvalidTemplate(t *testing.T) {
+ 
+ // CreateTmpl returns a ready-to-use template.
+ func createTmpl(t *testing.T) *template.Template {
+-	tmpl, err := template.FromGlobs([]string{})
++	tmpl, err := template.FromGlobs("", []string{})
+ 	require.NoError(t, err)
+ 	tmpl.ExternalURL, _ = url.Parse("http://am")
+ 	return tmpl
+diff --git a/notify/test/test.go b/notify/test/test.go
+index 75729b2..c13e417 100644
+--- a/notify/test/test.go
++++ b/notify/test/test.go
+@@ -128,7 +128,7 @@ func DefaultRetryCodes() []int {
+ 
+ // CreateTmpl returns a ready-to-use template.
+ func CreateTmpl(t *testing.T) *template.Template {
+-	tmpl, err := template.FromGlobs([]string{})
++	tmpl, err := template.FromGlobs("../../template", []string{})
+ 	require.NoError(t, err)
+ 	tmpl.ExternalURL, _ = url.Parse("http://am")
+ 	return tmpl
+diff --git a/template/template.go b/template/template.go
+index 73f1ac5..15facb9 100644
+--- a/template/template.go
++++ b/template/template.go
+@@ -21,6 +21,7 @@ import (
+ 	tmplhtml "html/template"
+ 	"io"
+ 	"net/url"
++	"os"
+ 	"path/filepath"
+ 	"reflect"
+ 	"regexp"
+@@ -73,16 +74,17 @@ func New(options ...Option) (*Template, error) {
+ 
+ // FromGlobs calls ParseGlob on all path globs provided and returns the
+ // resulting Template.
+-func FromGlobs(paths []string, options ...Option) (*Template, error) {
++func FromGlobs(defaultTemplatePath string, paths []string, options ...Option) (*Template, error) {
+ 	t, err := New(options...)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 
+-	defaultTemplates := []string{"default.tmpl", "email.tmpl"}
++	if defaultTemplatePath != "" {
++		defaultTemplates := []string{"default.tmpl", "email.tmpl"}
+ 
+-	for _, file := range defaultTemplates {
+-		f, err := asset.Open(file)
++		for _, file := range defaultTemplates {
++			f, err := os.Open(filepath.Join(defaultTemplatePath, file))
+ 		if err != nil {
+ 			return nil, err
+ 		}
+@@ -92,6 +94,7 @@ func FromGlobs(paths []string, options ...Option) (*Template, error) {
+ 		}
+ 		f.Close()
+ 	}
++	}
+ 
+ 	for _, tp := range paths {
+ 		if err := t.FromGlob(tp); err != nil {
+diff --git a/template/template_test.go b/template/template_test.go
+index 3935f0b..c8715e2 100644
+--- a/template/template_test.go
++++ b/template/template_test.go
+@@ -289,7 +289,7 @@ func TestData(t *testing.T) {
+ }
+ 
+ func TestTemplateExpansion(t *testing.T) {
+-	tmpl, err := FromGlobs([]string{})
++	tmpl, err := FromGlobs("../template", []string{})
+ 	require.NoError(t, err)
+ 
+ 	for _, tc := range []struct {
+@@ -572,7 +572,7 @@ func TestTemplateExpansionWithOptions(t *testing.T) {
+ 		},
+ 	} {
+ 		t.Run(tc.title, func(t *testing.T) {
+-			tmpl, err := FromGlobs([]string{}, tc.options...)
++			tmpl, err := FromGlobs("../template", []string{}, tc.options...)
+ 			require.NoError(t, err)
+ 			f := tmpl.ExecuteTextString
+ 			if tc.html {
+@@ -591,7 +591,7 @@ func TestTemplateExpansionWithOptions(t *testing.T) {
+ 
+ // This test asserts that template functions are thread-safe.
+ func TestTemplateFuncs(t *testing.T) {
+-	tmpl, err := FromGlobs([]string{})
++	tmpl, err := FromGlobs("../template", []string{})
+ 	require.NoError(t, err)
+ 
+ 	for _, tc := range []struct {
+@@ -723,7 +723,7 @@ func TestTemplateFuncs(t *testing.T) {
+ }
+ 
+ func TestTemplateNow(t *testing.T) {
+-	tmpl, err := FromGlobs([]string{})
++	tmpl, err := FromGlobs("../template", []string{})
+ 	require.NoError(t, err)
+ 
+ 	const (
+diff --git a/ui/app/src/Views.elm b/ui/app/src/Views.elm
+index 55a0598..c010ac3 100644
+--- a/ui/app/src/Views.elm
++++ b/ui/app/src/Views.elm
+@@ -24,6 +24,7 @@ view model =
+         ]
+ 
+ 
++
+ currentView : Model -> Html Msg
+ currentView model =
+     case model.route of
+diff --git a/ui/web.go b/ui/web.go
+index 145acf3..064b739 100644
+--- a/ui/web.go
++++ b/ui/web.go
+@@ -16,10 +16,10 @@ package ui
+ import (
+ 	"bytes"
+ 	"compress/gzip"
+-	"embed"
+ 	"io"
+ 	"io/fs"
+ 	"net/http"
++	"os"
+ 	"path"
+ 	"strconv"
+ 	"strings"
+@@ -28,9 +28,6 @@ import (
+ 	"github.com/prometheus/common/route"
+ )
+ 
+-//go:embed app/dist
+-var asset embed.FS
+-
+ var fileTypes = map[string]struct {
+ 	contentType  string // https://www.iana.org/assignments/media-types/
+ 	varyEncoding bool   // Must match build configuration in vite.config.mjs.
+@@ -115,11 +112,14 @@ func decompressToReader(f fs.File) (*bytes.Reader, error) {
+ }
+ 
+ // Register registers handlers to serve files for the web interface.
+-func Register(r *route.Router) {
+-	appFS, err := fs.Sub(asset, "app/dist")
+-	if err != nil {
+-		panic(err) // During build step, we did not embed a directory named `app/dist`.
++func Register(r *route.Router, uiPath string) {
++	if _, err := os.Stat(path.Join(uiPath, "index.html")); os.IsNotExist(err) {
++		if _, err := os.Stat(path.Join(uiPath, "index.html.gz")); os.IsNotExist(err) {
++			uiPath = "/usr/share/prometheus/alertmanager/no-ui"
++		}
+ 	}
++	appFS := os.DirFS(uiPath)
++
+ 	serve := func(w http.ResponseWriter, req *http.Request, filePath string, immutable bool) {
+ 		ext := strings.ToLower(path.Ext(filePath))
+ 		fileType, ok := fileTypes[ext]
+@@ -174,6 +174,17 @@ func Register(r *route.Router) {
+ 				return
+ 			}
+ 		}
++
++		// Fallback: serve uncompressed file when compressed variants don't exist.
++		// This is needed for the Debian no-embed build which does not ship .gz/.br files.
++		if f, err := appFS.Open(filePath); err == nil {
++			defer f.Close()
++			setCachePolicy(w, immutable)
++			w.Header().Set("Content-Type", fileType.contentType)
++			http.ServeContent(w, req, filePath, time.Time{}, f.(io.ReadSeeker))
++			return
++		}
++
+ 		http.NotFound(w, req)
+ 	}
+ 
+@@ -185,6 +196,14 @@ func Register(r *route.Router) {
+ 		serve(w, req, "favicon.ico", false)
+ 	})
+ 
++	r.Get("/script.js", func(w http.ResponseWriter, req *http.Request) {
++		serve(w, req, "script.js", false)
++	})
++
++	r.Get("/lib/*path", func(w http.ResponseWriter, req *http.Request) {
++		serve(w, req, path.Join("lib", route.Param(req.Context(), "path")), false)
++	})
++
+ 	r.Get("/assets/*path", func(w http.ResponseWriter, req *http.Request) {
+ 		serve(w, req, path.Join("assets", route.Param(req.Context(), "path")), true)
+ 	})
+diff --git a/ui/web_test.go b/ui/web_test.go
+index c9aa2b0..fba99bb 100644
+--- a/ui/web_test.go
++++ b/ui/web_test.go
+@@ -14,10 +14,14 @@
+ package ui
+ 
+ import (
++	"bytes"
++	"compress/gzip"
+ 	"io/fs"
+ 	"net/http"
+ 	"net/http/httptest"
++	"os"
+ 	"path"
++	"path/filepath"
+ 	"regexp"
+ 	"strings"
+ 	"testing"
+@@ -59,6 +63,42 @@ func TestSelectEncoding(t *testing.T) {
+ 	}
+ }
+ 
++func createMockUIDir(t *testing.T) string {
++	t.Helper()
++	tmpDir := t.TempDir()
++
++	writeFile := func(relPath, content string, compressed bool) {
++		absPath := filepath.Join(tmpDir, relPath)
++		err := os.MkdirAll(filepath.Dir(absPath), 0755)
++		require.NoError(t, err)
++
++		if compressed {
++			// Write .gz
++			var buf bytes.Buffer
++			gw := gzip.NewWriter(&buf)
++			_, err = gw.Write([]byte(content))
++			require.NoError(t, err)
++			require.NoError(t, gw.Close())
++			err = os.WriteFile(absPath+".gz", buf.Bytes(), 0644)
++			require.NoError(t, err)
++
++			// Write .br
++			err = os.WriteFile(absPath+".br", []byte("br:"+content), 0644)
++			require.NoError(t, err)
++		} else {
++			err = os.WriteFile(absPath, []byte(content), 0644)
++			require.NoError(t, err)
++		}
++	}
++
++	writeFile("index.html", `<html><head><link rel="icon" href="favicon.ico"><script src="assets/main.js"></script></head></html>`, true)
++	writeFile("favicon.ico", "ico-data", true)
++	writeFile("assets/main.js", "console.log();", true)
++	writeFile("assets/font.woff", "woff-data", false)
++
++	return tmpDir
++}
++
+ func fetchIndexAndAssets(t *testing.T, router *route.Router, urlPath string) {
+ 	t.Helper()
+ 	res := fetchWithEncoding(router, urlPath, encNone)
+@@ -78,28 +118,28 @@ func fetchIndexAndAssets(t *testing.T, router *route.Router, urlPath string) {
+ }
+ 
+ func TestIndexAssetsAreServed(t *testing.T) {
++	tmpDir := createMockUIDir(t)
+ 	router := route.New()
+-	Register(router)
++	Register(router, tmpDir)
+ 	fetchIndexAndAssets(t, router, "/")
+ }
+ 
+ // TestIndexAssetsAreServedPrefix tests the --web.route-prefix feature.
+ func TestIndexAssetsAreServedPrefix(t *testing.T) {
++	tmpDir := createMockUIDir(t)
+ 	router := route.New().WithPrefix("/alertmanager")
+-	Register(router)
++	Register(router, tmpDir)
+ 	fetchIndexAndAssets(t, router, "/alertmanager/")
+ }
+ 
+-// walkEmbeddedFiles returns a map of URL to encodings for every file in
+-// app/dist.
+-func walkEmbeddedFiles(t *testing.T) map[string][]encoding {
++// walkLocalFiles returns a map of URL to encodings for every file in the directory.
++func walkLocalFiles(t *testing.T, tmpDir string) map[string][]encoding {
+ 	t.Helper()
+-	appFS, err := fs.Sub(asset, "app/dist")
+-	require.NoError(t, err)
++	appFS := os.DirFS(tmpDir)
+ 
+ 	count := make(map[string]int)
+ 
+-	err = fs.WalkDir(appFS, ".", func(filePath string, d fs.DirEntry, err error) error {
++	err := fs.WalkDir(appFS, ".", func(filePath string, d fs.DirEntry, err error) error {
+ 		if err != nil || d.IsDir() {
+ 			return err
+ 		}
+@@ -170,8 +210,9 @@ func checkCachingHeaders(t *testing.T, res *httptest.ResponseRecorder) {
+ // /assets/* route does not carry a Cache-Control header. This could
+ // cause the error to be cached for a year.
+ func TestAssetsNotFoundCacheHeader(t *testing.T) {
++	tmpDir := createMockUIDir(t)
+ 	router := route.New()
+-	Register(router)
++	Register(router, tmpDir)
+ 
+ 	res := fetchWithEncoding(router, "/assets/nonexistent.js", encNone)
+ 
+@@ -179,13 +220,14 @@ func TestAssetsNotFoundCacheHeader(t *testing.T) {
+ 	require.Empty(t, res.Header().Get("Cache-Control"))
+ }
+ 
+-// TestWebRoutes walks the embedded FS and issues an HTTP request for every
++// TestWebRoutes walks the local directory and issues an HTTP request for every
+ // file, using the appropriate Accept-Encoding for compressed variants.
+ func TestWebRoutes(t *testing.T) {
++	tmpDir := createMockUIDir(t)
+ 	router := route.New()
+-	Register(router)
++	Register(router, tmpDir)
+ 
+-	files := walkEmbeddedFiles(t)
++	files := walkLocalFiles(t, tmpDir)
+ 
+ 	require.Contains(t, files, "/")
+ 	require.Contains(t, files, "/favicon.ico")

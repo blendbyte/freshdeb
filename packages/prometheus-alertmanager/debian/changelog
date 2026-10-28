@@ -1,0 +1,732 @@
+prometheus-alertmanager (0.33.1-5) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable. No changes since 0.33.1-5~exp1, which went to
+    experimental on 2026-09-29 to stage the otel 1.46 transition,
+    together with golang-opentelemetry-otel 1.46.0-1~exp1 and
+    golang-opentelemetry-contrib 1.46.0-1~exp1.
+
+ -- Juan Manuel Méndez Rey <juan.mendezr@proton.me>  Tue, 29 Sep 2026 14:08:01 +0200
+
+prometheus-alertmanager (0.33.1-5~exp1) experimental; urgency=medium
+
+  * Team upload.
+  * Add patch to use go.opentelemetry.io/otel/semconv/v1.43.0 in tracing:
+    otel 1.46.0 sdk/resource uses semconv v1.43.0 and mismatching schema
+    URLs make tracer provider setup fail with "conflicting Schema URL".
+  * Build-Depend and have golang-github-prometheus-alertmanager-dev
+    depend on golang-opentelemetry-otel-dev (>= 1.46.0~).
+
+ -- Juan Manuel Méndez Rey <juan.mendezr@proton.me>  Sun, 20 Sep 2026 17:41:37 +0200
+
+prometheus-alertmanager (0.33.1-4) unstable; urgency=medium
+
+  * Team upload
+  * Skip flaky TestPagerDutyTimeout and TestSlackTimeout tests on slow
+    architectures
+  * Skip flaky scheduler-dependent TestGroupAlert_RecoversWhenCASFails
+    test
+  * Disable invocing acceptance tests for now
+
+ -- Reinhard Tartler <siretart@tauware.de>  Mon, 03 Aug 2026 10:59:46 +0200
+
+prometheus-alertmanager (0.33.1-3) unstable; urgency=medium
+
+  * Team upload
+  * Skip flaky TestSilences_Maintenance_SupportsCustomCallback on slow
+    architectures
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 01 Aug 2026 20:14:27 +0200
+
+prometheus-alertmanager (0.33.1-2) unstable; urgency=medium
+
+  * Team upload
+  * generate-ui autopkgtest: skip elm build failure on 32-bit architectures
+
+ -- Reinhard Tartler <siretart@tauware.de>  Sat, 01 Aug 2026 10:20:24 +0200
+
+prometheus-alertmanager (0.33.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release, fixes flaky tests, closes: #1139523
+  * Refresh patches for new upstream release.
+  * Disable Kafka integration to avoid franz-go dependency.
+  * Fix generate-ui.sh script and add an autopkgtest, closes: #1067469
+  * Add lintian override for package-contains-vcs-control-file.
+
+ -- Reinhard Tartler <siretart@tauware.de>  Fri, 31 Jul 2026 15:25:50 +0200
+
+prometheus-alertmanager (0.31.1+ds-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Guillem Jover ]
+  * d/control:
+    - Remove «Priority: optional», which is now the default
+    - Bump Standards-Version to 4.7.4
+  * Switch to debian/watch format version 5
+  * Run wrap-and-sort -ast
+  * Place each multi-value for debian/rules make variables on its own line
+  * Switch debian/gitlab-ci.yml to debian/salsa-ci.yml
+  * Namespace debhelper fragment files with binary package name
+
+  [ Mathias Gibbens ]
+  * Update patch for otel/semconv schema version change and set minimum
+    required version of golang-opentelemetry-otel-dev in d/control
+    (Closes: #1137402)
+
+ -- Mathias Gibbens <gibmat@debian.org>  Wed, 03 Jun 2026 19:00:37 +0000
+
+prometheus-alertmanager (0.31.1+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add version constraint for golang-github-coder-quartz-dev (>= 0.3.0)
+  * Drop obsolete 0010-Extend-testing-CA-certificates-expiry-date.patch
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 31 Mar 2026 12:03:18 +0000
+
+prometheus-alertmanager (0.30.1+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete patches
+    - 0008-Disable-React-app.patch
+    - 0011-Disable-Jira-notification.patch
+    - 0012-Default-to-legacy-label-name-validation-in-tests.patch
+  * Refresh patches
+  * Add new 0011-Downgrade-otel-semconv-package-version.patch
+  * Update Build-Depends:
+    - drop golang-github-gofrs-uuid-dev
+    - drop golang-github-kylelemons-godebug-dev
+    - drop golang-go.uber-atomic-dev
+    - add golang-github-google-uuid-dev
+    - add golang-google-grpc-dev
+    - add golang-opentelemetry-contrib-dev
+    - add golang-opentelemetry-otel-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 30 Mar 2026 21:05:52 +0000
+
+prometheus-alertmanager (0.29.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 0013-Support-prometheus-common-v0.63.0.patch
+  * Refresh patches
+  * Bump Standards-Version to 4.7.3 (no changes)
+  * Drop obsolete Build-Depends golang-github-aws-aws-sdk-go-dev
+  * Add new Build-Depends:
+    - golang-github-aws-aws-sdk-go-v2-dev
+    - golang-github-aws-smithy-go-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 30 Mar 2026 13:59:25 +0000
+
+prometheus-alertmanager (0.28.1+ds-3) unstable; urgency=medium
+
+  * Team upload.
+  * Use golang-github-cenkalti-backoff-v4-dev
+  * Drop Rules-Requires-Root: no
+
+ -- Simon Josefsson <simon@josefsson.org>  Fri, 12 Dec 2025 14:10:30 +0100
+
+prometheus-alertmanager (0.28.1+ds-2) unstable; urgency=medium
+
+  * Add new 0013-Support-prometheus-common-v0.63.0.patch
+  * Bump golang-github-prometheus-common-dev version constraint (>= 0.63.0)
+  * Drop unused golang-github-pkg-errors-dev dependency
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 14 Aug 2025 18:54:55 +0000
+
+prometheus-alertmanager (0.28.1+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Add new Build-Depends golang-github-prometheus-sigv4-dev
+  * Bump Standards-Version to 4.7.2 (no changes)
+  * d/rules: add notify/opsgenie/api_key_file to DH_GOLANG_INSTALL_EXTRA,
+    which is required by a test
+  * Refresh packaging according to latest dh-make-golang template
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 09 Mar 2025 13:50:43 +0000
+
+prometheus-alertmanager (0.28.0+ds-2) unstable; urgency=medium
+
+  * Add new 0012-Default-to-legacy-label-name-validation-in-tests.patch to
+    properly support building with an unpatched prometheus/common v0.62.0+
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 20 Feb 2025 01:13:29 +0000
+
+prometheus-alertmanager (0.28.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete 0009-Support-prometheus-common-v0.50.0.patch (implemented
+    upstream)
+  * Add new 0011-Disable-Jira-notification.patch
+  * Add new Build-Depends:
+    - golang-github-coder-quartz-dev
+    - golang-github-emersion-go-sasl-dev
+    - golang-github-emersion-go-smtp-dev
+    - golang-github-kimmachinegun-automemlimit-dev
+    - golang-uber-automaxprocs-dev
+  * Drop obsolete Build-Depends:
+    - golang-github-benbjohnson-clock-dev
+    - golang-github-go-kit-log-dev
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint
+    (>= 0.13.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 11 Feb 2025 14:06:34 +0000
+
+prometheus-alertmanager (0.27.0+ds-3) unstable; urgency=medium
+
+  * Drop obsolete 0006-Revert-openapi-swaggerContext.patch
+  * Bump golang-github-go-openapi-runtime-dev version constraint (>= 0.25.0~)
+  * Add new 0010-Extend-testing-CA-certificates-expiry-date.patch
+    (Closes: #1078634)
+  * Bump Standards-Version to 4.7.0 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 30 Nov 2024 09:35:47 +0000
+
+prometheus-alertmanager (0.27.0+ds-2) unstable; urgency=medium
+
+  * Add new 0008-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 12 Mar 2024 13:39:20 +0000
+
+prometheus-alertmanager (0.27.0+ds-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Add new 0008-Disable-React-app.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 06 Mar 2024 21:20:49 +0000
+
+prometheus-alertmanager (0.26.0+ds-1) unstable; urgency=medium
+
+  * New upstream release (fixes CVE-2023-40577)
+  * Add new dependency golang-github-hashicorp-golang-lru-v2-dev
+  * debian/copyright: drop superfluous trailing slashes in Files-Excluded
+  * debian/rules: modernize style to match other exporter packages
+  * Drop obsolete 09-Avoid_port_clash.patch
+  * Convert patches to gbp-pq format
+  * Add new 0007-Revert-kingpin.v2-import-path.patch
+  * Drop obsolete lintian overrides
+  * Refresh default alertmanager.yml config
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 26 Aug 2023 15:50:44 +0000
+
+prometheus-alertmanager (0.25.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Re-introduce +ds version suffix, since we now strip some files from the
+    upstream original.
+  * Bump Standards-Version to 4.6.2 (no changes)
+  * Drop redundant version constraint for golang-github-alecthomas-units-dev
+
+  [ Martina Ferrari ]
+  * debian/generate-ui.sh:
+    - fix failing script, thanks to Ian Kelling <iank@fsf.org> for the patch.
+      Closes: #1037356.
+    - various additional fixes.
+  * Remove vendored font-awesome and bootstrap library.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 14 Jul 2023 16:38:14 +0000
+
+prometheus-alertmanager (0.25.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop obsolete patches:
+    - 07-Fix_config_test.patch
+    - 10-Support_newer_exporter-toolkit.patch
+  * Add new 10-Revert_openapi_swaggerContext.patch
+  * Add new (build-)dependencies:
+    - golang-github-benbjohnson-clock-dev
+    - golang-github-go-openapi-analysis-dev
+    - golang-golang-x-text-dev
+    - tzdata
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 03 Feb 2023 04:22:09 +0000
+
+prometheus-alertmanager (0.24.0-5) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Enhance 10-Support_newer_exporter-toolkit.patch to remove the redundant
+    logging of the listener address
+  * Refactor handling of default notification templates in
+    02-Do_not_embed_blobs.patch, and additionally ship email.tmpl in package
+    (Closes: #1023790)
+
+  [ Guillem Jover ]
+  * Remove --help output from default file
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 03 Feb 2023 02:39:37 +0000
+
+prometheus-alertmanager (0.24.0-4) unstable; urgency=medium
+
+  * Add new 10-Support_newer_exporter-toolkit.patch
+  * Bump required golang-github-prometheus-exporter-toolkit-dev version to >=
+    0.8.0
+  * debian/default: update command-line flag help
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 09 Nov 2022 10:53:33 +0000
+
+prometheus-alertmanager (0.24.0-3) unstable; urgency=medium
+
+  * Add patch to change port used in tests. This avoids autopkgtest
+    failures due to port clashes with a running alertmanager.
+    Closes: #1021734
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 17 Oct 2022 23:21:45 +0000
+
+prometheus-alertmanager (0.24.0-2) unstable; urgency=medium
+
+  * Add new 08-Disable_network_tests.patch to disable any test(s) which
+    attempt to use the network, since this is not guaranteed to be available
+    in a buildd.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 20 Sep 2022 01:09:53 +0000
+
+prometheus-alertmanager (0.24.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add new build-dep golang-gopkg-telebot.v3-dev
+  * Refresh patches
+  * Bump Standards-Version to 4.6.1 (no changes)
+  * Update lintian-overrides to new format
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 19 Sep 2022 17:43:20 +0000
+
+prometheus-alertmanager (0.23.0-6) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * Update my email address
+  * Add new 07-Fix_config_test.patch to fix config test failures when building
+    against newer golang-github-prometheus-common-dev versions
+  * Drop obsolete 06-Backoff-v3.patch and specify versioned dependencies for
+    golang-github-cenkalti-backoff-dev
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster
+  * Set upstream metadata fields: Repository-Browse, Security-Contact.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 12 Sep 2022 16:42:40 +0000
+
+prometheus-alertmanager (0.23.0-5) unstable; urgency=medium
+
+  * Team upload.
+  * Replace obsolete golang-go-flags-dev with
+    golang-github-jessevdk-go-flags-dev.
+  * Sort dependencies.
+  * Move installation from debian/rules to install fragment.
+  * Update gbp.conf following latest Go Team workflow.
+  * Do not install uninteresting documentation files.
+  * Do not list directories to create that dh knows about.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 15 Mar 2022 22:46:24 +0100
+
+prometheus-alertmanager (0.23.0-4) unstable; urgency=medium
+
+  * Team upload.
+  * Bump golang-github-go-openapi-errors-dev versioned dependency
+    to (>= 0.19.5~).
+  * Update debian/watch file.
+  * Remove now unused Files-Excluded field from debian/copyright.
+
+ -- Guillem Jover <gjover@sipwise.com>  Wed, 01 Dec 2021 14:38:08 +0100
+
+prometheus-alertmanager (0.23.0-3) unstable; urgency=medium
+
+  * Team upload.
+  * Bump golang-github-prometheus-common-dev (>= 0.32.1-4) versioned depends.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 30 Nov 2021 12:55:37 +0100
+
+prometheus-alertmanager (0.23.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Replace golang-github-satori-go.uuid-dev with golang-github-gofrs-uuid-dev
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 26 Nov 2021 17:56:06 +0100
+
+prometheus-alertmanager (0.23.0-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since stretch.
+
+  [ Guillem Jover ]
+  * New upstream release.
+  * Refresh debian/patches for new upstream release.
+  * Update dependencies for new upstream release.
+  * Update copyright years.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Switch to Standards-Version 4.6.0 (no changes needed).
+  * Add trailing comma to Build-Depends removed by the janitor.
+  * Remove ${shlibs:Depends} from -dev Depends field.
+  * Update default file from latest --help output.
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 26 Nov 2021 00:38:42 +0100
+
+prometheus-alertmanager (0.21.0+ds-4) unstable; urgency=medium
+
+  * Team upload.
+  * Revert "Remove unnecessary DH_GOPKG variable from debian/rules"
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 29 Jan 2021 01:48:05 +0100
+
+prometheus-alertmanager (0.21.0+ds-3) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Daniel Swarbrick ]
+  * Fix invocation of uglifyjs in maintainer-provided generate-ui.sh script.
+    Reported by Daniel Lo Nigro. Closes: #971637.
+
+  [ Guillem Jover ]
+  * Switch to debian/watch version 4
+  * Indent debian/watch file
+  * Do not enable DH_VERBOSE by default
+  * Update version.BuildUser to match the Maintainer address
+  * Use $(BUILDDIR) uniformly instead of the literal build/
+  * Switch to dh-sequence-bash-completion
+  * Remove nocheck handling from override_dh_auto_test
+  * Mark -dev package as Multi-Arch:foreign
+  * Use '' instead of `' in text
+  * Switch from /var/run to /run
+  * Move note about license location on Debian systems into a Comment field
+  * Replace out-of-date Comment field about vendoring with Files-Excluded field
+  * Set -dev package Section to golang
+  * Switch to Standards-Version 4.5.1 (no changes needed)
+  * Decapitalize synopsis first word
+  * Add missing Depends on adduser in prometheus-alertmanager
+  * Remove error suppression from postinst
+  * Use $() instead of `` in init script
+  * Remove unnecessary error suppression from init script
+  * Run adduser unconditionally
+  * Remove $syslog dependency from init script
+  * Change systemd service Restart directive from always to on-failure
+  * Fix NAME variable value in sysvinit init script
+  * Rewrite init script using start-stop-daemon
+  * Do not change pathname metadata if there are dpkg statoverrides in place
+  * Update gitignore entries
+  * Use execute_after_dh_auto_test instead of override_ and an explicit call
+  * Remove unused adduser from Build-Depends
+  * Remove unnecessary DH_GOPKG variable from debian/rules
+  * Remove obsolete Hipchat support from default config file
+  * Merge log files removal into a single entry
+  * Update gitlab-ci.yml from latest upstream version
+
+ -- Guillem Jover <gjover@sipwise.com>  Thu, 28 Jan 2021 22:27:17 +0100
+
+prometheus-alertmanager (0.21.0+ds-2) unstable; urgency=medium
+
+  * debian/install: rename to explicitly target binary package.
+  * debian/rules: Separate install target into arch and indep, to fix
+    arch-only or indep-only builds.
+  * Use debianised binary name in acceptance tests.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 22 Jun 2020 15:36:45 +0000
+
+prometheus-alertmanager (0.21.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Bump Standards-Version to 4.5.0 (rename systemd service file / init
+    script).
+  * Bump debhelper-compat version to 13.
+  * Update maintainer email addresses / names.
+  * Add missing build-dep golang-github-alecthomas-units-dev.
+  * Add missing build-dep golang-github-oklog-run-dev.
+  * Add missing build-dep golang-github-stretchr-testify-dev.
+  * Add missing build-dep golang-protobuf-extensions-dev.
+  * Refresh patches.
+  * Drop obsolete 01-Fix_script_shebang.patch.
+  * Add new 06-Backoff-v3.patch to negate superfluous API dependency bump.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 22 Jun 2020 13:03:01 +0000
+
+prometheus-alertmanager (0.20.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Add myself to uploaders.
+  * Refresh patches.
+  * Drop obsolete 06-Fix_cluster_tests.patch.
+  * d/docs: remove no longer existing CONTRIBUTING.md
+
+  [ Martina Ferrari ]
+  * Update initscript.
+  * Use packaged version of rs/cors. Closes: #944436.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 14 Jan 2020 22:18:18 +0000
+
+prometheus-alertmanager (0.19.0+ds-3) unstable; urgency=medium
+
+  * I should really not upload before proper testing :-).
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 30 Oct 2019 14:49:48 +0000
+
+prometheus-alertmanager (0.19.0+ds-2) unstable; urgency=medium
+
+  * Acceptance tests were not meant to stop the build on failure.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 30 Oct 2019 12:53:39 +0000
+
+prometheus-alertmanager (0.19.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Name update.
+  * Refresh patches.
+  * Update vendoring copyright info.
+  * Do not try to compile assets.
+  * Update dependencies.
+  * Manage new acceptance tests.
+  * Automatic cme fixes.
+  * Add needed Pre-Depends for sysvinit
+  * Use a default static UI only if the user did not provide one.
+  * Ship script to automatically build and deploy the Elm UI.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 29 Oct 2019 20:15:27 +0000
+
+prometheus-alertmanager (0.15.3+ds-3) unstable; urgency=medium
+
+  * Fix webserver patch to serve properly a UI compiled manually.
+  * Create a separate cmdline argument for the default notification
+    template.
+  * Rename cmdline argument for local UI.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 21 Feb 2019 19:36:45 +0000
+
+prometheus-alertmanager (0.15.3+ds-2) unstable; urgency=medium
+
+  * Replace custom patch with backporting of upstream fix for common lib
+    chages.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 14 Jan 2019 22:40:29 +0000
+
+prometheus-alertmanager (0.15.3+ds-1) unstable; urgency=high
+
+  * New upstream release.
+  * Make paths relative in dummy webpage. Closes: #907224
+  * Remove now unneeded symlinks. Closes: #910420.
+  * Refresh patches.
+  * Add patch to support current version of the common library.
+    Closes: #917503.
+  * Depend on the latest version of the common library.
+  * Update Standards-Version with no changes.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 14 Jan 2019 00:39:33 +0000
+
+prometheus-alertmanager (0.15.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches.
+  * Automated cmd fixes.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 05 Aug 2018 18:58:17 +0000
+
+prometheus-alertmanager (0.15.0+ds-4) unstable; urgency=medium
+
+  * Release to unstable.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 03 Jul 2018 14:40:37 +0000
+
+prometheus-alertmanager (0.15.0+ds-3) experimental; urgency=medium
+
+  * debian/examples: Add missing examples.
+  * Change default location of the amtool config.
+  * amtool: Change default processing for author parameter; fix
+    reproducibility issue.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 02 Jul 2018 01:26:34 +0000
+
+prometheus-alertmanager (0.15.0+ds-2) experimental; urgency=medium
+
+  * Fix tests that fail with certain network configurations.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 29 Jun 2018 11:35:04 +0000
+
+prometheus-alertmanager (0.15.0+ds-1) experimental; urgency=medium
+
+  * New upstream release. Closes: #894131.
+  * Remove now unneeded patch.
+  * Add missing shebang to example script.
+  * debian/control: Fix dependency version (missing epoch).
+  * Automated cmd fixes.
+  * Add nocheck buildflag test; also, actually run tests!
+  * Fix failing tests: missing dep, wrong template path, and missing executable.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 28 Jun 2018 15:44:42 +0000
+
+prometheus-alertmanager (0.15.0~rc.2+ds-1) experimental; urgency=medium
+
+  * Re-add missing +ds suffix.
+  * debian/rules: De-mangle upstream version for metadata reporting.
+  * Backport commit 387e684 to fix API breakage.
+  * debian/defaults: Update flags (mesh.* -> cluster.*).
+  * Install missing docs.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 13 Jun 2018 16:39:52 +0000
+
+prometheus-alertmanager (0.15.0~rc.2-1) experimental; urgency=medium
+
+  * New release candidate.
+  * Refresh patches.
+  * Add notice about the lack of a web interface.
+  * debian/control: Only depend on daemon if systemd is not installed.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 12 Jun 2018 13:20:38 +0000
+
+prometheus-alertmanager (0.15.0~rc.1~git20180507.28967e3+ds-1) experimental; urgency=medium
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Martina Ferrari ]
+  * Finally package a new upstream release.
+  * debian/copyright: Update attribution.
+  * debian/control: Update dependencies.
+  * debian/defaults: Update available flags.
+  * Update default config file.
+  * Stop using pristine-tar.
+  * Add bash-completion scripts, amtool binary, and examples.
+  * Remove building of UI assets.
+  * Ship NOTICE file as required by the Apache license.
+  * Remove unused lintian overrides.
+  * Add default API endpoint to amtool.
+  * Simplify installation of files into package & remove old hacks.
+  * Update dependencies.
+  * Generate man pages.
+  * Add index.html placeholder.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 19 May 2018 15:30:34 +0000
+
+prometheus-alertmanager (0.6.2+ds-5) unstable; urgency=high
+
+  * debian/rules: Fix build failure in Arch:all. Closes: #892164
+  * Automated cme fixes.
+  * Remove unneeded lintian overrides.
+  * Update debhelper compat to 11.
+  * Stop using recursive chown.
+  * debian/copyright: Move repackaging comment to appease lintian.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 27 Mar 2018 00:03:07 +0000
+
+prometheus-alertmanager (0.6.2+ds-4) unstable; urgency=medium
+
+  [ Martina Ferrari ]
+  * Team upload.
+  * Tighten dependency versions.
+  * Fix acceptance tests (log.level flag does not exist anymore).
+  * Add override for missing-notice-file-for-apache-license.
+
+  [ Michael Stapelberg ]
+  * Correctly set Architecture: all for package which contains only sources
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Mon, 05 Mar 2018 19:42:51 +0100
+
+prometheus-alertmanager (0.6.2+ds-3) unstable; urgency=medium
+
+  [ Martina Ferrari ]
+  * Team upload.
+  * debian/control: Update Standards-Version (no changes).
+  * Automatic fixes to control and copyright from cme.
+  * Replace dpkg-parsechangelog with /usr/share/dpkg/pkg-info.mk
+  * debian/control: Update package name for client-golang.
+
+  [ Michael Stapelberg ]
+  * gbp.conf: set debian-branch
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Sat, 10 Feb 2018 19:42:29 +0100
+
+prometheus-alertmanager (0.6.2+ds-2) unstable; urgency=medium
+
+  * Fix compilation on gccgo/mips*.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 19 Aug 2017 14:51:59 +0000
+
+prometheus-alertmanager (0.6.2+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: 871330, 862007..
+  * Fix installation path for source files.
+  * Refresh patches.
+  * Add gbp.conf.
+  * debian/copyright: Document new vendored dependency.
+  * debian/control:
+    - Update Standards-Version (no changes).
+    - Fix Vcs-* fields.
+    - Mark package as autopkgtest-able.
+    - Require latest version of the common library.
+    - Add new dependencies.
+  * debian/default: Update options.
+  * Fix /var/lib permissions.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 16 Aug 2017 21:00:28 +0000
+
+prometheus-alertmanager (0.5.1+ds-7) unstable; urgency=medium
+
+  * Increase timing margins even more, hopefully upstream will find a better
+    solution soon.
+    Also ensure the test alertmanager used for acceptance tests is ready (by
+    connecting to its http server) before trying to use it. Closes: 851372.
+  * Don't abort if acceptance tests fail, as they are too sensitive to
+    timing issues.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 16 Jan 2017 03:56:46 +0000
+
+prometheus-alertmanager (0.5.1+ds-6) unstable; urgency=medium
+
+  * Increase timing margings for flaky tests, as this is currently preventing
+    mips from building properly.
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 14 Jan 2017 05:48:45 -0300
+
+prometheus-alertmanager (0.5.1+ds-5) unstable; urgency=medium
+
+  * Fix name of minified angular-moment library. Fixes bug reported in GitHub:
+    https://github.com/prometheus/alertmanager/issues/590
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 08 Jan 2017 01:02:38 -0300
+
+prometheus-alertmanager (0.5.1+ds-4) unstable; urgency=medium
+
+  * Provide golang-github-prometheus-alertmanager-dev. Closes: #837756.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 25 Dec 2016 23:54:52 -0300
+
+prometheus-alertmanager (0.5.1+ds-3) unstable; urgency=medium
+
+  * Disable more flaky tests.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 13 Dec 2016 10:37:48 +0100
+
+prometheus-alertmanager (0.5.1+ds-2) unstable; urgency=medium
+
+  * Gccgo can't handle vendoring currently, so process it manually.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 12 Dec 2016 11:04:08 +0000
+
+prometheus-alertmanager (0.5.1+ds-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Refresh patches.
+  * Update dependencies.
+  * New patch to fix API change in prometheus/master, backported from
+    upstream master.
+  * Disable another flaky test.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 02 Dec 2016 22:40:14 +0000
+
+prometheus-alertmanager (0.3.0+ds-2) unstable; urgency=medium
+
+  * Add patch to fix flaky tests due to timing issues. Closes: #830936.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 15 Jul 2016 13:56:49 +0100
+
+prometheus-alertmanager (0.3.0+ds-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #828073)
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 12 Jul 2016 03:23:21 +0000

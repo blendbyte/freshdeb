@@ -1,0 +1,2 @@
+# The .gitignore is part of the Elm frontend code which is shipped as part of the source package in the -dev package for completeness/building.
+golang-github-prometheus-alertmanager-dev: package-contains-vcs-control-file [usr/share/gocode/src/github.com/prometheus/alertmanager/ui/app/.gitignore]

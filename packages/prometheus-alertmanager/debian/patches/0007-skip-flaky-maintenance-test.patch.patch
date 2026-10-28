@@ -1,0 +1,29 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Sat, 1 Aug 2026 20:01:40 +0200
+Subject: skip-flaky-maintenance-test.patch
+
+Skip flaky TestSilences_Maintenance_SupportsCustomCallback on slow
+architectures (like armhf) due to race condition between starting the
+maintenance goroutine and advancing the mock mock clock.
+
+Upstream is replacing the clock mock entirely with testing/synctest:
+https://github.com/prometheus/alertmanager/pull/5376
+https://github.com/prometheus/alertmanager/pull/5394
+
+Forwarded: not-needed
+---
+ silence/silence_test.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/silence/silence_test.go b/silence/silence_test.go
+index c083044..9aacec8 100644
+--- a/silence/silence_test.go
++++ b/silence/silence_test.go
+@@ -559,6 +559,7 @@ func TestSilences_Maintenance_DefaultMaintenanceFuncDoesntCrash(t *testing.T) {
+ }
+ 
+ func TestSilences_Maintenance_SupportsCustomCallback(t *testing.T) {
++	t.Skip("Skip flaky test on architectures with slow goroutine orchestration. See upstream issues #5376, #5394")
+ 	f, err := os.CreateTemp(t.TempDir(), "snapshot")
+ 	require.NoError(t, err, "creating temp file failed")
+ 	clock := quartz.NewMock(t)
