@@ -24,4 +24,4 @@ Repository: `deb [signed-by=…] https://deb.freshdeb.com/restic <codename> main
 
 ## Go toolchain
 
-The track uses the newest patch release of the Go minor that upstream's `go.mod` asks for (0.19.1 says `toolchain go1.25.10`, we build with 1.25.14). watch.yml opens a rebuild PR for every new Go patch release.
+The track uses the newest patch release of the Go minor that upstream's `go.mod` asks for, or the oldest one Go still supports when that minor is out of support: 0.19.1 says `toolchain go1.25.10`, and Go 1.25 no longer gets security fixes, so we build with 1.26.10 (restic's development branch already uses 1.26). watch.yml opens a rebuild PR for every new Go patch release, and moves the track on when its Go minor goes out of support.
