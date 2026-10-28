@@ -1,0 +1,29 @@
+Source: forgejo
+Section: vcs
+Priority: optional
+Maintainer: freshdeb <packages@freshdeb.com>
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.7.0
+Homepage: https://forgejo.org
+Rules-Requires-Root: no
+
+Package: forgejo
+Architecture: any
+Depends:
+ adduser,
+ git (>= 1:2.34.1),
+ ${misc:Depends},
+Recommends:
+ ca-certificates,
+Suggests:
+ openssh-server,
+Description: self-hosted lightweight software forge
+ Forgejo is a self-hosted lightweight software forge: Git hosting, code
+ review, issue tracking, package registries, wikis and CI (Forgejo
+ Actions), with a web interface and an API. It keeps its data in SQLite,
+ PostgreSQL or MySQL/MariaDB.
+ .
+ The service is installed but not enabled: its install wizard lets the
+ first visitor configure the instance, so start it when you're ready to
+ complete it (see /usr/share/doc/forgejo/README.Debian).

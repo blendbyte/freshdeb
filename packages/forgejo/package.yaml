@@ -1,0 +1,30 @@
+# Forgejo, a self-hosted software forge (https://forgejo.org); the packaging is ours.
+
+name: forgejo
+description: "Forgejo self-hosted software forge (Git hosting, code review, CI)"
+homepage: https://forgejo.org
+
+upstream:
+  git: https://codeberg.org/forgejo/forgejo.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+  # Has vendor/, the built frontend and its generated bindata; the git tag doesn't.
+  tarball: https://codeberg.org/forgejo/forgejo/releases/download/v{version}/forgejo-src-{version}.tar.gz
+
+packaging:
+  origin: freshdeb
+
+tracks:
+  main:  # every release; a new major every three months
+    tag: "v17.0.1"
+    commit: 363f3dc30beef902b187af5a5244ff7af44901e6
+    sha256: d6b32ac77e71af0737f30613d985a0dc335b694b8b989d609a0cc88972f2fd4d
+    revision: 1
+    go: "1.26.10"  # go.mod: toolchain go1.26.10
+  lts:
+    line: "15"  # current LTS; move to 19 (April 2027) in a PR
+    tag: "v15.0.11"
+    commit: 753f7edc775a97e66cd13d410404d5edc99b6b04
+    sha256: 335e244b7e624e0a548722b1a362bd8c5993143963ea52794cee08140f422777
+    revision: 1
+    go: "1.26.10"  # go.mod: toolchain go1.26.10
+    eol: 2027-07-15

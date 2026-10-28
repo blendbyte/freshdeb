@@ -1,0 +1,70 @@
+#!/usr/bin/make -f
+
+# Built like upstream's release binaries ("make release-linux"): upstream's
+# Makefile target static-executable, CGO for SQLite, statically linked, the
+# release build tags, upstream's version stamps. The source tarball already
+# holds the built frontend and the generated bindata, so neither npm nor
+# "go generate" runs. The pinned Go toolchain, offline mode
+# (GOFLAGS=-mod=vendor, GOPROXY=off) and caches come from the build
+# environment.
+include /usr/share/dpkg/pkg-info.mk
+
+export CGO_ENABLED := 1
+
+TAGS := bindata timetzdata sqlite sqlite_unlock_notify
+# The version upstream's release binaries report: 17.0.1+gitea-1.22.0, with
+# "release name 17.0.1" (their builds take it from git describe).
+GITEA_COMPATIBILITY := $(shell sed -n 's/^GITEA_COMPATIBILITY ?= //p' Makefile)
+FORGEJO_VERSION := $(DEB_VERSION_UPSTREAM)+$(GITEA_COMPATIBILITY)
+# Default paths, so that "forgejo admin ..." and the unit agree without
+# --config/--work-path: the layout of upstream's installation guide. The
+# Makefile appends its version flags to these. (dpkg's C LDFLAGS would end
+# up on the Go linker's command line, so they aren't passed.)
+SETTING := forgejo.org/modules/setting
+GO_LDFLAGS := -X $(SETTING).AppWorkPath=/var/lib/forgejo -X $(SETTING).CustomConf=/etc/forgejo/app.ini
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	go version
+	test -f modules/public/bindata.go
+	LDFLAGS='$(GO_LDFLAGS)' $(MAKE) static-executable EXECUTABLE=_build/forgejo \
+	    TAGS='$(TAGS)' GOFLAGS='-v -mod=vendor' \
+	    FORGEJO_VERSION='$(FORGEJO_VERSION)' RELEASE_VERSION='$(DEB_VERSION_UPSTREAM)'
+
+# Upstream's test suite is upstream's to run (it needs databases, git
+# servers and a long time); the smoke test checks the installed package.
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	_build/forgejo --version | grep -qF 'forgejo version $(FORGEJO_VERSION) (release name $(DEB_VERSION_UPSTREAM))'
+endif
+
+override_dh_auto_install:
+	install -D -m 0755 _build/forgejo debian/forgejo/usr/bin/forgejo
+	install -D -m 0644 custom/conf/app.example.ini debian/forgejo/usr/share/doc/forgejo/examples/app.example.ini
+	install -d debian/forgejo/usr/share/bash-completion/completions \
+	    debian/forgejo/usr/share/zsh/vendor-completions \
+	    debian/forgejo/usr/share/fish/vendor_completions.d
+	_build/forgejo completion bash > debian/forgejo/usr/share/bash-completion/completions/forgejo
+	_build/forgejo completion zsh > debian/forgejo/usr/share/zsh/vendor-completions/_forgejo
+	_build/forgejo completion fish > debian/forgejo/usr/share/fish/vendor_completions.d/forgejo.fish
+
+# Upstream's unit (contrib/systemd), for the binary in /usr/bin.
+execute_before_dh_installsystemd:
+	sed 's|/usr/local/bin/forgejo|/usr/bin/forgejo|' contrib/systemd/forgejo.service > debian/forgejo.service
+
+# Its install wizard lets the first visitor configure the instance (and
+# become its admin), so the service isn't enabled (README.Debian).
+# deb-systemd-invoke doesn't start disabled units; enabled ones restart
+# after upgrades.
+override_dh_installsystemd:
+	dh_installsystemd --no-enable
+
+# Go binary: nothing for dwz to compress.
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf _build .make_evidence debian/forgejo.service

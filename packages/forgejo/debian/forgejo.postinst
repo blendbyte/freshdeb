@@ -1,0 +1,36 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    # The user upstream's installation guide creates. An existing git user
+    # (another forge, gitolite) is used as it is.
+    if ! getent passwd git >/dev/null; then
+      adduser --system --shell /bin/bash --group --disabled-password \
+        --home /home/git git
+    fi
+    # Upstream's directories and permissions, created here rather than
+    # shipped so that upgrades leave them alone: the data directory belongs
+    # to git; the install wizard writes /etc/forgejo/app.ini, so git may
+    # write that directory until the installation is done (README.Debian).
+    group="$(id -gn git)"
+    if [ ! -d /var/lib/forgejo ]; then
+      install -d -o git -g "$group" -m 0750 /var/lib/forgejo
+    fi
+    if [ ! -d /etc/forgejo ]; then
+      install -d -o root -g "$group" -m 0770 /etc/forgejo
+    fi
+  ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
+
+  *)
+    echo "postinst called with unknown argument '$1'" >&2
+    exit 1
+  ;;
+esac
+
+#DEBHELPER#
+
+exit 0

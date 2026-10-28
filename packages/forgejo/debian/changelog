@@ -1,0 +1,6 @@
+forgejo (17.0.1-1) unstable; urgency=medium
+
+  * Initial packaging for freshdeb, laid out as upstream's installation
+    guide sets Forgejo up.
+
+ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000

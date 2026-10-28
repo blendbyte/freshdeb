@@ -1,0 +1,39 @@
+Forgejo for Debian (freshdeb)
+=============================
+
+The layout follows upstream's installation guide
+(https://forgejo.org/docs/latest/admin/installation/binary/):
+
+  /usr/bin/forgejo          the binary, with the web frontend built in
+  /etc/forgejo/app.ini      the configuration, written by the install wizard
+  /var/lib/forgejo          the work path: repositories, the SQLite database,
+                            attachments, logs, custom/ for templates
+  git                       the system user Forgejo runs as (home /home/git,
+                            where SSH access keeps authorized_keys)
+
+Forgejo looks for /etc/forgejo/app.ini and /var/lib/forgejo by default, so
+"forgejo admin ...", "forgejo doctor ..." and the like work as user git
+without --config or --work-path:
+
+  sudo -u git forgejo admin user list
+
+Installation
+------------
+
+The service isn't enabled on install: until the install wizard has been
+completed, the first visitor to http://<host>:3000/ configures the instance
+and creates its administrator. Start it when you're ready to do that, or
+write /etc/forgejo/app.ini yourself first (with INSTALL_LOCK = true):
+
+  systemctl enable --now forgejo
+
+The wizard needs to write /etc/forgejo/app.ini, so /etc/forgejo is writable
+by git (root:git 0770) at first. Once the installation is done, make it
+read-only for Forgejo, as upstream's guide says:
+
+  chmod 750 /etc/forgejo
+  chmod 640 /etc/forgejo/app.ini
+
+Upgrades migrate the database forward; there is no way back, so take a
+backup ("forgejo dump") before a new major. Purging removes app.ini but
+keeps /var/lib/forgejo and the git user.
