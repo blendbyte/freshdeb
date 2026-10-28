@@ -1,0 +1,18 @@
+diff -ruN a/debian/init b/debian/init
+--- a/debian/init
++++ b/debian/init
+@@ -25,6 +25,14 @@
+ 
+ do_start_prepare() {
+   mkdir -p $(dirname $PIDFILE)
++  # freshdeb: export the settings, as systemd's EnvironmentFile does.
++  # init-d-script only sources /etc/default/$NAME, so the exporter never saw
++  # DATA_SOURCE_NAME and started without a database.
++  if [ -r /etc/default/$NAME ]; then
++    set -a
++    . /etc/default/$NAME
++    set +a
++  fi
+   if test -z "$DATA_SOURCE_NAME"; then
+     log_failure_msg \
+       "missing \$DATA_SOURCE_NAME -- please edit /etc/default/$NAME"

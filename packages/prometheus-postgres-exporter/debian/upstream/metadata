@@ -1,0 +1,5 @@
+---
+Bug-Database: https://github.com/prometheus-community/postgres_exporter/issues
+Bug-Submit: https://github.com/prometheus-community/postgres_exporter/issues/new
+Repository: https://github.com/prometheus-community/postgres_exporter.git
+Repository-Browse: https://github.com/prometheus-community/postgres_exporter

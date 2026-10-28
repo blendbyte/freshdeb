@@ -1,0 +1,44 @@
+#!/usr/bin/env /lib/init/init-d-script
+### BEGIN INIT INFO
+# Provides:          prometheus-postgres-exporter
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Prometheus exporter for PostgreSQL server metrics
+# Description:       Prometheus exporter for PostgreSQL server metrics, written in Go.
+### END INIT INFO
+
+# Author: Martina Ferrari <tina@debian.org>
+# Author: Daniel Swarbrick <dswarbrick@debian.org>
+
+DESC="Prometheus exporter for PostgreSQL metrics"
+NAME=prometheus-postgres-exporter
+USER=prometheus
+GROUP=$USER
+DAEMON=/usr/bin/$NAME
+PIDFILE=/run/prometheus/$NAME.pid
+LOGFILE=/var/log/prometheus/$NAME.log
+
+START_ARGS="--no-close --background --make-pidfile"
+STOP_ARGS="--remove-pidfile"
+
+do_start_prepare() {
+  mkdir -p $(dirname $PIDFILE)
+  if test -z "$DATA_SOURCE_NAME"; then
+    log_failure_msg \
+      "missing \$DATA_SOURCE_NAME -- please edit /etc/default/$NAME"
+    exit
+  fi
+}
+
+do_start_cmd_override() {
+  start-stop-daemon --start --quiet --oknodo \
+    --exec $DAEMON --pidfile $PIDFILE --user $USER --group $GROUP \
+    --chuid $USER:$GROUP $START_ARGS -- $ARGS >>$LOGFILE 2>&1
+}
+
+do_stop_cmd_override() {
+  start-stop-daemon --stop --quiet --oknodo --retry=TERM/30/KILL/5 \
+    --exec $DAEMON --pidfile $PIDFILE --user $USER $STOP_ARGS
+}

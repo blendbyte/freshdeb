@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus exporter for PostgreSQL
+Documentation=https://github.com/prometheus-community/postgres_exporter
+
+[Service]
+User=prometheus
+EnvironmentFile=/etc/default/prometheus-postgres-exporter
+ExecStart=/usr/bin/prometheus-postgres-exporter $ARGS
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

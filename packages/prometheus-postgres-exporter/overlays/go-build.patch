@@ -1,0 +1,139 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -5,21 +5,6 @@
+ Uploaders: Martina Ferrari <tina@debian.org>,
+            Daniel Swarbrick <dswarbrick@debian.org>,
+ Build-Depends: debhelper-compat (= 13),
+-               dh-sequence-golang,
+-               golang-any (>= 2:1.21~),
+-               golang-github-blang-semver-dev,
+-               golang-github-data-dog-go-sqlmock-dev,
+-               golang-github-lib-pq-dev (>= 1.10.7),
+-               golang-github-prometheus-client-golang-dev (>= 1.19.0),
+-               golang-github-prometheus-client-model-dev (>= 0.4.0),
+-               golang-github-prometheus-common-dev (>= 0.44.0),
+-               golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+-               golang-github-smartystreets-goconvey-dev,
+-               golang-gopkg-alecthomas-kingpin.v2-dev,
+-               golang-gopkg-check.v1-dev,
+-               golang-gopkg-yaml.v2-dev,
+-               golang-gopkg-yaml.v3-dev,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.3
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-postgres-exporter
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-postgres-exporter.git
+@@ -34,7 +19,6 @@
+          ${misc:Depends},
+          ${shlibs:Depends},
+          ${sphinxdoc:Depends},
+-Built-Using: ${misc:Built-Using},
+ Description: Prometheus exporter for PostgreSQL server metrics
+  Prometheus exporter for PostgreSQL server metrics, written in Go.
+  Supports Postgres versions 9.4 and up.
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,3 +1,30 @@
++prometheus-postgres-exporter (0.20.0-1) unstable; urgency=medium
++
++  freshdeb: changes since the versions the distributions ship (0.10.1 to
++  0.19.0) that may need action. The connection settings in
++  /etc/default/prometheus-postgres-exporter (DATA_SOURCE_NAME) keep working.
++
++  0.16.0: the log format changed (log/slog). The "ts" field is now "time",
++  "caller" is now "source", and levels are written in capitals. Adjust
++  anything that parses /var/log/prometheus/prometheus-postgres-exporter.log.
++
++  0.20.0: the replication_slot collector is now replication_slots. Replace
++  --collector.replication_slot / --no-collector.replication_slot in ARGS,
++  and rename its metrics in alerts, recording rules and dashboards from
++  pg_replication_slot_* to pg_replication_slots_*. The
++  --disable-settings-metrics flag (PG_EXPORTER_DISABLE_SETTINGS_METRICS) is
++  gone; use --no-collector.settings. The settings, stat_activity,
++  stat_archiver, stat_replication and replication_slots metrics now come
++  from their own collectors: they ignore --metric-prefix and --constantLabels,
++  and --disable-default-metrics no longer turns them off (use their
++  --no-collector.* flags).
++
++  The full list is upstream's changelog:
++
++    https://github.com/prometheus-community/postgres_exporter/blob/master/CHANGELOG.md
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
+ prometheus-postgres-exporter (0.12.1-1) unstable; urgency=medium
+ 
+   BREAKING CHANGES: This release changes support for multiple PostgreSQL
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -4,32 +4,43 @@
+ # Uncomment this to enable verbose mode.
+ #export DH_VERBOSE := 1
+ 
+-export DH_GOLANG_INSTALL_EXTRA := exporter/tests/
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have, with the flags and version stamps of upstream's
++# release binaries. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment.
++export CGO_ENABLED := 0
+ 
+ METAPKG := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
+ BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+     +%Y%m%d-%H:%M:%S)
+-GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+ BUILDFLAGS  = -ldflags \
+   " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
++    -X $(METAPKG)/version.Revision=$(REVISION)\
++    -X $(METAPKG)/version.Branch=HEAD\
++    -X $(METAPKG)/version.BuildUser=freshdeb\
++    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)"
+ 
+ %:
+-	dh $@ --builddir=_build --buildsystem=golang
++	dh $@
+ 
+ BINNAME := $(DEB_SOURCE)
+ 
++override_dh_auto_configure:
++
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
+-	# Rename the binary to match the debian package.
+-	mv -v _build/bin/postgres_exporter _build/bin/$(BINNAME)
++	go version
++	go build $(BUILDFLAGS) -o _build/bin/$(BINNAME) ./cmd/postgres_exporter
++
++# Upstream's unit tests; the integration tests (build tag "integration")
++# need a running PostgreSQL.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	go test -short $(BUILDFLAGS) ./...
++endif
+ 
+ MAN_WHATIS := $(BINNAME) \\- Prometheus exporter for PostgreSQL
+ MAN_PROG := $(shell echo $(BINNAME) | tr [:lower:] [:upper:])
+@@ -48,4 +59,10 @@
+ 	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' _build/$(BINNAME).1
+ 
+ override_dh_auto_install:
+-	dh_auto_install -- --no-source
++	install -D -m 0755 _build/bin/$(BINNAME) debian/prometheus-postgres-exporter/usr/bin/$(BINNAME)
++
++# Go binary: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf _build

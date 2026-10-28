@@ -1,0 +1,3 @@
+usr/bin
+var/lib/prometheus
+var/log/prometheus

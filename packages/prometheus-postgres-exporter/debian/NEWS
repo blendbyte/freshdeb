@@ -1,0 +1,50 @@
+prometheus-postgres-exporter (0.12.1-1) unstable; urgency=medium
+
+  BREAKING CHANGES: This release changes support for multiple PostgreSQL
+  servers to use the multi-target exporter pattern. This makes it much easier
+  to monitor multiple PostgreSQL servers from a single exporter by passing the
+  target via URL params. See the Multi-Target Support section of the README.
+
+  Additionally, support for the PG_EXPORTER_WEB_LISTEN_ADDRESS environment
+  variable has been dropped, since multiple listener addresses can now be
+  specified on the command line.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 25 Jun 2023 15:14:31 +0000
+
+prometheus-postgres-exporter (0.4.1+ds-2) unstable; urgency=medium
+
+  The daemon now accepts command-line flags with two dashes, check
+  your /etc/default/prometheus-postgres-exporter to avoid errors.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 14 Dec 2017 17:07:03 +0000
+
+prometheus-postgres-exporter (0.2.0+ds-1) unstable; urgency=medium
+
+  * Major change - use pg_settings to retrieve runtime variables. Adds >180 new
+    metrics and descriptions (big thanks to Matt Bostock for this work).
+ 
+    Removes the following metrics:
+ 
+      pg_runtime_variable_max_connections
+      pg_runtime_variable_max_files_per_process
+      pg_runtime_variable_max_function_args
+      pg_runtime_variable_max_identifier_length
+      pg_runtime_variable_max_index_keys
+      pg_runtime_variable_max_locks_per_transaction
+      pg_runtime_variable_max_pred_locks_per_transaction
+      pg_runtime_variable_max_prepared_transactions
+      pg_runtime_variable_max_standby_archive_delay_milliseconds
+      pg_runtime_variable_max_standby_streaming_delay_milliseconds
+      pg_runtime_variable_max_wal_senders
+ 
+    They are replaced by equivalent names under `pg_settings` with the exception of
+ 
+      pg_runtime_variable_max_standby_archive_delay_milliseconds
+      pg_runtime_variable_max_standby_streaming_delay_milliseconds
+ 
+    which are replaced with
+ 
+      pg_settings_max_standby_archive_delay_seconds
+      pg_settings_max_standby_streaming_delay_seconds
+ 
+ -- Martina Ferrari <tina@debian.org>  Fri, 19 May 2017 21:43:00 +0000

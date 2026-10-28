@@ -1,0 +1,2 @@
+# Debian's only patch, 0001 (reverts the kingpin import path to Debian's
+# library name), isn't needed with vendored modules.

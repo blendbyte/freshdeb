@@ -1,0 +1,64 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Tue, 4 Jul 2023 18:16:13 +0200
+Subject: Revert alecthomas/kingpin import path
+
+Forwarded: not-needed
+
+Newer versions of alecthomas/kingpin use a different import path. This patch
+can be dropped once the golang-gopkg-alecthomas-kingpin.v2-dev package is
+updated and provides the new import path.
+---
+ cmd/postgres_exporter/main.go   | 2 +-
+ collector/collector.go          | 2 +-
+ collector/pg_stat_statements.go | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cmd/postgres_exporter/main.go b/cmd/postgres_exporter/main.go
+index 0c1bd00..e0e5167 100644
+--- a/cmd/postgres_exporter/main.go
++++ b/cmd/postgres_exporter/main.go
+@@ -20,7 +20,6 @@ import (
+ 	"os"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus-community/postgres_exporter/collector"
+ 	"github.com/prometheus-community/postgres_exporter/config"
+ 	"github.com/prometheus-community/postgres_exporter/exporter"
+@@ -32,6 +31,7 @@ import (
+ 	"github.com/prometheus/common/version"
+ 	"github.com/prometheus/exporter-toolkit/web"
+ 	"github.com/prometheus/exporter-toolkit/web/kingpinflag"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/collector.go b/collector/collector.go
+index 130f531..da79f7c 100644
+--- a/collector/collector.go
++++ b/collector/collector.go
+@@ -22,8 +22,8 @@ import (
+ 	"sync"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ var (
+diff --git a/collector/pg_stat_statements.go b/collector/pg_stat_statements.go
+index 9227f5c..48fee2f 100644
+--- a/collector/pg_stat_statements.go
++++ b/collector/pg_stat_statements.go
+@@ -20,9 +20,9 @@ import (
+ 	"log/slog"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/blang/semver/v4"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ )
+ 
+ const (

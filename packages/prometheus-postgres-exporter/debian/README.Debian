@@ -1,0 +1,29 @@
+To use the PostgreSQL exporter, you need to connect to the database with
+superuser (postgres) privileges, or with an user that has been granted enough
+permissions.
+
+The recommended way to do this, is to create a `prometheus` user with no
+password, and then connect using UNIX domain sockets.
+
+To do that, set this connection string in
+/etc/default/prometheus-postgres-exporter:
+
+  DATA_SOURCE_NAME='user=prometheus host=/run/postgresql dbname=postgres'
+
+For PostgreSQL versions >= 10, use psql (sudo -u postgres psql) to execute
+the following SQL commands to create the user:
+
+  CREATE USER prometheus;
+  GRANT pg_monitor TO prometheus;
+
+Previous instructions required you to create custom functions and views in a
+prometheus schema, since certain runtime information was not visible to non-
+superusers. With the advent of the pg_monitor role, these are no longer
+required, and may be safely removed:
+
+  ALTER ROLE prometheus RESET search_path;
+  DROP VIEW IF EXISTS prometheus.pg_stat_activity;
+  DROP VIEW IF EXISTS prometheus.pg_stat_replication;
+  DROP FUNCTION IF EXISTS prometheus.f_select_pg_stat_activity;
+  DROP FUNCTION IF EXISTS prometheus.f_select_pg_stat_replication;
+  DROP SCHEMA IF EXISTS prometheus;

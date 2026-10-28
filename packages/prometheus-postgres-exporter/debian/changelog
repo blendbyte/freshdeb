@@ -1,0 +1,314 @@
+prometheus-postgres-exporter (0.19.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 29 Mar 2026 17:19:23 +0000
+
+prometheus-postgres-exporter (0.19.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Bump Standards-Version to 4.7.3
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 15 Feb 2026 18:32:37 +0000
+
+prometheus-postgres-exporter (0.18.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Refresh packaging according to latest dh-make-golang template
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 05 Jan 2026 11:47:38 +0000
+
+prometheus-postgres-exporter (0.17.1-1) unstable; urgency=medium
+
+  * New upstream (bugfix) release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 26 Feb 2025 15:59:09 +0000
+
+prometheus-postgres-exporter (0.17.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint
+    (>= 0.13.0)
+  * Bump Standards-Version to 4.7.1 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 23 Feb 2025 02:24:55 +0000
+
+prometheus-postgres-exporter (0.16.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete patches:
+    - 0002-Support-prometheus-common-v0.50.0.patch
+    - 0003-Cherry-pick-upstream-PR-1048.patch
+  * Refresh patches
+  * Drop no longer used golang-github-go-kit-log-dev Build-Depends
+  * Bump golang-any Build-Depends version constraint to (>= 2:1.21~) due to
+    use of log/slog package
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 19 Nov 2024 21:47:39 +0000
+
+prometheus-postgres-exporter (0.15.0-4) unstable; urgency=medium
+
+  * Add new 0003-Cherry-pick-upstream-PR-1048.patch (Closes: #1071260)
+  * Bump Standards-Version to 4.7.0 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 22 Sep 2024 22:14:46 +0000
+
+prometheus-postgres-exporter (0.15.0-3) unstable; urgency=medium
+
+  * Update debian/README with modernized instructions for creating the
+    Postgres exporter user, along with instructions for cleaning up the
+    previous method (Closes: #1067405)
+  * Modernize init.d script and fix a few copypasta mistakes
+  * Drop obsolete Depends: daemon | systemd-sysv
+  * Add missing debian/logrotate
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 07 May 2024 19:18:24 +0000
+
+prometheus-postgres-exporter (0.15.0-2) unstable; urgency=medium
+
+  * Add new 0002-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 17 Mar 2024 02:25:29 +0000
+
+prometheus-postgres-exporter (0.15.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete patches (applied upstream):
+    - 0002-Fix-collector-test-untyped-int-overflows.patch
+    - 0003-Fix-TestMetric-fixtures.patch
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 27 Oct 2023 22:51:06 +0000
+
+prometheus-postgres-exporter (0.14.0-3) unstable; urgency=medium
+
+  * Add new Fix-TestMetric-fixtures.patch (Closes: #1054202)
+  * Bump minimum required golang-github-prometheus-client-golang-dev version
+    to 1.17.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 20 Oct 2023 17:28:09 +0000
+
+prometheus-postgres-exporter (0.14.0-2) unstable; urgency=medium
+
+  * Add new Fix-collector-test-untyped-int-overflows.patch to fix a new case
+    of test build failures on 32-bit archs
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 21 Sep 2023 12:31:48 +0000
+
+prometheus-postgres-exporter (0.14.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete Fix-collector-test-int32-overflows.patch (applied upstream)
+  * debian/rules: modernize style to match other exporter packages
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 20 Sep 2023 11:37:30 +0000
+
+prometheus-postgres-exporter (0.13.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * debian/rules: fix override_dh_auto_install and drop redundant
+    debian/install
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 24 Jul 2023 01:11:59 +0000
+
+prometheus-postgres-exporter (0.13.1-2) unstable; urgency=medium
+
+  * Convert quilt patches to gbp-pq format
+  * Add new Fix-collector-test-int32-overflows.patch to fix test build failures
+    on 32-bit archs caused by untyped int overflows
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 04 Jul 2023 16:23:56 +0000
+
+prometheus-postgres-exporter (0.13.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add missing Build-Depends
+  * Bump prometheus libraries Build-Depends versions
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 04 Jul 2023 11:59:43 +0000
+
+prometheus-postgres-exporter (0.12.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 01-support-newer-exporter-toolkit.patch
+  * Add new 01-Revert_kingpin_import_path.patch
+  * Bump various Build-Depends version constraints
+  * Add missing Build-Depends:
+    - golang-github-prometheus-client-model-dev
+    - golang-gopkg-yaml.v3-dev
+  * Bump Standards-Version to 4.6.2 (no changes)
+  * Add NEWS entry regarding breaking changes from upstream
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 25 Jun 2023 15:21:31 +0000
+
+prometheus-postgres-exporter (0.11.1-3) unstable; urgency=medium
+
+  * Add new 01-support-newer-exporter-toolkit.patch
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+    version to 0.8.0
+  * Remove --help output from default file
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 15 Dec 2022 02:13:05 +0000
+
+prometheus-postgres-exporter (0.11.1-2) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Repository, Repository-Browse.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 17 Oct 2022 15:09:05 +0100
+
+prometheus-postgres-exporter (0.11.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete patch 01-Fix_spelling_errors (applied upstream)
+  * Bump Standards-Version to 4.6.1 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 27 Aug 2022 20:48:08 +0000
+
+prometheus-postgres-exporter (0.10.1-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release (fixes ineffective --log.level flag)
+  * Replace golang-github-go-kit-kit-dev build-dep with
+    golang-github-go-kit-log-dev
+  * Refresh patches
+
+  [ Martina Ferrari ]
+  * Update my name and email address
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 16 Jan 2022 19:13:29 +0000
+
+prometheus-postgres-exporter (0.10.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * Add new build-deps
+    - golang-github-go-kit-kit-dev
+    - golang-github-prometheus-exporter-toolkit-dev
+  * Drop +ds version suffix, since we no longer need to unvendor
+  * Update maintainer / uploader email addresses
+  * Update upstream project URLs / import paths
+  * Bump debhelper-compat version to 13
+  * Bump Standards-Version to 4.6.0 (no changes)
+  * Update gbp configuration following Go Team new workflow
+  * Use dh-sequence-golang instead of dh-golang and --with=golang
+  * Update copyright holders
+  * Add NOTICE to docs as required by Apache-2.0 license
+  * Update debian/watch
+  * Add missing maint-script adduser dependency
+  * Change systemd service to Restart=on-failure
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 11 Dec 2021 12:15:19 +0000
+
+prometheus-postgres-exporter (0.8.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Add myself to uploaders.
+  * Bump minimum required version of golang-github-lib-pq to support
+    SCRAM-SHA-256 authentication.
+  * Update description (now supports Postgres 9.4 and up).
+  * lintian: fix rules-requires-root.
+
+  [ Debian Janitor ]
+  * Set debhelper-compat version in Build-Depends.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit.
+
+  [ Martina Ferrari ]
+  * Update initscript.
+  * Update my name.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 20 Jan 2020 12:25:39 +0000
+
+prometheus-postgres-exporter (0.5.1+ds-2) unstable; urgency=medium
+
+  * Name update.
+  * Add missing sphinxdoc dependency.
+  * Install sample queries.yaml file. Closes: #939507
+  * Fix spelling mistake in source.
+  * Update Standards-Version and Compat level. Add needed Pre-Depends for
+    sysvinit.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 28 Oct 2019 16:59:41 +0000
+
+prometheus-postgres-exporter (0.5.1+ds-1) unstable; urgency=medium
+
+  [ Sven Hoexter ]
+  * New upstream release.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 02 Aug 2019 16:01:05 +0000
+
+prometheus-postgres-exporter (0.4.7+ds-2) unstable; urgency=medium
+
+  * Use correct namespace for version metadata and remove unused vars.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 10 Feb 2019 18:58:09 +0000
+
+prometheus-postgres-exporter (0.4.7+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #920346.
+  * debian/gbp.conf: Update repo layout.
+  * Update Standards-Version with no changes.
+  * Add manpage and version metadata,
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 05 Feb 2019 04:51:10 +0000
+
+prometheus-postgres-exporter (0.4.6+ds-2) unstable; urgency=medium
+
+  * Update Standards-Version with no changes.
+  * Add missing --inherit flag to daemon; can't work without it!
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 08 Oct 2018 19:03:30 +0000
+
+prometheus-postgres-exporter (0.4.6+ds-1) unstable; urgency=medium
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Martina Ferrari ]
+  * New upstream release.
+  * debian/rules: Install test files.
+  * Bump debhelper compat level to 11.
+  * debian/copyright: Document Files-Excluded.
+  * debian/control: Bump Standards-Version (no changes).
+  * debian/postinst: Do not change permissions recursively.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 07 Aug 2018 16:07:06 +0000
+
+prometheus-postgres-exporter (0.4.1+ds-2) unstable; urgency=medium
+
+  * Update defaults for new cmdline flags format.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 14 Dec 2017 17:08:11 +0000
+
+prometheus-postgres-exporter (0.4.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add test fixtures.
+  * Packaging updates from cme; compat bump; make dep on daemon
+    conditional.
+  * Remove unused lintian overrides.
+  * Use automatic autopkgtests
+  * Use pkg-info.mk and XS-Go-Import-Path.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 14 Dec 2017 16:59:24 +0000
+
+prometheus-postgres-exporter (0.2.0+ds-2) unstable; urgency=medium
+
+  * Add autopkgtest.
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 21 May 2017 00:07:32 +0200
+
+prometheus-postgres-exporter (0.2.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 19 May 2017 22:25:36 +0000
+
+prometheus-postgres-exporter (0.1.1+ds-1) unstable; urgency=medium
+
+  * Initial packaging. (Closes: #854014).
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 04 Feb 2017 16:50:34 +0000
