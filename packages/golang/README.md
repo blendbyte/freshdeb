@@ -41,7 +41,7 @@ Each component's `golang-go` points to its own minor. The minors' own packages i
 
 ## New minors
 
-watch.yml bumps patch releases. A new minor (1.28) is a manual pull request: re-import `debian/` from Debian's `golang-1.28` branch (`packaging.ref`, `packaging.source`), add the track (watch.yml proposes it), make the previous minor's track a renaming overlay like `golang-1.26.patch`, drop the oldest track (or let its `eol` pass), move `latest`, and set the real `eol` dates.
+watch.yml bumps patch releases. A new minor (1.28) is a manual pull request: re-import `debian/` from Debian's `golang-1.28` branch (`packaging.ref`, `packaging.source`), add the track (watch.yml proposes it), make the previous minor's track a renaming overlay like `golang-1.26.patch`, drop the oldest track (or let its `eol` pass) and set the real `eol` dates. watch.yml's pull request already moves `latest` to the new track.
 
 ## Tests
 

@@ -60,6 +60,7 @@ tracks:                         # one APT component per track: main, or v<track>
 
 aliases:                        # optional; extra components mirroring a track
   "9": "9.1"                    # component v9 contains exactly what v9.1 contains
+  latest: "9.1"                 # optional; the newest track, moved by watch.yml
 
 overlays:                       # optional; patches to the assembled source tree
   - patch: overlays/legacy-sysusers.patch
@@ -77,6 +78,9 @@ build:
 
 tests:
   capabilities: [NET_ADMIN]     # optional; added to the test containers (see Tests)
+  upgrade_from:                 # optional; when no distribution ships the package
+    url: https://github.com/juanfont/headscale/releases/download/v0.28.0/headscale_0.28.0_linux_{arch}.deb
+    sha256: {amd64: <sha256>, arm64: <sha256>}
 ```
 
 `scripts/freshdeb.py validate` checks all of this. CI runs it on every change.
@@ -131,6 +135,8 @@ deb [signed-by=…] https://deb.freshdeb.com/restic trixie main
 
 Use version tracks only when upstream patches several release lines in parallel, like valkey. Each line gets a track keyed by its version prefix (`"9.1"` covers 9.1.x, component `v9.1`), plus optional aliases per major (`"9"` → component `v9`). watch.yml relies on the prefix to find patch releases and to propose new lines.
 
+Version tracks also fit projects whose upgrades must go one line at a time, like headscale (0.28 → 0.29 → 0.30, enforced by headscale itself): each minor is a track, and the older ones stay published as stepping stones. An alias named `latest` follows the newest track; when watch.yml proposes a new track, it moves `latest` to it in the same pull request.
+
 When upstream names one line for long-term support and the lines around it come and go quickly, like Prometheus (a minor every six weeks, one LTS line a year), use `main` plus a named track with a `line`:
 
 ```yaml
@@ -181,9 +187,11 @@ CI installs the built packages in a bare container of the target distribution (n
 | Step | What runs |
 |---|---|
 | install | `apt install` our debs, then `tests/smoke.sh`, then Debian's autopkgtests from `debian/tests` |
-| upgrade | `apt install` the distro's own version (if it has one), `tests/upgrade.sh seed`, `apt install` our debs, `tests/upgrade.sh check`, `tests/smoke.sh` |
+| upgrade | `apt install` the distro's own version (if it has one, else the upstream package in `tests.upgrade_from`), `tests/upgrade.sh seed`, `apt install` our debs, `tests/upgrade.sh check`, `tests/smoke.sh` |
 
 Tests run as root under `bash -euo pipefail` and get `FRESHDEB_VERSION` and `FRESHDEB_UPSTREAM_VERSION`. Check real behaviour: the service starts as the right user, data survives the upgrade, the advertised features are compiled in.
+
+When no distribution ships the package but upstream publishes its own `.deb`, `tests.upgrade_from` names it: a URL with an `{arch}` placeholder (the dpkg architecture) and a sha256 per architecture. `verify.sh` downloads it on the host, checks the checksum and the upgrade step starts from it, which is the path users of upstream's package take. Pin a release of the previous line, and move it along when the tracks move.
 
 Test containers get `SYS_PTRACE` (init scripts need it to find daemons running as another user) and nothing else. A package whose tests need more lists it in `tests.capabilities`: `NET_ADMIN` (keepalived adds its virtual IPs) or `NET_RAW`. Ask for as little as the tests need.
 

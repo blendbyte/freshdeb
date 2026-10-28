@@ -4,13 +4,15 @@
 # container (no build tools). Invoked by scripts/verify.sh.
 #
 #   container-verify.sh install   fresh install, smoke test, autopkgtests
-#   container-verify.sh upgrade   install the distribution's own version first,
+#   container-verify.sh upgrade   install the distribution's own version first
+#                                 (or FRESHDEB_UPGRADE_FROM, an upstream .deb),
 #                                 seed data, upgrade to ours, check data and
 #                                 run the smoke test again
 #
 # Mounts:  /debs   build output (debs, build-info.json, debian-tests/)
 #          /tests  packages/<name>/tests
 # Env:     FRESHDEB_VERSION FRESHDEB_UPSTREAM_VERSION FRESHDEB_BINARIES
+#          FRESHDEB_UPGRADE_FROM (optional; verified by verify.sh)
 
 set -euo pipefail
 
@@ -99,12 +101,21 @@ case "$MODE" in
                 distro+=("$binary")
             fi
         done
-        if (( ${#distro[@]} == 0 )); then
+        if (( ${#distro[@]} > 0 )); then
+            section "Install distribution packages: ${distro[*]}"
+            "${APT[@]}" install "${distro[@]}"
+        elif [[ -n "${FRESHDEB_UPGRADE_FROM:-}" ]]; then
+            # The distributions ship none: start from the upstream package
+            # the package names (tests.upgrade_from).
+            section "Install upstream package: $(basename "$FRESHDEB_UPGRADE_FROM")"
+            "${APT[@]}" install "$FRESHDEB_UPGRADE_FROM"
+            for binary in $FRESHDEB_BINARIES; do
+                dpkg-query -W "$binary" >/dev/null 2>&1 && distro+=("$binary")
+            done
+        else
             echo "The distribution does not ship any of: $FRESHDEB_BINARIES. Nothing to upgrade from."
             exit 0
         fi
-        section "Install distribution packages: ${distro[*]}"
-        "${APT[@]}" install "${distro[@]}"
         for binary in "${distro[@]}"; do
             echo "  $binary $(dpkg-query -W -f='${Version}' "$binary")"
         done

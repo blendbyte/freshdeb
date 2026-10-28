@@ -57,6 +57,9 @@ VENDOR_PREFIX = {"debian": "deb", "ubuntu": "ubuntu"}
 # Capabilities a package's tests may add to their containers (tests.capabilities),
 # e.g. NET_ADMIN for keepalived to add its virtual IPs.
 TEST_CAPABILITIES = ("NET_ADMIN", "NET_RAW")
+# The alias that always names a package's newest track; watch moves it to
+# each new track it proposes.
+LATEST_ALIAS = "latest"
 
 # GitHub Actions refuses matrices with more than 256 jobs.
 MAX_MATRIX = 256
@@ -524,11 +527,22 @@ def validate_package(pkg, config, today=None):
     tests = pkg.path / "tests"
     check((tests / "smoke.sh").is_file(), "tests/smoke.sh is required")
     test_config = data.get("tests") or {}
-    check(isinstance(test_config, dict) and set(test_config) <= {"capabilities"},
-          "tests only takes capabilities")
+    check(isinstance(test_config, dict) and set(test_config) <= {"capabilities", "upgrade_from"},
+          "tests only takes capabilities and upgrade_from")
     capabilities = test_config.get("capabilities") or [] if isinstance(test_config, dict) else []
     check(isinstance(capabilities, list) and set(capabilities) <= set(TEST_CAPABILITIES),
           f"tests.capabilities must be a list of {', '.join(TEST_CAPABILITIES)}")
+    upgrade_from = test_config.get("upgrade_from") if isinstance(test_config, dict) else None
+    if upgrade_from is not None:
+        ok = isinstance(upgrade_from, dict) and set(upgrade_from) == {"url", "sha256"}
+        check(ok, "tests.upgrade_from needs url and sha256 (and nothing else)")
+        if ok:
+            url, sums = upgrade_from["url"], upgrade_from["sha256"]
+            check(isinstance(url, str) and url.startswith("https://") and "{arch}" in url and url.endswith(".deb"),
+                  "tests.upgrade_from.url must be an https:// URL of a .deb with an {arch} placeholder")
+            check(isinstance(sums, dict) and set(sums) == set(config.architectures)
+                  and all(isinstance(v, str) and SHA256_RE.match(v) for v in sums.values()),
+                  "tests.upgrade_from.sha256 needs a sha256 for every architecture")
     return errors
 
 
@@ -1095,6 +1109,7 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         "build_profiles": build.get("profiles") or [],
         "build_env": build_env,
         "test_capabilities": (pkg.data.get("tests") or {}).get("capabilities") or [],
+        "test_upgrade_from": test_upgrade_from(pkg, arch),
         "assets": assets,
         "overlays": applied,
         "publish": bool(publish),
@@ -1107,6 +1122,16 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     for overlay in applied:
         print(f"  overlay: {overlay}")
     return info
+
+
+def test_upgrade_from(pkg, arch):
+    """The upstream package the upgrade test starts from when the
+    distributions ship none (tests.upgrade_from): {url, sha256} for this
+    architecture, or None."""
+    upgrade_from = (pkg.data.get("tests") or {}).get("upgrade_from")
+    if not upgrade_from:
+        return None
+    return {"url": upgrade_from["url"].format(arch=arch), "sha256": upgrade_from["sha256"][arch]}
 
 
 def cmd_prepare(args):
@@ -1229,6 +1254,9 @@ def watch_package(pkg, tags, today=None):
             alias_depths = {len(a.split(".")) for a in pkg.aliases if re.fullmatch(r"\d+(\.\d+)*", a)}
             if alias_depths == {1} and major not in pkg.aliases and depth > 1:
                 change["aliases"][major] = line
+            # "latest" always names the newest track.
+            if LATEST_ALIAS in pkg.aliases:
+                change["aliases"][LATEST_ALIAS] = line
             changes.append(change)
     return changes
 

@@ -144,6 +144,26 @@ class CatalogTests(unittest.TestCase):
         self.yaml.write_text(text + "\ntests:\n  privileged: true\n")
         self.assertTrue(any("tests only takes capabilities" in e for e in self.errors()))
 
+    UPGRADE_FROM = ("\ntests:\n  upgrade_from:\n    url: https://example.org/demo_1.0_linux_{arch}.deb\n"
+                    "    sha256: {amd64: " + "a" * 64 + ", arm64: " + "b" * 64 + "}\n")
+
+    def test_test_upgrade_from(self):
+        text = self.yaml.read_text()
+        self.yaml.write_text(text + self.UPGRADE_FROM)
+        self.assertEqual([e for e in self.errors() if e.startswith("valkey:")], [])
+        pkg = freshdeb.load_package("valkey", self.tmp)
+        self.assertEqual(freshdeb.test_upgrade_from(pkg, "arm64"),
+                         {"url": "https://example.org/demo_1.0_linux_arm64.deb", "sha256": "b" * 64})
+        self.yaml.write_text(text + self.UPGRADE_FROM.replace("_{arch}", ""))
+        self.assertTrue(any("{arch} placeholder" in e for e in self.errors()))
+        self.yaml.write_text(text + self.UPGRADE_FROM.replace(", arm64: " + "b" * 64, ""))
+        self.assertTrue(any("sha256 for every architecture" in e for e in self.errors()))
+        self.yaml.write_text(text + self.UPGRADE_FROM + "    version: 1.0\n")
+        self.assertTrue(any("needs url and sha256" in e for e in self.errors()))
+
+    def test_no_upgrade_from_in_build_info(self):
+        self.assertIsNone(freshdeb.test_upgrade_from(freshdeb.load_package("valkey", self.tmp), "amd64"))
+
 
 class ControlTests(unittest.TestCase):
     CONTROL = (
@@ -827,6 +847,27 @@ class WatchReportTests(unittest.TestCase):
         lines = self.report(pkg, {f"{line}.0": "a" * 40})
         self.assertIn(f"  valkey: new release line {line} ({line}.0) -> add track {line} based on {newest}, "
                       f"alias {major} -> {line}", lines)
+
+
+class LatestAliasTests(unittest.TestCase):
+    """The latest alias follows the newest track (golang, headscale)."""
+
+    def test_new_track_moves_latest(self):
+        pkg = freshdeb.load_package("golang", ROOT)
+        newest = max(pkg.tracks, key=freshdeb._VersionKey)
+        major, minor = newest.split(".")
+        line = f"{major}.{int(minor) + 1}"
+        tags = {**{t.tag: t.commit for t in pkg.tracks.values()}, f"go{line}.0": "a" * 40}
+        changes = freshdeb.watch_package(pkg, tags, TODAY)
+        self.assertEqual([(c["kind"], c["track"], c["aliases"]) for c in changes],
+                         [("new-track", line, {"latest": line})])
+
+    def test_numeric_aliases_unchanged(self):
+        pkg = freshdeb.load_package("valkey", ROOT)
+        self.assertNotIn("latest", pkg.aliases)
+        tags = {**{t.tag: t.commit for t in pkg.tracks.values()}, "9.2.0": "a" * 40}
+        changes = freshdeb.watch_package(pkg, tags, TODAY)
+        self.assertEqual(changes[0]["aliases"], {"9": "9.2"})
 
 
 class WatchTests(unittest.TestCase):
