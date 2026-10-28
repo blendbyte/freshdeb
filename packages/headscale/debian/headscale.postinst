@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    # The user upstream's .deb creates (packaging/deb/postinst).
+    groupadd --force --system headscale
+    if ! id -u headscale >/dev/null 2>&1; then
+      useradd --system --shell /usr/sbin/nologin --gid headscale \
+        --home-dir /var/lib/headscale --comment "headscale default user" headscale
+    fi
+  ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
+
+  *)
+    echo "postinst called with unknown argument '$1'" >&2
+    exit 1
+  ;;
+esac
+
+#DEBHELPER#
+
+exit 0

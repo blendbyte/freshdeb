@@ -1,0 +1,47 @@
+# headscale, an open source Tailscale control server:
+# https://github.com/juanfont/headscale
+#
+# Neither Debian nor Ubuntu ship headscale. Upstream publishes its own .deb
+# with each release (nfpm, see its .goreleaser.yml and packaging/), but no
+# APT repository. debian/ is our own (docs/packages.md, "Own packaging"),
+# laid out like upstream's .deb: same paths, conffile, user, systemd unit,
+# started on install. Built like upstream's release binaries with the pinned
+# Go toolchain and vendored, checksum-verified modules. See README.md.
+#
+# headscale upgrades one minor version at a time (0.28 -> 0.29 -> 0.30) and
+# refuses to start on a database from an older or newer minor. One track per
+# minor (component v0.29), older ones stay published as stepping stones;
+# "latest" follows the newest, watch.yml moves it with each new minor.
+# Upstream supports only its latest release: set eol on a track when the
+# next minor is out.
+
+name: headscale
+description: "headscale, an open source Tailscale control server"
+homepage: https://github.com/juanfont/headscale
+
+upstream:
+  git: https://github.com/juanfont/headscale.git
+  tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: freshdeb
+
+tracks:
+  "0.29":
+    tag: "v0.29.6"
+    commit: a2b1d7863926834e94479dcdd91ab344a9356bd0
+    revision: 1
+    go: "1.27.3"  # go.mod: go 1.27.3; upstream's release build uses it too
+    patches: patches/0.29  # ours: version, commit and build time from the linker (no git in a source tarball)
+
+aliases:
+  latest: "0.29"
+
+tests:
+  # The distributions ship no headscale; the upgrade test starts from
+  # upstream's own .deb of the previous minor, the path its users take.
+  upgrade_from:
+    url: https://github.com/juanfont/headscale/releases/download/v0.28.0/headscale_0.28.0_linux_{arch}.deb
+    sha256:
+      amd64: 8c3afb2e950e060d21bdefa98cda3accdcc1cb893bbed2e94a58de25a42f6dbe
+      arm64: a59e8f0ed0b02a6e958efdd64a8a74b6d21eff75edb6fe10f22f8ac4c2995db0

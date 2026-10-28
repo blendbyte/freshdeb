@@ -1,0 +1,46 @@
+From: freshdeb <packages@freshdeb.com>
+Subject: Version, commit and build time from the linker
+
+headscale takes its version from Go's build info, which only has it when
+building in a git checkout of the release tag. A package built from the
+release's source tarball would report "dev", and headscale's database
+version check (one minor version at a time) would be skipped. Let the
+build set them with -ldflags -X, as release builds get them from git.
+
+Forwarded: not-needed
+---
+--- a/hscontrol/types/version.go
++++ b/hscontrol/types/version.go
+@@ -40,6 +40,14 @@
+ 
+ var buildInfo = sync.OnceValues(debug.ReadBuildInfo)
+ 
++// Set with -ldflags -X by builds outside a git checkout (distribution
++// packages from a release tarball), where the build info has no version.
++var (
++	version   string
++	commit    string
++	buildTime string
++)
++
+ var GetVersionInfo = sync.OnceValue(func() *VersionInfo {
+ 	info := &VersionInfo{
+ 		Version:   "dev",
+@@ -75,5 +83,17 @@
+ 		}
+ 	}
+ 
++	if version != "" {
++		info.Version = version
++	}
++
++	if commit != "" {
++		info.Commit = commit
++	}
++
++	if buildTime != "" {
++		info.BuildTime = buildTime
++	}
++
+ 	return info
+ })

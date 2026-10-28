@@ -1,0 +1,25 @@
+Source: headscale
+Section: net
+Priority: optional
+Maintainer: freshdeb <packages@freshdeb.com>
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.7.0
+Homepage: https://github.com/juanfont/headscale
+Rules-Requires-Root: no
+
+Package: headscale
+Architecture: any
+Depends:
+ passwd,
+ ${misc:Depends},
+Description: open source implementation of the Tailscale control server
+ Headscale aims to implement a self-hosted, open source alternative to the
+ Tailscale control server. Headscale's goal is to provide self-hosters and
+ hobbyists with an open-source server they can use for their projects and
+ labs. It implements a narrow scope, a single Tailscale network (tailnet),
+ suitable for a personal use, or a small open-source organisation.
+ .
+ Configuration is in /etc/headscale/config.yaml, data in /var/lib/headscale.
+ The service starts on install, listening on 127.0.0.1:8080 until the
+ configuration says otherwise.

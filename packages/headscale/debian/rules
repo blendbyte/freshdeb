@@ -1,0 +1,55 @@
+#!/usr/bin/make -f
+
+# Built like upstream's release binaries (.goreleaser.yml): CGO_ENABLED=0,
+# goreleaser's default -s -w, and the version, commit and build time that
+# its builds get from git, set with -X instead (0001; a source tarball has
+# no .git). The pinned Go toolchain, offline mode (GOFLAGS=-mod=vendor,
+# GOPROXY=off) and caches come from the build environment.
+include /usr/share/dpkg/pkg-info.mk
+
+export CGO_ENABLED := 0
+
+# The upstream commit, from the changelog entry freshdeb adds.
+REVISION   := $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog)
+BUILD_TIME := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' +%Y-%m-%dT%H:%M:%SZ)
+TYPES      := github.com/juanfont/headscale/hscontrol/types
+LDFLAGS    := -s -w -X $(TYPES).version=v$(DEB_VERSION_UPSTREAM) -X $(TYPES).commit=$(REVISION) \
+	-X $(TYPES).buildTime=$(BUILD_TIME)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	go version
+	go build -ldflags "$(LDFLAGS)" -o _build/headscale ./cmd/headscale
+
+# Upstream's unit tests ("make test" runs go test ./...); not ./integration,
+# which runs Tailscale clients in Docker containers.
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	go test ./hscontrol/... ./cmd/...
+	_build/headscale version | grep -qx 'headscale version v$(DEB_VERSION_UPSTREAM)'
+endif
+
+# Where upstream's .deb puts things (nfpms in .goreleaser.yml).
+override_dh_auto_install:
+	install -D -m 0755 _build/headscale debian/headscale/usr/bin/headscale
+	install -D -m 0644 config-example.yaml debian/headscale/etc/headscale/config.yaml
+	install -d debian/headscale/usr/share/bash-completion/completions \
+	    debian/headscale/usr/share/zsh/vendor-completions \
+	    debian/headscale/usr/share/fish/vendor_completions.d
+	_build/headscale completion bash > debian/headscale/usr/share/bash-completion/completions/headscale
+	_build/headscale completion zsh > debian/headscale/usr/share/zsh/vendor-completions/_headscale
+	_build/headscale completion fish > debian/headscale/usr/share/fish/vendor_completions.d/headscale.fish
+
+# Upstream's unit, unchanged.
+execute_before_dh_installsystemd:
+	cp packaging/systemd/headscale.service debian/headscale.service
+
+# Go binary: nothing for dwz to compress.
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf _build debian/headscale.service
