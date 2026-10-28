@@ -1,0 +1,20 @@
+# htop (https://htop.dev), Debian's packaging, unchanged.
+
+name: htop
+description: "htop interactive process viewer"
+homepage: https://htop.dev
+
+upstream:
+  git: https://github.com/htop-dev/htop.git
+  tag_regex: '^(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/debian/htop.git
+  ref: be7ad56423063e1e7171ce23b37ae1d9e6bd3e02  # 3.5.3-1, unstable
+
+# Upstream supports only its latest release: one track that follows every release.
+tracks:
+  main:
+    tag: "3.5.3"
+    commit: 20882b8ef8271fb49ea0eb74bbfd484e9b0a11d8
+    revision: 1

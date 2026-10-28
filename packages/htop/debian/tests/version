@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+htop --version | grep "^htop " && echo Version: OK

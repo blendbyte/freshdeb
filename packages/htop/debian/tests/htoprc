@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+export HTOPRC="$AUTOPKGTEST_TMP/test_htoprc"
+echo HTOPRRC="$HTOPRC"
+TERM=vt100 htop -n 1 > /dev/null
+test -r "$AUTOPKGTEST_TMP/test_htoprc" && echo Create htoprc: OK
+
+grep htop_version "$AUTOPKGTEST_TMP/test_htoprc" && echo Version ID: OK
+
+grep config_reader_min_version "$AUTOPKGTEST_TMP/test_htoprc" && echo Config reader ID: OK

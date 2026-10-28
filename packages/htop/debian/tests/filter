@@ -1,0 +1,2 @@
+#!/bin/bash
+TERM=vt100 htop --filter=htop -n 5 | grep filter && echo "PASS: filter ok"

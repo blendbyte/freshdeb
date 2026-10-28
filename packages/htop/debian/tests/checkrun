@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+echo "Running htop, capturing output"
+OUTPUT=$(TERM=vt100 htop -n 10) && echo Run: OK
+
+grep -q "Mem" -- <<< "$OUTPUT" && echo Mem found: OK
+
+grep -q "Load average" -- <<< "$OUTPUT" && echo LA found: OK
+
+grep -q "root" -- <<< "$OUTPUT" && echo root found: OK

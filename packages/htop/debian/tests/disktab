@@ -1,0 +1,2 @@
+#!/bin/bash
+{ echo -e "\t" ; timeout 15 cat ; } | TERM=vt100 htop -n 10 | grep -q DISK && echo Disk tab: OK

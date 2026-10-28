@@ -1,0 +1,4 @@
+Tests: version help
+Restrictions: superficial
+
+Tests: checkrun disktab htoprc

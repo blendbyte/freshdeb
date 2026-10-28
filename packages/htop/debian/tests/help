@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+htop --help | grep -- "^htop"        && echo "Help (htop): OK"
+htop --help | grep -F "GPL"          && echo "Help (GPL): OK"
+htop --help | grep -F -- "--help"    && echo "Help (--help): OK"
+htop --help | grep -F -- "--tree"    && echo "Help (--tree): OK"
+htop --help | grep -F -- "--version" && echo "Help (--version): OK"
