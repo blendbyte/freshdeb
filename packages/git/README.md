@@ -21,6 +21,6 @@ On Ubuntu, [`ppa:git-core/ppa`](https://launchpad.net/~git-core/+archive/ubuntu/
 ## Notes
 
 - **Source:** upstream's release tarball from kernel.org (`upstream.tarball`), as in Debian. It carries the generated `configure` and `version` files, and its checksums match kernel.org's signed `sha256sums.asc`.
-- **No changes to Debian's packaging:** it modifies no upstream files and builds unchanged on every release. That includes git's test suite (about 1,000 test scripts), which gates the build as in Debian.
+- **No changes to Debian's packaging:** it modifies no upstream files and builds unchanged on every release. git's own test suite (about 1,000 test scripts) doesn't run during the build: that's upstream's job, and it added 5 to 15 minutes to every build. The smoke and upgrade tests, and Debian's autopkgtests, check the installed packages.
 - **Epoch:** Debian's versions carry an epoch (`1:2.39.5-…`), so ours do too (`epoch: 1`).
 - **Upgrade test:** a repository with a stash, a worktree and user configuration (including an alias) is created with the distribution's git, then checked, extended and maintained (`git maintenance run`) with ours.

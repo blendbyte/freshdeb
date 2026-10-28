@@ -30,4 +30,10 @@ tracks:
     tag: "v2.56.0"
     commit: a018953688f1b10bddf91bff8747068f5f4746a4
     sha256: 26c56c296b38c0695b26fa95f475f1d01704d2d38e73465ca30b0b2f5dc789d3
-    revision: 1
+    revision: 2
+
+build:
+  # git's own test suite (about 1,000 scripts) is upstream's job; it adds
+  # 5 to 15 minutes to every build. Our gate is tests/ plus Debian's
+  # autopkgtests, run against the installed packages.
+  options: [nocheck]

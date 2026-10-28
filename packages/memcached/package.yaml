@@ -27,7 +27,7 @@ tracks:
     tag: "1.6.45"
     commit: 2d51e364799bc9698bd4b11728ea978cea12da6e
     sha256: d362c64e6d8d5287153501eabf7c85b4a761432fbf53f5d7b085d0bb1653c1dd
-    revision: 2
+    revision: 3
     patches: patches/main  # Debian's, without 0006-Don-t-use-embedded-Lua (the proxy uses upstream's vendor/lua)
 
 overlays:
@@ -35,3 +35,9 @@ overlays:
   # tarball) instead of the system's lua5.4, as upstream builds it (all
   # releases).
   - patch: overlays/bundled-lua.patch
+
+build:
+  # Upstream's test suite is upstream's job; Debian runs it serially, which
+  # adds about 7 minutes to every build. Our gate is tests/ plus Debian's
+  # autopkgtests, run against the installed packages.
+  options: [nocheck]
