@@ -57,6 +57,16 @@ silences="$(amtool silence query -q)"
 grep -qxF "$silence" <<<"$silences" || { echo "silence $silence missing: $silences" >&2; exit 1; }
 amtool silence expire "$silence"
 
+echo "amtool reads upstream's /etc/amtool/config.yml, Debian's file first"
+mkdir -p /etc/amtool
+echo "output: json" > /etc/amtool/config.yml
+query="$(amtool silence query --expired)"
+[[ "$query" == "["* ]] || { echo "not JSON: $query" >&2; exit 1; }
+echo "output: simple" > /etc/prometheus/amtool.yml
+query="$(amtool silence query --expired)"
+[[ "$query" == "ID "* ]] || { echo "not Debian's file's output: $query" >&2; exit 1; }
+rm -rf /etc/amtool /etc/prometheus/amtool.yml
+
 echo "reload through the init script"
 reloads() {
     curl -fsS "$AM/metrics" | sed -n 's/^alertmanager_config_last_reload_success_timestamp_seconds //p'
