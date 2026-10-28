@@ -839,6 +839,27 @@ class NetworkRetryTests(unittest.TestCase):
         with self.assertRaises(freshdeb.FreshdebError):
             freshdeb.run_network("git", "ls-remote", "https://example.invalid/x.git")
 
+    def test_checksum_mismatch_is_downloaded_again(self):
+        digests = iter(["0" * 64, "a" * 64])
+        freshdeb_download = freshdeb.download
+        try:
+            freshdeb.download = lambda url, dest: next(digests)
+            self.assertEqual(freshdeb.download_verified("https://example.invalid/go.tgz", Path("/x"), "a" * 64),
+                             "a" * 64)
+        finally:
+            freshdeb.download = freshdeb_download
+
+    def test_persistent_mismatch_is_returned(self):
+        freshdeb_download = freshdeb.download
+        try:
+            calls = []
+            freshdeb.download = lambda url, dest: calls.append(url) or "0" * 64
+            self.assertEqual(freshdeb.download_verified("https://example.invalid/go.tgz", Path("/x"), "a" * 64),
+                             "0" * 64)
+            self.assertEqual(len(calls), freshdeb.NETWORK_ATTEMPTS)
+        finally:
+            freshdeb.download = freshdeb_download
+
     def test_download_does_not_retry_a_404(self):
         calls = []
 

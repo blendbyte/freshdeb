@@ -1059,13 +1059,26 @@ def download(url, dest):
             time.sleep(NETWORK_RETRY_DELAY * attempt)
 
 
+def download_verified(url, dest, expected):
+    """download() until the file has the pinned sha256, a few times: a
+    runner once got a corrupted toolchain from a CDN. Returns the last
+    digest; the caller fails if it still doesn't match."""
+    for attempt in range(1, NETWORK_ATTEMPTS + 1):
+        digest = download(url, dest)
+        if digest == expected or attempt == NETWORK_ATTEMPTS:
+            return digest
+        print(f"retrying ({attempt}/{NETWORK_ATTEMPTS - 1}) {url}: sha256 {digest}, expected {expected}",
+              file=sys.stderr)
+        time.sleep(NETWORK_RETRY_DELAY * attempt)
+
+
 def fetch_tarball(pkg, track, orig, dest):
     """Download the release tarball as the orig tarball, verify it, unpack it."""
     fetch_release_tarball(pkg.name, pkg.tarball_url(pkg.upstream_version(track.tag)), track.sha256, orig, dest)
 
 
 def fetch_release_tarball(label, url, sha256, orig, dest):
-    digest = download(url, orig)
+    digest = download_verified(url, orig, sha256)
     require(digest == sha256, f"{label}: {url} has sha256 {digest}, package.yaml pins {sha256}")
     dest.mkdir(parents=True)
     run("tar", "-xf", str(orig), "-C", str(dest), "--strip-components=1")
@@ -1084,8 +1097,8 @@ def fetch_assets(pkg, track, srcdir):
         dest = srcdir / pkg.asset_path(name)
         require(not dest.exists(), f"{pkg.name}: {dest} already exists in the source tree")
         dest.parent.mkdir(parents=True, exist_ok=True)
-        digest = download(url, dest)
         expected = track.assets[name]
+        digest = download_verified(url, dest, expected)
         require(digest == expected, f"{pkg.name}: {url} has sha256 {digest}, package.yaml pins {expected}")
         print(f"  asset {name}: {url} (sha256 ok)")
         fetched.append({"name": name, "url": url, "sha256": digest, "path": pkg.asset_path(name)})
@@ -1100,7 +1113,7 @@ def install_go(config, version, arch, dest):
     expected = config.toolchains["go"][version][arch]
     dest.mkdir(parents=True, exist_ok=True)
     archive = dest / f"go{version}.linux-{arch}.tar.gz"
-    digest = download(GO_DOWNLOAD.format(version=version, arch=arch), archive)
+    digest = download_verified(GO_DOWNLOAD.format(version=version, arch=arch), archive, expected)
     require(digest == expected, f"Go {version} for {arch} has sha256 {digest}, config.yaml pins {expected}")
     run("tar", "-xzf", str(archive), "-C", str(dest))
     archive.unlink()
