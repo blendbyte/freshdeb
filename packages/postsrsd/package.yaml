@@ -1,0 +1,45 @@
+# PostSRSd: https://github.com/roehling/postsrsd
+#
+# Packaging is Debian's (salsa.debian.org/debian/postsrsd); debian/ is an
+# unmodified import of the commit in packaging.ref, see README.md. Debian
+# patches nothing and builds upstream's git tag with CMake, its test suite
+# included; so do we. Overlays add the bookworm build dependency and carry
+# 1.x settings from /etc/default/postsrsd into /etc/postsrsd.conf on upgrade.
+#
+# Upstream maintains only its latest release, so there is one track, "main",
+# that follows every release (component main).
+
+name: postsrsd
+description: "PostSRSd Sender Rewriting Scheme daemon for Postfix"
+homepage: https://github.com/roehling/postsrsd
+
+upstream:
+  git: https://github.com/roehling/postsrsd.git
+  # Releases only: no 2.0.0a1-style pre-releases.
+  tag_regex: '^(?P<version>\d+\.\d+\.\d+)$'
+
+packaging:
+  origin: https://salsa.debian.org/debian/postsrsd.git
+  ref: dee03281beae9de47b96f7bbe78d9fa1b7b4ecdd  # 2.4.1-1, unstable
+
+# Not jammy: postsrsd 2.x needs CMake >= 3.24 and jammy has 3.22 (its
+# standard support ends in April 2027).
+codenames: [bookworm, trixie, noble, resolute]
+
+tracks:
+  main:
+    tag: "2.4.1"
+    commit: b21998ec41d4d08777f089916bf237c3ac55206c
+    revision: 1
+
+overlays:
+  # NEWS entry, and 1.x settings from /etc/default/postsrsd carried into
+  # /etc/postsrsd.conf when upgrading from 1.x (all releases).
+  - patch: overlays/upgrade-from-1.x.patch
+  # Debian's init script (systems without systemd) started postsrsd 2.x
+  # without daemonizing it, so start never returned (all releases).
+  - patch: overlays/init-daemonize.patch
+  # systemd-dev only exists from systemd 253; bookworm's systemd ships
+  # systemd.pc itself.
+  - patch: overlays/bookworm-systemd-pc.patch
+    codenames: [bookworm]

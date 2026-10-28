@@ -1,0 +1,127 @@
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,3 +1,27 @@
++postsrsd (2.4.1-1) unstable; urgency=medium
++
++  freshdeb: upgrading from postsrsd 1.x, the settings in /etc/default/postsrsd
++  are carried into the new /etc/postsrsd.conf: SRS_DOMAIN, SRS_EXCLUDE_DOMAINS,
++  SRS_SECRET, SRS_SEPARATOR, SRS_HASHLENGTH, SRS_HASHMIN, RUN_AS, CHROOT and
++  -A in SRS_EXTRA_OPTIONS. The secret file stays, so addresses rewritten by
++  1.x still reverse. /etc/default/postsrsd is no longer read; an existing
++  /etc/postsrsd.conf is left alone.
++
++  Postfix needs a change: postsrsd 2.x answers socketmap: lookups on the unix
++  socket /var/spool/postfix/srs instead of tcp: tables on ports 10001 and
++  10002. Replace the tcp: lines in /etc/postfix/main.cf with
++
++    sender_canonical_maps = socketmap:unix:srs:forward
++    sender_canonical_classes = envelope_sender
++    recipient_canonical_maps = socketmap:unix:srs:reverse
++    recipient_canonical_classes = envelope_recipient, header_recipient
++
++  and reload Postfix. Until then Postfix's lookups fail and it defers mail
++  (retrying it later). Alternatively, postsrsd can run as a milter: set
++  milter in /etc/postsrsd.conf and add it to smtpd_milters in main.cf.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
+ postsrsd (2.0.11-1) unstable; urgency=medium
+ 
+   Migrating from version 1.x
+diff -ruN a/debian/postsrsd.postinst b/debian/postsrsd.postinst
+--- a/debian/postsrsd.postinst
++++ b/debian/postsrsd.postinst
+@@ -4,7 +4,78 @@
+ set -e
+ . /usr/share/debconf/confmodule
+ 
++# freshdeb: carry the settings of postsrsd 1.x (/etc/default/postsrsd) into
++# a freshly created $CONFIGFILE, as upstream's migration notes describe. Run
++# in a subshell: it sources the old file.
++migrate_1x() {
++	SRS_DOMAIN= SRS_EXCLUDE_DOMAINS= SRS_SECRET= SRS_SEPARATOR= SRS_HASHLENGTH=
++	SRS_HASHMIN= RUN_AS= CHROOT= SRS_EXTRA_OPTIONS=
++	. /etc/default/postsrsd
++	cp -a -f $CONFIGFILE $CONFIGFILE.tmp
++	migrated=""
++	# Local domains: the SRS domain and SRS_EXCLUDE_DOMAINS (a leading dot
++	# means subdomains only, in 1.x and 2.x alike).
++	domains="" seen=" "
++	for d in $SRS_DOMAIN $(echo "$SRS_EXCLUDE_DOMAINS" | tr ',;' '  '); do
++		case "$d" in
++			*[!A-Za-z0-9.-]*) echo "postsrsd: not migrating invalid domain '$d'" >&2; continue ;;
++		esac
++		case "$seen" in *" $d "*) continue ;; esac
++		seen="$seen$d "
++		domains="${domains:+$domains, }\"$d\""
++	done
++	if [ -n "$domains" ]; then
++		sed -i "s/^domains = .*/domains = { $domains }/" $CONFIGFILE.tmp
++		[ -z "$SRS_EXCLUDE_DOMAINS" ] || migrated="$migrated SRS_EXCLUDE_DOMAINS"
++	fi
++	case "$SRS_DOMAIN" in
++		""|*[!A-Za-z0-9.-]*) ;;
++		*) sed -i "s/^#srs-domain =.*/srs-domain = \"$SRS_DOMAIN\"/" $CONFIGFILE.tmp
++		   migrated="$migrated SRS_DOMAIN" ;;
++	esac
++	case "$SRS_SECRET" in
++		/etc/postsrsd.secret|""|*[!A-Za-z0-9./_-]*) ;;
++		/*) sed -i "s|^secrets-file = .*|secrets-file = \"$SRS_SECRET\"|" $CONFIGFILE.tmp
++		    migrated="$migrated SRS_SECRET" ;;
++	esac
++	case "$SRS_SEPARATOR" in
++		+|-) sed -i "s/^#separator = .*/separator = \"$SRS_SEPARATOR\"/" $CONFIGFILE.tmp
++		     migrated="$migrated SRS_SEPARATOR" ;;
++	esac
++	case "$SRS_HASHLENGTH" in
++		4|""|*[!0-9]*) ;;
++		*) sed -i "s/^#hash-length = .*/hash-length = $SRS_HASHLENGTH/" $CONFIGFILE.tmp
++		   migrated="$migrated SRS_HASHLENGTH" ;;
++	esac
++	case "$SRS_HASHMIN" in
++		4|""|*[!0-9]*) ;;
++		*) sed -i "s/^#hash-minimum = .*/hash-minimum = $SRS_HASHMIN/" $CONFIGFILE.tmp
++		   migrated="$migrated SRS_HASHMIN" ;;
++	esac
++	case " $SRS_EXTRA_OPTIONS " in
++		*" -A "*) sed -i "s/^#always-rewrite = .*/always-rewrite = on/" $CONFIGFILE.tmp
++		          migrated="$migrated SRS_EXTRA_OPTIONS(-A)" ;;
++	esac
++	case "$RUN_AS" in
++		postsrsd|""|*[!a-z0-9_-]*) ;;
++		*) sed -i "s/^#unprivileged-user = .*/unprivileged-user = \"$RUN_AS\"/" $CONFIGFILE.tmp
++		   migrated="$migrated RUN_AS" ;;
++	esac
++	case "$CHROOT" in
++		/var/lib/postsrsd|""|*[!A-Za-z0-9./_-]*) ;;
++		/*) sed -i "s|^#chroot-dir = .*|chroot-dir = \"$CHROOT\"|" $CONFIGFILE.tmp
++		    migrated="$migrated CHROOT" ;;
++	esac
++	mv -f $CONFIGFILE.tmp $CONFIGFILE
++	echo "postsrsd: migrated${migrated:- no settings} from /etc/default/postsrsd into $CONFIGFILE;" \
++		"/etc/default/postsrsd is no longer read. Postfix must now use socketmap: tables," \
++		"see /usr/share/doc/postsrsd/NEWS.Debian.gz" >&2
++}
++
+ if [ "$1" = "configure" ]; then
++	# freshdeb: a config file created below is the packaged one.
++	[ -e $CONFIGFILE ] || fresh=1
++
+ 	if [ ! -f /etc/postsrsd.secret ]; then
+ 		echo "postsrsd: Generating initial /etc/postsrsd.secret" >&2
+ 		( umask 0077 ; dd if=/dev/urandom bs=24 count=1 2>/dev/null | base64 -w0 > /etc/postsrsd.secret )
+@@ -29,6 +100,13 @@
+ 		mv -f $CONFIGFILE.tmp $CONFIGFILE
+ 	fi
+ 
++	# freshdeb: upgrading from 1.x, into the config file just created.
++	if [ -n "$fresh" ] && [ -n "$2" ] && dpkg --compare-versions "$2" lt 2~ \
++		&& [ -r /etc/default/postsrsd ]; then
++		( migrate_1x ) || echo "postsrsd: could not migrate /etc/default/postsrsd;" \
++			"set up $CONFIGFILE yourself" >&2
++	fi
++
+ 	# Create user
+ 	if ! getent passwd postsrsd > /dev/null; then
+ 		adduser --quiet --system --group --no-create-home --home /var/lib/postsrsd postsrsd

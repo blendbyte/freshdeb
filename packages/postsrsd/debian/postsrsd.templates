@@ -1,0 +1,17 @@
+# These templates have been reviewed by the debian-l10n-english
+# team
+#
+# If modifications/additions/rewording are needed, please ask
+# debian-l10n-english@lists.debian.org for advice.
+#
+# Even minor modifications require translation updates and such
+# changes should be coordinated with translators and reviewers.
+
+Template: postsrsd/domain
+Type: string
+_Description: Local domain name to use as origin:
+ Please enter the domain name to use in rewritten addresses of
+ forwarded mail. The SPF policy for that domain should allow this
+ mail server to send mail.
+ .
+ Without a configured local domain name, postsrsd will not start.

@@ -1,0 +1,56 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          postsrsd
+# Required-Start:    $syslog $time $remote_fs
+# Required-Stop:     $syslog $time $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/stop the postsrsd daemon
+# Description:       PostSRSd offers Sender Rewriting Scheme support for Postfix.
+### END INIT INFO
+
+set -e
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/sbin/postsrsd
+
+# Gracefully exit if the package has been removed.
+test -x $DAEMON || exit 0
+
+. /lib/lsb/init-functions
+
+ret=0
+
+case "$1" in
+  start)
+	log_daemon_msg "Starting postsrsd"
+	if start-stop-daemon --start --oknodo --quiet \
+		--name postsrsd --startas $DAEMON -- -C "/etc/postsrsd.conf"
+	then
+	    log_end_msg 0
+	else
+	    ret=$?
+	    log_end_msg 1
+	fi
+	;;
+  stop)
+	log_daemon_msg "Stopping postsrsd"
+	if start-stop-daemon --stop --oknodo --quiet --exec $DAEMON --name postsrsd
+	then
+	    log_end_msg 0
+	else
+	    ret=$?
+	    log_end_msg 1
+	fi
+	;;
+  reload|force-reload|restart)
+	$0 stop
+	$0 start
+	ret=$?
+	;;
+  *)
+	exit 1
+	;;
+esac
+
+exit $ret

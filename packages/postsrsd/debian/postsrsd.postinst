@@ -1,0 +1,42 @@
+#!/bin/sh
+
+CONFIGFILE=/etc/postsrsd.conf
+set -e
+. /usr/share/debconf/confmodule
+
+if [ "$1" = "configure" ]; then
+	if [ ! -f /etc/postsrsd.secret ]; then
+		echo "postsrsd: Generating initial /etc/postsrsd.secret" >&2
+		( umask 0077 ; dd if=/dev/urandom bs=24 count=1 2>/dev/null | base64 -w0 > /etc/postsrsd.secret )
+	fi
+
+	# We'll only write the configured domain to the config file if it doesn't
+	# exist yet, or we're called by dpkg-reconfigure.
+	db_get postsrsd/domain; DOMAIN="$RET"
+
+	if [ ! -e $CONFIGFILE ]; then
+		cp -a -f /usr/share/postsrsd/postsrsd.template $CONFIGFILE.tmp
+		# Replace empty domains with write configured domain to config file (but only if the domain is not empty).
+		if [ ! -z "$DOMAIN" ]; then
+			sed -i "s/^domains = {}/domains = { \"$DOMAIN\" }/" $CONFIGFILE.tmp
+		fi
+		mv -f $CONFIGFILE.tmp $CONFIGFILE
+	fi
+
+	if [ "$DEBCONF_RECONFIGURE" = "1" -a ! -z "$DOMAIN" ]; then
+		cp -a -f $CONFIGFILE $CONFIGFILE.tmp
+		sed -i "s/^domains = {.*/domains = { \"$DOMAIN\" }/" $CONFIGFILE.tmp
+		mv -f $CONFIGFILE.tmp $CONFIGFILE
+	fi
+
+	# Create user
+	if ! getent passwd postsrsd > /dev/null; then
+		adduser --quiet --system --group --no-create-home --home /var/lib/postsrsd postsrsd
+	fi
+fi
+
+# Stop communcation with debconf, as the daemon might get confused with the extra file
+# descriptor if we use an init system that doesn't close it.
+db_stop
+
+#DEBHELPER#

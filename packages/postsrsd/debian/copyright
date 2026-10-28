@@ -1,0 +1,105 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: postsrsd
+Source: https://github.com/roehling/postsrsd
+
+Files: *
+Copyright:
+ 2012-2023 Timo Röhling <timo@gaussglocke.de>
+License: GPL-3.0-only
+
+Files: .clang-format
+       .cmake-format.json
+       .pre-commit-config.yaml
+       data/*
+       doc/postsrsd.conf
+Copyright:
+ 2012-2023 Timo Röhling <timo@gaussglocke.de>
+License: FSFUL
+
+Files: .github/*
+       cmake/*
+Copyright:
+ 2022-2023 Timo Röhling <timo@gaussglocke.de>
+License: FSFAP
+
+Files: src/sha1.c
+       src/sha1.h
+       src/srs2.c
+       src/srs2.h
+Copyright:
+ Gisle Ass, Peter C. Gutmann, Bruce Schneier
+ 2004 Shevek <srs@anarres.org>
+ 2012-2023 Timo Röhling <timo@gaussglocke.de>
+License: BSD-3-Clause
+
+Files: debian/*
+Copyright:
+ 2014 Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>
+ 2012 Timo Röhling <timo.roehling@gmx.de>
+License: GPL-3.0-only
+
+Files: debian/po/*
+Copyright:
+ 2015 Michal Simunek <michal.simunek@gmail.com>
+ 2015 Joe Hansen <joedalton2@yahoo.dk>
+ 2015 Chris Leick <c.leick@vollbio.de>
+ 2015 Software in the Public Interest
+ 2015 French l10N team <debian-l1On-french@lists.debian.org>
+ 2015 Beatrice Torracca <beatricet@libero.it>
+ 2015 Frans Spiesschaert <Frans.Spiesschaert@yucom.be>
+ 2015 Tomasz Buchert <tomasz@debian.org>
+ 2015 Łukasz Dulny <BartekChom@poczta.onet.pl>
+ 2015 Adriano Rafael Gomes <adrianorg@arg.eti.br>
+ 2015 Américo Monteiro <a_monteiro@gmx.com>
+ 2015 Yuri Kozlov <yuray@komyakino.ru>
+ 2015 Camaleón <noelamac@gmail.com>
+License: GPL-3.0-only
+
+License: BSD-3-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+ * Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+ * Neither the name of the project nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: GPL-3.0-only
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, version 3.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <https://www.gnu.org/licenses/>
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 2 can be found in "/usr/share/common-licenses/GPL-3".
+
+License: FSFUL
+ The copyright holder gives unlimited permission to copy, distribute and modify
+ this file.
+
+License: FSFAP
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice and
+ this notice are preserved. This file is offered as-is, without any warranty.

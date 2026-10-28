@@ -1,0 +1,41 @@
+# Czech PO debconf template translation of postsrsd.
+# Copyright (C) 2015 Michal Simunek <michal.simunek@gmail.com>
+# This file is distributed under the same license as the postsrsd package.
+# Michal Simunek <michal.simunek@gmail.com>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: postsrsd 1.2-2\n"
+"Report-Msgid-Bugs-To: postsrsd@packages.debian.org\n"
+"POT-Creation-Date: 2015-09-30 06:57+0200\n"
+"PO-Revision-Date: 2015-10-06 10:15+0200\n"
+"Last-Translator: Michal Simunek <michal.simunek@gmail.com>\n"
+"Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
+"Language: cs\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid "Local domain name to use as origin:"
+msgstr "Místní doménové jméno:, které se má použít jako původ:"
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid ""
+"Please enter the domain name to use in rewritten addresses of forwarded "
+"mail. The SPF policy for that domain should allow this mail server to send "
+"mail."
+msgstr ""
+"Zadejte prosím doménové jméno, které se má použít v přepsaných adresách "
+"předané pošty. Zásady SPF pro tuto doménu musí tomuto poštovnímu serveru  "
+"umožňovat odesílat poštu."
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid "Without a configured local domain name, postsrsd will not start."
+msgstr "Bez nastaveného místního doménového jména se postsrsd nespustí."

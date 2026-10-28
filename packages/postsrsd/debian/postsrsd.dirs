@@ -1,0 +1,3 @@
+etc/init.d
+usr/share/postsrsd
+var/lib/postsrsd

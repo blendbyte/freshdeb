@@ -1,0 +1,135 @@
+postsrsd (2.4.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Abhijith PA <abhijith@debian.org>  Sun, 11 Oct 2026 15:53:16 +0530
+
+postsrsd (2.4.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Remove config from /etc/default and use /etc/postsrsd.conf
+    https://salsa.debian.org/debian/postsrsd/-/merge_requests/5
+    Thanks to MichaIng.
+
+ -- Abhijith PA <abhijith@debian.org>  Mon, 05 Oct 2026 17:00:20 +0530
+
+postsrsd (2.0.11-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * Update standards version to 4.6.1, no changes needed.
+
+  [ Abhijith PA ]
+  * New upstream release.
+  * Add myself as maintainer. (Closes: #1017361)
+  * Update standards version to 4.7.2, no changes needed.
+  * Add d/NEWS with migration information.
+  * d/rules: Remove /lib dir created during build. usrmerge.
+  * d/po/ca.po:Added po-debconf Catalan translation (Closes: #1106342)
+    Thanks to Carles Pina i Estany <carles@pina.cat> for MR.
+  * d/po/sv.po: Add·po-debconf·Swedish·translation  (Closes: #1072289)
+    Thanks to Martin Bagge / brother <brother@persilja.net>
+  * Add back postsrsd CHROOT_DIR in rules
+  * Add python3 to build-depends to run optional blackbox tests.
+  * Add d/install to move config file to /etc/default.
+  * d/rules: remove build time generated /usr/lib/sysusers.d dir.
+
+ -- Abhijith PA <abhijith@debian.org>  Mon, 01 Sep 2025 18:06:07 +0530
+
+postsrsd (1.10-2.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * removed obsolete dependency on lsb-base
+
+ -- Raju Devidas <mail@raju.dev>  Mon, 18 Mar 2024 14:39:24 +0530
+
+postsrsd (1.10-2) unstable; urgency=medium
+
+  * Fix CVE-2021-35525: potential DoS when Postfix sends certain long data
+    fields such as multiple concatenated email addresses. Fix backported from
+    upstream commit 077be98d8c8. (Closes: #990439)
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Wed, 14 Jul 2021 21:21:11 +0200
+
+postsrsd (1.10-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #975633)
+  * Drop patches integrated upstream
+  * Run upstream blackbox test during build
+  * Add autopkgtest for a roundtrip rewrite
+  * Don't write an empty SRS_DOMAIN setting if no value is provided by the user
+  * Don't replace entered domain with default if preconfiguration is used
+  * Update to debhelper compat level 13
+  * Update Standards-Version to 4.5.1 (no changes required)
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Wed, 02 Dec 2020 22:36:36 +0100
+
+postsrsd (1.6-1) unstable; urgency=medium
+
+  * New upstream release
+  * Update Standards-Version to 4.5.0 (no changes required)
+  * Add Rules-Requires-Root: no
+  * Fix init script to properly stop with dpkg >= 1.19.3 (cherry-pick upstream
+    02efc02)
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Fri, 17 Apr 2020 13:36:33 +0200
+
+postsrsd (1.5-2) unstable; urgency=medium
+
+  * Increase hashlength for unit tests (cherry-picked from upstream db9ed58)
+  * Fix SHA-1 implementation on big endian architectures (cherry-picked from
+    upstream 0b8f8be, Closes: #921189)
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Sat, 23 Feb 2019 14:27:44 +0100
+
+postsrsd (1.5-1) unstable; urgency=medium
+
+  [ Tomasz Buchert ]
+  * Update Standards-Version to 4.3.0
+  * Update to debhelper compat level 12
+  * Update Vcs-* fields to salsa
+
+  [ Oxan van Leeuwen ]
+  * New upstream release
+  * Add 'm' permission to apparmor profile (Closes: #915118)
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Sat, 19 Jan 2019 01:53:50 +0100
+
+postsrsd (1.4-1) unstable; urgency=low
+
+  [ Christian Perrier ]
+  * Debconf templates and debian/control reviewed by the debian-l10n-
+    english team as part of the Smith review project. Closes: #797861
+
+  [ Debconf translation updates ]
+  * Czech (Michal Simunek).  Closes: #801118
+  * German (Chris Leick).  Closes: #801149
+  * French (Julien Patriarca).  Closes: #801179
+  * Brazilian Portuguese (Adriano Rafael Gomes).  Closes: #801188
+  * Russian (Yuri Kozlov).  Closes: #801619
+  * Spanish (Camaleón).  Closes: #801685
+  * Dutch (Frans Spiesschaert).  Closes: #801705
+  * Portuguese (Américo Monteiro).  Closes: #801824
+  * Polish (Łukasz Dulny).  Closes: #801620
+  * Italian (Beatrice Torracca).  Closes: #801874
+  * Danish (Joe Hansen).  Closes: #801890
+
+  [ Oxan van Leeuwen ]
+  * New upstream release (Closes: #849307)
+  * Run under postsrsd user by default instead of nobody (Closes: #801916)
+  * Enable PIE and bindnow hardening options
+  * Don't overwrite SRS_DOMAIN setting when manually changed by user
+
+  [ Tomasz Buchert ]
+  * Bumped Standards-Version to 3.9.8
+  * Update to debhelper compat level 10 and drop dh-systemd dependency
+  * Use version 4 watch file
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Thu, 19 Jan 2017 15:07:09 +0100
+
+postsrsd (1.2-1) unstable; urgency=medium
+
+  * Initial release (Closes: #757720)
+
+ -- Oxan van Leeuwen <oxan@oxanvanleeuwen.nl>  Fri, 26 Dec 2014 17:35:38 +0100

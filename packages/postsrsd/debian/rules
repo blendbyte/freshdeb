@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+# export build flags
+DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/default.mk
+
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=Release -DGENERATE_SRS_SECRET=OFF -DPOSTSRSD_USER=postsrsd -DTESTS_WITH_ASAN=OFF -DCHROOT_DIR=/var/lib/postsrsd -DUSE_APPARMOR=ON -DFETCHCONTENT_TRY_FIND_PACKAGE_MODE=ALWAYS
+override_dh_auto_test:
+	dh_auto_test --buildsystem=cmake
+
+override_dh_install:
+	dh_install
+	dh_apparmor --profile-name=usr.sbin.postsrsd
+	install -m 0644 obj-$(DEB_HOST_GNU_TYPE)/postsrsd.conf debian/postsrsd/usr/share/postsrsd/postsrsd.template
+	rm -rf $(CURDIR)/debian/postsrsd/usr/lib/sysusers.d/
+
+override_dh_installinit:
+	dh_installinit --restart-after-upgrade

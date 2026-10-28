@@ -1,0 +1,44 @@
+# Dutch translation of postsrsd debconf templates.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the postsrsd package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Frans Spiesschaert <Frans.Spiesschaert@yucom.be>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: postsrsd\n"
+"Report-Msgid-Bugs-To: postsrsd@packages.debian.org\n"
+"POT-Creation-Date: 2015-09-30 06:57+0200\n"
+"PO-Revision-Date: 2015-09-30 12:15+0200\n"
+"Last-Translator: Frans Spiesschaert <Frans.Spiesschaert@yucom.be>\n"
+"Language-Team: Debian Dutch l10n Team <debian-l10n-dutch@lists.debian.org>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 2.91.6\n"
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid "Local domain name to use as origin:"
+msgstr "Als oorsprong te gebruiken lokale domeinnaam:"
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid ""
+"Please enter the domain name to use in rewritten addresses of forwarded "
+"mail. The SPF policy for that domain should allow this mail server to send "
+"mail."
+msgstr ""
+"Geef de in herschreven adressen en doorgestuurde post te gebruiken "
+"domeinnaam op. Het SPF-beleid voor dat domein moet deze mailserver toelaten "
+"om post te versturen."
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid "Without a configured local domain name, postsrsd will not start."
+msgstr "Zonder een ingestelde lokale domeinnaam kan postsrsd niet opstarten."

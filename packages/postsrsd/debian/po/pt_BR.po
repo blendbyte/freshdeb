@@ -1,0 +1,42 @@
+# Debconf translations for postsrsd.
+# Copyright (C) 2015 THE postsrsd'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the postsrsd package.
+# Adriano Rafael Gomes <adrianorg@arg.eti.br>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: postsrsd\n"
+"Report-Msgid-Bugs-To: postsrsd@packages.debian.org\n"
+"POT-Creation-Date: 2015-09-30 06:57+0200\n"
+"PO-Revision-Date: 2015-10-01 20:40-0300\n"
+"Last-Translator: Adriano Rafael Gomes <adrianorg@arg.eti.br>\n"
+"Language-Team: Brazilian Portuguese <debian-l10n-portuguese@lists.debian."
+"org>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid "Local domain name to use as origin:"
+msgstr "Nome de domínio local para usar como origem:"
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid ""
+"Please enter the domain name to use in rewritten addresses of forwarded "
+"mail. The SPF policy for that domain should allow this mail server to send "
+"mail."
+msgstr ""
+"Por favor, informe o nome de domínio para usar em endereços reescritos de "
+"mensagens encaminhadas. A política SPF para esse domínio deve permitir que "
+"esse servidor de e-mail envie e-mail."
+
+#. Type: string
+#. Description
+#: ../postsrsd.templates:2001
+msgid "Without a configured local domain name, postsrsd will not start."
+msgstr "Sem um nome de domínio local configurado, o postsrsd não iniciará."

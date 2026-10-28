@@ -1,0 +1,39 @@
+.TH POSTSRSD "8" "May 2024" "postsrsd"
+.SH NAME
+PostSRSd \- Sender Rewriting Scheme daemon for Postfix
+.SH SYNOPSIS
+.B postsrsd
+\fI\,\-s<file> \-d<domain> \/\fR[\fI\,other options\/\fR]
+.SH DESCRIPTION
+Sender Rewriting Scheme implementation for Postfix.
+.PP
+The Sender Rewriting Scheme (SRS) is a technique to forward
+mails from domains which deploy the Sender Policy Framework (SPF)
+to prohibit other Mail Transfer Agents (MTAs) from sending mails
+on their behalf. With SRS, an MTA can circumvent SPF restrictions
+by replacing the envelope sender with a temporary email address from
+one of their own domains. This temporary address is bound to the
+original sender and only valid for a certain amount of time, which
+prevents abuse by spammers.
+.SH OPTIONS
+.TP
+\fB\-h\fR
+show help
+.TP
+\fB\-C\fR<file>
+load configuration from <file> (default: /usr/local/etc/postsrsd.conf)
+.TP
+\fB\-c\fR<dir>
+use <dir> as chroot directory (default: /usr/local/var/lib/postsrsd)
+.TP
+\fB\-D\fR
+daemonize by forking into background
+.TP
+\fB\-p\fR<file>
+write PostSRSd process ID into <file>
+.TP
+\fB\-u\fR<user>
+drop root privileges and run as <user> (default: nobody)
+.TP
+\fB\-v\fR
+show version number

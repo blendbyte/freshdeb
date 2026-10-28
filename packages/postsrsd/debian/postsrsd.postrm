@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "purge" ]; then
+	rm -f /etc/postsrsd.secret
+	rm -f /etc/postsrsd.conf
+
+	if getent passwd postsrsd >/dev/null; then
+		if [ -x "$(command -v deluser)" ]; then
+			deluser --system postsrsd || echo "Could not remove postsrsd user."
+		fi
+	fi
+
+	if getent group postsrsd >/dev/null; then
+		if [ -x "$(command -v delgroup)" ]; then
+			delgroup --system postsrsd || echo "Could not remove postsrsd group."
+		fi
+	fi
+
+fi
+
+#DEBHELPER#

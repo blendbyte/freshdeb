@@ -1,0 +1,35 @@
+diff -ruN a/debian/postsrsd.init b/debian/postsrsd.init
+--- a/debian/postsrsd.init
++++ b/debian/postsrsd.init
+@@ -13,6 +13,10 @@
+ 
+ PATH=/sbin:/bin:/usr/sbin:/usr/bin
+ DAEMON=/usr/sbin/postsrsd
++# freshdeb: postsrsd 2.x stays in the foreground unless told to daemonize
++# (-D), so start-stop-daemon never returned; it writes a pid file (-p) to
++# stop it by.
++PIDFILE=/run/postsrsd.pid
+ 
+ # Gracefully exit if the package has been removed.
+ test -x $DAEMON || exit 0
+@@ -24,8 +28,8 @@
+ case "$1" in
+   start)
+ 	log_daemon_msg "Starting postsrsd"
+-	if start-stop-daemon --start --oknodo --quiet \
+-		--name postsrsd --startas $DAEMON -- -C "/etc/postsrsd.conf"
++	if start-stop-daemon --start --oknodo --quiet --pidfile $PIDFILE \
++		--exec $DAEMON -- -C "/etc/postsrsd.conf" -D -p $PIDFILE
+ 	then
+ 	    log_end_msg 0
+ 	else
+@@ -35,7 +39,8 @@
+ 	;;
+   stop)
+ 	log_daemon_msg "Stopping postsrsd"
+-	if start-stop-daemon --stop --oknodo --quiet --exec $DAEMON --name postsrsd
++	if start-stop-daemon --stop --oknodo --quiet --retry TERM/10/KILL/5 \
++		--pidfile $PIDFILE --exec $DAEMON --remove-pidfile
+ 	then
+ 	    log_end_msg 0
+ 	else

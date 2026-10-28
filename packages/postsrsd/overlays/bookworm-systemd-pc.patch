@@ -1,0 +1,12 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -10,7 +10,7 @@
+                libconfuse-dev,
+                pkgconf,
+                po-debconf,
+-               systemd-dev,
++               systemd,
+                python3
+ Standards-Version: 4.7.4
+ Vcs-Browser: https://salsa.debian.org/debian/postsrsd
