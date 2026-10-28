@@ -27,25 +27,25 @@ tracks:
   "9.1":
     tag: "9.1.3"
     commit: 29173b67508b2de4c0f0ed551f3b47cf19fc3ca8
-    revision: 1
+    revision: 2
     eol: 2031-05-19
     patches: patches/9.1
   "9.0":
     tag: "9.0.7"
     commit: fe8d406c0b5a64ec897f6455e4de684629883764
-    revision: 1
+    revision: 2
     eol: 2028-10-21
     patches: patches/9.0  # from Ubuntu's 9.0.4-0ubuntu0.2; Debian skipped 9.0
   "8.1":
     tag: "8.1.11"
     commit: 5fb5bc4b13b22084b54c7db2a88d14ce2f6fa867
-    revision: 1
+    revision: 2
     eol: 2030-03-31
     patches: patches/8.1  # from Debian 8.1.4+dfsg1-2, CVE patches dropped (upstream)
   "8.0":
     tag: "8.0.12"
     commit: 3982d41ef1984629a95b6f7ea0adc7e0ac2e3df7
-    revision: 1
+    revision: 2
     eol: 2027-09-15
     patches: patches/8.0  # from Debian 8.0.2+dfsg1-1
 
@@ -54,6 +54,9 @@ aliases:
   "8": "8.1"
 
 overlays:
+  # Upstream's bundled jemalloc instead of the system one (all releases):
+  # active defragmentation needs it.
+  - patch: overlays/bundled-jemalloc.patch
   # debhelper 13.6 has no dh_installsysusers; create the user and its
   # directories in postinst, the way Debian did before 9.1.
   - patch: overlays/legacy-sysusers.patch

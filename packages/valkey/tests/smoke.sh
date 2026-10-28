@@ -50,6 +50,14 @@ test "$(valkey-cli eval 'return bit.band(6, 3)' 0)" = "2"
 valkey-cli save
 valkey-check-rdb /var/lib/valkey/dump.rdb
 
+echo "upstream's bundled jemalloc: active defragmentation can be enabled"
+# Only a server built with the bundled jemalloc accepts it; with the
+# system's it answers "Active defragmentation cannot be enabled".
+memory="$(valkey-cli info memory)"
+[[ "$memory" == *mem_allocator:jemalloc-* ]] || { echo "$memory" >&2; exit 1; }
+test "$(valkey-cli config set activedefrag yes)" = OK
+valkey-cli config set activedefrag no >/dev/null
+
 echo "TLS support is compiled in"
 # Capture first: "cmd | grep -q" trips pipefail when grep exits early.
 cli_help="$(valkey-cli --help 2>&1 || true)"

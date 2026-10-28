@@ -6,10 +6,10 @@ diff -ruN a/debian/control b/debian/control
  Build-Depends:
   debhelper-compat (= 13),
 - dh-sequence-installsysusers,
-  libjemalloc-dev [linux-any],
   liblua5.1-dev,
   liblzf-dev,
-@@ -54,6 +53,7 @@
+  libssl-dev,
+@@ -53,6 +52,7 @@
  Package: valkey-tools
  Architecture: any
  Depends:
