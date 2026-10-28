@@ -123,7 +123,7 @@ class CatalogTests(unittest.TestCase):
         self.assertTrue(any("sha256 of the release tarball is required" in e for e in self.errors()))
 
     def test_sha256_without_tarball_is_rejected(self):
-        self.replace("    revision: 1\n    eol: 2031-05-19", "    revision: 1\n    sha256: " + "a" * 64 + "\n    eol: 2031-05-19")
+        self.replace("\n    eol: 2031-05-19", "\n    sha256: " + "a" * 64 + "\n    eol: 2031-05-19")
         self.assertTrue(any("only used with upstream.tarball" in e for e in self.errors()))
 
     def test_tarball_url_needs_version_placeholder(self):
@@ -200,6 +200,14 @@ class PlanTests(unittest.TestCase):
         git(self.repo, "-c", "user.name=t", "-c", "user.email=t@t", "add", "-A")
         git(self.repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "change")
 
+    def bump_valkey(self, key):
+        """Bump one valkey track's revision, whatever it is now."""
+        target = self.repo / "packages/valkey/package.yaml"
+        text, count = re.subn(rf'(\n  "{re.escape(key)}":\n(?:    .*\n)*?    revision: )(\d+)',
+                              lambda m: f"{m.group(1)}{int(m.group(2)) + 1}", target.read_text(), count=1)
+        self.assertEqual(count, 1)
+        target.write_text(text)
+
     def edit(self, path, old, new):
         target = self.repo / path
         text = target.read_text()
@@ -211,7 +219,7 @@ class PlanTests(unittest.TestCase):
         return {k: v["publish"] for k, v in selected.items()}, errors, aliases
 
     def test_track_bump_selects_only_that_track(self):
-        self.edit("packages/valkey/package.yaml", "revision: 1\n    eol: 2031-05-19", "revision: 2\n    eol: 2031-05-19")
+        self.bump_valkey("9.1")
         self.commit()
         selected, errors, _ = self.plan()
         self.assertEqual(errors, [])
@@ -233,7 +241,8 @@ class PlanTests(unittest.TestCase):
 
     def test_packaging_change_with_bumps(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
-        text = (self.repo / "packages/valkey/package.yaml").read_text().replace("revision: 1", "revision: 2")
+        text = re.sub(r"revision: (\d+)", lambda m: f"revision: {int(m.group(1)) + 1}",
+                      (self.repo / "packages/valkey/package.yaml").read_text())
         (self.repo / "packages/valkey/package.yaml").write_text(text)
         self.commit()
         selected, errors, _ = self.plan()
@@ -282,7 +291,7 @@ class PlanTests(unittest.TestCase):
         self.assertTrue(all(j["nocheck"] and not j["publish"] for j in matrix))
 
     def test_releases_run_upstream_tests_even_with_a_canary(self):
-        self.edit("packages/valkey/package.yaml", "revision: 1\n    eol: 2031-05-19", "revision: 2\n    eol: 2031-05-19")
+        self.bump_valkey("9.1")
         self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
         self.commit()
         selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
@@ -315,7 +324,7 @@ class PlanTests(unittest.TestCase):
 
     def test_unreleased_changes_are_planned_again(self):
         # Commit 1 bumps 9.1 but its release failed; commit 2 only touches docs.
-        self.edit("packages/valkey/package.yaml", "revision: 1\n    eol: 2031-05-19", "revision: 2\n    eol: 2031-05-19")
+        self.bump_valkey("9.1")
         self.commit()
         previous = git(self.repo, "rev-parse", "HEAD").strip()
         self.edit("packages/valkey/README.md", "# valkey", "# valkey\n")
