@@ -1,2 +1,4 @@
-0001-Default-my.cnf-in-the-prometheus-home.patch
-0002-Warn-when-DATA_SOURCE_NAME-is-set.patch
+# None: the binary is upstream's. Debian's 0001 (kingpin import path) is for
+# its library packages, and 0002 (sort scrapers) isn't needed since upstream
+# keeps them in a list (0.21). The service scripts (overlays/go-build.patch)
+# run it in /var/lib/prometheus and warn about DATA_SOURCE_NAME.

@@ -26,9 +26,9 @@ tracks:
   main:
     tag: "v0.21.0"
     commit: 8feed91b970d346a15c12f164957c8f9a0e3291e
-    revision: 1
+    revision: 2
     go: "1.27.3"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
-    patches: patches/main  # ours: ~/.my.cnf default, DATA_SOURCE_NAME warning; Debian's 0001 (kingpin import path) and 0002 (sorted scrapers; a list since 0.21) dropped
+    patches: patches/main  # empty: Debian's 0001 (kingpin import path) and 0002 (sorted scrapers; a list since 0.21) dropped
 
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang, and the

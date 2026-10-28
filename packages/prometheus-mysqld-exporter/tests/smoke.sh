@@ -27,13 +27,17 @@ linkage="$(ldd /usr/bin/prometheus-mysqld-exporter 2>&1 || true)"
 echo "system user"
 id prometheus
 
-echo "DATA_SOURCE_NAME alone: refuses to start, and says why"
-status=0
-output="$(runuser -u prometheus -- env DATA_SOURCE_NAME='prometheus:x@unix(/run/mysqld/mysqld.sock)/' \
-    timeout 10 prometheus-mysqld-exporter --config.my-cnf=/nonexistent \
-    --web.listen-address=127.0.0.1:19104 2>&1)" || status=$?
-[[ "$status" == 1 && "$output" == *"DATA_SOURCE_NAME is no longer supported"* ]] \
-    || { echo "exit status $status: $output" >&2; exit 1; }
+echo "DATA_SOURCE_NAME set: the service says it's no longer supported"
+defaults=/etc/default/prometheus-mysqld-exporter
+saved="$(mktemp)"
+cp "$defaults" "$saved"
+echo "DATA_SOURCE_NAME='prometheus:x@unix(/run/mysqld/mysqld.sock)/'" >> "$defaults"
+service prometheus-mysqld-exporter start || true
+log="$(cat /var/log/prometheus/prometheus-mysqld-exporter.log)"
+[[ "$log" == *"DATA_SOURCE_NAME is no longer supported"* ]] || { tail -n 20 <<<"$log" >&2; exit 1; }
+stop_exporter
+cp "$saved" "$defaults"
+rm -f "$saved"
 
 echo "MariaDB with a monitoring user, credentials in ~prometheus/.my.cnf"
 start_mariadb

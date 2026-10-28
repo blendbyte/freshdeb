@@ -37,7 +37,7 @@ diff -ruN a/debian/control b/debian/control
 diff -ruN a/debian/default b/debian/default
 --- a/debian/default
 +++ b/debian/default
-@@ -6,18 +6,30 @@
+@@ -6,18 +6,31 @@
  
  ### Database authentication
  #
@@ -50,8 +50,9 @@ diff -ruN a/debian/default b/debian/default
 -# To use UNIX domain sockets authentication with or without password:
 -# DATA_SOURCE_NAME="prometheus:nopassword@unix(/run/mysqld/mysqld.sock)/"
 -# DATA_SOURCE_NAME="prometheus@unix(/run/mysqld/mysqld.sock)/"
-+# The credentials are read from /var/lib/prometheus/.my.cnf (the prometheus
-+# user's ~/.my.cnf), or from the file given with --config.my-cnf, e.g.
++# The credentials are read from .my.cnf in the service's working directory,
++# /var/lib/prometheus (the prometheus user's ~/.my.cnf), or from the file
++# given with --config.my-cnf, e.g.
 +# ARGS="--config.my-cnf=/etc/prometheus/mysqld-exporter.cnf". It has to be
 +# readable by the prometheus user, and should not be readable by others:
 +#
@@ -79,7 +80,7 @@ diff -ruN a/debian/default b/debian/default
  
  ### Monitoring user creation.
  #
-@@ -31,3 +43,6 @@
+@@ -31,3 +44,6 @@
  #
  # Finally, to grant the necessary privileges:
  #   GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'prometheus'@'localhost';
@@ -94,14 +95,35 @@ diff -ruN a/debian/init b/debian/init
  LOGFILE=/var/log/prometheus/$NAME.log
  
 -export DATA_SOURCE_NAME
-+export DATA_SOURCE_NAME MYSQLD_EXPORTER_PASSWORD
++export MYSQLD_EXPORTER_PASSWORD
  
  START_ARGS="--no-close --background --make-pidfile"
  STOP_ARGS="--remove-pidfile"
+@@ -31,13 +31,19 @@
+ do_start_prepare()
+ {
+   mkdir -p $(dirname $PIDFILE)
++  # freshdeb: mysqld_exporter ignores it since 0.15 and then finds no
++  # configuration; say why.
++  if [ -n "$DATA_SOURCE_NAME" ]; then
++    echo "DATA_SOURCE_NAME is no longer supported and is ignored; put the credentials in /var/lib/prometheus/.my.cnf, see /usr/share/doc/prometheus-mysqld-exporter/NEWS.Debian.gz" >>$LOGFILE
++    log_warning_msg "$NAME: DATA_SOURCE_NAME is no longer supported, see /usr/share/doc/prometheus-mysqld-exporter/NEWS.Debian.gz"
++  fi
+ }
+ 
+ do_start_cmd_override()
+ {
+   start-stop-daemon --start --quiet --oknodo \
+     --exec $DAEMON --pidfile $PIDFILE --user $USER --group $GROUP \
+-    --chuid $USER:$GROUP $START_ARGS -- $ARGS >>$LOGFILE 2>&1
++    --chuid $USER:$GROUP --chdir /var/lib/prometheus $START_ARGS -- $ARGS >>$LOGFILE 2>&1
+ }
+ 
+ do_stop_cmd_override()
 diff -ruN a/debian/NEWS b/debian/NEWS
 --- a/debian/NEWS
 +++ b/debian/NEWS
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,47 @@
 +prometheus-mysqld-exporter (0.21.0-1) unstable; urgency=medium
 +
 +  freshdeb: selected mysql_global_status_* and mysql_slave_status_* metrics
@@ -115,8 +137,10 @@ diff -ruN a/debian/NEWS b/debian/NEWS
 +
 +  freshdeb: mysqld_exporter 0.15 no longer reads DATA_SOURCE_NAME. If you
 +  set it in /etc/default/prometheus-mysqld-exporter, the exporter does not
-+  start: it logs that DATA_SOURCE_NAME is ignored, and that it found no
-+  configuration. Move the credentials to /var/lib/prometheus/.my.cnf, owned
++  start: the service warns that DATA_SOURCE_NAME is ignored, and the
++  exporter that it found no configuration (in the journal, or without
++  systemd in /var/log/prometheus/prometheus-mysqld-exporter.log). Move the
++  credentials to /var/lib/prometheus/.my.cnf, owned
 +  by and readable only by the prometheus user:
 +
 +    [client]
@@ -128,9 +152,10 @@ diff -ruN a/debian/NEWS b/debian/NEWS
 +  with --config.my-cnf=<file> in ARGS. /etc/default/prometheus-mysqld-exporter
 +  documents the other settings.
 +
-+  /var/lib/prometheus/.my.cnf, the prometheus user's ~/.my.cnf, stays the
-+  default file this package reads (upstream's default since 0.15 is .my.cnf
-+  in the working directory), so setups that already used it keep working.
++  /var/lib/prometheus/.my.cnf, the prometheus user's ~/.my.cnf, is still
++  the file the service reads by default: upstream's default since 0.15 is
++  .my.cnf in the working directory, and the service runs in
++  /var/lib/prometheus. Setups that already used it keep working.
 +
 +  The scrape metrics mysql_exporter_scrapes_total,
 +  mysql_exporter_scrape_errors_total and mysql_last_scrape_failed are gone;
@@ -221,3 +246,19 @@ diff -ruN a/debian/rules b/debian/rules
 +
 +override_dh_auto_clean:
 +	rm -rf $(BUILDDIR)
+diff -ruN a/debian/service b/debian/service
+--- a/debian/service
++++ b/debian/service
+@@ -6,6 +6,12 @@
+ Restart=on-failure
+ User=prometheus
+ EnvironmentFile=/etc/default/prometheus-mysqld-exporter
++# freshdeb: upstream's default --config.my-cnf is .my.cnf in the working
++# directory: the prometheus user's ~/.my.cnf, as before 0.15.
++WorkingDirectory=/var/lib/prometheus
++# mysqld_exporter ignores DATA_SOURCE_NAME since 0.15 and then finds no
++# configuration; say why ($$: the shell expands it, not systemd).
++ExecStartPre=/bin/sh -c '[ -z "$$DATA_SOURCE_NAME" ] || echo "DATA_SOURCE_NAME is no longer supported and is ignored; put the credentials in /var/lib/prometheus/.my.cnf, see /usr/share/doc/prometheus-mysqld-exporter/NEWS.Debian.gz" >&2'
+ ExecStart=/usr/bin/prometheus-mysqld-exporter $ARGS
+ 
+ [Install]
