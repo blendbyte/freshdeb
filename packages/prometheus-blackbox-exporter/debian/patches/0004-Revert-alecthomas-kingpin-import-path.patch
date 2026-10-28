@@ -1,0 +1,34 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Wed, 14 Jun 2023 14:11:32 +0200
+Subject: Revert alecthomas/kingpin import path
+
+Forwarded: not-needed
+Last-Update: 2023-06-14
+
+Newer versions of alecthomas/kingpin use a different import path. This patch
+can be dropped once the golang-gopkg-alecthomas-kingpin.v2-dev package is
+updated and provides the new import path.
+---
+ main.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/main.go b/main.go
+index 8f1db28..c79e9e6 100644
+--- a/main.go
++++ b/main.go
+@@ -29,7 +29,6 @@ import (
+ 	"syscall"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
+ 	"github.com/prometheus/client_golang/prometheus/promauto"
+@@ -40,6 +39,7 @@ import (
+ 	"github.com/prometheus/exporter-toolkit/web"
+ 	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
+ 	"go.yaml.in/yaml/v3"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/blackbox_exporter/config"
+ 	"github.com/prometheus/blackbox_exporter/prober"

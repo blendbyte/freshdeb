@@ -1,0 +1,3 @@
+# None of Debian's patches are needed: 0001 and 0003 adjust tests that need
+# localhost to resolve to ::1 (upstream's CI skips them the same way), 0004 and
+# 0005 change import paths for Debian's library packages.

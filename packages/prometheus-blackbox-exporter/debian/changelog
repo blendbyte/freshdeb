@@ -1,0 +1,406 @@
+prometheus-blackbox-exporter (0.28.0-2) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Guillem Jover ]
+  * Bump Standards-Version to 4.7.4
+  * Namespace debhelper fragment files with binary package name
+  * Remove «Priority: optional», which is now the default
+  * Remove «Rules-Requires-Root: no», which is now the default
+  * Run wrap-and-sort -ast
+  * Switch debian/gitlab-ci.yml to debian/salsa-ci.yml
+  * Switch to debian/watch format version 5
+
+  [ Arthur Diniz ]
+  * d/control: Rename cel-go dependency to golang-cel-cel-go-dev
+  * d/patches: Add patch to migrate cel-go import path to cel.dev/cel-go
+
+ -- Arthur Diniz <arthurbd@debian.org>  Wed, 07 Oct 2026 22:01:34 +0100
+
+prometheus-blackbox-exporter (0.28.0-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #1126929)
+  * Drop obsolete 0005-Support-prometheus-common-v0.63.0.patch
+  * Refresh patches
+  * Add new Build-Depends:
+    - golang-github-google-cel-go-dev
+    - golang-github-lucas-clemente-quic-go-dev
+  * d/rules: ignore gRPC namespace conflict due to vendored files in
+    golang-github-google-cel-go-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 31 Mar 2026 14:16:32 +0000
+
+prometheus-blackbox-exporter (0.26.0-2) unstable; urgency=medium
+
+  * Modernize debian/rules to produce more visually appealing man page
+  * Add new 0005-Support-prometheus-common-v0.63.0.patch
+  * Bump Standards-Version to 4.7.2 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 17 Aug 2025 15:16:28 +0000
+
+prometheus-blackbox-exporter (0.26.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 0002-Use-deprecate-insecure-gRPC.patch
+  * Refresh remaining patches
+  * Drop unused Build-Depends golang-github-go-kit-log-dev
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint
+    (>= 0.13.0)
+  * Bump Standards-Version to 4.7.1 (no changes)
+  * Refresh packaging according to latest dh-make-golang template
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 26 Feb 2025 16:31:30 +0000
+
+prometheus-blackbox-exporter (0.25.0-2) unstable; urgency=medium
+
+  * i18n: add Swedish debconf translation (Closes: #1080161)
+    Thanks to Martin Bagge for providing this translation
+  * Bump Standards-Version to 4.7.0 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 30 Nov 2024 09:05:51 +0000
+
+prometheus-blackbox-exporter (0.25.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 0005-Support-prometheus-common-v0.50.0.patch (implemented
+    upstream)
+  * Drop obsolete Build-Dep golang-github-pkg-errors-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 11 Apr 2024 15:04:57 +0000
+
+prometheus-blackbox-exporter (0.24.0-3) unstable; urgency=medium
+
+  * Convert patches to gbp-pq format
+  * Add new 0005-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 17 Mar 2024 02:05:19 +0000
+
+prometheus-blackbox-exporter (0.24.0-2) unstable; urgency=medium
+
+  * debian/rules: fix override_dh_auto_install and remove superfluous entry
+    from debian/install
+  * debian/rules: mv instead of cp blackbox_exporter in dh_auto_build
+  * Add missing Build-Depends:
+    - golang-github-alecthomas-units-dev
+    - golang-github-pkg-errors-dev (Closes: #1058505)
+    - golang-gopkg-yaml.v2-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 22 Dec 2023 10:54:46 +0000
+
+prometheus-blackbox-exporter (0.24.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add new 04-Revert_kingpin_import_path.patch
+  * Bump minimum required golang-github-prometheus-common-dev version to
+    0.42.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 14 Jun 2023 12:34:02 +0000
+
+prometheus-blackbox-exporter (0.23.0-4) unstable; urgency=medium
+
+  * Add new 03-Fallback_to_IPv4_localhost_in_gRPC_tests.patch, to address the
+    issue of localhost not resolving to ::1 in reproducible builds
+    environment.
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 04 Jan 2023 23:34:41 +0000
+
+prometheus-blackbox-exporter (0.23.0-3) unstable; urgency=medium
+
+  * Re-enable insecure gRPC probing (thanks Shengjing Zhu for pointing out
+    that this is possible with a less intrusive patch)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 03 Jan 2023 12:16:54 +0000
+
+prometheus-blackbox-exporter (0.23.0-2) unstable; urgency=medium
+
+  * Refactor 03-disable-flaky-grpc-tests.patch into
+    02-disable-insecure-grpc.patch, since the reason for the tests failing is
+    that we have to strip out insecure gRPC support.
+  * Bump Standards-Version to 4.6.2 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 03 Jan 2023 11:11:15 +0000
+
+prometheus-blackbox-exporter (0.23.0-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release (fixes CVE-2022-46146)
+  * Drop unused build-dep golang-golang-x-text-dev
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+    to 0.8.2
+
+  [ Guillem Jover ]
+  * Remove --help output from default file
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 03 Dec 2022 04:57:29 +0000
+
+prometheus-blackbox-exporter (0.22.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Bump minimum required Go version to 1.16
+  * Add new 03-disable-flaky-grpc-tests.patch (Closes: #1020084)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 18 Sep 2022 15:30:00 +0000
+
+prometheus-blackbox-exporter (0.21.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add new build-dep golang-golang-x-text-dev
+  * Bump version constraint on golang-github-prometheus-common-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 13 Sep 2022 14:37:13 +0000
+
+prometheus-blackbox-exporter (0.20.0-1) unstable; urgency=medium
+
+  * New upstream version (Closes: #1010054)
+  * Disable insecure gRPC due to outdated dependencies (awaiting experimental
+    golang-google-grpc-dev package re-upload to unstable)
+  * Bump Standards-Version to 4.6.1 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 07 Sep 2022 21:50:01 +0000
+
+prometheus-blackbox-exporter (0.19.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Update default file for new upstream release.
+  * Install NOTICE file for Apache-2.0 license compliance.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 15 Mar 2022 23:05:26 +0100
+
+prometheus-blackbox-exporter (0.19.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * Update gitlab-ci.yml from its new refactored template.
+  * Update gbp.conf following latest Go Team workflow.
+  * Update debian/watch file.
+  * Use dh-sequence-golang instead of dh-golang and --with=golang.
+  * Switch to Standards-Version 4.6.0 (no changes needed).
+  * Add Repository-Browse upstream metadata field.
+  * Update Catalan debconf translation.
+  * Remove Files-Excluded from debian/copyright.
+  * Refresh and remove patches for new upstream release.
+  * Update dependencies for new upstream release.
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 30 Nov 2021 23:21:56 +0100
+
+prometheus-blackbox-exporter (0.18.0+ds-3) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Américo Monteiro ]
+  * Update Portuguese debconf translation (Closes: #982331)
+
+  [ Adriano Rafael Gomes ]
+  * Update Brazilian Portuguese debconf translation (Closes: #987435)
+
+  [ Camaleón ]
+  * Update Spanish debconf translation (Closes: #987596)
+
+  [ Guillem Jover ]
+  * Add Catalan debconf translation
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 28 May 2021 01:31:50 +0200
+
+prometheus-blackbox-exporter (0.18.0+ds-2) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Daniel Swarbrick ]
+  * Bump Standards-Version to 4.5.1 (no changes).
+  * d/po/de.po: remove obsolete FIXME comment
+
+  [ Frans Spiesschaert ]
+  * Add initial Dutch debconf translation (Closes: #969342).
+
+  [ Jean-Pierre Giraud ]
+  * Add initial French debconf translation (Closes: #969480).
+
+  [ Helge Kreutzmann ]
+  * Minor grammar fix in debian/templates (Closes: #968857).
+  * Add initial German debconf translation (Closes: #968856).
+
+  [ Guillem Jover ]
+  * Switch to debian/watch format version 4
+  * Indent debian/watch opts contents
+  * Decapitalize synopsis first word
+  * Move note about license location on Debian systems into a Comment field
+  * Update gitlab-ci.yml from latest upstream version
+  * Use $(BUILDDIR) uniformly instead of the literal build/
+  * Update version.BuildUser to match the Maintainer address
+  * Remove nocheck handling from override_dh_auto_test
+  * Change systemd service Restart directive from always to on-failure
+  * Add man:prometheus-blackbox-exporter(1) to systemd unit Documentation field
+  * Use '' instead of `' in text
+  * Use $() instead of `` in init script
+  * Remove $syslog dependency from init script
+  * Switch from /var/run to /run
+  * Add missing dependency on adduser
+  * Rewrite init script using start-stop-daemon
+  * Unify log files removal during purge into a single entry
+  * Add missing CFGFILE variable to fix init script config check
+  * Remove error suppression from postinst
+  * Run adduser unconditionally
+  * Do not change pathname metadata if there are dpkg statoverrides in place
+  * Update copyright claims
+  * Update gitignore entries
+
+ -- Guillem Jover <gjover@sipwise.com>  Fri, 29 Jan 2021 00:27:44 +0100
+
+prometheus-blackbox-exporter (0.18.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add 02-Enable_HTTP2.patch to facilitate building with newer
+    golang-github-prometheus-common-dev package.
+  * Revert unwarranted renaming of systemd service file.
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Tue, 20 Oct 2020 14:51:09 +0000
+
+prometheus-blackbox-exporter (0.17.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream version.
+  * Set upstream metadata fields: Repository.
+  * Bump Standards-Version to 4.5.0 (rename service / init files).
+  * Bump debhelper-compat version to 13.
+  * Drop obsolete 02-yaml-v2.patch.
+  * Drop obsolete 99-Skip_network_test.patch.
+  * Update yaml build-dep package name.
+  * d/control: add Rules-Requires-Root.
+  * d/templates: mark description as translatable.
+  * Run debconf-updatepo.
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit.
+
+  [ Martina Ferrari ]
+  * Update my email.
+  * Update team email address in Maintainer.
+  * Update debian/defaults.
+  * debian/control: run wrap-and-sort, and fix Section.
+  * debian/dirs: Create shared directories.
+  * debian/examples: Add missing example.yml.
+  * debian/init: Add SysV init support.
+  * debian/rules, debian/install, debian/manpages: Generate manpage and unify
+    package build with other exporters.
+  * debian/logrotate: Add logrotate configuration.
+  * debian/watch: Consider upstream RC version naming.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 03 Aug 2020 22:17:02 +0000
+
+prometheus-blackbox-exporter (0.16.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Drop unnecessary 02-Client_API_change.patch.
+  * Drop unnecessary 03-promlog-fix.patch.
+  * Add patch to revert upstream yaml.v3 dependency.
+  * Update Standards-Version to 4.4.1 (debhelper-compat = 12).
+  * Bump required Go version to 1.13.
+  * Add myself to uploaders.
+  * Skip additional network-dependent test, and only run short tests.
+
+  [ Martina Ferrari ]
+  * Update my name.
+  * Improve init script.
+  * Add Pre-Depends as requested by lintian.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 03 Jan 2020 15:53:54 +0000
+
+prometheus-blackbox-exporter (0.13.0+ds-2) unstable; urgency=medium
+
+  * Ask the user to have CAP_NET_RAW enabled for blackbox-exporter
+    (Closes: #872997)
+
+ -- Filippo Giunchedi <filippo@debian.org>  Sat, 19 Jan 2019 15:59:39 +0100
+
+prometheus-blackbox-exporter (0.13.0+ds-1) unstable; urgency=medium
+
+  [ Filippo Giunchedi ]
+  * New upstream release.
+  * debian/patches/03-promlog-fix.patch:
+      update promlog invocation for newer golang-github-prometheus-common-dev
+
+  [ Martina Ferrari ]
+  * debian/control: Shorten version matching in depends to satisfy lintian
+    and ease backports.
+  * Update Standards-Version with no changes.
+
+ -- Martina Ferrari <tina@debian.org>  Wed, 26 Dec 2018 17:01:09 +0000
+
+prometheus-blackbox-exporter (0.12.0+ds-2) unstable; urgency=high
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Martina Ferrari ]
+  * Backport 9d8ad26 to fix client API change. Closes: #906503.
+    Raising urgency for RC bug fix.
+  * debian/gbp.conf: Stop using pristine tar, and update branch names.
+  * debian/control: Update Standards-Version (no changes).
+
+ -- Martina Ferrari <tina@debian.org>  Sun, 19 Aug 2018 03:07:32 +0000
+
+prometheus-blackbox-exporter (0.12.0+ds-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #894130
+  * debian/control: Update dependency version.
+  * debian/copyright: Add Files-Excluded header.
+  * debian/{postinst,init}: Use non-recursive chown.
+  * Update debhelper compat to 11.
+
+ -- Martina Ferrari <tina@debian.org>  Mon, 26 Mar 2018 22:14:14 +0000
+
+prometheus-blackbox-exporter (0.11.0+ds-4) unstable; urgency=high
+
+  * Disable completely tcp_test.go until upstream fixes the tests.
+    Closes: 887070
+
+ -- Martina Ferrari <tina@debian.org>  Sat, 13 Jan 2018 13:41:14 +0000
+
+prometheus-blackbox-exporter (0.11.0+ds-3) unstable; urgency=high
+
+  * Disable a race-prone test that is causing FTBFS in many architectures
+    (raise urgency).
+  * Update Standards-Version.
+
+ -- Martina Ferrari <tina@debian.org>  Tue, 09 Jan 2018 17:41:35 +0000
+
+prometheus-blackbox-exporter (0.11.0+ds-2) unstable; urgency=medium
+
+  * Add missing documentation.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 14 Dec 2017 19:52:28 +0000
+
+prometheus-blackbox-exporter (0.11.0+ds-1) unstable; urgency=medium
+
+  * Replace dpkg-parsechangelog with /usr/share/dpkg/pkg-info.mk
+  * New upstream release.
+  * Update dependencies.
+  * Automated cme updates.
+  * Update fixtures location.
+  * Update defaults.
+  * Fix watchfile.
+
+ -- Martina Ferrari <tina@debian.org>  Thu, 14 Dec 2017 19:42:09 +0000
+
+prometheus-blackbox-exporter (0.7.0+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add watchfile.
+  * debian/control:
+    - Add myself to Uploaders.
+    - Update Standards-Version (no changes).
+    - Replace golang-go with golang-any in Build-Depends.
+    - Mark package as autopkgtest-able.
+    - Refresh dependencies.
+  * Replace debian/rules trick for creating tarballs with gbp config.
+
+ -- Martina Ferrari <tina@debian.org>  Fri, 14 Jul 2017 18:28:23 +0000
+
+prometheus-blackbox-exporter (0.3.0+ds1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #843189)
+
+ -- Filippo Giunchedi <filippo@debian.org>  Mon, 7 Nov 2016 00:25:52 +0000

@@ -1,0 +1,13 @@
+[Unit]
+Description=Blackbox exporter for Prometheus
+Documentation=https://prometheus.io/docs/introduction/overview/ man:prometheus-blackbox-exporter(1)
+
+[Service]
+Restart=on-failure
+User=prometheus
+EnvironmentFile=/etc/default/prometheus-blackbox-exporter
+ExecStart=/usr/bin/prometheus-blackbox-exporter $ARGS
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

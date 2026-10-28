@@ -1,0 +1,24 @@
+From: Martina Ferrari <tina@debian.org>
+Date: Tue, 9 Jan 2018 17:33:15 +0000
+Subject: Disable tcp tests that seem to fail under high load, causing FTBFS
+
+Forwarded: not-needed
+
+in many architectures.
+---
+ prober/tcp_test.go | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/prober/tcp_test.go b/prober/tcp_test.go
+index 5589ef3..32d7919 100644
+--- a/prober/tcp_test.go
++++ b/prober/tcp_test.go
+@@ -11,6 +11,8 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++// +build ignore
++
+ package prober
+ 
+ import (

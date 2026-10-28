@@ -1,0 +1,51 @@
+From: Arthur Diniz <arthurbd@debian.org>
+Date: Wed, 7 Oct 2026 22:10:37 +0100
+Subject: Migrate cel-go import path to cel.dev/cel-go
+
+Upstream cel-go moved from github.com/google/cel-go to the canonical
+cel.dev/cel-go vanity import path (repository now at
+github.com/cel-expr/cel-go under the dedicated cel-expr organization).
+
+Update imports in config/config.go and prober/http.go, and bump the
+dependency to cel.dev/cel-go v0.32.0.
+
+Ref: https://github.com/cel-expr/cel-go/issues/1329
+
+Bug-Debian: https://bugs.debian.org/1146564
+Forwarded: https://github.com/prometheus/blackbox_exporter/pull/1697
+Origin: https://github.com/prometheus/blackbox_exporter/pull/1697
+Last-Update: 2026-10-07
+
+Signed-off-by: Arthur Diniz <arthurbd@debian.org>
+---
+ config/config.go | 2 +-
+ prober/http.go   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/config/config.go b/config/config.go
+index f918be6..9f2d607 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -30,7 +30,7 @@ import (
+ 
+ 	"google.golang.org/grpc/metadata"
+ 
+-	"github.com/google/cel-go/cel"
++	"cel.dev/cel-go/cel"
+ 	"go.yaml.in/yaml/v3"
+ 
+ 	"github.com/alecthomas/units"
+diff --git a/prober/http.go b/prober/http.go
+index 41b9942..84142b0 100644
+--- a/prober/http.go
++++ b/prober/http.go
+@@ -35,8 +35,8 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"cel.dev/cel-go/cel"
+ 	"github.com/andybalholm/brotli"
+-	"github.com/google/cel-go/cel"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	pconfig "github.com/prometheus/common/config"
+ 	"github.com/prometheus/common/version"

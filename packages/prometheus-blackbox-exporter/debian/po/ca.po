@@ -1,0 +1,44 @@
+# prometheus-blackbox-exporter po-debconf translation to Catalan.
+# Copyright (C) 2021
+# This file is distributed under the same license as the prometheus-blackbox-exporter package.
+# Guillem Jover <guillem@debian.org>, 2021.
+
+msgid ""
+msgstr ""
+"Project-Id-Version: prometheus-blackbox-exporter\n"
+"Report-Msgid-Bugs-To: prometheus-blackbox-exporter@packages.debian.org\n"
+"POT-Creation-Date: 2021-01-24 16:54+0100\n"
+"PO-Revision-Date: 2021-11-30 23:02+0100\n"
+"Last-Translator: Guillem Jover <guillem@debian.org>\n"
+"Language-Team: Catalan <debian-l10n-catalan@lists.debian.org>\n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n!=1;\n"
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid "Enable additional network privileges for ICMP probing?"
+msgstr "Voleu activar privilegis de xarxa addicionals per al sondeig ICMP?"
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid ""
+"/usr/bin/prometheus-blackbox-exporter requires the CAP_NET_RAW capability to "
+"be able to send out crafted packets to targets for ICMP probing."
+msgstr ""
+"«/usr/bin/prometheus-blackbox-exporter» requereix la capacitat CAP_NET_RAW "
+"per poder enviar paquets fets a mà als objectius del sondeig ICMP."
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid ""
+"ICMP probing will not work unless this option is enabled, or prometheus-"
+"blackbox-exporter runs as root."
+msgstr ""
+"El sondeig ICMP no funcionarà fins que activeu aquesta opció o executeu "
+"«prometheus-blackbox-exporter» com a superusuari."

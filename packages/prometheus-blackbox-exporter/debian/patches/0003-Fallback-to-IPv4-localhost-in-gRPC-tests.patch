@@ -1,0 +1,90 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Thu, 5 Jan 2023 12:33:54 +1300
+Subject: Fallback to IPv4 name resolution in gRPC tests
+
+Bug: https://github.com/prometheus/blackbox_exporter/issues/969
+Last-Update: 2023-01-05
+
+This conforms to other tests in this repo. It should also address the issue
+of tests failing on reproducible builds, where localhost apparently does not
+resolve to ::1 in addition to 127.0.0.1.
+---
+ prober/grpc_test.go | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/prober/grpc_test.go b/prober/grpc_test.go
+index fc5ea0e..9b4ed14 100644
+--- a/prober/grpc_test.go
++++ b/prober/grpc_test.go
+@@ -70,7 +70,7 @@ func TestGRPCConnection(t *testing.T) {
+ 
+ 	result := ProbeGRPC(testCTX, "localhost:"+port,
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 		},
+ 		}, registry, promslog.NewNopLogger())
+ 
+@@ -246,7 +246,7 @@ func TestMultipleGRPCservices(t *testing.T) {
+ 
+ 	resultService1 := ProbeGRPC(testCTX, "localhost:"+port,
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 			Service:            "service1",
+ 		},
+ 		}, registryService1, promslog.NewNopLogger())
+@@ -258,7 +258,7 @@ func TestMultipleGRPCservices(t *testing.T) {
+ 	registryService2 := prometheus.NewRegistry()
+ 	resultService2 := ProbeGRPC(testCTX, "localhost:"+port,
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 			Service:            "service2",
+ 		},
+ 		}, registryService2, promslog.NewNopLogger())
+@@ -270,7 +270,7 @@ func TestMultipleGRPCservices(t *testing.T) {
+ 	registryService3 := prometheus.NewRegistry()
+ 	resultService3 := ProbeGRPC(testCTX, "localhost:"+port,
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 			Service:            "service3",
+ 		},
+ 		}, registryService3, promslog.NewNopLogger())
+@@ -347,7 +347,7 @@ func TestGRPCTLSConnection(t *testing.T) {
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+ 			TLS:                true,
+ 			TLSConfig:          pconfig.TLSConfig{InsecureSkipVerify: true},
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 		},
+ 		}, registry, promslog.NewNopLogger())
+ 
+@@ -411,7 +411,7 @@ func TestNoTLSConnection(t *testing.T) {
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+ 			TLS:                true,
+ 			TLSConfig:          pconfig.TLSConfig{InsecureSkipVerify: true},
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 		},
+ 		}, registry, promslog.NewNopLogger())
+ 
+@@ -467,7 +467,7 @@ func TestGRPCServiceNotFound(t *testing.T) {
+ 
+ 	result := ProbeGRPC(testCTX, "localhost:"+port,
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 			Service:            "NonExistingService",
+ 		},
+ 		}, registry, promslog.NewNopLogger())
+@@ -520,7 +520,7 @@ func TestGRPCHealthCheckUnimplemented(t *testing.T) {
+ 
+ 	result := ProbeGRPC(testCTX, "localhost:"+port,
+ 		config.Module{Timeout: time.Second, GRPC: config.GRPCProbe{
+-			IPProtocolFallback: false,
++			IPProtocolFallback: true,
+ 			Service:            "NonExistingService",
+ 		},
+ 		}, registry, promslog.NewNopLogger())

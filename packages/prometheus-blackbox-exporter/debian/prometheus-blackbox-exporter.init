@@ -1,0 +1,67 @@
+#!/bin/sh
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          prometheus-blackbox-exporter
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Blackbox prober for Prometheus
+# Description:       The blackbox exporter allows blackbox probing of network
+#                    endpoints over HTTP, HTTPS, DNS, TCP and ICMP.
+### END INIT INFO
+
+# Author: Martina Ferrari <tina@debian.org>
+# Author: Guillem Jover <gjover@sipwise.com>
+
+DESC="Blackbox prober for Prometheus"
+NAME=prometheus-blackbox-exporter
+USER=prometheus
+GROUP=$USER
+DAEMON=/usr/bin/$NAME
+PIDFILE=/run/prometheus/$NAME.pid
+LOGFILE=/var/log/prometheus/$NAME.log
+CFGFILE=/etc/prometheus/blackbox.yml
+
+START_ARGS="--no-close --background --make-pidfile"
+STOP_ARGS="--remove-pidfile"
+
+config_check()
+{
+  retcode=0
+  errors="$(/usr/bin/promtool check config $CFGFILE 2>&1)" || retcode=$?
+  if [ $retcode -ne 0 ]; then
+    log_failure_msg
+    echo "Configuration test failed. Output of config test was:" >&2
+    echo "$errors" >&2
+    exit 2
+  fi
+}
+
+do_start_prepare()
+{
+  config_check
+  mkdir -p $(dirname $PIDFILE)
+}
+
+do_start_cmd_override()
+{
+  start-stop-daemon --start --quiet --oknodo \
+    --exec $DAEMON --pidfile $PIDFILE --user $USER --group $GROUP \
+    --chuid $USER:$GROUP $START_ARGS -- $ARGS >>$LOGFILE 2>&1
+}
+
+do_stop_cmd_override()
+{
+  start-stop-daemon --stop --quiet --oknodo --retry=TERM/30/KILL/5 \
+    --exec $DAEMON --pidfile $PIDFILE --user $USER $STOP_ARGS
+}
+
+do_reload_prepare()
+{
+  config_check
+}
+alias do_reload=do_reload_sigusr1

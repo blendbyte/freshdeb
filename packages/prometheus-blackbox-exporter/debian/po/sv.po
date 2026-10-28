@@ -1,0 +1,44 @@
+# Translation of prometheus-blackbox-exporter debconf template to Swedish
+# Copyright (C) 2024 Martin Bagge <brother@persilja.net>
+# This file is distributed under the same license as the prometheus-blackbox-exporter package.
+#
+# Martin Bagge <brother@persilja.net>, 2024
+msgid ""
+msgstr ""
+"Project-Id-Version: prometheus-blackbox-exporter\n"
+"Report-Msgid-Bugs-To: prometheus-blackbox-exporter@packages.debian.org\n"
+"POT-Creation-Date: 2021-01-24 16:54+0100\n"
+"PO-Revision-Date: 2024-08-30 23:20+0200\n"
+"Last-Translator: Martin Bagge / <brother@persilja.net>\n"
+"Language-Team: Swedish <debian-l10n-swedish@lists.debian.org>\n"
+"Language: sv \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid "Enable additional network privileges for ICMP probing?"
+msgstr "Ska ytterligare nätverkstillgång tillåtas för ICMP-förfrågningar?"
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid ""
+"/usr/bin/prometheus-blackbox-exporter requires the CAP_NET_RAW capability to "
+"be able to send out crafted packets to targets for ICMP probing."
+msgstr ""
+"/usr/bin/prometheus-blackbox-exporter kräver inställningen CAP_NET_RAW för "
+"att kunna skicka speciellt framtagna paket för att göra förfrågningar över "
+"ICMP."
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid ""
+"ICMP probing will not work unless this option is enabled, or prometheus-"
+"blackbox-exporter runs as root."
+msgstr ""
+"ICMP-förfrågningarna kommer inte fungera utan att detta alternativ har "
+"aktiverats, så vida prometheus-blackbox-exporter inte körs som root."

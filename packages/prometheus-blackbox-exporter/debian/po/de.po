@@ -1,0 +1,44 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the prometheus-blackbox-exporter package.
+# Helge Kreutzmann <debian@helgefjell.de>, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: prometheus-blackbox-exporter 0.17.0+ds-1\n"
+"Report-Msgid-Bugs-To: prometheus-blackbox-exporter@packages.debian.org\n"
+"POT-Creation-Date: 2020-07-25 19:32+0200\n"
+"PO-Revision-Date: 2020-08-22 14:54+0200\n"
+"Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
+"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid "Enable additional network privileges for ICMP probing?"
+msgstr "Zusätzliche Netzwerkprivilegien für ICMP-Untersuchungen aktivieren?"
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid ""
+"/usr/bin/prometheus-blackbox-exporter requires the CAP_NET_RAW capability to "
+"be able to send out crafted packets to targets for ICMP probing."
+msgstr ""
+"/usr/bin/prometheus-blackbox-exporter benötigt die Capability CAP_NET_RAW, "
+"um in der Lage zu sein, handgefertigte Pakete zur ICMP-Untersuchung an Ziele "
+"zu senden."
+
+#. Type: boolean
+#. Description
+#: ../templates:1001
+msgid ""
+"ICMP probing will not work unless this option is enabled, or prometheus-"
+"blackbox-exporter runs as root."
+msgstr ""
+"ICMP-Untersuchungen werden nicht funktionieren, außer diese Option ist "
+"aktiviert oder prometheus-blackbox-exporter läuft als root."

@@ -1,0 +1,24 @@
+diff -ruN a/debian/prometheus-blackbox-exporter.init b/debian/prometheus-blackbox-exporter.init
+--- a/debian/prometheus-blackbox-exporter.init
++++ b/debian/prometheus-blackbox-exporter.init
+@@ -19,6 +19,9 @@
+ 
+ DESC="Blackbox prober for Prometheus"
+ NAME=prometheus-blackbox-exporter
++# freshdeb: the pid file and the binary identify the daemon; its name is
++# longer than the 15 characters start-stop-daemon can match, so reload failed.
++COMMAND_NAME=none
+ USER=prometheus
+ GROUP=$USER
+ DAEMON=/usr/bin/$NAME
+@@ -32,7 +35,9 @@
+ config_check()
+ {
+   retcode=0
+-  errors="$(/usr/bin/promtool check config $CFGFILE 2>&1)" || retcode=$?
++  # freshdeb: the exporter checks its own configuration; promtool checks
++  # Prometheus configurations only (and needs the prometheus package).
++  errors="$($DAEMON --config.check --config.file=$CFGFILE 2>&1)" || retcode=$?
+   if [ $retcode -ne 0 ]; then
+     log_failure_msg
+     echo "Configuration test failed. Output of config test was:" >&2
