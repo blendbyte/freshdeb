@@ -1,0 +1,85 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Sat, 17 Jun 2023 12:49:10 +0200
+Subject: Revert alecthomas/kingpin import path
+
+Forwarded: not-needed
+Last-Update: 2023-06-17
+
+Newer versions of alecthomas/kingpin use a different import path. This patch
+can be dropped once the golang-gopkg-alecthomas-kingpin.v2-dev package is
+updated and provides the new import path.
+---
+ collector/collector.go      | 2 +-
+ collector/collector_test.go | 2 +-
+ generator/main.go           | 2 +-
+ main.go                     | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/collector/collector.go b/collector/collector.go
+index 8a95d0e..ba356a6 100644
+--- a/collector/collector.go
++++ b/collector/collector.go
+@@ -26,10 +26,10 @@ import (
+ 	"sync"
+ 	"time"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/gosnmp/gosnmp"
+ 	"github.com/itchyny/timefmt-go"
+ 	"github.com/prometheus/client_golang/prometheus"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/snmp_exporter/config"
+ 	"github.com/prometheus/snmp_exporter/scraper"
+diff --git a/collector/collector_test.go b/collector/collector_test.go
+index 86b4e71..ab96d53 100644
+--- a/collector/collector_test.go
++++ b/collector/collector_test.go
+@@ -20,10 +20,10 @@ import (
+ 	"strings"
+ 	"testing"
+ 
+-	kingpin "github.com/alecthomas/kingpin/v2"
+ 	"github.com/gosnmp/gosnmp"
+ 	io_prometheus_client "github.com/prometheus/client_model/go"
+ 	"github.com/prometheus/common/promslog"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/snmp_exporter/config"
+ 	"github.com/prometheus/snmp_exporter/scraper"
+diff --git a/generator/main.go b/generator/main.go
+index d81bcda..3e8a4cf 100644
+--- a/generator/main.go
++++ b/generator/main.go
+@@ -21,10 +21,10 @@ import (
+ 	"regexp"
+ 	"strings"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/common/promslog"
+ 	"github.com/prometheus/common/promslog/flag"
+ 	"go.yaml.in/yaml/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/snmp_exporter/config"
+ )
+diff --git a/main.go b/main.go
+index 5ce40dd..6fa4966 100644
+--- a/main.go
++++ b/main.go
+@@ -24,7 +24,6 @@ import (
+ 	"sync"
+ 	"syscall"
+ 
+-	"github.com/alecthomas/kingpin/v2"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
+ 	"github.com/prometheus/client_golang/prometheus/promauto"
+@@ -35,6 +34,7 @@ import (
+ 	"github.com/prometheus/exporter-toolkit/web"
+ 	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
+ 	"go.yaml.in/yaml/v2"
++	"gopkg.in/alecthomas/kingpin.v2"
+ 
+ 	"github.com/prometheus/snmp_exporter/collector"
+ 	"github.com/prometheus/snmp_exporter/config"

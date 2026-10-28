@@ -1,0 +1,21 @@
+prometheus-snmp-exporter for Debian
+-----------------------------------
+
+Due to licensing reasons, it is not possible to ship a ready-to-use snmp.yml
+config file with this package.
+
+See generator/README.md for instructions on how to obtain SNMP MIBs and
+generate a suitable snmp.yml config.
+
+Most vendor MIBs will require the basic set of IANA & IETF MIBs to be present
+on the system. You can download these using the snmp-mibs-downloader:
+
+1. Activate the non-free repository in your APT sources.
+2. Install the snmp-mibs-downloader package.
+
+Upon installation of the package, it should automatically download a number of
+MIBs. You can refresh these at any time by executing the "download-mibs"
+command as root (or via sudo).
+
+The generator will search for MIBs in a variety of directories, including
+/usr/share/snmp/mibs, where the snmp-mibs-downloader will install them.

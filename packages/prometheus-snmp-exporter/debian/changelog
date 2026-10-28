@@ -1,0 +1,237 @@
+prometheus-snmp-exporter (0.30.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 09 Jan 2026 17:10:49 +0000
+
+prometheus-snmp-exporter (0.29.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh packaging according to latest dh-make-golang template
+  * Bump Standards-Version to 4.7.2 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 12 Aug 2025 15:19:18 +0000
+
+prometheus-snmp-exporter (0.28.0-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 07 Feb 2025 15:12:45 +0000
+
+prometheus-snmp-exporter (0.27.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Drop no longer used golang-github-go-kit-log-dev Build-Depends
+  * Bump golang-go Build-Depends version constraint to (>= 2:1.21~) due to
+    use of log/slog package
+  * Bump golang-github-prometheus-exporter-toolkit-dev version constraint to
+    (>= 0.13.0)
+  * Add new Build-Depends golang-github-itchyny-timefmt-go-dev
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 13 Jan 2025 09:20:25 +0000
+
+prometheus-snmp-exporter (0.26.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 0003-Support-prometheus-common-v0.50.0.patch (implemented
+    upstream)
+  * Refresh patches
+  * Bump Standards-Version to 4.7.0 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 11 May 2024 13:27:22 +0000
+
+prometheus-snmp-exporter (0.25.0-2) unstable; urgency=medium
+
+  * Add new 0003-Support-prometheus-common-v0.50.0.patch
+  * Bump golang-github-prometheus-client-golang-dev version constraint
+    (>= 1.19.0)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sun, 17 Mar 2024 02:33:47 +0000
+
+prometheus-snmp-exporter (0.25.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete 0003-Fix-collector-test-fixtures.patch (applied upstream)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Tue, 12 Dec 2023 17:04:18 +0000
+
+prometheus-snmp-exporter (0.24.1-2) unstable; urgency=medium
+
+  * Add new 0003-Fix-collector-test-fixtures.patch (Closes: #1054199)
+  * Bump minimum required golang-github-prometheus-client-golang-dev version
+    to 1.17.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Fri, 20 Oct 2023 18:19:42 +0000
+
+prometheus-snmp-exporter (0.24.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 02 Sep 2023 02:55:13 +0000
+
+prometheus-snmp-exporter (0.24.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Wed, 30 Aug 2023 12:09:37 +0000
+
+prometheus-snmp-exporter (0.23.0-1) unstable; urgency=medium
+
+  * New upstream release - with breaking changes
+  * debian/docs:
+    - add auth-split-migration.md
+    - drop CONTRIBUTING.md, MAINTAINERS.md
+  * debian/service: add basic systemd service hardening
+  * Convert patches to gbp-pq format
+  * Modernize debian/rules to produce more visually appealing man pages
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 17 Aug 2023 22:51:00 +0000
+
+prometheus-snmp-exporter (0.22.0-2) unstable; urgency=medium
+
+  * Drop obsolete 03-Support_older_client_model.patch
+  * Bump minimum required golang-github-prometheus-client-model-dev to 0.4.0
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Mon, 19 Jun 2023 08:57:24 +0000
+
+prometheus-snmp-exporter (0.22.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump minimum required golang-go version to 2:1.16~
+  * Refresh patches
+  * Add new patches:
+    - 02-Revert_kingpin_import_path.patch
+    - 03-Support_older_client_model.patch
+  * Add version constraints for golang-github-prometheus-client-model-dev
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+    version to 0.10.0
+  * Bump Standards-Version to 4.6.2 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 17 Jun 2023 11:36:46 +0000
+
+prometheus-snmp-exporter (0.21.0-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Drop obsolete patches:
+    - 02-max-repetitions-uint32.patch
+    - 03-go-kit-log.patch
+  * Refresh patch(es)
+  * Bump minimum required golang-github-prometheus-exporter-toolkit-dev
+
+  [ Guillem Jover ]
+  * Add value quoting information in default file comment header
+  * Remove --help output from default file
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Thu, 24 Nov 2022 01:44:11 +0000
+
+prometheus-snmp-exporter (0.20.0-3) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster
+  * Set upstream metadata fields: Repository-Browse.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 17 Oct 2022 15:12:55 +0100
+
+prometheus-snmp-exporter (0.20.0-2) unstable; urgency=medium
+
+  * Add patch to replace go-kit/kit/log with go-kit/log (Closes: #1002729)
+  * Bump Standards-Version to 4.6.1 (no changes)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 14 May 2022 15:56:15 +0000
+
+prometheus-snmp-exporter (0.20.0-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release
+  * Add new golang-github-prometheus-exporter-toolkit-dev build-dep
+  * Drop +ds version suffix, since we no longer have to unvendor
+  * Update copyright legal entity name
+  * Refresh patches
+    - Drop obsolete patch 02-soniah-gosnmp.patch
+    - Add new 02-max-repetitions-uint32.patch
+
+  [ Guillem Jover ]
+  * Update gitlab-ci.yml from its new refactored template
+  * Update gbp.conf following latest Go Team workflow
+  * Update debian/watch file
+  * Use dh-sequence-golang instead of dh-golang and --with=golang
+  * Switch to Standards-Version 4.6.0 (no changes needed)
+
+ -- Daniel Swarbrick <dswarbrick@debian.org>  Sat, 04 Dec 2021 15:45:18 +0000
+
+prometheus-snmp-exporter (0.19.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release (Closes: #976724)
+  * Bump Standards-Version to 4.5.1 (no changes)
+  * Update copyright holder
+  * Add 02-soniah-gosnmp.patch to fix gosnmp import path
+
+  [ Guillem Jover ]
+  * Add Restart=on-failure to systemd service
+  * Add sysvinit script and logrotate fragment file
+  * Create the prometheus user if needed
+  * Do not enable DH_VERBOSE by default
+  * Use $(BUILDDIR) uniformly in debian/rules
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Tue, 02 Feb 2021 12:46:11 +0100
+
+prometheus-snmp-exporter (0.18.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update maintainer email address.
+  * Bump debhelper-compat version to 13.
+  * Add upstream metadata field: Repository.
+  * Add Testsuite.
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Fri, 05 Jun 2020 18:25:52 +0200
+
+prometheus-snmp-exporter (0.17.0+ds-1) unstable; urgency=medium
+
+  [ Daniel Swarbrick ]
+  * New upstream release.
+  * Update Standards-Version to 4.5.0 (rename systemd service file).
+  * Bump golang-github-soniah-gosnmp build-dep version.
+  * lintian: Add Rules-Requires-Root to d/control.
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit.
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Thu, 27 Feb 2020 11:27:58 +0100
+
+prometheus-snmp-exporter (0.16.1+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update Standards-Version to 4.4.1 (debhelper-compat = 12).
+  * Bump required Go version to 1.13.
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Fri, 03 Jan 2020 14:34:08 +0100
+
+prometheus-snmp-exporter (0.15.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Support multi-index lookups (note: generator YAML config syntax change)
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Thu, 06 Jun 2019 17:36:19 +0200
+
+prometheus-snmp-exporter (0.14.0+ds-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add support for LLDP-MIB's LldpPortId
+  * Update Standards-Version to 4.3.0
+  * Add debian/gbp.conf to describe repo configuration.
+  * Add '+ds' suffix to version number to reflect repackaging done to remove
+    vendoring.
+  * Update watchfile for repackaging suffix.
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Mon, 21 Jan 2019 11:38:12 +0100
+
+prometheus-snmp-exporter (0.13.0-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #902120)
+
+ -- Daniel Swarbrick <daniel.swarbrick@cloud.ionos.com>  Wed, 12 Sep 2018 14:10:09 +0200

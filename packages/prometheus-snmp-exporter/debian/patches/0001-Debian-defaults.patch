@@ -1,0 +1,22 @@
+From: Daniel Swarbrick <dswarbrick@debian.org>
+Date: Wed, 12 Sep 2018 14:51:01 +0200
+Subject: Set default config path to /etc/prometheus/snmp.yml
+
+Forwarded: not-needed
+---
+ main.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/main.go b/main.go
+index c93a58d..5ce40dd 100644
+--- a/main.go
++++ b/main.go
+@@ -45,7 +45,7 @@ const (
+ )
+ 
+ var (
+-	configFile    = kingpin.Flag("config.file", "Path to configuration file.").Default("snmp.yml").Strings()
++	configFile    = kingpin.Flag("config.file", "Path to configuration file.").Default("/etc/prometheus/snmp.yml").Strings()
+ 	dryRun        = kingpin.Flag("dry-run", "Only verify configuration is valid and exit.").Default("false").Bool()
+ 	concurrency   = kingpin.Flag("snmp.module-concurrency", "The number of modules to fetch concurrently per scrape").Default("1").Int()
+ 	debugSNMP     = kingpin.Flag("snmp.debug-packets", "Include a full debug trace of SNMP packet traffics.").Default("false").Bool()

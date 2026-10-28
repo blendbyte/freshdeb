@@ -1,0 +1,57 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/pkg-info.mk
+
+# Uncomment this to enable verbose mode.
+#export DH_VERBOSE := 1
+
+METAPKG := github.com/prometheus/common
+
+BRANCH     := debian/sid
+USER       := team+pkg-go@tracker.debian.org
+BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+    +%Y%m%d-%H:%M:%S)
+GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+BUILDFLAGS  = -ldflags \
+  " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+    -X $(METAPKG)/version.Branch=$(BRANCH)\
+    -X $(METAPKG)/version.BuildUser=$(USER)\
+    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
+
+%:
+	dh $@ --builddir=_build --buildsystem=golang
+
+EXPORTER_BINNAME := $(DEB_SOURCE)
+GENERATOR_BINNAME := prometheus-snmp-generator
+
+override_dh_auto_build:
+	dh_auto_build -- $(BUILDFLAGS)
+	# Rename the binaries to match the debian package.
+	mv -v _build/bin/snmp_exporter _build/bin/$(EXPORTER_BINNAME)
+	mv -v _build/bin/generator _build/bin/$(GENERATOR_BINNAME)
+
+MAN_WHATIS_EXPORTER := $(EXPORTER_BINNAME) \\- Prometheus exporter for SNMP-enabled devices
+MAN_WHATIS_GENERATOR := $(GENERATOR_BINNAME) \\- Config generator for $(DEB_SOURCE)
+MAN_PROG_EXPORTER := $(shell echo $(EXPORTER_BINNAME) | tr [:lower:] [:upper:])
+MAN_PROG_GENERATOR := $(shell echo $(GENERATOR_BINNAME) | tr [:lower:] [:upper:])
+MAN_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' '+%B %Y')
+
+execute_before_dh_installman:
+	_build/bin/$(EXPORTER_BINNAME) --help-man > _build/$(EXPORTER_BINNAME).1
+	_build/bin/$(GENERATOR_BINNAME) --help-man > _build/$(GENERATOR_BINNAME).1
+	# Fix title header and footers.
+	sed -i '/^.TH .*/c.TH $(MAN_PROG_EXPORTER) "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        _build/$(EXPORTER_BINNAME).1
+	sed -i '/^.TH .*/c.TH $(MAN_PROG_GENERATOR) "1" "$(MAN_DATE)" "$(DEB_SOURCE) $(DEB_VERSION_UPSTREAM)" "Prometheus"/' \
+        _build/$(GENERATOR_BINNAME).1
+	# Remove build user/build date/go version headers, which is ugly.
+	sed -i '/^  /d' _build/*.1
+	# Fix whatis entries.
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n$(MAN_WHATIS_EXPORTER)' _build/$(EXPORTER_BINNAME).1
+	sed -i '/^.SH "NAME"/,+1c.SH "NAME"\n$(MAN_WHATIS_GENERATOR)' _build/$(GENERATOR_BINNAME).1
+	# Remove default values, as they create unwieldy long lines.
+	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' _build/*.1
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source

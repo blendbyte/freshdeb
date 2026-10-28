@@ -1,0 +1,2 @@
+debian/snmp.yml     etc/prometheus
+generator/README.md usr/share/doc/prometheus-snmp-exporter/generator

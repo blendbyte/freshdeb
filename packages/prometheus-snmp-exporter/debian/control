@@ -1,0 +1,40 @@
+Source: prometheus-snmp-exporter
+Section: golang
+Priority: optional
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders: Daniel Swarbrick <dswarbrick@debian.org>,
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13),
+               dh-sequence-golang,
+               golang-github-gosnmp-gosnmp-dev,
+               golang-github-itchyny-timefmt-go-dev,
+               golang-github-prometheus-client-golang-dev (>= 1.19.0),
+               golang-github-prometheus-client-model-dev (>= 0.4.0),
+               golang-github-prometheus-common-dev,
+               golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+               golang-go (>= 2:1.21~),
+               golang-gopkg-alecthomas-kingpin.v2-dev,
+               golang-gopkg-yaml.v2-dev,
+               libsnmp-dev,
+Testsuite: autopkgtest-pkg-go
+Standards-Version: 4.7.2
+Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-snmp-exporter
+Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-snmp-exporter.git
+Homepage: https://github.com/prometheus/snmp_exporter
+XS-Go-Import-Path: github.com/prometheus/snmp_exporter
+
+Package: prometheus-snmp-exporter
+Section: net
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends},
+Depends: adduser,
+         ${misc:Depends},
+         ${shlibs:Depends},
+Static-Built-Using: ${misc:Static-Built-Using}
+Description: Prometheus exporter for SNMP-enabled devices
+ An exporter for Prometheus which exposes information gathered from Simple
+ Network Management Protocol (SNMP) for use by the Prometheus monitoring
+ system.
+ .
+ There are two components - an exporter which does the actual scraping, and a
+ generator which creates the configuration for use by the exporter.

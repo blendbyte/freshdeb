@@ -1,0 +1,23 @@
+[Unit]
+Description=Prometheus exporter for SNMP-enabled devices
+Documentation=https://github.com/prometheus/snmp_exporter
+After=network.target
+
+[Service]
+Restart=on-failure
+User=prometheus
+EnvironmentFile=/etc/default/prometheus-snmp-exporter
+ExecStart=/usr/bin/prometheus-snmp-exporter $ARGS
+ExecReload=/bin/kill -HUP $MAINPID
+
+# systemd hardening options
+PrivateDevices=true
+PrivateTmp=true
+PrivateUsers=true
+ProtectHome=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

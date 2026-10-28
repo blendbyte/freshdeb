@@ -1,0 +1,142 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control	2026-10-28 07:55:29.796598525 +0800
++++ b/debian/control	2026-10-28 07:55:29.833837047 +0800
+@@ -5,18 +5,7 @@
+ Uploaders: Daniel Swarbrick <dswarbrick@debian.org>,
+ Rules-Requires-Root: no
+ Build-Depends: debhelper-compat (= 13),
+-               dh-sequence-golang,
+-               golang-github-gosnmp-gosnmp-dev,
+-               golang-github-itchyny-timefmt-go-dev,
+-               golang-github-prometheus-client-golang-dev (>= 1.19.0),
+-               golang-github-prometheus-client-model-dev (>= 0.4.0),
+-               golang-github-prometheus-common-dev,
+-               golang-github-prometheus-exporter-toolkit-dev (>= 0.13.0),
+-               golang-go (>= 2:1.21~),
+-               golang-gopkg-alecthomas-kingpin.v2-dev,
+-               golang-gopkg-yaml.v2-dev,
+                libsnmp-dev,
+-Testsuite: autopkgtest-pkg-go
+ Standards-Version: 4.7.2
+ Vcs-Browser: https://salsa.debian.org/go-team/packages/prometheus-snmp-exporter
+ Vcs-Git: https://salsa.debian.org/go-team/packages/prometheus-snmp-exporter.git
+@@ -30,7 +19,6 @@
+ Depends: adduser,
+          ${misc:Depends},
+          ${shlibs:Depends},
+-Static-Built-Using: ${misc:Static-Built-Using}
+ Description: Prometheus exporter for SNMP-enabled devices
+  An exporter for Prometheus which exposes information gathered from Simple
+  Network Management Protocol (SNMP) for use by the Prometheus monitoring
+diff -ruN a/debian/dirs b/debian/dirs
+--- a/debian/dirs
++++ b/debian/dirs
+@@ -0,0 +1 @@
++var/log/prometheus
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,3 +1,26 @@
++prometheus-snmp-exporter (0.31.0-1) unstable; urgency=medium
++
++  freshdeb: the distributions ship snmp_exporter 0.20 to 0.30; this is a
++  newer release, with these changes to the configuration:
++
++  * 0.23 (only from 0.20/0.21, Ubuntu 22.04 and Debian 12): a new
++    configuration format, see the entry below. The exporter doesn't start
++    with an snmp.yml in the old format; regenerate it with
++    prometheus-snmp-generator from a generator.yml with an "auths" section.
++  * 0.27: the UCD-SNMP-MIB OIDs moved out of the synology, ddwrt and
++    kemp_loadmaster modules of upstream's generator.yml into a new
++    ucd_la_table module; scrape that module too.
++  * 0.28: sysUpTime moved from the if_mib module to the new system module.
++  * 0.31: the generator maps enum lookups to string labels ("ioMemory"
++    instead of "2") and skips tables whose index can't be a label.
++
++  The exporter and the generator must be the same version: regenerate
++  snmp.yml with this package's prometheus-snmp-generator. Details are in
++  /usr/share/doc/prometheus-snmp-exporter/auth-split-migration.md and
++  https://github.com/prometheus/snmp_exporter/blob/main/CHANGELOG.md.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
+ prometheus-snmp-exporter (0.23.0-1) unstable; urgency=medium
+ 
+   BREAKING CHANGES: This version of the exporter introduces a new
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -4,32 +4,47 @@
+ # Uncomment this to enable verbose mode.
+ #export DH_VERBOSE := 1
+ 
++# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
++# modules instead of dh-golang and Debian's golang-* packages, which older
++# releases don't have, with the flags and version stamps of upstream's
++# release binaries. The toolchain, offline mode (GOFLAGS=-mod=vendor,
++# GOPROXY=off) and caches come from the build environment. The exporter is
++# static (CGO_ENABLED=0) like upstream's release binary; the generator uses
++# net-snmp's MIB parser, so it links libsnmp (cgo) like Debian's.
++
+ METAPKG := github.com/prometheus/common
+ 
+-BRANCH     := debian/sid
+-USER       := team+pkg-go@tracker.debian.org
++# The upstream commit, from the changelog entry freshdeb adds.
++REVISION   := $(or $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog),$(DEB_VERSION))
+ BUILD_DATE := $(shell date --utc --date='@$(SOURCE_DATE_EPOCH)' \
+     +%Y%m%d-%H:%M:%S)
+-GO_VERSION := $(shell go version | sed 's/go version \(\S*\).*/\1/')
+ BUILDFLAGS  = -ldflags \
+   " -X $(METAPKG)/version.Version=$(DEB_VERSION_UPSTREAM)\
+-    -X $(METAPKG)/version.Revision=$(DEB_VERSION)\
+-    -X $(METAPKG)/version.Branch=$(BRANCH)\
+-    -X $(METAPKG)/version.BuildUser=$(USER)\
+-    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)\
+-    -X $(METAPKG)/version.GoVersion=$(GO_VERSION)"
++    -X $(METAPKG)/version.Revision=$(REVISION)\
++    -X $(METAPKG)/version.Branch=HEAD\
++    -X $(METAPKG)/version.BuildUser=freshdeb\
++    -X $(METAPKG)/version.BuildDate=$(BUILD_DATE)"
+ 
+ %:
+-	dh $@ --builddir=_build --buildsystem=golang
++	dh $@
+ 
+ EXPORTER_BINNAME := $(DEB_SOURCE)
+ GENERATOR_BINNAME := prometheus-snmp-generator
+ 
++override_dh_auto_configure:
++
+ override_dh_auto_build:
+-	dh_auto_build -- $(BUILDFLAGS)
+-	# Rename the binaries to match the debian package.
+-	mv -v _build/bin/snmp_exporter _build/bin/$(EXPORTER_BINNAME)
+-	mv -v _build/bin/generator _build/bin/$(GENERATOR_BINNAME)
++	go version
++	CGO_ENABLED=0 go build $(BUILDFLAGS) -o _build/bin/$(EXPORTER_BINNAME) .
++	CGO_ENABLED=1 go build $(BUILDFLAGS) -o _build/bin/$(GENERATOR_BINNAME) ./generator
++
++# Upstream's test suite, as upstream's "make test" runs it; the generator's
++# tests need cgo like the generator.
++override_dh_auto_test:
++ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
++	CGO_ENABLED=0 go test -short $(BUILDFLAGS) $$(go list ./... | grep -v '/generator$$')
++	CGO_ENABLED=1 go test -short $(BUILDFLAGS) ./generator
++endif
+ 
+ MAN_WHATIS_EXPORTER := $(EXPORTER_BINNAME) \\- Prometheus exporter for SNMP-enabled devices
+ MAN_WHATIS_GENERATOR := $(GENERATOR_BINNAME) \\- Config generator for $(DEB_SOURCE)
+@@ -54,4 +69,11 @@
+ 	sed -i 's/\\fB--\(.*\)=".*"\\fR/\\fB--\1\\fR/' _build/*.1
+ 
+ override_dh_auto_install:
+-	dh_auto_install -- --no-source
++	install -D -m 0755 _build/bin/$(EXPORTER_BINNAME) debian/prometheus-snmp-exporter/usr/bin/$(EXPORTER_BINNAME)
++	install -D -m 0755 _build/bin/$(GENERATOR_BINNAME) debian/prometheus-snmp-exporter/usr/bin/$(GENERATOR_BINNAME)
++
++# Go binaries: nothing for dwz to compress.
++override_dh_dwz:
++
++override_dh_auto_clean:
++	rm -rf _build
