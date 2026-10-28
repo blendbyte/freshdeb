@@ -129,3 +129,29 @@ diff -ruN a/debian/rules b/debian/rules
 +
 +override_dh_auto_clean:
 +	rm -rf _build collector/fixtures/sys collector/fixtures/udev
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,3 +1,22 @@
++prometheus-node-exporter (1.12.1-3) unstable; urgency=medium
++
++  freshdeb: the defaults are upstream's now, except for the textfile
++  directory (/var/lib/prometheus/node-exporter). Debian's packages, and
++  this one up to 1.12.1-2, changed three more:
++
++   * The systemd collector is off by default, as upstream has it. To keep
++     its node_systemd_* metrics, add --collector.systemd to ARGS in
++     /etc/default/prometheus-node-exporter. It reports .target units too,
++     as upstream does (--collector.systemd.unit-exclude to change that).
++   * Filesystems mounted under /mnt, /media and /run are reported again;
++     upstream only leaves out /run/credentials. To exclude them as before:
++     --collector.filesystem.mount-points-exclude='^/(dev|proc|run|sys|mnt|media|var/lib/docker/.+|var/lib/containers/storage/.+)($|/)'
++   * Upstream's deprecated flags (--collector.netdev.device-whitelist and
++     -blacklist, --collector.systemd.unit-whitelist and -blacklist) are
++     accepted again, with a warning.
++
++ -- freshdeb <packages@freshdeb.com>  Wed, 28 Oct 2026 12:00:00 +0000
++
+ prometheus-node-exporter (0.18.1+ds-2) unstable; urgency=medium
+ 
+   This release removes the bundled textfile collector example scripts, since

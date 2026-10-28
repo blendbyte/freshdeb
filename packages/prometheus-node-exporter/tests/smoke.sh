@@ -25,6 +25,17 @@ echo "static binary"
 linkage="$(ldd /usr/bin/prometheus-node-exporter 2>&1 || true)"
 [[ "$linkage" == *"not a dynamic executable"* ]] || { echo "$linkage" >&2; exit 1; }
 
+echo "upstream's defaults, except the textfile directory"
+# Help text on one line: kingpin wraps it.
+help="$(prometheus-node-exporter --help 2>&1 | tr -s ' \n' ' ')"
+for text in "Enable the systemd collector (default: disabled)" \
+    '--collector.filesystem.mount-points-exclude="^/(dev|proc|run/credentials/.+|sys|' \
+    "--collector.textfile.directory=$TEXTFILE_DIR"; do
+    [[ "$help" == *"$text"* ]] || { echo "not in --help: $text" >&2; exit 1; }
+done
+# Upstream's deprecated flags are accepted (Debian's packages removed them).
+prometheus-node-exporter --collector.netdev.device-blacklist=lo --version >/dev/null
+
 echo "system user and textfile directory"
 id prometheus
 test -d "$TEXTFILE_DIR"
@@ -42,6 +53,7 @@ expect_metrics 9100 \
     'node_scrape_collector_success{collector="cpu"} 1'
 scrape="$(curl -fsS http://127.0.0.1:9100/metrics)"
 [[ "$scrape" == *"version=\"${expected}\""* ]] || { echo "build_info has no version ${expected}" >&2; exit 1; }
+[[ "$scrape" != *'collector="systemd"'* ]] || { echo "the systemd collector runs by default" >&2; exit 1; }
 
 echo "no reload (SIGHUP would stop it); force-reload restarts"
 if service prometheus-node-exporter reload >/dev/null 2>&1; then

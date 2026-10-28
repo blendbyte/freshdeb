@@ -26,9 +26,9 @@ tracks:
   main:
     tag: "v1.12.1"
     commit: 6044da783597cc3b57aef7580ddcdcff58a4ee99
-    revision: 2
+    revision: 3
     go: "1.26.10"  # upstream's release build: Go 1.26 (.promu.yml); go.mod: go 1.25.0
-    patches: patches/main  # Debian's 0001 (Debian defaults); 0002 (kingpin import path) and 0003 (in 1.12) dropped
+    patches: patches/main  # Debian's 0001 reduced to the textfile directory; 0002 (kingpin import path) and 0003 (in 1.12) dropped
 
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).

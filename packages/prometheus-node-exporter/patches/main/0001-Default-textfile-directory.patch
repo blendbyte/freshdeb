@@ -1,0 +1,23 @@
+From: Martina Ferrari <tina@debian.org>
+Subject: Default textfile directory /var/lib/prometheus/node-exporter
+
+freshdeb: Debian's 0001 ("Set defaults that make sense for Debian systems")
+reduced to the textfile directory, where prometheus-node-exporter-collectors
+writes its metrics. Upstream's other defaults (systemd collector off, the
+mount points it excludes, the deprecated flags) stay as upstream has them.
+
+Forwarded: not-needed
+---
+diff --git a/collector/textfile.go b/collector/textfile.go
+index 17e4a60..7753940 100644
+--- a/collector/textfile.go
++++ b/collector/textfile.go
+@@ -33,7 +33,7 @@ import (
+ )
+ 
+ var (
+-	textFileDirectories = kingpin.Flag("collector.textfile.directory", "Directory to read text files with metrics from, supports glob matching. (repeatable)").Default("").Strings()
++	textFileDirectories = kingpin.Flag("collector.textfile.directory", "Directory to read text files with metrics from, supports glob matching. (repeatable)").Default("/var/lib/prometheus/node-exporter").Strings()
+ 	mtimeDesc           = prometheus.NewDesc(
+ 		"node_textfile_mtime_seconds",
+ 		"Unixtime mtime of textfiles successfully read.",
