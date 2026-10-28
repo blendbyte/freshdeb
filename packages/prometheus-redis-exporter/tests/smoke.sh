@@ -39,6 +39,13 @@ scrape="$(curl -fsS http://127.0.0.1:9121/metrics)"
 info="$(grep '^redis_exporter_build_info{' <<<"$scrape" || true)"
 [[ "$info" == *"version=\"v${expected}\""* && "$info" =~ commit_sha=\"[0-9a-f]{40}\" ]] \
     || { echo "build_info has no commit or version v${expected}: $info" >&2; exit 1; }
+
+echo "no reload (SIGHUP would stop it); force-reload restarts"
+if service prometheus-redis-exporter reload >/dev/null 2>&1; then
+    echo "service prometheus-redis-exporter reload succeeded" >&2; exit 1
+fi
+service prometheus-redis-exporter force-reload
+wait_metrics 9121
 stop_exporter
 
 echo "password from --redis.password-file"

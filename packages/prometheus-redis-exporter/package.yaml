@@ -26,9 +26,12 @@ tracks:
   main:
     tag: "v1.96.0"
     commit: 9f6a2d1ecbc004851498bac7fc79e18793581979
-    revision: 1
+    revision: 2
     go: "1.27.3"  # upstream's release build: Go 1.27 (release workflow); go.mod: go 1.26.0
 
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
   - patch: overlays/go-build.patch
+  # No reload (systemd unit and init script): the exporter doesn't handle
+  # SIGHUP, so reloading stopped it.
+  - patch: overlays/no-reload.patch

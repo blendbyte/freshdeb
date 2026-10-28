@@ -42,6 +42,13 @@ expect_metrics 9100 \
     'node_scrape_collector_success{collector="cpu"} 1'
 scrape="$(curl -fsS http://127.0.0.1:9100/metrics)"
 [[ "$scrape" == *"version=\"${expected}\""* ]] || { echo "build_info has no version ${expected}" >&2; exit 1; }
+
+echo "no reload (SIGHUP would stop it); force-reload restarts"
+if service prometheus-node-exporter reload >/dev/null 2>&1; then
+    echo "service prometheus-node-exporter reload succeeded" >&2; exit 1
+fi
+service prometheus-node-exporter force-reload
+wait_metrics 9100
 stop_exporter
 
 echo "TLS and auth settings (--web.config.file) work"

@@ -1,0 +1,21 @@
+diff -ruN a/debian/prometheus-redis-exporter.init b/debian/prometheus-redis-exporter.init
+--- a/debian/prometheus-redis-exporter.init
++++ b/debian/prometheus-redis-exporter.init
+@@ -47,4 +47,5 @@
+     --exec $DAEMON --pidfile $PIDFILE --user $USER $STOP_ARGS
+ }
+ 
+-alias do_reload=do_reload_sigusr1
++# freshdeb: no reload. The exporter has nothing to reload, and the signal
++# (SIGHUP) stops it. force-reload restarts it.
+diff -ruN a/debian/prometheus-redis-exporter.service b/debian/prometheus-redis-exporter.service
+--- a/debian/prometheus-redis-exporter.service
++++ b/debian/prometheus-redis-exporter.service
+@@ -7,7 +7,6 @@
+ User=prometheus
+ EnvironmentFile=/etc/default/prometheus-redis-exporter
+ ExecStart=/usr/bin/prometheus-redis-exporter $ARGS
+-ExecReload=/bin/kill -HUP $MAINPID
+ TimeoutStopSec=20s
+ SendSIGKILL=no
+ 
