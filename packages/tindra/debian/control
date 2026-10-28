@@ -1,0 +1,26 @@
+Source: tindra
+Section: net
+Priority: optional
+Maintainer: freshdeb <packages@freshdeb.com>
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.7.0
+Homepage: https://tindra.sh
+Rules-Requires-Root: no
+
+Package: tindra
+Architecture: any
+Depends:
+ adduser,
+ openssl,
+ ${misc:Depends},
+Recommends:
+ postgresql,
+Description: self-hosted error tracking and performance monitoring
+ Tindra is self-hosted error tracking, performance, uptime and cron
+ monitoring that works with Sentry SDKs. It runs as one binary with one
+ PostgreSQL database and serves its web UI itself.
+ .
+ debconf asks for the public URL, sets up a local PostgreSQL database and
+ creates the first account; dpkg-reconfigure tindra changes the settings
+ later. Configuration is in /etc/tindra/tindra.env, data in /var/lib/tindra.

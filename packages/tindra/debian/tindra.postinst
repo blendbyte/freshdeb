@@ -1,0 +1,259 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+CONF=/etc/tindra/tindra.env
+DATA=/var/lib/tindra
+ACCOUNT_DONE=$DATA/.debconf-account-created
+
+# Everything below talks debconf on stdout: messages go to stderr.
+note() {
+    echo "tindra: $*" >&2
+}
+
+value() {
+    sed -n "s/^$1=//p" "$CONF" | tail -n 1
+}
+
+# set_key KEY VALUE: set KEY in the configuration, keeping everything else
+# (comments, the admin's own settings) as it is.
+set_key() {
+    tmp="$(mktemp)"
+    KEY="$1" VALUE="$2" awk '
+        BEGIN { key = ENVIRON["KEY"]; val = ENVIRON["VALUE"] }
+        index($0, key "=") == 1 { if (!done) print key "=" val; done = 1; next }
+        { print }
+        END { if (!done) print key "=" val }
+    ' "$CONF" > "$tmp"
+    cat "$tmp" > "$CONF"
+    rm -f "$tmp"
+}
+
+# run_tindra ARGS: the CLI as the tindra user with the configuration.
+run_tindra() {
+    (cd / && runuser -u tindra -- env TINDRA_ENV_FILE="$CONF" /usr/bin/tindra "$@") >&2
+}
+
+postgres_sql() {
+    (cd / && runuser -u postgres -- psql -X -q -v ON_ERROR_STOP=1 "$@")
+}
+
+# setup_local_database: role and database "tindra" on this machine's
+# PostgreSQL, with a new random password; writes DATABASE_URL.
+setup_local_database() {
+    if ! command -v psql >/dev/null 2>&1 || ! id -u postgres >/dev/null 2>&1 \
+        || ! postgres_sql -Atc 'SELECT 1' >/dev/null 2>&1; then
+        note "no PostgreSQL server is running on this machine yet; start it (or install"
+        note "postgresql) and run \"dpkg-reconfigure tindra\" to finish the setup."
+        return 1
+    fi
+    port="$(postgres_sql -Atc 'SHOW port')"
+    password="$(openssl rand -hex 24)"
+    # On stdin, so the password stays out of the process list.
+    postgres_sql >&2 <<SQL
+SELECT format('CREATE ROLE tindra LOGIN PASSWORD %L', '$password')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'tindra') \gexec
+ALTER ROLE tindra LOGIN PASSWORD '$password';
+SELECT 'CREATE DATABASE tindra OWNER tindra'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tindra') \gexec
+SQL
+    set_key DATABASE_URL "postgres://tindra:$password@localhost:$port/tindra?sslmode=disable"
+    note "created the PostgreSQL role and database tindra"
+}
+
+# write_debconf: the keys debconf manages, from its answers.
+write_debconf() {
+    db_get tindra/public_url
+    url="${RET%/}"
+    set_key PUBLIC_URL "$url"
+    case "$url" in
+        https://*) set_key COOKIE_SECURE true ;;
+        *) set_key COOKIE_SECURE false ;;
+    esac
+    db_get tindra/port
+    port="${RET:-8080}"
+    # A Unix socket is the admin's choice; dpkg-reconfigure doesn't touch it.
+    case "$(value BIND_ADDR)" in
+        unix:*) ;;
+        *)
+            db_get tindra/local_proxy
+            if [ "$RET" = true ]; then
+                set_key BIND_ADDR "127.0.0.1:$port"
+                set_key TRUSTED_PROXIES "127.0.0.1,::1"
+            else
+                set_key BIND_ADDR ":$port"
+                db_get tindra/trusted_proxies
+                set_key TRUSTED_PROXIES "$RET"
+            fi
+            ;;
+    esac
+    if [ -z "$(value DATABASE_URL)" ]; then
+        db_get tindra/local_database
+        if [ "$RET" = false ]; then
+            db_get tindra/database_url
+            set_key DATABASE_URL "$RET"
+        fi
+    fi
+}
+
+# mirror_file: debconf follows the configuration, so dpkg-reconfigure starts
+# from what the admin has.
+mirror_file() {
+    [ -n "$(value PUBLIC_URL)" ] && db_set tindra/public_url "$(value PUBLIC_URL)"
+    case "$(value BIND_ADDR)" in
+        127.0.0.1:*) db_set tindra/port "$(value BIND_ADDR | sed 's/.*://')"; db_set tindra/local_proxy true ;;
+        :*|0.0.0.0:*)
+            db_set tindra/port "$(value BIND_ADDR | sed 's/.*://')"
+            db_set tindra/local_proxy false
+            db_set tindra/trusted_proxies "$(value TRUSTED_PROXIES)"
+            ;;
+    esac
+    return 0
+}
+
+# create_account: the first account from debconf, once. The password is
+# passed on stdin and removed from debconf afterwards.
+create_account() {
+    [ -e "$ACCOUNT_DONE" ] && return 0
+    db_get tindra/admin_email
+    email="$RET"
+    db_get tindra/admin_password
+    password="$RET"
+    db_set tindra/admin_password ""
+    [ -n "$email" ] && [ -n "$password" ] || return 0
+    db_get tindra/admin_name
+    name="${RET:-$email}"
+    if printf '%s\n' "$password" | run_tindra users create --email "$email" --name "$name" --password-stdin; then
+        touch "$ACCOUNT_DONE"
+        note "created the account $email"
+    else
+        note "could not create the account $email; run \"dpkg-reconfigure tindra\" or"
+        note "\"tindra users create\" (as the tindra user) again."
+    fi
+}
+
+configured() {
+    [ -n "$(value PUBLIC_URL)" ] && [ -n "$(value DATABASE_URL)" ]
+}
+
+# postgresql_pending: a PostgreSQL server is installed in this same dpkg run
+# but not configured yet (apt doesn't order Recommends). Our trigger on
+# /usr/lib/postgresql then finishes the setup once it is.
+postgresql_pending() {
+    dpkg-query -W -f '${db:Status-Abbrev} ${Package}\n' 'postgresql-[0-9]*' 2>/dev/null \
+        | grep -q '^i[UHFWt]'
+}
+
+# local_database_wanted: a URL, no database yet, and debconf says local.
+local_database_wanted() {
+    [ -n "$(value PUBLIC_URL)" ] && [ -z "$(value DATABASE_URL)" ] || return 1
+    db_get tindra/local_database
+    [ "$RET" = true ]
+}
+
+# start_configured WAS_CONFIGURED: migrations, the first account, and the
+# service enabled (if configured just now) and (re)started.
+start_configured() {
+    if ! run_tindra migrate; then
+        note "the database migrations failed; Tindra isn't started. Check DATABASE_URL"
+        note "in $CONF and run \"dpkg-reconfigure tindra\"."
+        return 0
+    fi
+    create_account
+    # deb-systemd-helper wants to know the package; dpkg-reconfigure doesn't
+    # tell it.
+    export DPKG_MAINTSCRIPT_PACKAGE="${DPKG_MAINTSCRIPT_PACKAGE:-tindra}"
+    if [ "$1" = false ]; then
+        # Configured just now: enable it. The unit is installed disabled
+        # (dh_installsystemd --no-enable), and deb-systemd-helper won't enable
+        # a unit it recorded as disabled, so its record goes first.
+        deb-systemd-helper purge tindra.service >/dev/null || true
+        deb-systemd-helper enable tindra.service >/dev/null || true
+    fi
+    # Started or restarted if enabled; an admin's "disable" stays.
+    if [ -d /run/systemd/system ] && deb-systemd-helper --quiet is-enabled tindra.service; then
+        systemctl --system daemon-reload >/dev/null || true
+        deb-systemd-invoke restart tindra.service >/dev/null || true
+    fi
+}
+
+# not_started: what's missing; the account password only stays in debconf
+# while a PostgreSQL install in this run can still complete the setup.
+not_started() {
+    if local_database_wanted && postgresql_pending; then
+        # Runs our "triggered" step at the end of this dpkg run, after
+        # PostgreSQL's own setup.
+        dpkg-trigger --no-await tindra-database-setup || true
+        note "the database is set up once PostgreSQL is installed."
+        return 0
+    fi
+    db_set tindra/admin_password ""
+    note "not configured yet, so not started: run \"dpkg-reconfigure tindra\"."
+}
+
+case "$1" in
+    configure|reconfigure)
+        adduser --quiet --system --group --home "$DATA" --no-create-home \
+            --shell /usr/sbin/nologin tindra
+        # Created here, not shipped: dpkg would reset owner and mode on upgrades.
+        if [ ! -d "$DATA" ]; then
+            install -d -o tindra -g tindra -m 0750 "$DATA"
+        fi
+        if [ ! -d /etc/tindra ]; then
+            install -d -o root -g tindra -m 0750 /etc/tindra
+        fi
+
+        was_configured=false
+        fresh=false
+        if [ ! -f "$CONF" ]; then
+            install -o root -g tindra -m 0640 /usr/share/tindra/tindra.env "$CONF"
+            fresh=true
+        elif configured; then
+            was_configured=true
+        fi
+
+        # Answers apply on a fresh configuration, on dpkg-reconfigure, and while
+        # it isn't configured yet; upgrades keep the file as the admin left it.
+        if [ "$fresh" = true ] || [ "$1" = reconfigure ] || [ -n "$DEBCONF_RECONFIGURE" ] \
+            || [ "$was_configured" = false ]; then
+            write_debconf
+            if local_database_wanted && ! postgresql_pending; then
+                setup_local_database || true
+            fi
+        else
+            mirror_file
+        fi
+
+        if configured; then
+            start_configured "$was_configured"
+        else
+            not_started
+        fi
+    ;;
+
+    triggered)
+        # A PostgreSQL server was installed or upgraded: finish a setup that
+        # waited for it.
+        if [ -f "$CONF" ] && ! configured && local_database_wanted; then
+            setup_local_database || true
+            if configured; then
+                start_configured false
+            else
+                not_started
+            fi
+        fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

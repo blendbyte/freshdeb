@@ -1,0 +1,47 @@
+[Unit]
+Description=Tindra error tracking and monitoring
+Documentation=https://tindra.sh/docs
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tindra
+Group=tindra
+WorkingDirectory=/var/lib/tindra
+# Tindra reads the file itself (a missing one is an error), so SIGHUP can
+# reload it; reload applies the project, event and user limits, other
+# settings need a restart.
+Environment=TINDRA_ENV_FILE=/etc/tindra/tindra.env
+ExecStart=/usr/bin/tindra serve
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+# Upstream's stop_grace_period: drain the in-memory ingestion queues.
+TimeoutStopSec=75
+
+# For BIND_ADDR=unix:/run/tindra/tindra.sock.
+RuntimeDirectory=tindra
+RuntimeDirectoryMode=0755
+ReadWritePaths=/var/lib/tindra
+CapabilityBoundingSet=
+LockPersonality=true
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

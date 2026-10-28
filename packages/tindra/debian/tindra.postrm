@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  purge)
+    # The configuration (with the database password) and the data directory
+    # (source maps, attachments). The PostgreSQL database and the tindra user
+    # stay; README.Debian says how to drop the database.
+    rm -rf /etc/tindra /var/lib/tindra
+  ;;
+
+  remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+  ;;
+
+  *)
+    echo "postrm called with unknown argument '$1'" >&2
+    exit 1
+  ;;
+esac
+
+#DEBHELPER#
+
+exit 0

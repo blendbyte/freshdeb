@@ -1,0 +1,54 @@
+#!/usr/bin/make -f
+
+# Built like upstream's release binaries (.github/workflows/release.yml):
+# CGO_ENABLED=0, -trimpath, -s -w and its version and commit stamps, with the
+# web UI from the release asset in internal/ui/dist, where its build puts it.
+# The pinned Go toolchain, offline mode (GOFLAGS=-mod=vendor, GOPROXY=off)
+# and caches come from the build environment.
+include /usr/share/dpkg/pkg-info.mk
+
+export CGO_ENABLED := 0
+
+# The upstream commit, from the changelog entry freshdeb adds.
+REVISION := $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog)
+LDFLAGS  := -s -w -X main.Version=v$(DEB_VERSION_UPSTREAM) -X main.Commit=$(REVISION)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	go version
+	mkdir -p internal/ui/dist
+	tar -xzf freshdeb-assets/web-ui.tar.gz -C internal/ui/dist
+	test -f internal/ui/dist/index.html
+	go build -trimpath -ldflags "$(LDFLAGS)" -o _build/tindra ./cmd/tindra
+
+# Upstream's tests need a PostgreSQL server; the smoke test runs the package
+# against the distribution's.
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	_build/tindra --help >/dev/null
+endif
+
+override_dh_auto_install:
+	install -D -m 0755 _build/tindra debian/tindra/usr/bin/tindra
+	install -D -m 0644 debian/tindra.env debian/tindra/usr/share/tindra/tindra.env
+	install -D -m 0644 .env.example debian/tindra/usr/share/doc/tindra/examples/env.example
+	install -d debian/tindra/usr/share/bash-completion/completions \
+	    debian/tindra/usr/share/zsh/vendor-completions \
+	    debian/tindra/usr/share/fish/vendor_completions.d
+	_build/tindra completion bash > debian/tindra/usr/share/bash-completion/completions/tindra
+	_build/tindra completion zsh > debian/tindra/usr/share/zsh/vendor-completions/_tindra
+	_build/tindra completion fish > debian/tindra/usr/share/fish/vendor_completions.d/tindra.fish
+
+# Enabled and started by postinst once debconf has a configuration.
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+# Go binary: nothing for dwz to compress.
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf _build internal/ui/dist

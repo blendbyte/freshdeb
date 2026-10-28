@@ -1,0 +1,67 @@
+Template: tindra/public_url
+Type: string
+Default:
+Description: Public URL of Tindra:
+ The address users and Sentry SDKs reach Tindra at, for example
+ https://tindra.example.com. With an https:// URL, login cookies are marked
+ secure.
+ .
+ Leave it empty to configure Tindra later with "dpkg-reconfigure tindra";
+ it isn't started until then.
+
+Template: tindra/port
+Type: string
+Default: 8080
+Description: Port Tindra listens on:
+
+Template: tindra/local_proxy
+Type: boolean
+Default: true
+Description: Is the reverse proxy (Caddy, nginx, ...) on this machine?
+ Tindra then listens on 127.0.0.1 only and trusts the proxy's forwarded
+ client addresses. Otherwise it listens on all interfaces.
+
+Template: tindra/trusted_proxies
+Type: string
+Default:
+Description: Addresses of the reverse proxies:
+ Comma-separated IP addresses or CIDRs of the proxies that forward requests
+ to Tindra, for example 10.0.0.5. Leave it empty when Tindra is reached
+ directly; it then ignores forwarded headers.
+
+Template: tindra/local_database
+Type: boolean
+Default: true
+Description: Set up a local PostgreSQL database for Tindra?
+ A role and a database "tindra" are created on this machine's PostgreSQL
+ server, with a random password. Choose no to use another server.
+
+Template: tindra/database_url
+Type: string
+Default:
+Description: PostgreSQL connection URL:
+ For example postgres://tindra:secret@db.example.com:5432/tindra. Characters
+ such as @, : or / in the password must be percent-encoded.
+
+Template: tindra/admin_email
+Type: string
+Default:
+Description: Email address of the first account:
+ This account gets full management permissions. Leave it empty to create
+ accounts later with "tindra users create".
+
+Template: tindra/admin_name
+Type: string
+Default:
+Description: Name of the first account:
+
+Template: tindra/admin_password
+Type: password
+Description: Password of the first account:
+ At least 12 characters. It is only used to create the account and isn't
+ stored.
+
+Template: tindra/password_too_short
+Type: error
+Description: The password is too short
+ Tindra needs at least 12 characters.

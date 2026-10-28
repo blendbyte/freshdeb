@@ -1,0 +1,88 @@
+Tindra for Debian and Ubuntu
+============================
+
+Setup
+-----
+
+debconf asks for the public URL, the port, whether the reverse proxy is on
+this machine, the database and the first account. With a local PostgreSQL
+server it creates the role and database "tindra" itself. Change the answers
+with:
+
+  sudo dpkg-reconfigure tindra
+
+When PostgreSQL is installed together with tindra (it's recommended), the
+database is set up at the end of the installation, once PostgreSQL's own
+setup is done; when it's installed later, as soon as it is. Until the public
+URL and a database are configured, Tindra isn't started.
+
+The configuration is /etc/tindra/tindra.env. dpkg-reconfigure manages
+PUBLIC_URL, BIND_ADDR, TRUSTED_PROXIES, COOKIE_SECURE and DATABASE_URL;
+add any other option (email, SSO, retention, limits) from
+/usr/share/doc/tindra/examples/env.example, then:
+
+  sudo systemctl restart tindra
+
+(systemctl reload tindra applies changed project, event and user limits
+without a restart.)
+
+The CLI reads the same file when run as the tindra user, for example:
+
+  sudo -u tindra tindra users create --email you@example.com --name "You"
+
+Unattended installs
+-------------------
+
+Preseed the answers before installing, for example:
+
+  tindra tindra/public_url string https://tindra.example.com
+  tindra tindra/port string 8080
+  tindra tindra/local_proxy boolean true
+  tindra tindra/trusted_proxies string
+  tindra tindra/local_database boolean true
+  tindra tindra/database_url string
+  tindra tindra/admin_email string you@example.com
+  tindra tindra/admin_name string You
+  tindra tindra/admin_password password <at least 12 characters>
+
+  sudo debconf-set-selections answers.txt
+
+The password is removed from debconf once the account exists.
+
+Reverse proxy
+-------------
+
+Tindra serves plain HTTP; terminate TLS in front of it. Caddy:
+
+  tindra.example.com {
+      reverse_proxy localhost:8080
+  }
+
+nginx (with your certificate settings):
+
+  server {
+      listen 443 ssl;
+      server_name tindra.example.com;
+
+      location / {
+          proxy_pass http://localhost:8080;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+      }
+  }
+
+Backups
+-------
+
+Back up the database and /var/lib/tindra (source maps, attachments):
+
+  sudo -u postgres pg_dump -Fc tindra > tindra.dump
+  sudo tar -czf tindra-data.tar.gz -C /var/lib tindra
+
+Purging the package removes /etc/tindra and /var/lib/tindra, not the
+database. To drop it as well:
+
+  sudo -u postgres dropdb tindra
+  sudo -u postgres dropuser tindra

@@ -1,0 +1,4 @@
+# PostgreSQL installed later: finish a setup that waited for it.
+interest-noawait /usr/lib/postgresql
+# Activated by postinst when PostgreSQL is configured later in the same run.
+interest-noawait tindra-database-setup
