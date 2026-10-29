@@ -1002,6 +1002,28 @@ class NetworkRetryTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
 
+    def test_published_is_false_only_for_a_404(self):
+        calls = []
+
+        def not_found(request, timeout):
+            calls.append(request.get_method())
+            raise freshdeb.urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+
+        freshdeb.urllib.request.urlopen = not_found
+        self.assertFalse(freshdeb.published("https://example.invalid/x.tar.gz"))
+        self.assertEqual(calls, ["HEAD"])
+
+        def forbidden(request, timeout):
+            raise freshdeb.urllib.error.HTTPError(request.full_url, 403, "Forbidden", {}, None)
+
+        freshdeb.urllib.request.urlopen = forbidden
+        with self.assertRaises(freshdeb.urllib.error.HTTPError):
+            freshdeb.published("https://example.invalid/x.tar.gz")
+
+        freshdeb.urllib.request.urlopen = lambda request, timeout: io.BytesIO()
+        self.assertTrue(freshdeb.published("https://example.invalid/x.tar.gz"))
+
+
 class WatchReportTests(unittest.TestCase):
     """The watch log: ours, upstream and the decision per track."""
 
@@ -1169,6 +1191,29 @@ class WatchFailureTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertEqual([(c["package"], c["tag"]) for c in json.loads(out.getvalue())], [("valkey", "9.1.99")])
         self.assertIn("ERROR: memcached: command failed", err.getvalue())
+
+    def test_tag_without_its_release_files_waits(self):
+        # Upstream pushed the tag, its release job hasn't uploaded the tarball yet.
+        memcached = freshdeb.load_package("memcached", ROOT)
+        tags = {memcached.tracks["main"].tag: memcached.tracks["main"].commit, "1.6.99": "a" * 40}
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(freshdeb, "remote_tags", lambda url: tags), \
+                mock.patch.object(freshdeb, "published", lambda url: "1.6.99" not in url), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            status = freshdeb.cmd_watch(SimpleNamespace(root=ROOT, packages=["memcached"], tracks=None,
+                                                        kinds=None, companions=None, apply=False))
+        self.assertEqual(status, 0)
+        self.assertEqual(json.loads(out.getvalue()), [])
+        self.assertIn("memcached main: 1.6.99 is tagged but https://memcached.org/files/memcached-1.6.99.tar.gz "
+                      "isn't published yet -> waiting for the next run", err.getvalue())
+
+    def test_release_urls_are_the_tarball_and_assets(self):
+        change = {"kind": "bump", "tag": "v0.34.2"}
+        self.assertEqual(freshdeb.release_urls(freshdeb.load_package("prometheus-alertmanager", ROOT), change),
+                         ["https://github.com/prometheus/alertmanager/releases/download/v0.34.2/"
+                          "alertmanager-web-ui-0.34.2.tar.gz"])
+        self.assertEqual(freshdeb.release_urls(freshdeb.load_package("valkey", ROOT), {"kind": "bump", "tag": "9.1.99"}),
+                         [])
 
 
 class CompanionTests(unittest.TestCase):

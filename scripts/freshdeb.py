@@ -103,6 +103,7 @@ def run(*args, cwd=None, check=True):
 # build or a watch run: retry them a few times.
 NETWORK_ATTEMPTS = 3
 NETWORK_RETRY_DELAY = 10
+USER_AGENT = "freshdeb (+https://github.com/blendbyte/freshdeb)"
 
 
 def run_network(*args, cwd=None):
@@ -1168,7 +1169,7 @@ def download(url, dest):
     """Download url to dest; returns its sha256. Retries server errors, rate
     limits, dropped connections and cut-off bodies; other client errors (a
     404) fail right away."""
-    request = urllib.request.Request(url, headers={"User-Agent": "freshdeb (+https://github.com/blendbyte/freshdeb)"})
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     for attempt in range(1, NETWORK_ATTEMPTS + 1):
         digest = hashlib.sha256()
         try:
@@ -1184,6 +1185,24 @@ def download(url, dest):
                     raise http.client.IncompleteRead(b"", int(length) - size)
             return digest.hexdigest()
         except (urllib.error.URLError, http.client.HTTPException, OSError) as error:
+            client_error = isinstance(error, urllib.error.HTTPError) and error.code < 500 and error.code != 429
+            if client_error or attempt == NETWORK_ATTEMPTS:
+                raise
+            print(f"retrying ({attempt}/{NETWORK_ATTEMPTS - 1}) {url} after: {error}", file=sys.stderr)
+            time.sleep(NETWORK_RETRY_DELAY * attempt)
+
+
+def published(url):
+    """Whether url is there: False on a 404, True when it answers. Retries
+    like download()."""
+    request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
+    for attempt in range(1, NETWORK_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=60):
+                return True
+        except (urllib.error.URLError, http.client.HTTPException, OSError) as error:
+            if isinstance(error, urllib.error.HTTPError) and error.code == 404:
+                return False
             client_error = isinstance(error, urllib.error.HTTPError) and error.code < 500 and error.code != 429
             if client_error or attempt == NETWORK_ATTEMPTS:
                 raise
@@ -1894,6 +1913,31 @@ def watch_report(pkg, tags, changes, go=None, today=None):
     return lines
 
 
+def release_urls(pkg, change):
+    """The release files apply_change pins for a change: its tarball and
+    assets."""
+    if change["kind"] == "toolchain":
+        return []
+    if change["kind"] == "companion":
+        companion = pkg.companions[change["companion"]]
+        url = companion.tarball_url(companion.upstream_version(change["tag"]))
+        return [url] if url else []
+    version = pkg.upstream_version(change["tag"])
+    url = pkg.tarball_url(version)
+    return ([url] if url else []) + [template.format(version=version) for template in pkg.assets.values()]
+
+
+def unpublished(pkg, changes):
+    """{change index: URL} for changes whose tag is out but whose release
+    files aren't yet: upstreams tag first and upload a few minutes later."""
+    missing = {}
+    for index, change in enumerate(changes):
+        url = next((u for u in release_urls(pkg, change) if not published(u)), None)
+        if url:
+            missing[index] = url
+    return missing
+
+
 def ensure_go_toolchain(root, version, sums):
     """Add a Go release's checksums to config.yaml if they aren't there."""
     if version in load_config(root).toolchains.get("go", {}):
@@ -2016,14 +2060,18 @@ def cmd_watch(args):
                 found += watch_go(pkg, found, releases)
             companion_tags = {c: remote_tags(companion.upstream["git"]) for c, companion in pkg.companions.items()}
             found += watch_companions(pkg, companion_tags)
+            missing = unpublished(pkg, found)
         except Exception as error:  # noqa: BLE001
             print(f"ERROR: {name}: {error}", file=sys.stderr)
             failed.append(name)
             continue
         # The report goes to stderr: stdout is the JSON the workflow reads.
         print("\n".join(watch_report(pkg, tags, found, releases)
-                        + companion_report(pkg, companion_tags, found)), file=sys.stderr)
-        changes.extend(found)
+                        + companion_report(pkg, companion_tags, found)
+                        + [f"  {pkg.name} {found[i]['track']}: {found[i]['tag']} is tagged but {url} isn't "
+                           f"published yet -> waiting for the next run" for i, url in missing.items()]),
+              file=sys.stderr)
+        changes.extend(c for i, c in enumerate(found) if i not in missing)
     if args.tracks:
         changes = [c for c in changes if c["track"] in args.tracks]
     if args.kinds:
