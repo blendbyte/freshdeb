@@ -3,28 +3,23 @@
 name: composer
 description: "Composer, the dependency manager for PHP"
 homepage: https://getcomposer.org
-
 upstream:
   git: https://github.com/composer/composer.git
   tag_regex: '^(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: https://salsa.debian.org/php-team/pear/composer.git
-  ref: d6918e9527c80da3074b9af67faef9f6dbdfbdb5  # 2.10.3-1, unstable
-
+  ref: d6918e9527c80da3074b9af67faef9f6dbdfbdb5 # 2.10.3-1, unstable
 build:
   # Fetches the dependencies in upstream's composer.lock, each by its locked
   # git commit, and the release's commit date, so the build runs offline.
   prepare: hooks/vendor-deps.py
-
 # One track: the 2.2 LTS line is only for PHP < 7.2.5, which no distribution has.
 tracks:
   main:
-    tag: "2.10.3"
-    commit: f0de0bf90226853b841672f086d8b58b02332504
+    tag: "2.11.0"
+    commit: e52c65bed1de6aa272cdde4b7725ca6653d7b06a
     revision: 1
-    patches: patches/main  # ours: build without git, no self-update; Debian's adapt its unbundled layout
-
+    patches: patches/main # ours: build without git, no self-update; Debian's adapt its unbundled layout
 overlays:
   # composer.phar built from source with upstream's bin/compile instead of
   # Composer's sources against Debian's php-* libraries (all releases).
