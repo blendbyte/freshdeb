@@ -5,8 +5,8 @@
 #
 #   scripts/sync-repo.sh pull|push <local-repo> <remote> [--dry-run]
 #
-# <remote> is s3://bucket/<project> in production (Cloudflare R2 through its
-# S3 API; endpoint and credentials come from the AWS_* environment), or a
+# <remote> is s3://bucket/<project> in production (S3-compatible storage;
+# endpoint and credentials come from the AWS_* environment), or a
 # local directory (used by the release tests; ordering only matters for S3).
 set -euo pipefail
 
@@ -55,8 +55,8 @@ case "$mode" in
         # Upload payloads before the indexes that reference them, and the
         # signed Release files last.
         #
-        # Cache-Control is for the CDN in front of the bucket (Cloudflare on
-        # deb.freshdeb.com). Pool files never change once published, so they
+        # Cache-Control is for the CDN in front of the bucket on
+        # deb.freshdeb.com. Pool files never change once published, so they
         # cache forever; indexes must never be served stale, or apt sees a
         # new Release next to old Packages files ("Hash Sum mismatch").
         immutable=(--cache-control "public, max-age=31536000, immutable")

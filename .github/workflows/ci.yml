@@ -57,7 +57,7 @@ jobs:
     name: checks
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Build test image
         run: docker build -f tests/release.Dockerfile -t freshdeb-tests .
@@ -80,8 +80,9 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
       count: ${{ steps.plan.outputs.count }}
       publish: ${{ steps.plan.outputs.publish }}
+      projects: ${{ steps.plan.outputs.projects }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
 
@@ -109,8 +110,16 @@ jobs:
               # Each package is planned from the commit it was last released
               # from (the registry on deb.freshdeb.com), not just this push:
               # pending runs on main can be cancelled by newer pushes, and a
-              # failed release of one project must be retried.
-              curl -fsS --max-time 20 https://deb.freshdeb.com/status.json -o released.json || true
+              # failed release of one project must be retried. Without it the
+              # plan would only cover this push, so it has to load; only an
+              # empty bucket (404, before the first release) has none.
+              code="$(curl -sS --retry 3 --max-time 20 -w '%{http_code}' -o released.json \
+                      https://deb.freshdeb.com/status.json)" || code=error
+              case "$code" in
+                200) ;;
+                404) echo "No registry yet (first release)"; rm -f released.json ;;
+                *) echo "::error::can't fetch https://deb.freshdeb.com/status.json ($code)"; exit 1 ;;
+              esac
               args=(--base "$PUSH_BEFORE" --released released.json --publish)
               ;;
             workflow_dispatch)
@@ -146,13 +155,13 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
 
       - name: Builder image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
         with:
           context: builders
           build-args: BASE_IMAGE=${{ matrix.image }}
@@ -181,7 +190,7 @@ jobs:
             out/build-info.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: build-${{ matrix.package }}-${{ matrix.track }}-${{ matrix.codename }}-${{ matrix.arch }}
           path: |
@@ -208,4 +217,5 @@ jobs:
     uses: ./.github/workflows/release.yml
     with:
       run_id: ${{ github.run_id }}
+      projects: ${{ needs.plan.outputs.projects }}
     secrets: inherit

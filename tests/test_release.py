@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -90,7 +91,7 @@ class ReleaseTests(unittest.TestCase):
         self.root.mkdir()
         shutil.copy(ROOT / "config.yaml", self.root / "config.yaml")
         shutil.copytree(ROOT / "packages", self.root / "packages")
-        self.remote = self.work / "remote"  # stands in for the R2 bucket
+        self.remote = self.work / "remote"  # stands in for the S3 bucket
         self.remote.mkdir()
         self.config = freshdeb.load_config(self.root)
 
@@ -141,10 +142,10 @@ class ReleaseTests(unittest.TestCase):
                 shutil.copytree(child, out / child.name)
         return out
 
-    def publish(self, artifacts, bootstrap=False, all_builds=False, commit="c0ffee", dry_run=False):
+    def publish(self, artifacts, bootstrap=False, all_builds=False, commit="c0ffee", dry_run=False, projects=None):
         work = Path(tempfile.mkdtemp(dir=self.work))
         return release.publish(self.root, work, artifacts, str(self.remote), self.key, bootstrap=bootstrap,
-                               commit=commit, all_builds=all_builds, dry_run=dry_run)
+                               commit=commit, all_builds=all_builds, dry_run=dry_run, projects=projects)
 
     def registry(self):
         return json.loads((self.remote / "status.json").read_text())
@@ -357,8 +358,44 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(self.version_in(demo, "trixie", "v1", package="demo"), "1.2.0-1+freshdeb~deb13")
         self.assertEqual(valkey_before, self.indexes())
         projects = self.registry()["projects"]
-        self.assertEqual((projects["demo"]["commit"], projects["valkey"]["commit"]), ("beef", "beef"))
+        # valkey wasn't part of this release: whatever it has pending stays planned.
+        self.assertEqual((projects["demo"]["commit"], projects["valkey"]["commit"]), ("beef", "c0ffee"))
         self.assertFalse((self.remote / "valkey/pool/v1").exists())
+
+    def test_planned_projects_move_on_without_builds(self):
+        # An alias-only change: planned, released, nothing built.
+        self.bootstrap()
+        empty = self.work / "no-builds"
+        empty.mkdir()
+        self.assertEqual(self.publish(empty, commit="beef", projects=[]), {})
+        self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "c0ffee")
+        self.assertEqual(self.publish(empty, commit="beef", projects=["valkey"]), {})
+        self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "beef")
+
+    def test_failed_upload_puts_the_previous_state_back(self):
+        before = self.bootstrap()
+        self.edit_package('.tracks["9.1"].revision += 1')
+        real_sync, failed = release.sync, []
+
+        def flaky_sync(mode, local, remote, dry_run=False):
+            real_sync(mode, local, remote, dry_run)
+            if mode == "push" and not failed:
+                failed.append(remote)  # uploaded, then the connection dropped
+                raise freshdeb.FreshdebError("upload failed")
+
+        with mock.patch.object(release, "sync", flaky_sync):
+            failures = self.publish(self.artifacts(tracks=["9.1"]), commit="beef")
+        self.assertIn("the previous state is back in place", failures["valkey"])
+        self.assertEqual(before, self.indexes())
+        self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "c0ffee")
+        self.assertEqual(self.publish(self.artifacts(tracks=["9.1"]), commit="beef"), {})
+
+    def test_older_run_is_refused(self):
+        self.bootstrap()
+        with mock.patch.object(release, "is_ancestor", lambda root, older, newer: False):
+            failures = self.publish(self.artifacts(tracks=["9.1"]), commit="beef")
+        self.assertIn("refusing to go back", failures["valkey"])
+        self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "c0ffee")
 
     def test_failing_project_does_not_block_others(self):
         self.bootstrap()

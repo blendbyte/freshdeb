@@ -345,7 +345,8 @@ def release_project(project, repo, artifacts, key, new=False, pool_source=None, 
     database = repo / "db" / "packages.db"
     if new:
         require(not database.exists(), f"{project.name} is not registered, but a repository database exists "
-                                       "at the remote; refusing to guess which is right")
+                                       f"at {pool_source}/ (left by a failed first upload?); refusing to guess "
+                                       f"which is right. Delete {pool_source}/ and release again")
     else:
         # A missing database is never treated as a fresh start: a partial
         # build would otherwise erase every other package from the indexes.
@@ -423,9 +424,38 @@ def export_keyring(root_dir, key):
     require(keyring.stat().st_size > 0, f"gpg exported nothing for key {key}")
 
 
+def is_ancestor(root, older, newer):
+    """Whether commit older is an ancestor of (or equal to) newer; None when
+    this checkout doesn't have one of them."""
+    for rev in (older, newer):
+        if subprocess.run(["git", "cat-file", "-e", f"{rev}^{{commit}}"], cwd=root,
+                          capture_output=True).returncode != 0:
+            return None
+    return subprocess.run(["git", "merge-base", "--is-ancestor", older, newer], cwd=root,
+                          capture_output=True).returncode == 0
+
+
+def restore(work, name, remote, dry_run):
+    """Put a project's previous db/ and dists/ back at the remote after a
+    failed upload, from the copy publish() took before changing anything:
+    a half-uploaded dists/ (new Packages, old Release) breaks apt and every
+    later release. New pool files stay; nothing references them."""
+    target = work / "rollback"
+    target.mkdir(exist_ok=True)
+    with tarfile.open(work / "state-before" / f"{name}.tar.gz") as tar:
+        tar.extractall(target, filter="data")
+    sync("push", target / name, f"{remote}/{name}", dry_run)
+
+
 def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, all_builds=False, dry_run=False,
-            reset=()):
-    """Release every affected project; returns {project: error} for failures."""
+            reset=(), projects=None):
+    """Release every affected project; returns {project: error} for failures.
+
+    The registry records per project the last commit whose changes are
+    published; the next push plans that project from there. Only projects
+    (the plan's list; without one, those with builds here) move on: one
+    that wasn't planned keeps its commit, so its unreleased changes stay
+    pending."""
     remote = remote.rstrip("/")
     errors = freshdeb.validate_all(root)
     require(not errors, "catalog does not validate:\n  " + "\n  ".join(errors))
@@ -453,6 +483,7 @@ def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, al
     require(not missing, f"--reset-project {sorted(missing)}: no builds in this run to start from")
     names = sorted(set(registry["projects"]) | built)
     print(f"Projects: {', '.join(names) or 'none'}")
+    released = set(projects) if projects is not None else built
 
     work.mkdir(parents=True, exist_ok=True)
     (work / "state-before").mkdir(exist_ok=True)
@@ -462,6 +493,16 @@ def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, al
         project = Project(config, packages[name])
         repo = work / "projects" / name
         try:
+            # Re-running an older run must not undo what a newer one published.
+            registered = (registry["projects"].get(name) or {}).get("commit")
+            if commit and registered and registered != commit:
+                ancestor = is_ancestor(root, registered, commit)
+                if ancestor is None:
+                    print(f"{name}: can't compare its registered commit {registered[:12]} with {commit[:12]} "
+                          "(not in this checkout)", file=sys.stderr)
+                require(ancestor is not False,
+                        f"{name} was published from {registered[:12]}, which is newer than this run's "
+                        f"{commit[:12]}; refusing to go back (re-run the newest run instead)")
             repo.mkdir(parents=True)
             sync("pull", repo, f"{remote}/{name}")
             with tarfile.open(work / "state-before" / f"{name}.tar.gz", "w:gz") as tar:
@@ -477,11 +518,22 @@ def publish(root, work, artifacts, remote, key, bootstrap=False, commit=None, al
             changed = release_project(project, repo, artifacts, key, new=new, pool_source=f"{remote}/{name}",
                                       commit=commit, all_builds=all_builds)
             if changed is not None:
-                sync("push", repo, f"{remote}/{name}", dry_run)
-            entry = registry["projects"].setdefault(name, {})
-            entry["commit"] = commit
+                try:
+                    sync("push", repo, f"{remote}/{name}", dry_run)
+                except FreshdebError as error:
+                    if new:
+                        raise FreshdebError(f"{error}\nupload of the new project failed; delete {remote}/{name}/ "
+                                            "before releasing it again") from error
+                    try:
+                        restore(work, name, remote, dry_run)
+                    except FreshdebError as rollback:
+                        raise FreshdebError(f"{error}\nputting the previous state back failed too: {rollback}\n"
+                                            "restore it from the repo-state-before artifact") from error
+                    raise FreshdebError(f"{error}\nupload failed; the previous state is back in place") from error
+            if name in released or name not in registry["projects"]:
+                registry["projects"].setdefault(name, {})["commit"] = commit
             if changed is not None:
-                entry["updated"] = now()
+                registry["projects"][name]["updated"] = now()
         except FreshdebError as error:
             print(f"ERROR: {name}: {error}", file=sys.stderr)
             failures[name] = str(error)
@@ -510,11 +562,13 @@ def main():
     parser.add_argument("--reset-project", action="append", default=[], metavar="NAME",
                         help="start this registered project's repository from scratch (its remote "
                              "directory must already be deleted)")
+    parser.add_argument("--projects", help="space-separated projects the run planned: only their registry "
+                                           "commit moves on (default: the projects with builds)")
     args = parser.parse_args()
     try:
         failures = publish(args.root.resolve(), args.work.resolve(), args.artifacts.resolve(), args.remote,
                            args.key, args.bootstrap, args.commit, args.all_builds, args.dry_run,
-                           args.reset_project)
+                           args.reset_project, args.projects.split() if args.projects is not None else None)
     except FreshdebError as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 1

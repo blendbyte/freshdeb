@@ -891,17 +891,19 @@ def newest_track(keys):
     return max(numeric, key=_VersionKey) if numeric else keys[0]
 
 
-def plan_changes(root, base, head, today=None, package_bases=None):
+def plan_changes(root, base, head, today=None, package_bases=None, registered=None):
     """Work out what a diff needs built.
 
     package_bases maps a package to the commit it was last released from;
     its own files are diffed from there, so a failed or skipped release is
-    planned again. Everything else is diffed from base.
+    planned again. Everything else is diffed from base. registered names the
+    packages the registry has (None without one): any other package was
+    never released, so all of it is planned.
 
     Returns (selected, errors, alias_changes): selected maps (package, track)
     to {"publish": bool, "codenames": {"*"} or a set}; errors lists packaging
-    changes without a version bump; alias_changes says a release is needed
-    even if nothing gets built.
+    changes without a version bump; alias_changes names the packages that
+    need a release even if nothing gets built.
 
     Rules:
       * package.yaml track entry added or changed       -> that track, publish;
@@ -918,8 +920,10 @@ def plan_changes(root, base, head, today=None, package_bases=None):
       * build infrastructure changed                     -> newest track of every
                                                             package, one job each,
                                                             no upstream test suite
-      * codename added to config.yaml                    -> every active track
+      * codename added to config.yaml since the
+        package's base                                   -> every active track
                                                             on it, publish
+      * package not in the registry                      -> every active track
     """
     config = load_config(root)
     files = changed_files(root, base, head)
@@ -927,13 +931,15 @@ def plan_changes(root, base, head, today=None, package_bases=None):
     diffs = {base: files}
     selected = {}
     errors = []
-    new_codenames = set()
-    alias_changes = False
+    alias_changes = set()
+    dists = {}
 
-    base_config_text = git_show(root, base, "config.yaml")
-    if base_config_text is not None:
-        base_dists = set((yaml.safe_load(base_config_text) or {}).get("distributions") or {})
-        new_codenames = set(config.distributions) - base_dists
+    def new_codenames(rev):
+        """Codenames config.yaml has now but didn't at rev."""
+        if rev not in dists:
+            text = git_show(root, rev, "config.yaml")
+            dists[rev] = set((yaml.safe_load(text) or {}).get("distributions") or {}) if text else None
+        return set() if dists[rev] is None else set(config.distributions) - dists[rev]
 
     def select(name, key, publish, codenames=None, scope="full"):
         entry = selected.setdefault((name, key), {"publish": False, "codenames": set(), "scope": scope})
@@ -955,7 +961,7 @@ def plan_changes(root, base, head, today=None, package_bases=None):
         base_text = git_show(root, pkg_base, prefix + "package.yaml")
         base_pkg = parse_package(pkg.name, pkg.path, yaml.safe_load(base_text)) if base_text else None
 
-        if pkg_files and base_pkg is None:
+        if (pkg_files and base_pkg is None) or (registered is not None and pkg.name not in registered):
             for key in active:
                 select(pkg.name, key, True)
             continue
@@ -975,7 +981,7 @@ def plan_changes(root, base, head, today=None, package_bases=None):
                     changed.setdefault(key, set()).add("package.yaml")
             tests_changed |= pkg.data.get("tests") != base_pkg.data.get("tests")
             if pkg.aliases != base_pkg.aliases:
-                alias_changes = True
+                alias_changes.add(pkg.name)
             settings = lambda p, name: p.companions[name].data if name in p.companions else None
             for key in active:
                 new, old = pkg.tracks[key], base_pkg.tracks.get(key)
@@ -1011,9 +1017,10 @@ def plan_changes(root, base, head, today=None, package_bases=None):
 
         if infra:
             select(pkg.name, newest, False, scope="canary")
-        if new_codenames:
+        added = new_codenames(pkg_base)
+        if added:
             for key in active:
-                select(pkg.name, key, True, new_codenames)
+                select(pkg.name, key, True, added)
     return selected, errors, alias_changes
 
 
@@ -1048,18 +1055,24 @@ def expand_matrix(root, selected, codename_filter=None, today=None):
     return include
 
 
+def registry_projects(path):
+    """{package: entry} from the registry (deb.freshdeb.com/status.json), or
+    None without one."""
+    if not path or not Path(path).is_file() or not Path(path).read_text().strip():
+        return None
+    try:
+        projects = json.loads(Path(path).read_text()).get("projects")
+    except (json.JSONDecodeError, AttributeError):
+        print(f"plan: ignoring unreadable {path}", file=sys.stderr)
+        return None
+    return projects if isinstance(projects, dict) else None
+
+
 def released_bases(root, path, head):
     """{package: commit} from the registry (deb.freshdeb.com/status.json),
     keeping only commits this checkout has as ancestors of head."""
-    if not path or not Path(path).is_file() or not Path(path).read_text().strip():
-        return {}
-    try:
-        projects = json.loads(Path(path).read_text()).get("projects") or {}
-    except (json.JSONDecodeError, AttributeError):
-        print(f"plan: ignoring unreadable {path}", file=sys.stderr)
-        return {}
     bases = {}
-    for name, entry in projects.items():
+    for name, entry in (registry_projects(path) or {}).items():
         commit = (entry or {}).get("commit")
         if commit and re.fullmatch(r"[0-9a-f]{7,40}", commit) and subprocess.run(
                 ["git", "merge-base", "--is-ancestor", commit, head], cwd=root, capture_output=True).returncode == 0:
@@ -1071,7 +1084,7 @@ def released_bases(root, path, head):
 def cmd_plan(args):
     root = args.root
     today = dt.date.today()
-    alias_changes = False
+    alias_changes = set()
     if args.packages or args.all:
         names = package_names(root) if args.all or args.packages == ["all"] else args.packages
         selected = {}
@@ -1099,8 +1112,10 @@ def cmd_plan(args):
                         selected[(pkg.name, key)] = {"publish": True, "codenames": {"*"}, "scope": "full"}
             errors = []
         else:
+            registry = registry_projects(args.released)
             selected, errors, alias_changes = plan_changes(root, base, args.head, today,
-                                                           released_bases(root, args.released, args.head))
+                                                           released_bases(root, args.released, args.head),
+                                                           set(registry) if registry is not None else None)
         if not args.publish:
             for entry in selected.values():
                 entry["publish"] = False
@@ -1110,14 +1125,18 @@ def cmd_plan(args):
         return 1
     codenames = None if not args.codenames or args.codenames == ["all"] else set(args.codenames)
     include = expand_matrix(root, selected, codenames, today)
-    publish = any(job["publish"] for job in include) or (alias_changes and args.publish)
-    result = {"matrix": {"include": include}, "count": len(include), "publish": publish}
+    # The projects this run releases: release.py moves only their registry
+    # entry on, so whatever else is pending stays planned.
+    projects = sorted({job["package"] for job in include if job["publish"]} | (alias_changes if args.publish else set()))
+    publish = bool(projects)
+    result = {"matrix": {"include": include}, "count": len(include), "publish": publish, "projects": projects}
     text = json.dumps(result, indent=2)
     if args.github_output:
         with open(args.github_output, "a") as fh:
             fh.write(f"matrix={json.dumps(result['matrix'])}\n")
             fh.write(f"count={len(include)}\n")
             fh.write(f"publish={'true' if publish else 'false'}\n")
+            fh.write(f"projects={' '.join(projects)}\n")
     print(text)
     for job in include:
         print(f"  {job['package']} {job['track']} {job['codename']}/{job['arch']} "

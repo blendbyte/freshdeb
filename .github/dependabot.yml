@@ -1,6 +1,11 @@
 version: 2
 updates:
+  # Actions are pinned to commit SHAs (the version in a comment); this keeps
+  # them current, all in one pull request a month.
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

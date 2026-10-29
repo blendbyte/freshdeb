@@ -10,6 +10,10 @@ on:
       run_id:
         type: string
         required: true
+      # The projects the run planned; only their registry entry moves on.
+      projects:
+        type: string
+        required: false
   workflow_dispatch:
     inputs:
       run_id:
@@ -55,13 +59,14 @@ jobs:
       cancel-in-progress: false
     env:
       GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-      # Cloudflare R2 through its S3 API. The endpoint is
-      # https://<account-id>.r2.cloudflarestorage.com; R2's region is "auto".
+      # The S3-compatible bucket behind deb.freshdeb.com; endpoint and
+      # credentials are secrets.
       AWS_ACCESS_KEY_ID: ${{ secrets.PKG_S3_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.PKG_S3_SECRET }}
       AWS_ENDPOINT_URL: ${{ secrets.PKG_S3_ENDPOINT_URL }}
       AWS_REGION: auto
-      # Newer AWS CLIs add checksum headers by default that R2 may reject.
+      # Newer AWS CLIs add checksum headers by default that S3-compatible
+      # storage may reject.
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
       # A variable, not a secret: the name isn't sensitive, and GitHub masks
@@ -71,10 +76,12 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run == true }}
       BOOTSTRAP: ${{ inputs.bootstrap == true }}
       RESET_PROJECT: ${{ inputs.reset_project }}
+      PROJECTS: ${{ inputs.projects }}
+      CALLED: ${{ github.event_name != 'workflow_dispatch' }}
     steps:
       - name: Validate source run
         id: source
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
             const runId = process.env.RUN_ID;
@@ -108,11 +115,15 @@ jobs:
             }
             core.setOutput('sha', run.head_sha);
 
-      # Release tooling and package.yaml come from main as it is now, so
+      # Release tooling and package.yaml: the run's commit when called from
+      # ci.yml (re-runs included), main as it is now when dispatched, so
       # release fixes also apply to re-publishing older runs. A build can't
       # drift from the manifest: release.py refuses builds whose versions
-      # disagree with package.yaml.
-      - uses: actions/checkout@v7
+      # disagree with package.yaml. Full history: release.py refuses to
+      # publish a project from a commit older than its last release.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Install repository tools
         run: |
@@ -121,7 +132,7 @@ jobs:
           aws --version
 
       - name: Download builds
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           run-id: ${{ inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -151,6 +162,8 @@ jobs:
           [[ "$BOOTSTRAP" == "true" ]] && args+=(--bootstrap)
           [[ "$DRY_RUN" == "true" ]] && args+=(--dry-run)
           for project in $RESET_PROJECT; do args+=(--reset-project "$project"); done
+          # From ci.yml: the plan's projects. Dispatched: those with builds.
+          [[ "$CALLED" == "true" ]] && args+=(--projects "$PROJECTS")
           # Dispatched by hand for a chosen run: publish all of its builds,
           # including ones built with publishing off. ci.yml's automatic
           # release only takes the builds its plan marked publishable.
@@ -167,7 +180,7 @@ jobs:
 
       - name: Keep pre-release state for recovery
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: repo-state-before-${{ github.run_id }}-${{ github.run_attempt }}
           path: release-work/state-before/

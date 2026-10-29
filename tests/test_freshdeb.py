@@ -290,7 +290,7 @@ class PlanTests(unittest.TestCase):
         self.edit("packages/valkey/package.yaml", 'homepage: https://valkey.io', 'homepage: https://valkey.io/\nwatch: false')
         self.commit()
         selected, errors, aliases = self.plan()
-        self.assertEqual((selected, errors, aliases), ({}, [], False))
+        self.assertEqual((selected, errors, aliases), ({}, [], set()))
 
     def test_packaging_change_requires_bump(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
@@ -320,7 +320,7 @@ class PlanTests(unittest.TestCase):
         self.assertIn("valkey 8.0: packaging changed (patches/8.0/series)", errors[0])
         self.bump_valkey("8.0")
         self.commit()
-        self.assertEqual(self.plan(), ({("valkey", "8.0"): True}, [], False))
+        self.assertEqual(self.plan(), ({("valkey", "8.0"): True}, [], set()))
 
     def test_scoped_overlay_affects_only_its_tracks(self):
         self.edit("packages/golang/overlays/golang-1.26.patch", "\n", "\n\n")
@@ -339,7 +339,7 @@ class PlanTests(unittest.TestCase):
                                           "tag": f"{line}.0", "commit": "b" * 40, "based_on": newest,
                                           "aliases": {major: line}})
         self.commit()
-        self.assertEqual(self.plan(), ({("valkey", line): True}, [], True))
+        self.assertEqual(self.plan(), ({("valkey", line): True}, [], {"valkey"}))
 
     def test_build_field_change_needs_a_bump(self):
         self.edit("packages/restic/package.yaml", 'go: "1.26.10"', 'go: "1.27.3"')
@@ -360,7 +360,7 @@ class PlanTests(unittest.TestCase):
     def test_test_settings_change_is_test_only(self):
         self.edit("packages/valkey/package.yaml", "\ntracks:", "\ntests:\n  capabilities: [NET_ADMIN]\n\ntracks:")
         self.commit()
-        self.assertEqual(self.plan(), ({("valkey", "9.1"): False}, [], False))
+        self.assertEqual(self.plan(), ({("valkey", "9.1"): False}, [], set()))
 
     def test_eol_tracks_are_not_built(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
@@ -416,7 +416,7 @@ class PlanTests(unittest.TestCase):
         self.edit("packages/valkey/package.yaml", '"8": "8.1"', '"8": "8.0"')
         self.commit()
         selected, errors, aliases = self.plan()
-        self.assertEqual((selected, errors, aliases), ({}, [], True))
+        self.assertEqual((selected, errors, aliases), ({}, [], {"valkey"}))
 
     def test_new_codename_builds_every_track_there(self):
         self.edit("config.yaml", "  resolute:\n", "  stonking:\n    vendor: ubuntu\n    version: \"28.04\"\n"
@@ -450,6 +450,27 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(selected, {})
         selected, _, _ = freshdeb.plan_changes(self.repo, previous, "HEAD", TODAY, {"valkey": self.base})
         self.assertEqual({k: v["publish"] for k, v in selected.items()}, {("valkey", "9.1"): True})
+
+    def test_package_missing_from_the_registry_is_planned_in_full(self):
+        # "Add valkey" never got released (its run failed or was cancelled).
+        (self.repo / "packages/valkey/NOTES.md").write_text("Docs only.\n")
+        self.commit()
+        others = set(freshdeb.package_names(self.repo)) - {"valkey"}
+        selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY, registered=others)
+        active = {k for k, t in freshdeb.load_package("valkey", self.repo).tracks.items() if t.active(TODAY)}
+        self.assertEqual({k: v["publish"] for k, v in selected.items()}, {("valkey", k): True for k in active})
+
+    def test_new_codename_counts_from_the_packages_base(self):
+        # The codename came with an earlier push whose release failed.
+        self.edit("config.yaml", "  resolute:\n", "  stonking:\n    vendor: ubuntu\n    version: \"28.04\"\n"
+                                                  "    image: ubuntu:stonking\n  resolute:\n")
+        self.commit()
+        previous = git(self.repo, "rev-parse", "HEAD").strip()
+        (self.repo / "packages/valkey/NOTES.md").write_text("Docs only.\n")
+        self.commit()
+        selected, _, _ = freshdeb.plan_changes(self.repo, previous, "HEAD", TODAY, {"valkey": self.base})
+        self.assertEqual({k[0] for k in selected}, {"valkey"})
+        self.assertTrue(all(v["codenames"] == {"stonking"} and v["publish"] for v in selected.values()))
 
     def test_released_bases_from_registry(self):
         registry = self.repo / "released.json"
