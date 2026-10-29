@@ -3,28 +3,24 @@
 name: prometheus-alertmanager
 description: "Prometheus Alertmanager: routes, groups and silences alerts"
 homepage: https://github.com/prometheus/alertmanager
-
 upstream:
   git: https://github.com/prometheus/alertmanager.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
   assets:
     # The built web UI, from the release; it is what upstream's own build embeds.
     web-ui: https://github.com/prometheus/alertmanager/releases/download/v{version}/alertmanager-web-ui-{version}.tar.gz
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/prometheus-alertmanager.git
-  ref: 7a0e028cbf67c952a0263ad88d03cbe311f9de4a  # 0.33.1-5, unstable
-
+  ref: 7a0e028cbf67c952a0263ad88d03cbe311f9de4a # 0.33.1-5, unstable
 tracks:
   main:
-    tag: "v0.34.1"
-    commit: 73c6bfe7393929211294c1954f30d8ed78e4d0ad
-    revision: 5
-    go: "1.26.10"  # what upstream's release build uses (.promu.yml: go 1.26; go.mod: go 1.25.0)
-    patches: patches/main  # Debian's 0003 (Debian defaults; amtool also reads upstream's config paths) and a compat patch for Debian's --web.ui-path flag
+    tag: "v0.34.2"
+    commit: e8349048265ccc0871c3d0d668b05eacc68baf50
+    revision: 1
+    go: "1.26.10" # what upstream's release build uses (.promu.yml: go 1.26; go.mod: go 1.25.0)
+    patches: patches/main # Debian's 0003 (Debian defaults; amtool also reads upstream's config paths) and a compat patch for Debian's --web.ui-path flag
     assets:
-      web-ui: 881fe0f7beb9573f35be47dd233af6220e72c8db72c03bcd1780402eb8dc1307
-
+      web-ui: 3d6b13c5af094724e0bed8f757399e08af44d40d6c6cd87392a1f8ee6ed1e457
 overlays:
   # Pinned Go toolchain, vendored modules and the embedded web UI instead of
   # dh-golang (all releases).
