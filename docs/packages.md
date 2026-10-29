@@ -89,11 +89,11 @@ tests:
 
 ### Git tag or release tarball
 
-By default the source is the git tag, checked out at the pinned commit. Set `upstream.tarball` when Debian builds from upstream's release tarball instead, typically because it contains generated files (`configure`, version stamps) that the git tag doesn't. The tarball becomes the orig tarball, verified against the track's `sha256` before anything is unpacked. The tag's commit is still checked, so a moved tag fails the build either way.
+By default the source is the git tag, checked out at the pinned commit. Set `upstream.tarball` when Debian builds from upstream's release tarball instead, typically because it contains generated files (`configure`, version stamps) that the git tag doesn't. The build downloads it and verifies it against the track's `sha256` before anything is unpacked. The tag's commit is still checked, so a moved tag fails the build either way.
 
 ### Release assets
 
-Some builds need files that upstream publishes with each release but doesn't keep in git, such as Prometheus' built web UI. List them under `upstream.assets` (name → URL with `{version}`) and pin each one per track under `assets:` with its sha256. The build downloads them into the source tree as `freshdeb-assets/<name>` plus the URL's archive suffix (`freshdeb-assets/web-ui.tar.gz`), verifies them, and the orig tarball includes them, so the source package holds everything the build used. watch.yml pins the new checksums when it bumps a track. Assets can't be combined with `upstream.tarball`.
+Some builds need files that upstream publishes with each release but doesn't keep in git, such as Prometheus' built web UI. List them under `upstream.assets` (name → URL with `{version}`) and pin each one per track under `assets:` with its sha256. The build downloads them into the source tree as `freshdeb-assets/<name>` plus the URL's archive suffix (`freshdeb-assets/web-ui.tar.gz`), and verifies them. watch.yml pins the new checksums when it bumps a track. Assets can't be combined with `upstream.tarball`.
 
 ### Go programs
 
@@ -168,7 +168,7 @@ Most projects only maintain their latest release. They get one track named `main
 deb [signed-by=…] https://deb.freshdeb.com/restic trixie main
 ```
 
-Use version tracks only when upstream patches several release lines in parallel, like valkey. Each line gets a track keyed by its version prefix (`"9.1"` covers 9.1.x, component `v9.1`), plus optional aliases per major (`"9"` → component `v9`). watch.yml relies on the prefix to find patch releases and to propose new lines.
+Use version tracks only when upstream patches several release lines in parallel, like valkey. Each line gets a track keyed by its version prefix (`"9.1"` covers 9.1.x, component `v9.1`), plus optional aliases per major (`"9"` → component `v9`). watch.yml relies on the prefix to find patch releases and to propose new lines above the newest track; a line between existing tracks is only mentioned in its log.
 
 Version tracks also fit projects whose upgrades must go one line at a time, like headscale (0.28 → 0.29 → 0.30, enforced by headscale itself): each minor is a track, and the older ones stay published as stepping stones. An alias named `latest` follows the newest track; when watch.yml proposes a new track, it moves `latest` to it in the same pull request.
 
@@ -185,13 +185,13 @@ tracks:
 
 watch.yml only bumps `lts` within its line. When upstream names the next LTS, move `line` and `tag` to it in a PR, so users of the `lts` component move along.
 
-Never remove a track. When upstream support ends, the `eol` date stops builds and the component stays published as-is. The release refuses to publish if a component disappears. If components really have to change before anyone uses them, delete the project's directory in the bucket and release with `reset_project` (a dispatch input of release.yml).
+Never remove a track. When upstream support ends, the `eol` date stops builds and the component stays published as-is, and so do aliases pointing at it. The release refuses to publish if a component disappears. If components really have to change before anyone uses them, delete the project's directory in the bucket and release with `reset_project` (a dispatch input of release.yml).
 
 ### Versions
 
 Every build is versioned `[epoch:]<upstream>-<revision>+freshdeb~<deb12|deb13|ubuntu22.04|…>`.
 
-- Bump `revision` whenever the packaging changes (debian/, patches, overlays, build options) without a new upstream tag. CI rejects packaging changes that don't change the version.
+- Bump `revision` whenever the packaging changes without a new upstream tag, on every track it affects: `debian/` and package-wide settings affect all tracks; a track's `patches` directory, an overlay scoped with `tracks:` or a companion's files only the tracks using them. The same goes for a track's `commit`, `sha256`, `go`, `assets` or `patches` changing on the same tag. CI rejects such changes when the version stays the same.
 - Published versions are immutable. Re-running a release never replaces an existing file.
 - Before building, the version guard compares against everything the distribution ships for that codename. If the distro has the same or a newer version, the build is skipped and nothing is published there.
 

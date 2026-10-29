@@ -11,6 +11,9 @@ name: watch
 #                                the new toolchain (revision + 1); Go patch
 #                                releases are mostly security fixes
 #
+# Each run refreshes its PR branches, except ones a maintainer pushed to,
+# and doesn't reopen a change whose PR was closed without merging.
+#
 # Pull requests opened with the default GITHUB_TOKEN do not trigger ci.yml.
 # Set the FRESHDEB_BOT_TOKEN secret (GitHub App or fine-grained PAT with
 # contents + pull-requests write) so the PRs get their checks and plan.
@@ -48,10 +51,13 @@ jobs:
         run: sudo apt-get install -y --no-install-recommends python3-yaml
 
       # Logs per package and track: our version, the newest upstream release
-      # it follows, Go toolchains, and what watch decided.
+      # it follows, Go toolchains, and what watch decided. A package that
+      # fails is logged and fails the job at the end; the others go on.
       - name: Find upstream releases
+        id: find
         run: |
-          python3 scripts/freshdeb.py watch > changes.json
+          status=0
+          python3 scripts/freshdeb.py watch > changes.json || status=$?
           echo
           if [[ "$(jq length changes.json)" == 0 ]]; then
             echo "No changes: every track is up to date."
@@ -59,8 +65,17 @@ jobs:
             echo "Changes (one pull request each):"
             jq -r '.[] | "  \(.package) \(.track): \(.kind) -> \(.tag // ("Go " + .go))"' changes.json
           fi
+          if [[ "$status" != 0 ]]; then
+            echo "::error::watch failed for some packages, see ERROR lines above"
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
 
+      # One pull request per change, each on its own: a failing one is
+      # logged and the rest still get theirs. A branch is only (re)written
+      # by the bot: once a maintainer pushed to it, it is left alone. A
+      # change whose pull request was closed unmerged isn't proposed again.
       - name: Open pull requests
+        id: prs
         env:
           GH_TOKEN: ${{ secrets.FRESHDEB_BOT_TOKEN || github.token }}
         run: |
@@ -68,7 +83,9 @@ jobs:
           git config user.email "packages@freshdeb.com"
           base="$(git rev-parse HEAD)"
           gh label create watch --color 0e8a16 --description "Opened by watch.yml" --force >/dev/null
-          jq -c '.[]' changes.json | while read -r change; do
+
+          open_pr() {
+            local change="$1"
             package="$(jq -r .package <<<"$change")"
             track="$(jq -r .track <<<"$change")"
             tag="$(jq -r .tag <<<"$change")"
@@ -82,15 +99,6 @@ jobs:
             upstream="$(yq -r .upstream.git "packages/${package}/package.yaml")"
             [[ "$kind" == "companion" ]] && upstream="$(yq -r ".companions[\"${companion}\"].upstream.git" "packages/${package}/package.yaml")"
             notes="${upstream%.git}/releases/tag/${tag}"
-
-            git checkout -q -B "$branch" "$base"
-            only=()
-            [[ "$kind" == "companion" ]] && only=(--companions "$companion")
-            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --kinds "$kind" "${only[@]}" --apply >/dev/null
-            git add -A "packages/${package}" config.yaml
-            if git diff --cached --quiet; then
-              continue
-            fi
 
             if [[ "$kind" == "toolchain" ]]; then
               title="${package} ${track}: rebuild with Go ${go}"
@@ -123,7 +131,35 @@ jobs:
           - [ ] Decide whether moving the aliases now is right (users of the alias get a minor/major upgrade)"
             fi
 
+            closed="$(gh pr list --head "$branch" --state closed --json title,mergedAt \
+                      -q '.[] | select(.mergedAt == null) | .title')"
+            if grep -Fxq "$title" <<<"$closed"; then
+              echo "${branch}: \"${title}\" was closed without merging; not proposing it again"
+              return 0
+            fi
+            remote=""
+            if git fetch -q origin "refs/heads/${branch}" 2>/dev/null; then
+              remote="$(git rev-parse FETCH_HEAD)"
+              if git log --format=%an "${base}..${remote}" | grep -vqx "freshdeb-bot"; then
+                echo "${branch}: has commits by someone else; leaving it alone"
+                return 0
+              fi
+            fi
+
+            git checkout -q -f -B "$branch" "$base"
+            git clean -qfd -- packages config.yaml
+            only=()
+            [[ "$kind" == "companion" ]] && only=(--companions "$companion")
+            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --kinds "$kind" "${only[@]}" --apply >/dev/null
+            git add -A "packages/${package}" config.yaml
+            if git diff --cached --quiet; then
+              return 0
+            fi
             git commit -q -m "$title"
+            if [[ -n "$remote" ]] && git diff --quiet "$remote" HEAD -- "packages/${package}" config.yaml; then
+              echo "${branch}: already up to date"
+              return 0
+            fi
             git push -q --force origin "$branch"
             state="$(gh pr view "$branch" --json state -q .state 2>/dev/null || true)"
             if [[ "$state" == "OPEN" ]]; then
@@ -131,4 +167,25 @@ jobs:
             else
               gh pr create --head "$branch" --base main --title "$title" --body "$body" --label "watch"
             fi
-          done
+          }
+
+          failed=0
+          while read -r change; do
+            # A subshell with -e of its own: "if ! open_pr" would turn -e off.
+            set +e
+            ( set -e; open_pr "$change" )
+            status=$?
+            set -e
+            if [[ "$status" != 0 ]]; then
+              echo "::error::pull request for $(jq -r '"\(.package) \(.track) \(.kind)"' <<<"$change") failed"
+              failed=1
+            fi
+          done < <(jq -c '.[]' changes.json)
+          git checkout -q -f "$base"
+          if [[ "$failed" != 0 ]]; then
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fail if a package or pull request failed
+        if: steps.find.outputs.failed == 'true' || steps.prs.outputs.failed == 'true'
+        run: exit 1

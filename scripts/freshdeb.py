@@ -24,13 +24,13 @@ import argparse
 import datetime as dt
 import email.utils
 import hashlib
+import http.client
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 import urllib.error
@@ -62,6 +62,21 @@ TEST_CAPABILITIES = ("NET_ADMIN", "NET_RAW")
 # The alias that always names a package's newest track; watch moves it to
 # each new track it proposes.
 LATEST_ALIAS = "latest"
+
+# The keys package.yaml takes, per mapping (docs/packages.md): a typo
+# would otherwise be ignored, an overlay's "codename:" apply everywhere.
+PACKAGE_KEYS = {
+    "package": {"name", "description", "homepage", "watch", "upstream", "packaging", "epoch", "codenames",
+                "build", "tests", "tracks", "aliases", "overlays", "companions"},
+    "upstream": {"git", "tag_regex", "tarball", "assets", "submodules"},
+    "packaging": {"origin", "ref", "source"},
+    "build": {"go", "options", "profiles", "prepare"},
+    "track": {"tag", "commit", "revision", "eol", "patches", "codenames", "sha256", "go", "line", "assets",
+              "companions"},
+    "overlay": {"patch", "tracks", "codenames"},
+    "companion upstream": {"git", "tag_regex", "tarball", "submodules"},
+    "pin": {"tag", "commit", "sha256", "patches"},
+}
 
 # GitHub Actions refuses matrices with more than 256 jobs.
 MAX_MATRIX = 256
@@ -497,6 +512,24 @@ def validate_package(pkg, config, today=None):
             errors.append(f"{pkg.name}: {message}")
 
     data = pkg.data
+    known_keys(data, "package", "package.yaml", check)
+    for section in ("upstream", "packaging", "build"):
+        known_keys(data.get(section), section, section, check)
+    for key, entry in (data.get("tracks") or {}).items():
+        known_keys(entry, "track", f"track {key}", check)
+        for name, pin in ((entry.get("companions") if isinstance(entry, dict) else None) or {}).items():
+            known_keys(pin, "pin", f"track {key} companion {name}", check)
+    for index, overlay in enumerate(pkg.overlays):
+        known_keys(overlay, "overlay", f"overlay #{index + 1}", check)
+    for where, values in [("codenames", data.get("codenames")),
+                          *((f"track {k} codenames", t.codenames) for k, t in pkg.tracks.items()),
+                          *((f"overlay #{i + 1} {field}", o.get(field)) for i, o in enumerate(pkg.overlays)
+                            if isinstance(o, dict) for field in ("tracks", "codenames"))]:
+        check(values is None or (isinstance(values, list) and values),
+              f"{where} must be a non-empty list (leave it out for all)")
+    components = pkg.components()
+    duplicates = sorted({c for c in components if components.count(c) > 1})
+    check(not duplicates, f"tracks and aliases share the component(s) {', '.join(duplicates)}")
     check(NAME_RE.match(pkg.name) is not None, f"invalid package name {pkg.name!r}")
     check(data.get("name") == pkg.name, f"name field must equal the directory name ({pkg.name})")
     for key in ("description", "homepage"):
@@ -518,7 +551,7 @@ def validate_package(pkg, config, today=None):
                   f"upstream.assets: invalid name {name!r} (lowercase letters, digits, dashes)")
             check(isinstance(url, str) and url.startswith("https://") and "{version}" in url,
                   f"upstream.assets {name}: must be an https:// URL containing {{version}}")
-        # The orig tarball would be upstream's, without them.
+        # No package needs both; release tarballs carry their generated files.
         check(tarball is None, "upstream.assets can't be combined with upstream.tarball")
     asset_names = set(assets) if isinstance(assets, dict) else set()
     try:
@@ -608,9 +641,8 @@ def validate_package(pkg, config, today=None):
     for key, target in pkg.aliases.items():
         check(TRACK_RE.match(key) is not None, f"alias {key}: invalid key")
         check(key not in pkg.tracks, f"alias {key} collides with a track of the same name")
+        # An end-of-life target is fine: its component stays published as it is.
         check(target in pkg.tracks, f"alias {key} points to unknown track {target}")
-        if target in pkg.tracks:
-            check(pkg.tracks[target].active(today), f"alias {key} points to end-of-life track {target}")
 
     if data.get("codenames") is not None:
         check(set(data["codenames"]) <= set(config.distributions), "unknown codename in codenames")
@@ -660,6 +692,12 @@ def validate_package(pkg, config, today=None):
     return errors
 
 
+def known_keys(mapping, kind, where, check):
+    if isinstance(mapping, dict):
+        extra = sorted(str(key) for key in set(mapping) - PACKAGE_KEYS[kind])
+        check(not extra, f"{where}: unknown key(s) {', '.join(extra)}")
+
+
 def validate_upstream(upstream, check, where):
     """upstream.git, tarball and tag_regex; returns the compiled regex or None."""
     check(isinstance(upstream.get("git"), str) and upstream.get("git", "").startswith("https://"),
@@ -696,6 +734,8 @@ def validate_companions(pkg, config, check):
         check(set(companion.data) <= {"upstream", "packaging", "codenames", "overlays"},
               f"{where}takes upstream, packaging, codenames and overlays")
         validate_upstream(companion.upstream, check, where)
+        known_keys(companion.data.get("upstream"), "companion upstream", f"{where}upstream", check)
+        known_keys(companion.data.get("packaging"), "packaging", f"{where}packaging", check)
         packaging = companion.packaging
         check(isinstance(packaging.get("origin"), str) and packaging.get("origin") != OWN_PACKAGING,
               f"{where}packaging.origin is required (where debian/ came from)")
@@ -715,10 +755,13 @@ def validate_companions(pkg, config, check):
         for file in ("rules", "changelog", "source/format"):
             check((cdebian / file).is_file(), f"{where}companions/{name}/debian/{file} is missing")
         codenames = companion.data.get("codenames")
-        check(codenames is None or set(codenames) <= set(config.distributions), f"{where}unknown codename")
+        check(codenames is None or (isinstance(codenames, list) and codenames
+                                    and set(codenames) <= set(config.distributions)),
+              f"{where}codenames must be a non-empty list of known codenames")
         for index, overlay in enumerate(companion.data.get("overlays") or []):
             ok = isinstance(overlay, dict) and isinstance(overlay.get("patch"), str)
             check(ok, f"{where}overlay #{index + 1}: patch is required")
+            known_keys(overlay, "overlay", f"{where}overlay #{index + 1}", check)
             if ok:
                 check((pkg.path / overlay["patch"]).is_file(), f"{where}{overlay['patch']} does not exist")
                 check(set(overlay.get("tracks") or []) <= set(pkg.tracks), f"{where}overlay: unknown track")
@@ -788,7 +831,7 @@ def cmd_validate(args):
 SCOPES = ("canary", "tests", "full")
 
 # package.yaml keys that never end up in a .deb: changing them needs no build.
-METADATA_KEYS = ("description", "homepage", "maintainers", "watch")
+METADATA_KEYS = ("description", "homepage", "watch")
 
 INFRA_PREFIXES = ("builders/", "scripts/", ".github/workflows/ci.yml")
 NON_BUILD_SUFFIXES = (".md",)
@@ -804,10 +847,43 @@ def changed_files(root, base, head):
     return [line for line in out.splitlines() if line]
 
 
-def track_fields(track):
-    return (track.tag, track.commit, track.revision, track.patches, track.codenames, track.sha256, track.go,
-            track.line, sorted((track.assets or {}).items()),
-            sorted((name, pin.tag, pin.commit, pin.sha256, pin.patches) for name, pin in track.companions.items()))
+# Track fields that change what gets built from the same tag: changing one
+# needs a new revision, or the release finds the version published already.
+BUILD_FIELDS = ("commit", "patches", "sha256", "go", "assets")
+
+
+def file_tracks(rel, manifests, keys):
+    """The tracks (of keys) that a changed file under packages/<name>/ can
+    affect, going by what references it in package.yaml now or before:
+    a patches directory its tracks (and companion pins), an overlay the
+    tracks it is scoped to, companions/<n>/ the tracks that pin <n>.
+    Anything else, or a file nothing references, affects every track."""
+    def within(directory):
+        return bool(directory) and (rel + "/").startswith(directory.rstrip("/") + "/")
+
+    hits, referenced = set(), False
+    for pkg in manifests:
+        if rel.startswith("companions/"):
+            name = rel.split("/")[1]
+            referenced = referenced or name in pkg.companions
+            hits |= {k for k in keys if k in pkg.tracks and name in pkg.tracks[k].companions}
+            continue
+        for key, track in pkg.tracks.items():
+            if within(track.patches) or any(within(pin.patches) for pin in track.companions.values()):
+                referenced = True
+                hits |= {key} & set(keys)
+        entries = [*pkg.overlays, *(o for c in pkg.companions.values() for o in c.data.get("overlays") or [])]
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get("patch") == rel:
+                referenced = True
+                hits |= {k for k in keys if not entry.get("tracks") or k in entry["tracks"]}
+    return hits if referenced else set(keys)
+
+
+def track_overlays(pkg, key):
+    """The overlay entries (package and companions) a track applies."""
+    entries = [*pkg.overlays, *(o for c in pkg.companions.values() for o in c.data.get("overlays") or [])]
+    return [o for o in entries if not (isinstance(o, dict) and o.get("tracks")) or key in o["tracks"]]
 
 
 def newest_track(keys):
@@ -828,12 +904,16 @@ def plan_changes(root, base, head, today=None, package_bases=None):
     even if nothing gets built.
 
     Rules:
-      * package.yaml track entry added or changed       -> that track, publish
-      * packaging changed (debian/, patches/, overlays/,
-        or package.yaml outside tracks/aliases)          -> all active tracks,
-                                                            publish; each must
-                                                            have a new version
-      * only tests/ changed                              -> newest track, test only,
+      * package.yaml track entry added or changed       -> that track, publish;
+                                                            commit, patches,
+                                                            sha256, go or assets
+                                                            need a new version
+      * track or package codenames added                 -> those codenames
+      * packaging changed                                -> the tracks it affects
+                                                            (file_tracks), publish;
+                                                            each must have a new
+                                                            version
+      * only tests/ or tests: changed                    -> newest track, test only,
                                                             no upstream test suite
       * build infrastructure changed                     -> newest track of every
                                                             package, one job each,
@@ -880,27 +960,53 @@ def plan_changes(root, base, head, today=None, package_bases=None):
                 select(pkg.name, key, True)
             continue
 
-        packaging = [f for f in pkg_files if f != "package.yaml" and not f.startswith("tests/")
-                     and not f.endswith(NON_BUILD_SUFFIXES)]
+        changed = {}  # track -> what changed in its build
+        tests_changed = any(f.startswith("tests/") for f in pkg_files)
+        for f in pkg_files:
+            if f != "package.yaml" and not f.startswith("tests/") and not f.endswith(NON_BUILD_SUFFIXES):
+                for key in file_tracks(f, (pkg, base_pkg), active):
+                    changed.setdefault(key, set()).add(f)
         if "package.yaml" in pkg_files and base_pkg:
-            strip = lambda d: {k: v for k, v in d.items() if k not in ("tracks", "aliases", *METADATA_KEYS)}
+            # Keys handled one by one below; the rest affects every track.
+            own = ("tracks", "aliases", "tests", "overlays", "companions", "codenames", *METADATA_KEYS)
+            strip = lambda d: {k: v for k, v in d.items() if k not in own}
             if strip(pkg.data) != strip(base_pkg.data):
-                packaging.append("package.yaml")
+                for key in active:
+                    changed.setdefault(key, set()).add("package.yaml")
+            tests_changed |= pkg.data.get("tests") != base_pkg.data.get("tests")
             if pkg.aliases != base_pkg.aliases:
                 alias_changes = True
+            settings = lambda p, name: p.companions[name].data if name in p.companions else None
             for key in active:
-                old = base_pkg.tracks.get(key)
-                if old is None or track_fields(old) != track_fields(pkg.tracks[key]):
+                new, old = pkg.tracks[key], base_pkg.tracks.get(key)
+                if old is None:
                     select(pkg.name, key, True)
+                    continue
+                if track_overlays(pkg, key) != track_overlays(base_pkg, key):
+                    changed.setdefault(key, set()).add("package.yaml overlays")
+                for name, pin in new.companions.items():
+                    old_pin = old.companions.get(name)
+                    if settings(pkg, name) != settings(base_pkg, name):
+                        changed.setdefault(key, set()).add(f"package.yaml companion {name}")
+                    elif old_pin and old_pin.tag == pin.tag and old_pin != pin:
+                        # Same companion version: the build must change it.
+                        changed.setdefault(key, set()).add(f"track {key} companion {name}")
+                fields = [f for f in BUILD_FIELDS if getattr(old, f) != getattr(new, f)]
+                if fields:
+                    changed.setdefault(key, set()).add(f"track {key} {', '.join(fields)}")
+                if (old.tag, old.revision) != (new.tag, new.revision) or old.companions != new.companions:
+                    select(pkg.name, key, True)
+                added = set(pkg.codenames(config, new)) - set(base_pkg.codenames(config, old))
+                if added:
+                    select(pkg.name, key, True, added)
 
-        if packaging:
-            for key in active:
-                select(pkg.name, key, True)
-                old = base_pkg.tracks.get(key) if base_pkg else None
-                if old and (old.tag, old.revision) == (pkg.tracks[key].tag, pkg.tracks[key].revision):
-                    errors.append(f"{pkg.name} {key}: packaging changed ({', '.join(sorted(set(packaging)))}) "
-                                  f"but tag and revision did not; bump revision so the version changes")
-        elif any(f.startswith("tests/") for f in pkg_files):
+        for key in sorted(changed):
+            select(pkg.name, key, True)
+            old = base_pkg.tracks.get(key) if base_pkg else None
+            if old and (old.tag, old.revision) == (pkg.tracks[key].tag, pkg.tracks[key].revision):
+                errors.append(f"{pkg.name} {key}: packaging changed ({', '.join(sorted(changed[key]))}) "
+                              f"but tag and revision did not; bump revision so the version changes")
+        if tests_changed:
             select(pkg.name, newest, False, scope="tests")
 
         if infra:
@@ -1040,19 +1146,26 @@ def check_tag_pin(label, url, tag, pinned):
 
 
 def download(url, dest):
-    """Download url to dest; returns its sha256. Retries server errors and
-    dropped connections; a 404 fails right away."""
+    """Download url to dest; returns its sha256. Retries server errors, rate
+    limits, dropped connections and cut-off bodies; other client errors (a
+    404) fail right away."""
     request = urllib.request.Request(url, headers={"User-Agent": "freshdeb (+https://github.com/blendbyte/freshdeb)"})
     for attempt in range(1, NETWORK_ATTEMPTS + 1):
         digest = hashlib.sha256()
         try:
             with urllib.request.urlopen(request, timeout=120) as response, open(dest, "wb") as fh:
+                size = 0
                 for chunk in iter(lambda: response.read(1 << 20), b""):
                     digest.update(chunk)
                     fh.write(chunk)
+                    size += len(chunk)
+                # read() returns what it got when a connection closes early.
+                length = response.headers.get("Content-Length")
+                if length and length.isdigit() and int(length) != size:
+                    raise http.client.IncompleteRead(b"", int(length) - size)
             return digest.hexdigest()
-        except (urllib.error.URLError, OSError) as error:
-            client_error = isinstance(error, urllib.error.HTTPError) and error.code < 500
+        except (urllib.error.URLError, http.client.HTTPException, OSError) as error:
+            client_error = isinstance(error, urllib.error.HTTPError) and error.code < 500 and error.code != 429
             if client_error or attempt == NETWORK_ATTEMPTS:
                 raise
             print(f"retrying ({attempt}/{NETWORK_ATTEMPTS - 1}) {url} after: {error}", file=sys.stderr)
@@ -1087,9 +1200,7 @@ def fetch_release_tarball(label, url, sha256, orig, dest):
 
 def fetch_assets(pkg, track, srcdir):
     """Download the track's release assets (upstream.assets, e.g. a prebuilt
-    web UI) into the source tree, each verified against its pinned sha256.
-    They end up in the orig tarball, so the source package holds everything
-    the build used."""
+    web UI) into the source tree, each verified against its pinned sha256."""
     version = pkg.upstream_version(track.tag)
     fetched = []
     for name, template in pkg.assets.items():
@@ -1188,23 +1299,6 @@ def fetch_git(label, url, tag, commit, dest, submodules=False):
     run("git", "-C", str(dest), "-c", "advice.detachedHead=false", "checkout", "-q", head)
     if submodules:
         run_network("git", "-C", str(dest), "submodule", "update", "-q", "--init", "--recursive", "--depth", "1")
-
-
-def make_orig_tarball(src, tarball, prefix, mtime):
-    def normalize(info):
-        if "/.git" in info.name or info.name.endswith("/.git"):
-            return None
-        info.uid = info.gid = 0
-        info.uname = info.gname = "root"
-        info.mtime = mtime
-        return info
-
-    with tarfile.open(tarball, "w:gz", compresslevel=6) as tar:
-        for path in sorted(src.rglob("*")):
-            rel = path.relative_to(src)
-            if rel.parts[0] == ".git" or ".git" in rel.parts:
-                continue
-            tar.add(path, arcname=f"{prefix}/{rel}", recursive=False, filter=normalize)
 
 
 def rewrite_control(debian_dir, maintainer, source_name=None):
@@ -1312,8 +1406,6 @@ def prepare_companions(pkg, config, key, codename, version, out, when):
             fetch_git(label, companion.upstream["git"], pin.tag, pin.commit, srcdir,
                       companion.upstream.get("submodules"))
             shutil.rmtree(srcdir / ".git")
-            make_orig_tarball(srcdir, cdir / f"{companion.name}_{orig_version}.orig.tar.gz",
-                              f"{companion.name}-{orig_version}", when)
         if (srcdir / "debian").exists():
             shutil.rmtree(srcdir / "debian")
         shutil.copytree(companion.path / "debian", srcdir / "debian", symlinks=True)
@@ -1377,9 +1469,6 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
         else:
             vendor_go_modules(srcdir, go_env(goroot, out / "cache", offline=False))
             build_env = go_env(goroot, out / "cache", offline=True)
-    if not tarball:
-        # After vendoring, so the orig tarball holds everything the build used.
-        make_orig_tarball(srcdir, out / f"{name}_{upstream_version}.orig.tar.gz", f"{name}-{upstream_version}", when)
 
     shutil.copytree(pkg.path / "debian", srcdir / "debian", symlinks=True)
     if track.patches:
@@ -1647,9 +1736,9 @@ def go_minor(version):
 def go_releases(archs):
     """{version: {arch: sha256}} for stable Go releases that have linux
     archives for every architecture we build."""
-    request = urllib.request.Request(GO_RELEASES, headers={"User-Agent": "freshdeb"})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        data = json.load(response)
+    with tempfile.TemporaryDirectory() as tmp:
+        download(GO_RELEASES, Path(tmp) / "releases.json")
+        data = json.loads((Path(tmp) / "releases.json").read_text())
     releases = {}
     for release in data:
         if not release.get("stable") or not re.fullmatch(r"go\d+\.\d+\.\d+", release["version"]):
@@ -1690,23 +1779,24 @@ def watch_go(pkg, changes, releases):
     when Go has a newer patch release (those are mostly security fixes,
     which a static binary only gets by being rebuilt)."""
     bumped = set()
+    supported = supported_go_minors(releases)
     for change in changes:
         if change["package"] != pkg.name:
             continue
         base = pkg.tracks.get(change["track"]) or pkg.tracks.get(change.get("based_on", ""))
         if not base or not base.go:
             continue
-        minor = go_minor(base.go)
+        # The track's minor, or newer if upstream needs it or the track's is
+        # no longer supported.
         needed = required_go_minor(pkg.upstream["git"], change["tag"])
-        if go_key(needed) > go_key(minor):
-            minor = needed
+        oldest = min(supported, key=go_key) if supported else needed
+        minor = max(go_minor(base.go), needed, oldest, key=go_key)
         version = newest_go_patch(minor, releases)
         require(version, f"{pkg.name} {change['track']}: no stable Go {minor} release on go.dev")
         change["go"] = version
         change["go_sha256"] = releases[version]
         bumped.add(change["track"])
     extra = []
-    supported = supported_go_minors(releases)
     for key, track in pkg.tracks.items():
         if not track.go or not track.active() or key in bumped:
             continue
@@ -1761,6 +1851,22 @@ def watch_report(pkg, tags, changes, go=None, today=None):
             else:
                 go_decision = "up to date"
             lines.append(f"  {label}: Go {track.go}, newest {go_minor(track.go)}.x {newest_go or '-'} -> {go_decision}")
+    numeric = [k for k in pkg.tracks if NUMERIC_RE.match(k)]
+    if numeric:
+        # Lines between our tracks that we don't follow: watch only adds
+        # lines above the newest track, these need a look by hand.
+        depth = len(numeric[0].split("."))
+        lowest, highest = min(numeric, key=_VersionKey), max(numeric, key=_VersionKey)
+        gaps = {}
+        for version in releases:
+            line = numeric_prefix(version, depth)
+            if (line and line not in pkg.tracks and compare_versions(line, lowest) > 0
+                    and compare_versions(line, highest) < 0
+                    and (line not in gaps or compare_versions(version, gaps[line]) > 0)):
+                gaps[line] = version
+        for line, version in sorted(gaps.items(), key=lambda item: _VersionKey(item[0])):
+            lines.append(f"  {pkg.name}: release line {line} ({releases[version][0]}) is between tracks {lowest} "
+                         f"and {highest} -> not added; add a track by hand if it should be")
     for change in changes:
         if change["kind"] == "new-track":
             moves = ", ".join(f"alias {a} -> {t}" for a, t in change["aliases"].items())
@@ -1847,6 +1953,11 @@ def apply_change(root, change):
             entry["go"] = base.go
         if assets:
             entry["assets"] = assets
+        if base.codenames:
+            entry["codenames"] = base.codenames
+        if base.companions:
+            entry["companions"] = {name: {k: v for k, v in vars(pin).items() if v is not None}
+                                   for name, pin in base.companions.items()}
         if base.patches:
             new_dir = f"patches/{change['track']}"
             src = pkg.path / base.patches
@@ -1870,18 +1981,26 @@ def cmd_watch(args):
     config = load_config(root)
     changes = []
     releases = None
+    failed = []
     for name in names:
-        pkg = load_package(name, root)
-        if not pkg.data.get("watch", True):
-            print(f"{pkg.name}: watch disabled", file=sys.stderr)
+        # One upstream that is down (or a bug with one package) must not
+        # keep the others from getting their pull requests.
+        try:
+            pkg = load_package(name, root)
+            if not pkg.data.get("watch", True):
+                print(f"{pkg.name}: watch disabled", file=sys.stderr)
+                continue
+            tags = remote_tags(pkg.upstream["git"])
+            found = watch_package(pkg, tags)
+            if pkg.go_mode == "modules" and any(track.go for track in pkg.tracks.values()):
+                releases = releases if releases is not None else go_releases(list(config.architectures))
+                found += watch_go(pkg, found, releases)
+            companion_tags = {c: remote_tags(companion.upstream["git"]) for c, companion in pkg.companions.items()}
+            found += watch_companions(pkg, companion_tags)
+        except Exception as error:  # noqa: BLE001
+            print(f"ERROR: {name}: {error}", file=sys.stderr)
+            failed.append(name)
             continue
-        tags = remote_tags(pkg.upstream["git"])
-        found = watch_package(pkg, tags)
-        if pkg.go_mode == "modules" and any(track.go for track in pkg.tracks.values()):
-            releases = releases if releases is not None else go_releases(list(config.architectures))
-            found += watch_go(pkg, found, releases)
-        companion_tags = {name: remote_tags(companion.upstream["git"]) for name, companion in pkg.companions.items()}
-        found += watch_companions(pkg, companion_tags)
         # The report goes to stderr: stdout is the JSON the workflow reads.
         print("\n".join(watch_report(pkg, tags, found, releases)
                         + companion_report(pkg, companion_tags, found)), file=sys.stderr)
@@ -1896,6 +2015,9 @@ def cmd_watch(args):
         for change in changes:
             apply_change(root, change)
     print(json.dumps(changes, indent=2))
+    if failed:
+        print(f"ERROR: watch failed for {', '.join(failed)}; the other packages' changes are above", file=sys.stderr)
+        return 1
     return 0
 
 

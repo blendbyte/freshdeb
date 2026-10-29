@@ -24,6 +24,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import freshdeb  # noqa: E402
 
+freshdeb.NETWORK_RETRY_DELAY = 0  # retries happen, without the waiting
+
 TODAY = dt.date(2026, 10, 27)
 
 
@@ -112,10 +114,29 @@ class CatalogTests(unittest.TestCase):
         self.replace('"9": "9.1"', '"9": "9.7"')
         self.assertTrue(any("unknown track 9.7" in e for e in self.errors()))
 
-    def test_alias_to_eol_track(self):
+    def test_alias_to_eol_track_is_fine(self):
         self.replace('"8": "8.1"', '"8": "8.0"')
-        errors = freshdeb.validate_all(self.tmp, dt.date(2028, 1, 1))
-        self.assertTrue(any("end-of-life" in e for e in errors))
+        self.assertEqual(freshdeb.validate_all(self.tmp, dt.date(2040, 1, 1)), [])
+
+    def test_unknown_keys(self):
+        self.replace("  - patch: overlays/legacy-sysusers.patch\n", "  - patch: overlays/legacy-sysusers.patch\n    codename: [jammy]\n")
+        self.replace("\n    eol: 2031-05-19", "\n    EOL: 2031-05-19")
+        self.replace("\nupstream:\n", "\nupstream:\n  tag-regex: x\n")
+        errors = self.errors()
+        for message in ("overlay #2: unknown key(s) codename", "track 9.1: unknown key(s) EOL",
+                        "upstream: unknown key(s) tag-regex"):
+            self.assertTrue(any(message in e for e in errors), (message, errors))
+        y = self.tmp / "packages/proftpd/package.yaml"
+        y.write_text(y.read_text().replace('proftpd-mod-vroot: {tag: "v0.9.12"', 'proftpd-mod-vroot: {tg: "x", tag: "v0.9.12"', 1))
+        self.assertTrue(any("track main companion proftpd-mod-vroot: unknown key(s) tg" in e for e in self.errors()))
+
+    def test_empty_codenames(self):
+        self.replace("  - patch: overlays/legacy-sysusers.patch\n", "  - patch: overlays/legacy-sysusers.patch\n    tracks: []\n")
+        self.assertTrue(any("overlay #2 tracks must be a non-empty list" in e for e in self.errors()))
+
+    def test_components_must_be_unique(self):
+        self.replace('"8": "8.1"', '"8": "8.1"\n  v9: "9.1"')
+        self.assertTrue(any("share the component(s) v9" in e for e in self.errors()))
 
     def test_missing_patches(self):
         self.replace("patches: patches/9.0", "patches: patches/nope")
@@ -266,7 +287,7 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(selected, {("valkey", "9.1"): True})
 
     def test_metadata_change_needs_no_build(self):
-        self.edit("packages/valkey/package.yaml", 'homepage: https://valkey.io', 'homepage: https://valkey.io/\nmaintainers: [someone]')
+        self.edit("packages/valkey/package.yaml", 'homepage: https://valkey.io', 'homepage: https://valkey.io/\nwatch: false')
         self.commit()
         selected, errors, aliases = self.plan()
         self.assertEqual((selected, errors, aliases), ({}, [], False))
@@ -289,6 +310,57 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertTrue(all(selected.values()))
         self.assertEqual(len(selected), 4)
+
+    def test_track_patches_affect_only_their_track(self):
+        self.edit("packages/valkey/patches/8.0/series", "\n", "\n# changed\n")
+        self.commit()
+        selected, errors, _ = self.plan()
+        self.assertEqual(set(selected), {("valkey", "8.0")})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("valkey 8.0: packaging changed (patches/8.0/series)", errors[0])
+        self.bump_valkey("8.0")
+        self.commit()
+        self.assertEqual(self.plan(), ({("valkey", "8.0"): True}, [], False))
+
+    def test_scoped_overlay_affects_only_its_tracks(self):
+        self.edit("packages/golang/overlays/golang-1.26.patch", "\n", "\n\n")
+        self.commit()
+        selected, errors, _ = self.plan()
+        self.assertEqual(set(selected), {("golang", "1.26")})
+        self.assertEqual(len(errors), 1)
+
+    def test_new_track_from_watch_plans_cleanly(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        newest = max(freshdeb.load_package("valkey", self.repo).tracks, key=freshdeb._VersionKey)
+        major, minor = newest.split(".")
+        line = f"{major}.{int(minor) + 1}"
+        freshdeb.apply_change(self.repo, {"package": "valkey", "kind": "new-track", "track": line,
+                                          "tag": f"{line}.0", "commit": "b" * 40, "based_on": newest,
+                                          "aliases": {major: line}})
+        self.commit()
+        self.assertEqual(self.plan(), ({("valkey", line): True}, [], True))
+
+    def test_build_field_change_needs_a_bump(self):
+        self.edit("packages/restic/package.yaml", 'go: "1.26.10"', 'go: "1.27.3"')
+        self.commit()
+        selected, errors, _ = self.plan()
+        self.assertEqual(selected, {("restic", "main"): True})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("track main go", errors[0])
+
+    def test_added_codenames_build_only_there(self):
+        self.edit("packages/postsrsd/package.yaml", "codenames: [bookworm, trixie, noble, resolute]",
+                  "codenames: [bookworm, trixie, jammy, noble, resolute]")
+        self.commit()
+        selected, errors, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
+        self.assertEqual(errors, [])
+        self.assertEqual({k: v["codenames"] for k, v in selected.items()}, {("postsrsd", "main"): {"jammy"}})
+
+    def test_test_settings_change_is_test_only(self):
+        self.edit("packages/valkey/package.yaml", "\ntracks:", "\ntests:\n  capabilities: [NET_ADMIN]\n\ntracks:")
+        self.commit()
+        self.assertEqual(self.plan(), ({("valkey", "9.1"): False}, [], False))
 
     def test_eol_tracks_are_not_built(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
@@ -602,6 +674,9 @@ class GoTests(unittest.TestCase):
         y = self.tmp / "packages/restic/package.yaml"
         text = re.sub(r'^(    go: )"[^"]+"', r'\1"1.25.14"', y.read_text(), count=1, flags=re.M)
         y.write_text(re.sub(r"^(    revision: )\d+", r"\g<1>1", text, count=1, flags=re.M))
+        c = self.tmp / "config.yaml"
+        c.write_text(c.read_text().replace("\n  go:\n", '\n  go:\n    "1.25.14":\n      amd64: ' + "a" * 64
+                                           + "\n      arm64: " + "b" * 64 + "\n", 1))
         self.pkg = freshdeb.load_package("restic", self.tmp)
         self.original = freshdeb.required_go_minor
 
@@ -643,6 +718,13 @@ class GoTests(unittest.TestCase):
         freshdeb.required_go_minor = lambda url, tag: "1.26"
         change = {"package": "restic", "kind": "bump", "track": "main", "tag": "v0.20.0", "commit": "c" * 40}
         self.assertEqual(freshdeb.watch_go(self.pkg, [change], self.RELEASES), [])
+        self.assertEqual(change["go"], "1.26.3")
+
+    def test_bump_leaves_an_unsupported_minor(self):
+        freshdeb.required_go_minor = lambda url, tag: "1.24"
+        releases = {**self.RELEASES, "1.27.1": {"amd64": "1" * 64, "arm64": "2" * 64}}
+        change = {"package": "restic", "kind": "bump", "track": "main", "tag": "v0.19.2", "commit": "c" * 40}
+        self.assertEqual(freshdeb.watch_go(self.pkg, [change], releases), [])
         self.assertEqual(change["go"], "1.26.3")
 
     def test_bump_keeps_the_minor_but_takes_its_newest_patch(self):
@@ -726,10 +808,6 @@ class LineTrackTests(unittest.TestCase):
         y.write_text(y.read_text().replace('    tag: "9.1.3"', '    line: "9.1"\n    tag: "9.1.3"'))
         self.assertTrue(any("line is only for named tracks" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
 
-    def test_moving_the_line_is_a_track_change(self):
-        old = self.pkg.tracks["lts"]
-        moved = freshdeb.parse_package("prometheus", self.pkg.path, yaml_replace(self.yaml, '"3.13"', '"3.15"')).tracks["lts"]
-        self.assertNotEqual(freshdeb.track_fields(old), freshdeb.track_fields(moved))
 
 
 def yaml_replace(path, old, new):
@@ -860,6 +938,36 @@ class NetworkRetryTests(unittest.TestCase):
         finally:
             freshdeb.download = freshdeb_download
 
+    def test_cut_off_download_is_retried(self):
+        calls = []
+
+        class Short(io.BytesIO):
+            headers = {"Content-Length": "100"}
+
+            def __enter__(self):
+                return self
+
+        def short(request, timeout):
+            calls.append(request)
+            return Short(b"0123456789")
+
+        freshdeb.urllib.request.urlopen = short
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(freshdeb.http.client.IncompleteRead):
+            freshdeb.download("https://example.invalid/x.tar.gz", Path(tmp) / "x")
+        self.assertEqual(len(calls), freshdeb.NETWORK_ATTEMPTS)
+
+    def test_rate_limit_is_retried(self):
+        calls = []
+
+        def limited(request, timeout):
+            calls.append(request)
+            raise freshdeb.urllib.error.HTTPError(request.full_url, 429, "Too Many Requests", {}, None)
+
+        freshdeb.urllib.request.urlopen = limited
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(freshdeb.urllib.error.HTTPError):
+            freshdeb.download("https://example.invalid/x.tar.gz", Path(tmp) / "x")
+        self.assertEqual(len(calls), freshdeb.NETWORK_ATTEMPTS)
+
     def test_download_does_not_retry_a_404(self):
         calls = []
 
@@ -926,6 +1034,13 @@ class WatchReportTests(unittest.TestCase):
         lines = self.report(pkg, {}, today=track.eol + dt.timedelta(days=1))
         self.assertIn(f"  valkey {key}: ours {pkg.upstream_version(track.tag)}, end of life since {track.eol} "
                       "-> skipped", lines)
+
+    def test_release_line_between_tracks(self):
+        pkg = freshdeb.load_package("valkey", self.tmp)
+        lines = self.report(pkg, {"8.2.0": "a" * 40, "8.2.1": "b" * 40, "7.2.9": "c" * 40})
+        self.assertIn("  valkey: release line 8.2 (8.2.1) is between tracks 8.0 and 9.1 -> not added; "
+                      "add a track by hand if it should be", lines)
+        self.assertFalse(any("release line 7.2" in line for line in lines))
 
     def test_new_release_line(self):
         pkg = freshdeb.load_package("valkey", self.tmp)
@@ -1010,6 +1125,29 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(pkg.aliases["9"], "9.2")
         self.assertEqual(freshdeb.validate_all(tmp, TODAY), [], text)
         shutil.rmtree(tmp)
+
+
+class WatchFailureTests(unittest.TestCase):
+    """One broken upstream doesn't stop watch for the others."""
+
+    def test_other_packages_still_get_their_changes(self):
+        valkey = freshdeb.load_package("valkey", ROOT)
+        tags = {t.tag: t.commit for t in valkey.tracks.values()}
+        tags["9.1.99"] = "a" * 40
+
+        def remote_tags(url):
+            if "memcached" in url:
+                raise freshdeb.FreshdebError("command failed (128): git ls-remote")
+            return tags
+
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(freshdeb, "remote_tags", remote_tags), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            status = freshdeb.cmd_watch(SimpleNamespace(root=ROOT, packages=["memcached", "valkey"], tracks=None,
+                                                        kinds=None, companions=None, apply=False))
+        self.assertEqual(status, 1)
+        self.assertEqual([(c["package"], c["tag"]) for c in json.loads(out.getvalue())], [("valkey", "9.1.99")])
+        self.assertIn("ERROR: memcached: command failed", err.getvalue())
 
 
 class CompanionTests(unittest.TestCase):
@@ -1154,9 +1292,18 @@ class CompanionTests(unittest.TestCase):
             "binaries": {"proftpd-mod-procfs": "any"}, "overlays": ["overlays/procfs-debhelper-13.patch"]}])
         src = out / prepared[0]["source_dir"]
         self.assertEqual((src / "mod_procfs.c").read_text(), "/* mod_procfs */\n")
-        self.assertTrue((out / f"companions/proftpd-mod-procfs_{cversion.rsplit('-', 1)[0]}.orig.tar.gz").is_file())
         self.assertTrue((src / "debian/changelog").read_text().startswith(f"proftpd-mod-procfs ({cversion}) "))
         self.assertIn("debhelper-compat (= 13)", (src / "debian/control").read_text())
+
+    def test_new_track_copies_pins_and_codenames(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        self.replace(self.yaml, '\n    tag: "v1.3.9e"', '\n    codenames: [trixie]\n    tag: "v1.3.9e"')
+        freshdeb.apply_change(self.tmp, {"package": "proftpd", "kind": "new-track", "track": "1.4",
+                                         "tag": "v1.4.0", "commit": "b" * 40, "based_on": "main", "aliases": {}})
+        pkg = freshdeb.load_package("proftpd", self.tmp)
+        self.assertEqual(pkg.tracks["1.4"].companions, pkg.tracks["main"].companions)
+        self.assertEqual(pkg.tracks["1.4"].codenames, ["trixie"])
 
     def test_apply_pins_the_companion(self):
         if not shutil.which("yq"):
