@@ -84,7 +84,8 @@ echo "an event from a Sentry SDK shows up"
 created="$(tindra_cli projects create --name "Freshdeb Smoke" --slug freshdeb-smoke)"
 key="$(sed -n 's/^ *public_key: *//p' <<<"$created")"
 [[ -n "$key" ]] || { echo "$created" >&2; exit 1; }
-payload='{"timestamp":"2026-01-01T00:00:00Z","level":"error","message":"freshdeb smoke event","platform":"other"}'
+# Now: an older event could be past the retention period (RETENTION_DAYS).
+payload='{"timestamp":"'"$(date -u +%FT%TZ)"'","level":"error","message":"freshdeb smoke event","platform":"other"}'
 envelope="$(printf '{"event_id":"%s"}\n{"type":"event","length":%d}\n%s\n' \
     "$(openssl rand -hex 16)" "${#payload}" "$payload")"
 curl -fsS -o /dev/null -H "X-Sentry-Auth: Sentry sentry_version=7, sentry_key=$key" \

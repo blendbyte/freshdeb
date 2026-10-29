@@ -16,7 +16,8 @@ expected="${FRESHDEB_UPSTREAM_VERSION:?}"
 source "$(dirname "$0")/lib.sh"
 work="$(mktemp -d)"
 modules=/etc/proftpd/conf.d/freshdeb-modules.conf
-trap 'rm -rf "$work" "$modules" "$SNIPPET"' EXIT
+reload_conf=/etc/proftpd/conf.d/freshdeb-reload.conf
+trap 'rm -rf "$work" "$modules" "$SNIPPET" "$reload_conf"' EXIT
 
 echo "proftpd reports the expected version"
 # Captured first throughout: "cmd | grep -q" trips pipefail when grep exits early.
@@ -125,6 +126,28 @@ else
     [[ "$banner" == SSH-2.0-* ]] || { echo "no SSH banner: $banner" >&2; exit 1; }
 fi
 
+echo "reload: the running server takes up a changed setting"
+# The init script (and the systemd unit) reload with SIGHUP: the master
+# process stays and rereads its configuration.
+banner() {
+    timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/21; head -n 1 <&3' || true
+}
+master="$(cat /run/proftpd.pid)"
+ident="freshdeb reload test $$"
+[[ "$(banner)" != *"$ident"* ]]
+echo "ServerIdent on \"$ident\"" > "$reload_conf"
+proftpd -t
+service proftpd reload
+for _ in $(seq 1 100); do
+    [[ "$(banner)" == "220 $ident"* ]] && break
+    sleep 0.2
+done
+got="$(banner)"
+[[ "$got" == "220 $ident"* ]] || { echo "banner after reload: $got" >&2; tail -n 30 /var/log/proftpd/proftpd.log >&2; exit 1; }
+[[ "$(cat /run/proftpd.pid)" == "$master" && -d "/proc/$master" ]] \
+    || { echo "proftpd was restarted instead (pid $master before)" >&2; exit 1; }
+[[ "$(ftp ftp://127.0.0.1/up.txt)" == "uploaded over ftp" ]]
+
 stop_proftpd
-rm -f "$FTP_HOME"/up*.txt
+rm -f "$FTP_HOME"/up*.txt "$reload_conf"
 echo "smoke test passed"

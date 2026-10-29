@@ -1,0 +1,47 @@
+diff -ruN a/debian/install b/debian/install
+--- a/debian/install
++++ b/debian/install
+@@ -1,2 +1,2 @@
+-debian/snmp.yml     etc/prometheus
++snmp.yml            etc/prometheus
+ generator/README.md usr/share/doc/prometheus-snmp-exporter/generator
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,3 +1,20 @@
++prometheus-snmp-exporter (0.31.0-3) unstable; urgency=medium
++
++  freshdeb: /etc/prometheus/snmp.yml is upstream's configuration now, instead
++  of Debian's placeholder without any modules. It is generated from upstream's
++  generator.yml (in /usr/share/doc/prometheus-snmp-exporter/examples) and has
++  modules for standard MIBs (if_mib, system, ip_mib, ucd_system_stats, ...)
++  and many vendors (cisco_device, mikrotik, synology, ...), and the auths
++  public_v1 and public_v2 (community "public", public_v2 is the default):
++
++    /snmp?target=192.0.2.1&module=if_mib
++
++  An snmp.yml you changed or generated yourself is kept: dpkg asks whether to
++  replace it, and keeping it puts upstream's next to it as
++  /etc/prometheus/snmp.yml.dpkg-dist.
++
++ -- freshdeb <packages@freshdeb.com>  Thu, 29 Oct 2026 12:00:00 +0000
++
+ prometheus-snmp-exporter (0.31.0-1) unstable; urgency=medium
+ 
+   freshdeb: the distributions ship snmp_exporter 0.20 to 0.30; this is a
+diff -ruN a/debian/README.Debian b/debian/README.Debian
+--- a/debian/README.Debian
++++ b/debian/README.Debian
+@@ -1,8 +1,10 @@
+ prometheus-snmp-exporter for Debian
+ -----------------------------------
+ 
+-Due to licensing reasons, it is not possible to ship a ready-to-use snmp.yml
+-config file with this package.
++freshdeb: /etc/prometheus/snmp.yml is upstream's ready-to-use configuration,
++generated from the generator.yml in
++/usr/share/doc/prometheus-snmp-exporter/examples. For devices or credentials
++it doesn't cover, generate your own.
+ 
+ See generator/README.md for instructions on how to obtain SNMP MIBs and
+ generate a suitable snmp.yml config.

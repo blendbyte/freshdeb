@@ -16,7 +16,7 @@ tracks:
   main:
     tag: "v0.20.1"
     commit: 867fbcac31cd18c143e244190ea9168cca069827
-    revision: 1
+    revision: 2
     go: "1.26.10"  # upstream's release build: Go 1.26 (.promu.yml); go.mod: go 1.25.0
     patches: patches/main  # empty: Debian's only patch (kingpin import path) isn't needed with vendored modules
 
@@ -24,5 +24,6 @@ overlays:
   # Pinned Go and vendored modules instead of dh-golang, plus a NEWS entry for the upgrade.
   - patch: overlays/go-build.patch
   # The init script didn't export /etc/default's settings, so without
-  # systemd the exporter never got DATA_SOURCE_NAME (all releases).
+  # systemd the exporter never got DATA_SOURCE_NAME, and it refused
+  # DATA_SOURCE_URI and exited 0 without a connection (all releases).
   - patch: overlays/init-export-environment.patch

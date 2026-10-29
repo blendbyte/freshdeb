@@ -101,10 +101,11 @@ EOF
     rm -rf "$dir"
 }
 
-# An SNMP v2c agent on $TARGET with community "freshdeb".
+# An SNMP v2c agent on $TARGET with the communities "freshdeb" and "public"
+# (the one of upstream's snmp.yml).
 start_snmpd() {
     mkdir -p "$SNMP_DIR"
-    printf 'rocommunity freshdeb 127.0.0.1\nsysName %s\n' "$SYS_NAME" > "$SNMP_DIR/snmpd.conf"
+    printf 'rocommunity freshdeb 127.0.0.1\nrocommunity public 127.0.0.1\nsysName %s\n' "$SYS_NAME" > "$SNMP_DIR/snmpd.conf"
     if ! snmpd -C -c "$SNMP_DIR/snmpd.conf" -Lf "$SNMP_DIR/snmpd.log" -p "$SNMP_DIR/snmpd.pid" "udp:$TARGET"; then
         echo "snmpd does not start" >&2
         tail -n 20 "$SNMP_DIR/snmpd.log" >&2 || true

@@ -1,0 +1,9 @@
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -1,4 +1,4 @@
+-forgejo (17.0.1-2) unstable; urgency=medium
++forgejo (15.0.11-2) unstable; urgency=medium
+ 
+   The "main" component follows every Forgejo release, including the new
+   major version that comes about every three months. On its first start, a

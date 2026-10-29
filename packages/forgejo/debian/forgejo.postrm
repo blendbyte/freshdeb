@@ -3,10 +3,10 @@ set -e
 
 case "$1" in
   purge)
-    # The configuration goes with the package; repositories, the database
-    # and everything else in /var/lib/forgejo, and the git user, stay.
-    rm -f /etc/forgejo/app.ini
-    rmdir /etc/forgejo 2>/dev/null || true
+    # Nothing is removed: /etc/forgejo/app.ini holds the secrets (SECRET_KEY)
+    # that parts of /var/lib/forgejo are encrypted with, so the configuration
+    # stays with the repositories and the database, and the git user stays
+    # too (README.Debian).
   ;;
 
   remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)

@@ -1,0 +1,13 @@
+diff -ruN a/debian/NEWS b/debian/NEWS
+--- a/debian/NEWS
++++ b/debian/NEWS
+@@ -0,0 +1,9 @@
++valkey (8.1.11-3) unstable; urgency=medium
++
++  freshdeb: on arm64, valkey-server now also runs on kernels with 16K or
++  64K pages (Raspberry Pi 5, Asahi Linux, Ubuntu's -64k kernels), where it
++  used to abort with "<jemalloc>: Unsupported system page size". Its bundled
++  jemalloc is now built for 64K pages, as Debian's libjemalloc is; on 4K
++  kernels that can use a little more memory.
++
++ -- freshdeb <packages@freshdeb.com>  Thu, 29 Oct 2026 12:00:00 +0000

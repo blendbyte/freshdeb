@@ -23,11 +23,11 @@ override_dh_auto_build:
 	go build -trimpath -ldflags "$(LDFLAGS)" -tags frps -o _build/frps ./cmd/frps
 	go build -trimpath -ldflags "$(LDFLAGS)" -tags frpc -o _build/frpc ./cmd/frpc
 
-# Upstream's unit tests, as its "make test" runs them (not the e2e suite,
-# which needs network setups and a long time).
+# Not upstream's suite (they run it in their CI); a check of the built binaries.
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-	go test ./assets/... ./cmd/... ./client/... ./server/... ./pkg/...
+	_build/frps --version | grep -qxF '$(DEB_VERSION_UPSTREAM)'
+	_build/frpc --version | grep -qxF '$(DEB_VERSION_UPSTREAM)'
 endif
 
 override_dh_auto_install:

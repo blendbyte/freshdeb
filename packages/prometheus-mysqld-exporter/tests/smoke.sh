@@ -37,7 +37,6 @@ log="$(cat /var/log/prometheus/prometheus-mysqld-exporter.log)"
 [[ "$log" == *"DATA_SOURCE_NAME is no longer supported"* ]] || { tail -n 20 <<<"$log" >&2; exit 1; }
 stop_exporter
 cp "$saved" "$defaults"
-rm -f "$saved"
 
 echo "MariaDB with a monitoring user, credentials in ~prometheus/.my.cnf"
 start_mariadb
@@ -64,6 +63,17 @@ direct_pid=$!
 wait_metrics 19104 || { cat /tmp/direct.log >&2; exit 1; }
 expect_metrics 19104 'mysql_up 1' || { cat /tmp/direct.log >&2; exit 1; }
 kill "$direct_pid"
+
+echo "the same through the service: ARGS and MYSQLD_EXPORTER_PASSWORD in $defaults"
+cat >> "$defaults" <<EOF
+ARGS="--config.my-cnf=/nonexistent --mysqld.username=prometheus --mysqld.address=unix://$DB_SOCKET"
+MYSQLD_EXPORTER_PASSWORD="$DB_PASSWORD"
+EOF
+start_exporter 9104
+expect_metrics 9104 'mysql_up 1'
+stop_exporter
+cp "$saved" "$defaults"
+rm -f "$saved"
 
 echo "man page is packaged"
 # From the file list: Ubuntu's minimized images skip /usr/share/man.

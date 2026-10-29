@@ -17,11 +17,13 @@ tracks:
   main:
     tag: "v1.155.0"
     commit: 3fec2f72414d00d1acda807c8818d7af90cc966d
-    revision: 1
+    revision: 2
     go: "1.27.3"  # what upstream's release build uses (deployment/docker: golang:1.27.3); go.mod: go 1.27.3
     patches: patches/main  # Debian's test fix only; the patches that remove the web UI are dropped
 
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang, built like
-  # upstream's release binaries with the web UI (all releases).
+  # upstream's release binaries with the web UI (all releases); also a working
+  # reload (COMMAND_NAME=none in the init script, ExecReload in the unit) and a
+  # NEWS entry about the upgrade from the distributions' versions.
   - patch: overlays/go-build.patch

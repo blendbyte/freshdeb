@@ -12,15 +12,25 @@ diff -ruN a/debian/control b/debian/control
 diff -ruN a/debian/rules b/debian/rules
 --- a/debian/rules
 +++ b/debian/rules
-@@ -23,8 +23,10 @@
+@@ -23,8 +23,20 @@
  	dh_auto_clean
  	rm -f src/release.h debian/*.service
  
 +# freshdeb: upstream's bundled jemalloc (deps/jemalloc), which valkey is
 +# built and tested with; only with it is active defragmentation available.
++# Its configure takes the build machine's page size, and jemalloc refuses to
++# run on a kernel with larger pages: outside x86, use 64K pages (16K and 64K
++# arm64 kernels), as Debian's libjemalloc does. This replaces deps/Makefile's
++# own JEMALLOC_CONFIGURE_OPTS, hence --host.
++include /usr/share/dpkg/architecture.mk
++ifeq (,$(filter amd64 i386,$(DEB_HOST_ARCH)))
++JEMALLOC_LG_PAGE = --with-lg-page=16
++endif
++
  override_dh_auto_build:
 -	dh_auto_build -- V=1 USE_SYSTEM_JEMALLOC=yes USE_SYSTEMD=yes USE_JEMALLOC=yes
-+	dh_auto_build -- V=1 USE_SYSTEMD=yes USE_JEMALLOC=yes
++	dh_auto_build -- V=1 USE_SYSTEMD=yes USE_JEMALLOC=yes \
++		JEMALLOC_CONFIGURE_OPTS="--host=$(DEB_HOST_GNU_TYPE) $(JEMALLOC_LG_PAGE)"
  
  override_dh_auto_test:
  ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))

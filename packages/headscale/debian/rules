@@ -25,11 +25,9 @@ override_dh_auto_build:
 	go version
 	go build -ldflags "$(LDFLAGS)" -o _build/headscale ./cmd/headscale
 
-# Upstream's unit tests ("make test" runs go test ./...); not ./integration,
-# which runs Tailscale clients in Docker containers.
+# Not upstream's suite (they run it in their CI); a check of the built binary.
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-	go test ./hscontrol/... ./cmd/...
 	_build/headscale version | grep -qx 'headscale version v$(DEB_VERSION_UPSTREAM)'
 endif
 

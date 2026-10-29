@@ -19,5 +19,5 @@ tracks:
   main:
     tag: "v0.71.1"
     commit: d8cf1800dc1abd7fda1828cab105d7a6b5a50eb1
-    revision: 1
+    revision: 2
     go: "1.26.10"  # what upstream's release workflow uses (Go 1.26); go.mod: go 1.26.0

@@ -123,16 +123,16 @@ class CatalogTests(unittest.TestCase):
         self.replace("\n    eol: 2031-05-19", "\n    EOL: 2031-05-19")
         self.replace("\nupstream:\n", "\nupstream:\n  tag-regex: x\n")
         errors = self.errors()
-        for message in ("overlay #2: unknown key(s) codename", "track 9.1: unknown key(s) EOL",
-                        "upstream: unknown key(s) tag-regex"):
-            self.assertTrue(any(message in e for e in errors), (message, errors))
+        for message in (r"overlay #\d+: unknown key\(s\) codename$", r"track 9\.1: unknown key\(s\) EOL$",
+                        r"upstream: unknown key\(s\) tag-regex$"):
+            self.assertTrue(any(re.search(message, e) for e in errors), (message, errors))
         y = self.tmp / "packages/proftpd/package.yaml"
         y.write_text(y.read_text().replace('proftpd-mod-vroot: {tag: "v0.9.12"', 'proftpd-mod-vroot: {tg: "x", tag: "v0.9.12"', 1))
         self.assertTrue(any("track main companion proftpd-mod-vroot: unknown key(s) tg" in e for e in self.errors()))
 
     def test_empty_codenames(self):
         self.replace("  - patch: overlays/legacy-sysusers.patch\n", "  - patch: overlays/legacy-sysusers.patch\n    tracks: []\n")
-        self.assertTrue(any("overlay #2 tracks must be a non-empty list" in e for e in self.errors()))
+        self.assertTrue(any(re.search(r"overlay #\d+ tracks must be a non-empty list", e) for e in self.errors()))
 
     def test_components_must_be_unique(self):
         self.replace('"8": "8.1"', '"8": "8.1"\n  v9: "9.1"')

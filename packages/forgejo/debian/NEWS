@@ -1,0 +1,16 @@
+forgejo (17.0.1-2) unstable; urgency=medium
+
+  The "main" component follows every Forgejo release, including the new
+  major version that comes about every three months. On its first start, a
+  new major migrates the database, and that can't be undone: the previous
+  version doesn't run on the migrated database, so going back means
+  restoring a backup. Take one before upgrading to a new major:
+
+    cd /var/lib/forgejo && sudo -u git forgejo dump
+
+  (it writes forgejo-dump-<time>.zip there). For fewer of these upgrades,
+  use the "lts" component instead: it stays on Forgejo's long-term support
+  release, with its patch releases only, and moves on to the next one about
+  once a year, which is a major upgrade like the others.
+
+ -- freshdeb <packages@freshdeb.com>  Thu, 29 Oct 2026 12:00:00 +0000

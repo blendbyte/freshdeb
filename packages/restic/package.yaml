@@ -16,9 +16,9 @@ tracks:
   main:
     tag: "v0.19.1"
     commit: 6aa3a516ce654808a1f28f9fa21e9b7c8e6e90bf
-    revision: 2
+    revision: 3
     go: "1.26.10"  # upstream's go.mod: toolchain go1.25.10; Go 1.25 is no longer supported, so the oldest supported minor
-    patches: patches/main  # Debian's, without 0002-disable-azure.patch (we vendor the Azure SDK)
+    patches: patches/main  # Debian's, without 0002-disable-azure.patch (we vendor the Azure SDK) and python-is-python3.patch (for the tests, which we don't run)
 
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).

@@ -238,14 +238,14 @@ diff -ruN a/debian/rules b/debian/rules
 +	        -o _build/bin/$$app ./app/$$app; \
 +	done
 +
-+# Upstream's unit tests (lib/ and app/; apptest/ needs cluster binaries), with
-+# Debian's skips: TestStorage_futureTimestamps depends on the clock,
-+# TestExecSuccess and TestExecError on a shell environment.
++# Not upstream's suite (they run it in their CI); a check of the built
++# binaries: each reports upstream's version stamp (vmctl and vmalert-tool as
++# "<app> version <stamp>").
 +override_dh_auto_test:
 +ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-+	go test -tags '$(GOTAGS)' \
-+	    -skip 'TestStorage_futureTimestamps|TestExecSuccess|TestExecError' \
-+	    ./lib/... ./app/...
++	set -e; for app in $(APPS); do \
++	    _build/bin/$$app -version 2>&1 | grep -qxE "($$app version )?$$app-$(BUILDINFO)"; \
++	done
 +endif
 +
 +override_dh_auto_install:

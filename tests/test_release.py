@@ -226,7 +226,7 @@ class ReleaseTests(unittest.TestCase):
     def test_registered_project_without_database_is_refused(self):
         self.bootstrap()
         shutil.rmtree(self.remote / "valkey/db")
-        self.edit_package('.tracks["9.1"].revision = 2')
+        self.edit_package('.tracks["9.1"].revision += 1')
         failures = self.publish(self.artifacts(tracks=["9.1"]))
         self.assertIn("database is missing", failures["valkey"])
 
@@ -238,12 +238,13 @@ class ReleaseTests(unittest.TestCase):
 
     def test_partial_release_only_touches_its_track_and_alias(self):
         before = self.bootstrap()
-        self.edit_package('.tracks["9.1"].revision = 2')
+        self.edit_package('.tracks["9.1"].revision += 1')
+        revision = freshdeb.load_package("valkey", self.root).tracks["9.1"].revision
         self.assertEqual(self.publish(self.artifacts(tracks=["9.1"]), commit="beef"), {})
         after = self.indexes()
         for key in set(before) | set(after):
             if key[1] in ("v9.1", "v9"):
-                self.assertRegex(after[key]["Version"], r"^9\.1\.\d+-2\+freshdeb~")
+                self.assertRegex(after[key]["Version"], rf"^9\.1\.\d+-{revision}\+freshdeb~")
             else:
                 self.assertEqual(before.get(key), after.get(key), key)
         self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "beef")
@@ -269,14 +270,14 @@ class ReleaseTests(unittest.TestCase):
 
     def test_skipped_builds_publish_nothing(self):
         before = self.bootstrap()
-        self.edit_package('.tracks["8.0"].revision = 2')
+        self.edit_package('.tracks["8.0"].revision += 1')
         codenames = list(self.config.distributions)
         self.publish(self.artifacts(tracks=["8.0"], skipped={("8.0", c) for c in codenames}))
         self.assertEqual(before, self.indexes())
 
     def test_test_only_builds_are_ignored(self):
         before = self.bootstrap()
-        self.edit_package('.tracks["9.1"].revision = 2')
+        self.edit_package('.tracks["9.1"].revision += 1')
         self.publish(self.artifacts(tracks=["9.1"], publish=False))
         self.assertEqual(before, self.indexes())
 
@@ -288,13 +289,13 @@ class ReleaseTests(unittest.TestCase):
     def test_refuses_builds_that_disagree_with_the_manifest(self):
         self.bootstrap()
         artifacts = self.artifacts(tracks=["9.1"])
-        self.edit_package('.tracks["9.1"].revision = 3')  # manifest moved on after the build
+        self.edit_package('.tracks["9.1"].revision += 1')  # manifest moved on after the build
         self.assertIn("package.yaml now says", self.publish(artifacts)["valkey"])
 
     def test_refuses_downgrade(self):
-        self.edit_package('.tracks["9.1"].revision = 5')
+        self.edit_package('.tracks["9.1"].revision += 2')
         self.bootstrap()
-        self.edit_package('.tracks["9.1"].revision = 4')
+        self.edit_package('.tracks["9.1"].revision -= 1')
         self.assertIn("refusing downgrade", self.publish(self.artifacts(tracks=["9.1"]))["valkey"])
 
     def test_arch_all_packages_come_from_the_primary_architecture(self):
@@ -325,7 +326,7 @@ class ReleaseTests(unittest.TestCase):
 
     def test_refuses_incomplete_build(self):
         self.bootstrap()
-        self.edit_package('.tracks["9.1"].revision = 2')
+        self.edit_package('.tracks["9.1"].revision += 1')
         artifacts = self.artifacts(tracks=["9.1"], codenames=["bookworm"])
         info_path = next(artifacts.glob("valkey_9.1_bookworm_amd64/build-info.json"))
         info = json.loads(info_path.read_text())
@@ -337,12 +338,12 @@ class ReleaseTests(unittest.TestCase):
         self.bootstrap()
         index = self.remote / "valkey/dists/bookworm/v9.1/binary-amd64/Packages"
         index.write_text(index.read_text().replace("Version: 9.1", "Version: 9.9"))
-        self.edit_package('.tracks["9.1"].revision = 2')
+        self.edit_package('.tracks["9.1"].revision += 1')
         self.assertIn("checksum mismatch", self.publish(self.artifacts(tracks=["9.1"]))["valkey"])
 
     def test_refuses_removed_track(self):
         self.bootstrap()
-        self.edit_package('del(.tracks["8.0"])')
+        self.edit_package('del(.tracks["8.0"]) | del(.overlays[] | select(.tracks[0] == "8.0"))')
         self.assertIn("never remove a track", self.publish(self.artifacts(tracks=["9.1"]))["valkey"])
 
     # ─── projects are independent ───────────────────────────────────────
@@ -364,7 +365,7 @@ class ReleaseTests(unittest.TestCase):
         self.add_demo_package()
         index = self.remote / "valkey/dists/bookworm/v9.1/binary-amd64/Packages"
         index.write_text(index.read_text().replace("Version: 9.1", "Version: 9.9"))
-        self.edit_package('.tracks["9.1"].revision = 2')
+        self.edit_package('.tracks["9.1"].revision += 1')
         failures = self.publish(self.merge(self.artifacts(tracks=["9.1"]), self.artifacts(name="demo")),
                                 commit="beef")
         self.assertEqual(list(failures), ["valkey"])
@@ -382,7 +383,7 @@ class ReleaseTests(unittest.TestCase):
 
     def rename_valkey_tracks(self):
         # Like memcached's 1.6 -> main: the published components disappear.
-        self.edit_package('.tracks = {"main": .tracks["9.1"]} | del(.aliases)')
+        self.edit_package('.tracks = {"main": .tracks["9.1"]} | del(.aliases) | del(.overlays[] | select(has("tracks")))')
 
     def test_renamed_components_need_a_reset(self):
         self.bootstrap()

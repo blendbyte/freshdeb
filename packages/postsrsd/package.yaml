@@ -21,7 +21,7 @@ tracks:
   main:
     tag: "2.4.1"
     commit: b21998ec41d4d08777f089916bf237c3ac55206c
-    revision: 1
+    revision: 2
 
 overlays:
   # NEWS entry, and 1.x settings from /etc/default/postsrsd carried into

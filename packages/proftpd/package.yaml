@@ -141,7 +141,7 @@ tracks:
   main:
     tag: "v1.3.9e"
     commit: fc3f908a0d07fa3b17fbe1e3054b7520806bc75a
-    revision: 1
+    revision: 2
     patches: patches/main  # Debian's, plus upstream PR 2417: FTPS over TLSv1.3 broke with OpenSSL < 3.5 in 1.3.9e
     companions:
       proftpd-mod-autohost: {tag: "v0.6", commit: d05feed332055831adcf27791d7c48c24667ccb4}

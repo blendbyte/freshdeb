@@ -4,7 +4,8 @@
 # our package was installed (and again after an upgrade from the distro's
 # version). The generator writes a configuration from a small MIB, and the
 # exporter, running through its init script as the prometheus user, scrapes
-# snmpd from the distribution on localhost; nothing leaves the container.
+# snmpd from the distribution on localhost with it, then with the packaged
+# configuration (upstream's); nothing leaves the container.
 #
 # Env: FRESHDEB_UPSTREAM_VERSION  e.g. 0.31.0
 
@@ -61,6 +62,24 @@ done
 (( $(grep -c 'Loaded config file' "$log" || true) > loaded )) \
     || { echo "service reload did not reload the configuration" >&2; tail -n 20 "$log" >&2; exit 1; }
 expect_agent_metrics
+
+echo "the packaged configuration is upstream's: its if_mib module scrapes snmpd"
+# After an upgrade from an edited snmp.yml, dpkg keeps that one and puts ours
+# next to it.
+packaged="$(dpkg-query -W -f='${Conffiles}\n' prometheus-snmp-exporter | awk -v f="$config" '$1 == f { print $2 }')"
+shipped="$work/snmp.yml.orig"
+[[ "$(md5sum <"$shipped")" == "$packaged "* ]] || shipped="$config.dpkg-dist"
+[[ "$(md5sum <"$shipped")" == "$packaged "* ]] \
+    || { echo "neither $config nor $config.dpkg-dist is the packaged configuration" >&2; exit 1; }
+grep -qx '  if_mib:' "$shipped" || { echo "no if_mib module in the packaged $config" >&2; exit 1; }
+install -m 0644 "$shipped" "$config"
+prometheus-snmp-exporter --dry-run
+curl -fsS -X POST http://127.0.0.1:9116/-/reload
+loaded="$(curl -fsS http://127.0.0.1:9116/config)"
+[[ "$loaded" == *$'\n  if_mib:\n'* ]] || { echo "the exporter has no if_mib module" >&2; exit 1; }
+scrape="$(curl -fsS "http://127.0.0.1:9116/snmp?target=$TARGET&module=if_mib&auth=public_v2")"
+[[ $'\n'"$scrape" == *$'\nifNumber '* && "$scrape" == *'ifInOctets{'*'ifDescr="lo"'* ]] \
+    || { echo "the if_mib scrape has no interfaces" >&2; echo "$scrape" >&2; exit 1; }
 stop_exporter
 stop_snmpd
 

@@ -50,26 +50,27 @@ diff -ruN a/debian/control b/debian/control
 diff -ruN a/debian/rules b/debian/rules
 --- a/debian/rules
 +++ b/debian/rules
-@@ -2,30 +2,36 @@
+@@ -1,31 +1,36 @@
+ #!/usr/bin/make -f
  
  include /usr/share/dpkg/architecture.mk
++include /usr/share/dpkg/pkg-info.mk
  
 -export DH_OPTIONS
 -# Install everything, for testdata/ directories:
 -export DH_GOLANG_INSTALL_ALL := 1
+-
+-# Install only restic binary, other binaries are used to prepare release.
+-export DH_GOLANG_BUILDPKG := github.com/restic/restic/cmd/restic
+-
+-# FUSE doesn’t work within schroot
+-export RESTIC_TEST_FUSE := 0
 +# freshdeb: built with a pinned Go toolchain and vendored, checksum-verified
 +# modules instead of dh-golang and Debian's golang-* packages, which older
 +# releases don't have in the versions restic needs. The toolchain, offline
 +# mode (GOFLAGS=-mod=vendor, GOPROXY=off) and caches come from the build
 +# environment. Same flags as upstream's release binaries: static, stripped.
 +export CGO_ENABLED := 0
- 
--# Install only restic binary, other binaries are used to prepare release.
--export DH_GOLANG_BUILDPKG := github.com/restic/restic/cmd/restic
--
--# FUSE doesn’t work within schroot
-+# FUSE doesn't work in build containers
- export RESTIC_TEST_FUSE := 0
  
  %:
 -	dh $@ --buildsystem=golang --with=golang
@@ -88,9 +89,10 @@ diff -ruN a/debian/rules b/debian/rules
  
 -# Do not install the restic source code, there are no downstream consumers and
 -# it is not intended to be used as a library right now.
++# Not upstream's suite (they run it in their CI); a check of the built binary.
 +override_dh_auto_test:
 +ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-+	go test ./...
++	build/restic version | grep -q '^restic $(DEB_VERSION_UPSTREAM) compiled with '
 +endif
 +
  override_dh_auto_install:
@@ -99,7 +101,7 @@ diff -ruN a/debian/rules b/debian/rules
  ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
  	install -d debian/restic/usr/share/bash-completion/completions
  	debian/restic/usr/bin/restic generate --bash-completion debian/restic/usr/share/bash-completion/completions/restic
-@@ -37,9 +43,11 @@
+@@ -37,9 +42,11 @@
  	debian/restic/usr/bin/restic generate --man debian/restic/usr/share/man/man1
  endif
  

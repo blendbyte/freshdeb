@@ -58,6 +58,16 @@ memory="$(valkey-cli info memory)"
 test "$(valkey-cli config set activedefrag yes)" = OK
 valkey-cli config set activedefrag no >/dev/null
 
+echo "jemalloc is built for the largest page size of the architecture"
+# arm64 kernels run with 4K, 16K or 64K pages, and jemalloc aborts on pages
+# larger than it was built for (overlays/bundled-jemalloc.patch).
+case "$(dpkg --print-architecture)" in
+    amd64|i386) page_size=4096 ;;
+    *) page_size=65536 ;;
+esac
+stats="$(valkey-cli memory malloc-stats)"
+grep -qx "Page size: ${page_size}" <<<"$stats" || { grep -i 'page size' <<<"$stats" >&2; exit 1; }
+
 echo "TLS support is compiled in"
 # Capture first: "cmd | grep -q" trips pipefail when grep exits early.
 cli_help="$(valkey-cli --help 2>&1 || true)"

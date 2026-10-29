@@ -43,6 +43,21 @@ scrape="$(curl -fsS http://127.0.0.1:9187/metrics)"
 [[ "$scrape" == *"version=\"${expected}\""* ]] || { echo "build_info has no version ${expected}" >&2; exit 1; }
 stop_exporter
 
+echo "the init script takes DATA_SOURCE_URI and DATA_SOURCE_USER instead"
+set_default DATA_SOURCE_NAME ''
+printf "DATA_SOURCE_URI='%s'\nDATA_SOURCE_USER='prometheus'\n" '/postgres?host=/run/postgresql' >>"$DEFAULTS"
+start_exporter 9187
+expect_metrics 9187 'pg_up 1'
+stop_exporter
+
+echo "without a connection, the init script fails to start it"
+sed -i '/^DATA_SOURCE_URI=/d; /^DATA_SOURCE_USER=/d' "$DEFAULTS"
+if service prometheus-postgres-exporter start; then
+    echo "started without DATA_SOURCE_NAME or DATA_SOURCE_URI" >&2
+    exit 1
+fi
+test -z "$(exporter_users)"
+
 echo "man page is packaged"
 # From the file list: Ubuntu's minimized images skip /usr/share/man.
 files="$(dpkg -L prometheus-postgres-exporter)"

@@ -17,7 +17,7 @@ tracks:
   "0.29":
     tag: "v0.29.6"
     commit: a2b1d7863926834e94479dcdd91ab344a9356bd0
-    revision: 1
+    revision: 2
     go: "1.27.3"  # go.mod: go 1.27.3; upstream's release build uses it too
     patches: patches/0.29  # ours: version, commit and build time from the linker (no git in a source tarball)
 

@@ -35,5 +35,9 @@ read-only for Forgejo, as upstream's guide says:
   chmod 640 /etc/forgejo/app.ini
 
 Upgrades migrate the database forward; there is no way back, so take a
-backup ("forgejo dump") before a new major. Purging removes app.ini but
-keeps /var/lib/forgejo and the git user.
+backup ("forgejo dump") before a new major (see NEWS.Debian).
+
+Purging the package removes nothing of the instance: /etc/forgejo/app.ini
+holds the secrets (SECRET_KEY) that parts of /var/lib/forgejo are encrypted
+with, so both stay, and so does the git user. Delete them by hand to start
+over.

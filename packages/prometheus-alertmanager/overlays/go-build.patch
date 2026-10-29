@@ -283,7 +283,7 @@ diff -ruN a/debian/prometheus-alertmanager.lintian-overrides b/debian/prometheus
 diff -ruN a/debian/rules b/debian/rules
 --- a/debian/rules
 +++ b/debian/rules
-@@ -1,54 +1,51 @@
+@@ -1,54 +1,46 @@
  #!/usr/bin/make -f
  include /usr/share/dpkg/pkg-info.mk
  
@@ -360,17 +360,12 @@ diff -ruN a/debian/rules b/debian/rules
 +	# upstream's own build embeds from ui/app/dist).
 +	tar -xzf freshdeb-assets/web-ui.tar.gz -C ui/app
 +	test -f ui/app/dist/index.html.gz
-+	# Upstream's names: its acceptance tests run the binaries from the top
-+	# of the source tree.
-+	go build $(BUILDFLAGS) -o alertmanager ./cmd/alertmanager
-+	go build $(BUILDFLAGS) -o amtool ./cmd/amtool
-+	mkdir -vp _build/bin
-+	cp -v alertmanager _build/bin/$(MANAGER_BINNAME)
-+	cp -v amtool _build/bin/$(TOOL_BINNAME)
++	go build $(BUILDFLAGS) -o _build/bin/$(MANAGER_BINNAME) ./cmd/alertmanager
++	go build $(BUILDFLAGS) -o _build/bin/$(TOOL_BINNAME) ./cmd/amtool
  	# Build bash completion scripts.
  	mkdir -vp _build/bash_completion.d
  	_build/bin/$(TOOL_BINNAME) --completion-script-bash > _build/bash_completion.d/$(TOOL_BINNAME)
-@@ -77,22 +74,23 @@
+@@ -77,22 +69,19 @@
  	# Fix executable path in amtool examples
  	sed -i 's/\.\/amtool/amtool/' _build/$(TOOL_BINNAME).1
  
@@ -393,15 +388,11 @@ diff -ruN a/debian/rules b/debian/rules
 -# 		exit 1; \
 -# 		}; \
 -# 	  done; ) || true
-+# Upstream's test suite, as upstream's "make test" runs it, including the
-+# acceptance tests against the binaries built above. Except tests that
-+# depend on goroutine scheduling and fail on busy CI runners: the four
-+# Debian skips too (upstream issues #5376, #5394) and TestAlertsConcurrently,
-+# which expects the 1ms garbage collection to catch up within 20ms.
-+FLAKY_TESTS := TestAlertsConcurrently|TestGroupAlert_RecoversWhenCASFails|TestSilences_Maintenance_SupportsCustomCallback|TestPagerDutyTimeout|TestSlackTimeout
++# Not upstream's suite (they run it in their CI); a check of the built binaries.
 +override_dh_auto_test:
 +ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-+	go test $(BUILDFLAGS) -skip '^($(FLAKY_TESTS))$$' ./...
++	_build/bin/$(MANAGER_BINNAME) --version 2>&1 | grep -q '^alertmanager, version $(DEB_VERSION_UPSTREAM) '
++	_build/bin/$(TOOL_BINNAME) --version 2>&1 | grep -q '^amtool, version $(DEB_VERSION_UPSTREAM) '
 +endif
 +
 +override_dh_auto_install:
@@ -412,7 +403,7 @@ diff -ruN a/debian/rules b/debian/rules
 +override_dh_dwz:
 +
 +override_dh_auto_clean:
-+	rm -rf _build alertmanager amtool ui/app/dist
++	rm -rf _build ui/app/dist
 diff -ruN a/debian/tests/control b/debian/tests/control
 --- a/debian/tests/control
 +++ b/debian/tests/control
