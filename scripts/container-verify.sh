@@ -5,14 +5,17 @@
 #
 #   container-verify.sh install   fresh install, smoke test, autopkgtests
 #   container-verify.sh upgrade   install the distribution's own version first
-#                                 (or FRESHDEB_UPGRADE_FROM, an upstream .deb),
-#                                 seed data, upgrade to ours, check data and
-#                                 run the smoke test again
+#                                 (or FRESHDEB_UPGRADE_FROM, an upstream .deb,
+#                                 or else FRESHDEB_PUBLISHED, ours), seed data,
+#                                 upgrade to ours, check data and run the
+#                                 smoke test again
 #
 # Mounts:  /debs   build output (debs, build-info.json, debian-tests/)
 #          /tests  packages/<name>/tests
 # Env:     FRESHDEB_VERSION FRESHDEB_UPSTREAM_VERSION FRESHDEB_BINARIES
 #          FRESHDEB_UPGRADE_FROM (optional; verified by verify.sh)
+#          FRESHDEB_PUBLISHED "<repository URL> <codename> <component>"
+#          (optional; its keyring is mounted at /freshdeb-keyring.gpg)
 
 set -euo pipefail
 
@@ -112,6 +115,25 @@ case "$MODE" in
             for binary in $FRESHDEB_BINARIES; do
                 dpkg-query -W "$binary" >/dev/null 2>&1 && distro+=("$binary")
             done
+        elif [[ -n "${FRESHDEB_PUBLISHED:-}" ]]; then
+            # Nobody else ships it: start from what deb.freshdeb.com has.
+            read -r url codename component <<<"$FRESHDEB_PUBLISHED"
+            section "Install our published version ($url $codename $component)"
+            "${APT[@]}" install ca-certificates
+            echo "deb [signed-by=/freshdeb-keyring.gpg] $url $codename $component" \
+                > /etc/apt/sources.list.d/freshdeb.list
+            apt-get update -qq
+            for binary in $FRESHDEB_BINARIES; do
+                [[ -n "$(apt-cache madison "$binary" 2>/dev/null)" ]] && distro+=("$binary")
+            done
+            (( ${#distro[@]} > 0 )) || { echo "Nothing published for $codename $component yet."; exit 0; }
+            published="$(apt-cache policy "${distro[0]}" | awk '/Candidate:/ {print $2}')"
+            if dpkg --compare-versions "$published" ge "$FRESHDEB_VERSION"; then
+                echo "$published is published already; nothing to upgrade from."
+                exit 0
+            fi
+            "${APT[@]}" install "${distro[@]}"
+            rm /etc/apt/sources.list.d/freshdeb.list
         else
             echo "The distribution does not ship any of: $FRESHDEB_BINARIES. Nothing to upgrade from."
             exit 0

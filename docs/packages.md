@@ -222,7 +222,7 @@ CI installs the built packages in a bare container of the target distribution (n
 | Step | What runs |
 |---|---|
 | install | `apt install` our debs, then `tests/smoke.sh`, then Debian's autopkgtests from `debian/tests` |
-| upgrade | `apt install` the distro's own version (if it has one, else the upstream package in `tests.upgrade_from`), `tests/upgrade.sh seed`, `apt install` our debs, `tests/upgrade.sh check`, `tests/smoke.sh` |
+| upgrade | `apt install` the distro's own version (if it has one, else the upstream package in `tests.upgrade_from`, else our version published on deb.freshdeb.com), `tests/upgrade.sh seed`, `apt install` our debs, `tests/upgrade.sh check`, `tests/smoke.sh` |
 
 Tests run as root under `bash -euo pipefail` and get `FRESHDEB_VERSION` and `FRESHDEB_UPSTREAM_VERSION`. Check real behaviour: the service starts as the right user, data survives the upgrade, the advertised features are compiled in.
 

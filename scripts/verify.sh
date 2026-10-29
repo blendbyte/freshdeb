@@ -66,6 +66,26 @@ if [[ -n "$from_deb" ]]; then
     upgrade_from=(-v "$from_dir:/upgrade-from:ro" -e FRESHDEB_UPGRADE_FROM="/upgrade-from/$from_deb")
 fi
 
+# Without that, and when no distribution ships the package either, the
+# upgrade starts from our own published version, if there is one yet: the
+# only upgrade test for packages nobody else ships (frp, forgejo, tindra).
+published=()
+if [[ -z "$from_deb" && " $MODES " == *" upgrade "* ]]; then
+    archive="$(sed -n 's/^  url: *//p' "$ROOT/config.yaml")"
+    keyring="$(sed -n 's/^  keyring: *//p' "$ROOT/config.yaml")"
+    repo="$archive/$PACKAGE"
+    code="$(curl -sS --retry 3 -o /dev/null -w '%{http_code}' "$repo/dists/$(field codename)/InRelease")" || code=error
+    case "$code" in
+        200)
+            curl -fsS --retry 3 -o "$from_dir/$keyring" "$archive/$keyring"
+            published=(-v "$from_dir/$keyring:/freshdeb-keyring.gpg:ro"
+                       -e FRESHDEB_PUBLISHED="$repo $(field codename) $(field component)")
+            ;;
+        404) ;;  # not published yet
+        *) echo "can't reach $repo ($code)" >&2; exit 1 ;;
+    esac
+fi
+
 for mode in $MODES; do
     echo "=== verify $PACKAGE $(field version) on $IMAGE/$ARCH: $mode"
     # SYS_PTRACE: without it even root can't read /proc/<pid>/exe of a
@@ -76,6 +96,7 @@ for mode in $MODES; do
         --cap-add SYS_PTRACE \
         ${caps[@]+"${caps[@]}"} \
         ${upgrade_from[@]+"${upgrade_from[@]}"} \
+        ${published[@]+"${published[@]}"} \
         -v "$DIR:/debs:ro" \
         -v "$ROOT/packages/$PACKAGE/tests:/tests:ro" \
         -v "$ROOT/scripts/container-verify.sh:/usr/local/bin/container-verify.sh:ro" \
