@@ -13,6 +13,8 @@ set -euo pipefail
 # shellcheck source=packages/postsrsd/tests/lib.sh
 source "$(dirname "$0")/lib.sh"
 state=/var/tmp/freshdeb-postsrsd
+# 1.x's AppArmor profile, a conffile 2.x no longer has.
+PROFILE=/etc/apparmor.d/usr.sbin.postsrsd
 
 case "${1:?seed or check}" in
     seed)
@@ -21,6 +23,7 @@ case "${1:?seed or check}" in
         echo "postsrsd $version"
         stop_postsrsd
         sha256sum "$SECRET" > "$state/secret.sha256"
+        [[ ! -e "$PROFILE" ]] || touch "$state/apparmor"
         if dpkg --compare-versions "$version" lt 2~; then
             # 1.x: settings as shell variables. The SRS domain, two excluded
             # domains (with a leading dot: subdomains only) and a different
@@ -56,6 +59,13 @@ EOF
         version="$(postsrsd -v 2>&1)"
         [[ "$version" == *"${FRESHDEB_UPSTREAM_VERSION:?}"* ]] || { echo "$version" >&2; exit 1; }
         sha256sum -c --quiet "$state/secret.sha256"
+        if [[ -e "$state/apparmor" ]]; then
+            [[ ! -e "$PROFILE" ]] || { echo "$PROFILE is still there" >&2; exit 1; }
+            if dpkg-query -W -f '${Conffiles}' postsrsd | grep -qF "$PROFILE"; then
+                echo "$PROFILE is still a conffile of postsrsd" >&2
+                exit 1
+            fi
+        fi
         if [[ -e "$state/from-1.x" ]]; then
             # The settings from /etc/default/postsrsd, in 2.x's format.
             for line in 'srs-domain = "example.org"' \

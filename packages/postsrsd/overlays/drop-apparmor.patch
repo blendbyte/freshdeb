@@ -1,0 +1,60 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -4,7 +4,6 @@
+ Priority: optional
+ Build-Depends: cmake,
+                debhelper-compat (= 13),
+-               dh-apparmor,
+                faketime,
+                check,
+                libconfuse-dev,
+diff -ruN a/debian/postsrsd.maintscript b/debian/postsrsd.maintscript
+--- a/debian/postsrsd.maintscript
++++ b/debian/postsrsd.maintscript
+@@ -0,0 +1 @@
++rm_conffile /etc/apparmor.d/usr.sbin.postsrsd 2.4.1-3~
+diff -ruN a/debian/postsrsd.preinst b/debian/postsrsd.preinst
+--- a/debian/postsrsd.preinst
++++ b/debian/postsrsd.preinst
+@@ -0,0 +1,22 @@
++#!/bin/sh
++
++set -e
++
++# freshdeb: postsrsd 1.x shipped an AppArmor profile, which Debian's 2.x
++# packages kept loading as an obsolete conffile. 2.x has none and the old
++# one doesn't fit it, so unload it here, while it is still in place
++# (rm_conffile in postsrsd.maintscript moves it aside below), and drop
++# what went with it.
++if [ "$1" = install ] || [ "$1" = upgrade ]; then
++	if dpkg --compare-versions "$2" lt-nl 2.4.1-3~; then
++		PROFILE=/etc/apparmor.d/usr.sbin.postsrsd
++		if [ -f $PROFILE ] && [ -x /sbin/apparmor_parser ] && aa-status --enabled 2>/dev/null; then
++			apparmor_parser -R $PROFILE 2>/dev/null || true
++		fi
++		rm -f /etc/apparmor.d/disable/usr.sbin.postsrsd /etc/apparmor.d/force-complain/usr.sbin.postsrsd
++		rm -f /var/cache/apparmor/*/usr.sbin.postsrsd
++		[ -s /etc/apparmor.d/local/usr.sbin.postsrsd ] || rm -f /etc/apparmor.d/local/usr.sbin.postsrsd
++	fi
++fi
++
++#DEBHELPER#
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -9,13 +9,12 @@
+ 	dh $@ --buildsystem=cmake
+ 
+ override_dh_auto_configure:
+-	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=Release -DGENERATE_SRS_SECRET=OFF -DPOSTSRSD_USER=postsrsd -DTESTS_WITH_ASAN=OFF -DCHROOT_DIR=/var/lib/postsrsd -DUSE_APPARMOR=ON -DFETCHCONTENT_TRY_FIND_PACKAGE_MODE=ALWAYS
++	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=Release -DGENERATE_SRS_SECRET=OFF -DPOSTSRSD_USER=postsrsd -DTESTS_WITH_ASAN=OFF -DCHROOT_DIR=/var/lib/postsrsd -DFETCHCONTENT_TRY_FIND_PACKAGE_MODE=ALWAYS
+ override_dh_auto_test:
+ 	dh_auto_test --buildsystem=cmake
+ 
+ override_dh_install:
+ 	dh_install
+-	dh_apparmor --profile-name=usr.sbin.postsrsd
+ 	install -m 0644 obj-$(DEB_HOST_GNU_TYPE)/postsrsd.conf debian/postsrsd/usr/share/postsrsd/postsrsd.template
+ 	rm -rf $(CURDIR)/debian/postsrsd/usr/lib/sysusers.d/
+ 

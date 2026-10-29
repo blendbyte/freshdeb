@@ -21,7 +21,7 @@ tracks:
   main:
     tag: "2.4.1"
     commit: b21998ec41d4d08777f089916bf237c3ac55206c
-    revision: 2
+    revision: 3
 
 overlays:
   # NEWS entry, and 1.x settings from /etc/default/postsrsd carried into
@@ -30,6 +30,9 @@ overlays:
   # Debian's init script (systems without systemd) started postsrsd 2.x
   # without daemonizing it, so start never returned (all releases).
   - patch: overlays/init-daemonize.patch
+  # 2.x has no AppArmor profile: drop dh_apparmor, which kept reloading the
+  # one 1.x left behind, and remove that one on upgrade (all releases).
+  - patch: overlays/drop-apparmor.patch
   # systemd-dev only exists from systemd 253; bookworm's systemd ships
   # systemd.pc itself.
   - patch: overlays/bookworm-systemd-pc.patch
