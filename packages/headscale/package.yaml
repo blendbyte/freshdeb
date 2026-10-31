@@ -3,27 +3,22 @@
 name: headscale
 description: "headscale, an open source Tailscale control server"
 homepage: https://github.com/juanfont/headscale
-
 upstream:
   git: https://github.com/juanfont/headscale.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: freshdeb
-
 # A track per minor: headscale upgrades one minor at a time, so older tracks stay as stepping stones;
 # latest follows the newest. Upstream supports only its latest release: set eol when the next minor is out.
 tracks:
   "0.29":
-    tag: "v0.29.6"
-    commit: a2b1d7863926834e94479dcdd91ab344a9356bd0
-    revision: 2
-    go: "1.27.3"  # go.mod: go 1.27.3; upstream's release build uses it too
-    patches: patches/0.29  # ours: version, commit and build time from the linker (no git in a source tarball)
-
+    tag: "v0.29.7"
+    commit: c9cf210b8bc84d13177e18b91f555788a44b47b6
+    revision: 1
+    go: "1.27.3" # go.mod: go 1.27.3; upstream's release build uses it too
+    patches: patches/0.29 # ours: version, commit and build time from the linker (no git in a source tarball)
 aliases:
   latest: "0.29"
-
 tests:
   # The distributions ship no headscale; the upgrade test starts from
   # upstream's own .deb of the previous minor, the path its users take.
