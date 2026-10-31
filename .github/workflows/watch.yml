@@ -15,8 +15,11 @@ name: watch
 # and doesn't reopen a change whose PR was closed without merging.
 #
 # Pull requests opened with the default GITHUB_TOKEN do not trigger ci.yml.
-# Set the FRESHDEB_BOT_TOKEN secret (GitHub App or fine-grained PAT with
-# contents + pull-requests write) so the PRs get their checks and plan.
+# Install a GitHub App on the repo (contents + pull-requests write), set its
+# client ID as the FRESHDEB_APP_CLIENT_ID variable and its private key as the
+# FRESHDEB_APP_PRIVATE_KEY secret: the PRs then come from <app>[bot], get
+# their checks and plan, and notify maintainers like any other author.
+# Without the app, the FRESHDEB_BOT_TOKEN secret (fine-grained PAT) is used.
 
 on:
   schedule:
@@ -42,9 +45,19 @@ jobs:
   watch:
     runs-on: ubuntu-24.04
     steps:
+      - name: Get the app's token
+        id: app
+        if: vars.FRESHDEB_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510  # v3.3.0
+        with:
+          client-id: ${{ vars.FRESHDEB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FRESHDEB_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          token: ${{ secrets.FRESHDEB_BOT_TOKEN || github.token }}
+          token: ${{ steps.app.outputs.token || secrets.FRESHDEB_BOT_TOKEN || github.token }}
           fetch-depth: 0
 
       - name: Install PyYAML
@@ -77,7 +90,7 @@ jobs:
       - name: Open pull requests
         id: prs
         env:
-          GH_TOKEN: ${{ secrets.FRESHDEB_BOT_TOKEN || github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token || secrets.FRESHDEB_BOT_TOKEN || github.token }}
         run: |
           git config user.name "freshdeb-bot"
           git config user.email "packages@freshdeb.com"
