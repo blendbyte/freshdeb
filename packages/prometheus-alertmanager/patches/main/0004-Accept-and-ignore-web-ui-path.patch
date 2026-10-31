@@ -13,8 +13,8 @@ Forwarded: not-needed
 diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
 --- a/cmd/alertmanager/main.go
 +++ b/cmd/alertmanager/main.go
-@@ -65,6 +65,9 @@ func run() int {
- 		routePrefix    = kingpin.Flag("web.route-prefix", "Prefix for the internal routes of web endpoints. Defaults to path of --web.external-url.").String()
+@@ -67,6 +67,9 @@ func run() int {
+ 		corsOrigin     = kingpin.Flag("web.cors.origin", `Regex for CORS origin. It is fully anchored, so it must match the whole origin including scheme and port, and dots must be escaped. Browser pages from matching origins may call the API. Example: 'https?://(domain1|domain2)\.com'. If empty, no CORS headers are sent.`).String()
  		getConcurrency = kingpin.Flag("web.get-concurrency", "Maximum number of GET requests processed concurrently. If negative or zero, the limit is GOMAXPROC or 8, whichever is larger.").Default("0").Int()
  		httpTimeout    = kingpin.Flag("web.timeout", "Timeout for HTTP requests. If negative or zero, no timeout is set.").Default("0").Duration()
 +		// Debian's packages had this flag for a separately built web UI; the
@@ -23,7 +23,7 @@ diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
  
  		memlimitRatio = kingpin.Flag("auto-gomemlimit.ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value must be greater than 0 and less than or equal to 1.").
  				Default("0.9").Float64()
-@@ -99,6 +102,10 @@ func run() int {
+@@ -101,6 +104,10 @@ func run() int {
  
  	logger := promslog.New(&promslogConfig)
  
