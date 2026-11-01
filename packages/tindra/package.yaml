@@ -3,23 +3,20 @@
 name: tindra
 description: "Tindra, self-hosted error tracking and performance, uptime and cron monitoring"
 homepage: https://tindra.sh
-
 upstream:
   git: https://github.com/blendbyte/tindra.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
   assets:
     # The built web UI, from the release; it is what upstream's binaries embed.
     web-ui: https://github.com/blendbyte/tindra/releases/download/v{version}/tindra-web-{version}.tar.gz
-
 packaging:
   origin: freshdeb
-
 # Upstream supports only its latest release: one track that follows every release.
 tracks:
   main:
-    tag: "v1.2.0"
-    commit: 82941d885a4dbd5eeab9d82e78810f6a585ea2ab
+    tag: "v1.4.0"
+    commit: 908f107aba88ad04bcd6eda9a442335febeb28f9
     revision: 1
-    go: "1.27.3"  # go.mod: go 1.27.3; upstream's release build uses go.mod's version
+    go: "1.27.3" # go.mod: go 1.27.3; upstream's release build uses go.mod's version
     assets:
-      web-ui: f0e5d346667b22306bce33fa4cdcd36111a0f0d7133716ef27255167d17c37d0  # also in upstream's SHA256SUMS
+      web-ui: b1b2c52ec4594d9e3db9a87ba8acdb2b2f9d6ed03c108716acf40c7e9a71079b # also in upstream's SHA256SUMS
