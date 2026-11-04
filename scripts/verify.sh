@@ -82,6 +82,12 @@ if [[ -z "$from_deb" && " $MODES " == *" upgrade "* ]]; then
                        -e FRESHDEB_PUBLISHED="$repo $(field codename) $(field component)")
             ;;
         404) ;;  # not published yet
+        403)
+            # The bucket also answers 403 for a key that doesn't exist. The
+            # keyring always exists, so if that loads, it's not published yet.
+            code="$(curl -sS --retry 3 -o /dev/null -w '%{http_code}' "$archive/$keyring")" || code=error
+            [[ "$code" == 200 ]] || { echo "can't reach $archive/$keyring ($code)" >&2; exit 1; }
+            ;;
         *) echo "can't reach $repo ($code)" >&2; exit 1 ;;
     esac
 fi
