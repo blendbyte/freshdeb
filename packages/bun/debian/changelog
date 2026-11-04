@@ -1,0 +1,5 @@
+bun (1.4.4-1) unstable; urgency=medium
+
+  * Initial packaging for freshdeb, around upstream's release binaries.
+
+ -- freshdeb <packages@freshdeb.com>  Wed, 04 Nov 2026 12:00:00 +0000

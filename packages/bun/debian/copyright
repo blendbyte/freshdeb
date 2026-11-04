@@ -1,0 +1,45 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: bun
+Upstream-Contact: https://github.com/oven-sh/bun/issues
+Source: https://github.com/oven-sh/bun
+Comment:
+ The binary is upstream's release build. It statically links JavaScriptCore
+ and WebKit (LGPL-2), tinycc (LGPL-2.1) and other libraries, and embeds
+ polyfills; /usr/share/doc/bun/LICENSE.md lists each with its license. That
+ file also says how to relink Bun with a changed JavaScriptCore; the patched
+ WebKit is at https://github.com/oven-sh/WebKit.
+
+Files: *
+Copyright: Oven and Bun contributors
+License: MIT and LGPL-2 and LGPL-2.1
+
+Files: debian/*
+Copyright: 2026 freshdeb
+License: MIT
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+License: LGPL-2
+ On Debian systems, the complete text of the GNU Library General Public
+ License version 2 is in /usr/share/common-licenses/LGPL-2.
+
+License: LGPL-2.1
+ On Debian systems, the complete text of the GNU Lesser General Public
+ License version 2.1 is in /usr/share/common-licenses/LGPL-2.1.

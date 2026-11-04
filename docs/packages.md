@@ -95,6 +95,15 @@ By default the source is the git tag, checked out at the pinned commit. Set `ups
 
 Some builds need files that upstream publishes with each release but doesn't keep in git, such as Prometheus' built web UI. List them under `upstream.assets` (name → URL with `{version}`) and pin each one per track under `assets:` with its sha256. The build downloads them into the source tree as `freshdeb-assets/<name>` plus the URL's archive suffix (`freshdeb-assets/web-ui.tar.gz`), and verifies them. watch.yml pins the new checksums when it bumps a track. Assets can't be combined with `upstream.tarball`.
 
+### Prebuilt upstream binaries
+
+Packages are built from source, with one exception: when a source build would itself depend on upstream's binaries and a toolchain the builders can't pin, the package can ship upstream's release binary instead (bun needs a previous Bun, a prebuilt JavaScriptCore, an exact LLVM and a Rust nightly). It's our own packaging with one asset per architecture (`bun-amd64`, `bun-arm64`), and `debian/rules` picks the right one with `DEB_HOST_ARCH`:
+
+- **Checks:** the sha256 pins and the moved-tag check work as for any asset. `debian/rules` also checks that the binary reports the pinned version and commit.
+- **Unchanged:** override `dh_strip` and `dh_dwz`, so the installed binary is byte for byte upstream's.
+- **Licenses:** `debian/copyright` and the package's docs carry upstream's license list, including anything statically linked.
+- **Say so:** the package's description and `README.Debian` state that it's upstream's binary.
+
 ### Go programs
 
 Debian builds Go programs against Debian-packaged Go libraries (`golang-*-dev`) and the distribution's Go compiler. Older releases have neither in the versions current upstreams need. Instead, Go packages build with a pinned toolchain:

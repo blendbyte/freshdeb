@@ -1,0 +1,12 @@
+bun for Debian and Ubuntu
+=========================
+
+This package contains upstream's release binary, unchanged, as /usr/bin/bun.
+It isn't built from source. The checksums of the release files are pinned in
+freshdeb, and the build checks that the binary reports the release's commit.
+
+Update with apt. "bun upgrade" isn't disabled: as root, with unzip installed, it
+replaces /usr/bin/bun with a binary from GitHub behind dpkg's back, and the next
+package update overwrites that again. Without unzip it stops with an error.
+
+Packages installed with "bun install -g" go to ~/.bun, not to /usr.

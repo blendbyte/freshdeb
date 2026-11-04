@@ -1,0 +1,26 @@
+# Bun (https://bun.com), our own packaging around upstream's release binaries: building it needs an exact LLVM, a Rust nightly, a previous Bun and a prebuilt JavaScriptCore.
+
+name: bun
+description: "Bun, a JavaScript runtime, bundler, test runner and package manager"
+homepage: https://bun.com
+
+upstream:
+  git: https://github.com/oven-sh/bun.git
+  tag_regex: '^bun-v(?P<version>\d+\.\d+\.\d+)$'
+  assets:
+    # What gets packaged, see "Prebuilt upstream binaries" in docs/packages.md.
+    bun-amd64: https://github.com/oven-sh/bun/releases/download/bun-v{version}/bun-linux-x64.zip
+    bun-arm64: https://github.com/oven-sh/bun/releases/download/bun-v{version}/bun-linux-aarch64.zip
+
+packaging:
+  origin: freshdeb
+
+# Upstream supports only its latest release: one track that follows every release.
+tracks:
+  main:
+    tag: "bun-v1.4.4"
+    commit: 38afee6c84fcf48c0edb2466aa4b27d287a59c30
+    revision: 1
+    assets:  # also in upstream's SHASUMS256.txt
+      bun-amd64: bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c
+      bun-arm64: baa6bb36f51d6e58561e02bbea825038a9df454f673d6d776e8bbf86f8c7850e

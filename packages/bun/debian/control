@@ -1,0 +1,23 @@
+Source: bun
+Section: javascript
+Priority: optional
+Maintainer: freshdeb <packages@freshdeb.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ unzip,
+Standards-Version: 4.7.0
+Homepage: https://bun.com
+Rules-Requires-Root: no
+
+Package: bun
+Architecture: amd64 arm64
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: JavaScript runtime, bundler, test runner and package manager
+ Bun runs JavaScript and TypeScript on JavaScriptCore and aims to be a drop-in
+ replacement for Node.js. The one binary also bundles code, runs tests and
+ installs npm packages.
+ .
+ This package contains upstream's release binary, unchanged. Update it with
+ apt, not with "bun upgrade".

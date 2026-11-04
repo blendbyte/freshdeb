@@ -1,0 +1,46 @@
+#!/usr/bin/make -f
+
+# Packages upstream's release binary from the pinned release asset; nothing is
+# compiled. The completions come from the pinned tag.
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/pkg-info.mk
+
+# The upstream commit, from the changelog entry freshdeb adds.
+REVISION := $(shell sed -n '1,/^ -- /s/.*(commit \([0-9a-f]\{40\}\)).*/\1/p' debian/changelog)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+# The binary must be the release of the pinned tag: it reports the version and
+# a short commit, e.g. 1.4.4+38afee6c8.
+override_dh_auto_build:
+	test -n "$(REVISION)"
+	unzip -q -j freshdeb-assets/bun-$(DEB_HOST_ARCH) '*/bun' -d _build
+	revision="$$(_build/bun --revision)"; \
+	case "$$revision" in \
+	    $(DEB_VERSION_UPSTREAM)+?*) ;; \
+	    *) echo "unexpected revision: $$revision" >&2; exit 1 ;; \
+	esac; \
+	case "$(DEB_VERSION_UPSTREAM)+$(REVISION)" in \
+	    "$$revision"*) ;; \
+	    *) echo "$$revision is not $(DEB_VERSION_UPSTREAM)+$(REVISION)" >&2; exit 1 ;; \
+	esac
+
+# Upstream's tests need a build from source; the smoke test uses the package.
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -D -m 0755 _build/bun debian/bun/usr/bin/bun
+	install -D -m 0644 completions/bun.bash debian/bun/usr/share/bash-completion/completions/bun
+	install -D -m 0644 completions/bun.zsh debian/bun/usr/share/zsh/vendor-completions/_bun
+	install -D -m 0644 completions/bun.fish debian/bun/usr/share/fish/vendor_completions.d/bun.fish
+
+# Upstream's binary stays byte for byte what its release published.
+override_dh_strip:
+
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf _build
