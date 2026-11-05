@@ -3,21 +3,17 @@
 name: frp
 description: "frp fast reverse proxy: expose local servers behind NAT (frps, frpc)"
 homepage: https://github.com/fatedier/frp
-
 upstream:
   git: https://github.com/fatedier/frp.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: freshdeb
-
 build:
   # Builds the dashboards (web/frps/dist, web/frpc/dist) the binaries embed.
   prepare: hooks/build-web.py
-
 tracks:
   main:
-    tag: "v0.71.1"
-    commit: d8cf1800dc1abd7fda1828cab105d7a6b5a50eb1
-    revision: 2
-    go: "1.26.10"  # what upstream's release workflow uses (Go 1.26); go.mod: go 1.26.0
+    tag: "v0.72.0"
+    commit: bafec21abce5f91ae4a05b4bd19c55543c263128
+    revision: 1
+    go: "1.26.10" # what upstream's release workflow uses (Go 1.26); go.mod: go 1.26.0
