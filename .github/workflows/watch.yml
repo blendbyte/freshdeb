@@ -1,7 +1,7 @@
 name: watch
 
-# Daily: look for new upstream releases and open one pull request per
-# change. Nothing is published from here; merging the PR does that.
+# Every 6 hours: look for new upstream releases and open one pull request
+# per change. Nothing is published from here; merging the PR does that.
 #
 #   patch release in a track  -> PR bumping tag/commit (revision back to 1)
 #   new minor/major line      -> PR adding the track (patches copied from the
@@ -23,7 +23,7 @@ name: watch
 
 on:
   schedule:
-    - cron: '23 5 * * *'
+    - cron: '23 */6 * * *'
   workflow_dispatch:
 
 permissions:
