@@ -81,6 +81,9 @@ echo "the unit waits for a configuration"
 unit="$(dpkg -L unrealircd | grep -E '^/(usr/)?lib/systemd/system/unrealircd\.service$')"
 grep -qx 'ConditionPathExists=/etc/unrealircd/unrealircd.conf' "$unit"
 grep -qx 'User=unrealircd' "$unit"
+grep -qx 'Type=forking' "$unit"
+grep -qx 'ExecStart=/usr/sbin/unrealircd' "$unit"
+grep -qx 'PIDFile=/run/unrealircd/unrealircd.pid' "$unit"
 
 echo "the module manager says it isn't available"
 if refused="$(runuser -u unrealircd -- unrealircd -m list 2>&1)"; then
@@ -122,15 +125,18 @@ chgrp unrealircd "$CONF"
 chmod 0640 "$CONF"
 runuser -u unrealircd -- unrealircd -c
 
-echo "the server starts and accepts a client, with a cloaked host"
+echo "the server starts as the unit starts it (forking, once it listens), with a pid file"
 install -d -o unrealircd -g unrealircd -m 0755 /run/unrealircd
-runuser -u unrealircd -- unrealircd -F >"$OUT" 2>&1 &
-PID=$!
+runuser -u unrealircd -- unrealircd >"$OUT" 2>&1 || { cat "$OUT" >&2; exit 1; }
 for _ in $(seq 1 50); do
-    (exec 3<>/dev/tcp/127.0.0.1/6667) 2>/dev/null && break
-    kill -0 "$PID" 2>/dev/null || { cat "$OUT" >&2; exit 1; }
-    sleep 0.2
+    [[ -s /run/unrealircd/unrealircd.pid ]] && break
+    sleep 0.1
 done
+PID="$(tr -d ' \n' </run/unrealircd/unrealircd.pid)"
+[[ "$(stat -c %U "/proc/$PID")" == unrealircd ]]
+(exec 3<>/dev/tcp/127.0.0.1/6667)
+
+echo "it accepts a client, with a cloaked host"
 session="$(irc 6667 VERSION 'JOIN #smoke' 'QUIT :done')"
 expect "$session" " 001 smoke :Welcome to the freshdeb IRC Network" " 351 smoke UnrealIRCd-${expected}." \
     ":smoke!smoke@Clk-" " JOIN :#smoke" "ERROR :Closing Link: smoke"
@@ -146,8 +152,16 @@ expect "$(unrealircdctl rehash)" "Rehashed successfully."
 
 echo "it writes its data and logs where the package put them"
 grep -q "UnrealIRCd started" /var/log/unrealircd/ircd.log
+grep -q "Client connecting: smoke" /var/log/unrealircd/ircd.log
+
+echo "once forked, it logs only as configured: nothing more on stderr (the journal)"
+if grep -q "Client connecting" "$OUT"; then cat "$OUT" >&2; exit 1; fi
 kill "$PID"
-wait "$PID" || true
+for _ in $(seq 1 50); do
+    kill -0 "$PID" 2>/dev/null || break
+    sleep 0.1
+done
+if kill -0 "$PID" 2>/dev/null; then echo "still running after SIGTERM" >&2; exit 1; fi
 PID=""
 [[ -f /var/lib/unrealircd/channel.db && -f /var/lib/unrealircd/tkl.db ]] \
     || { ls -la /var/lib/unrealircd >&2; exit 1; }
