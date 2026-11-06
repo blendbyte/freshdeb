@@ -1,0 +1,81 @@
+UnrealIRCd for Debian and Ubuntu (freshdeb)
+===========================================
+
+Getting started
+---------------
+
+The server doesn't start until it has a configuration. Start from upstream's
+example, then follow https://www.unrealircd.org/docs/Configuration:
+
+  cp /etc/unrealircd/examples/example.conf /etc/unrealircd/unrealircd.conf
+  chgrp unrealircd /etc/unrealircd/unrealircd.conf
+  chmod 0640 /etc/unrealircd/unrealircd.conf
+  unrealircdctl gencloak          # cloak keys for set::cloak-keys
+  unrealircdctl mkpasswd          # oper passwords
+  runuser -u unrealircd -- unrealircd -c     # test the configuration
+  systemctl start unrealircd
+
+It runs as the user unrealircd, which can read /etc/unrealircd but not write
+to it. The commands of upstream's "./unrealircd" script:
+
+  ./unrealircd start|stop|restart    systemctl start|stop|restart unrealircd
+  ./unrealircd rehash                unrealircdctl rehash (or systemctl reload)
+  ./unrealircd reloadtls             unrealircdctl reloadtls
+  ./unrealircd status                unrealircdctl status
+  ./unrealircd configtest            runuser -u unrealircd -- unrealircd -c
+  ./unrealircd mkpasswd|gencloak     unrealircdctl mkpasswd|gencloak
+  ./unrealircd spkifp                unrealircdctl spkifp
+  ./unrealircd version               runuser -u unrealircd -- unrealircd -v
+
+Files
+-----
+
+  /etc/unrealircd/unrealircd.conf      yours (not shipped)
+  /etc/unrealircd/*.default.conf,      upstream's defaults, links to
+    *.optional.conf, help/, aliases/,  /usr/share/unrealircd/conf. Like
+    examples/                          upstream's "make install", every
+                                       upgrade replaces them: don't edit
+                                       them, override them in your own files
+  /etc/unrealircd/badwords.conf,       conffiles: yours to edit
+    dccallow.conf, spamfilter.conf
+  /etc/unrealircd/tls/                 server.cert.pem and server.key.pem,
+                                       self-signed when the package was
+                                       installed; replace them with your own.
+                                       curl-ca-bundle.crt links to the
+                                       system's CAs (ca-certificates)
+  /var/lib/unrealircd                  data (databases, ircd.tune, the
+                                       services MOTD)
+  /var/cache/unrealircd                remote includes, GeoIP databases
+  /var/log/unrealircd                  log files named in the configuration
+  /usr/lib/unrealircd/modules          modules
+
+Differences from upstream's installation
+----------------------------------------
+
+ * Upgrades come with apt, not "./unrealircd upgrade": the upgrade script,
+   hot-patch and cold-patch aren't included. An upgrade restarts the server,
+   as its modules are replaced and only load into the version they were
+   built with.
+
+ * When an advisory says to run "./unrealircd hot-patch <name>", install the
+   release it comes with instead: upstream publishes each hot-patch together
+   with a release that has the same fix, as the alternative for those who
+   can't restart. That release reaches this repository like any other.
+
+ * No third-party modules: the module manager ("./unrealircd module") isn't
+   available. Modules compile against UnrealIRCd's configured source tree,
+   which the package doesn't have, and have to be rebuilt for every release.
+   If you need them, install UnrealIRCd from source instead.
+
+ * The services MOTD (SVSMOTD) lives in /var/lib/unrealircd/ircd.svsmotd
+   instead of the configuration directory, which the server can't write to.
+   /ADDMOTD and /ADDOMOTD append to ircd.motd and oper.motd in
+   /etc/unrealircd, so they fail; edit those files instead.
+
+ * Built against the distribution's c-ares, PCRE2, argon2, libsodium and
+   jansson instead of the copies upstream bundles, which get their security
+   fixes from the distribution.
+
+ * By default (modules.default.conf), the server downloads GeoIP databases
+   from geoip.unrealircd.org every 14 days, as upstream's builds do; see
+   https://www.unrealircd.org/docs/GeoIP to change that.

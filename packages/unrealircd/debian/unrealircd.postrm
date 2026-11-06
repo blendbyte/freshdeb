@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  purge)
+    # What the server and postinst created. The user stays, as Debian's
+    # packages leave their system users (files elsewhere may still be its).
+    rm -f /etc/unrealircd/tls/server.cert.pem /etc/unrealircd/tls/server.key.pem
+    rm -rf /var/lib/unrealircd /var/cache/unrealircd /var/log/unrealircd
+  ;;
+
+  remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+  ;;
+
+  *)
+    echo "postrm called with unknown argument '$1'" >&2
+    exit 1
+  ;;
+esac
+
+#DEBHELPER#
+
+exit 0

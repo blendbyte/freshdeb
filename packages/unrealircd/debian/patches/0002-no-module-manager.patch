@@ -1,0 +1,23 @@
+Description: Turn off the module manager
+ "unrealircd -m" (./unrealircd module …) downloads third-party modules and
+ compiles them in the build directory, which the package doesn't have, then
+ installs them into /usr/lib. Say so instead of failing halfway.
+Author: freshdeb <packages@freshdeb.com>
+Forwarded: not-needed
+---
+--- a/src/modulemanager.c
++++ b/src/modulemanager.c
+@@ -1620,6 +1620,13 @@
+ 
+ void modulemanager(int argc, char *args[])
+ {
++	/* freshdeb: modules compile against the configured source tree,
++	 * which a package doesn't ship, and only load into the exact
++	 * UnrealIRCd version they were compiled for. */
++	fprintf(stderr, "The module manager is not available in the Debian package of UnrealIRCd:\n"
++	                "third-party modules need UnrealIRCd's source tree to compile against.\n"
++	                "See /usr/share/doc/unrealircd/README.Debian\n");
++	exit(1);
+ 	if (!args[0])
+ 		mm_usage();
+ 

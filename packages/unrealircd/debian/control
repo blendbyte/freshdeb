@@ -1,0 +1,34 @@
+Source: unrealircd
+Section: net
+Priority: optional
+Maintainer: freshdeb <packages@freshdeb.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ libargon2-dev,
+ libc-ares-dev,
+ libjansson-dev,
+ libpcre2-dev,
+ libsodium-dev,
+ libssl-dev,
+ pkg-config,
+Standards-Version: 4.7.0
+Homepage: https://www.unrealircd.org
+Rules-Requires-Root: no
+
+Package: unrealircd
+Architecture: any
+Depends:
+ ca-certificates,
+ openssl,
+ passwd,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: modular IRC server
+ UnrealIRCd is an Open Source IRC server, serving thousands of networks
+ since 1999, with a strong focus on modularity and security. Its features
+ include full IRCv3 support, SSL/TLS, cloaking, JSON-RPC, advanced
+ anti-flood and anti-spam systems, GeoIP and remote includes.
+ .
+ The server doesn't start until /etc/unrealircd/unrealircd.conf exists; see
+ /usr/share/doc/unrealircd/README.Debian. Third-party modules and the module
+ manager aren't supported by this package.

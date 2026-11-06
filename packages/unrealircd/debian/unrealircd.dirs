@@ -1,0 +1,4 @@
+var/lib/unrealircd
+var/lib/unrealircd/tmp
+var/cache/unrealircd
+var/log/unrealircd

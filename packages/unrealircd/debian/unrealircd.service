@@ -1,0 +1,45 @@
+# Upstream's extras/startup/unrealircd.service, with the package's paths and
+# user, the directories it writes to, and no start until it's configured.
+# Upstream's ExecReload/ExecStop run /bin/kill, which minimal systems don't
+# have (procps): reload rehashes over the control socket instead, which also
+# fails the reload when the configuration does, and stop is systemd's own
+# SIGTERM, which is all upstream's ExecStop sent.
+[Unit]
+Description=UnrealIRCd IRC server
+Documentation=https://www.unrealircd.org/docs/ file:/usr/share/doc/unrealircd/README.Debian
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/unrealircd/unrealircd.conf
+
+[Service]
+Type=simple
+User=unrealircd
+Group=unrealircd
+ExecStart=/usr/sbin/unrealircd -F
+ExecReload=/usr/sbin/unrealircdctl rehash
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+UMask=0027
+
+RuntimeDirectory=unrealircd
+StateDirectory=unrealircd unrealircd/tmp
+StateDirectoryMode=0750
+CacheDirectory=unrealircd
+CacheDirectoryMode=0750
+LogsDirectory=unrealircd
+LogsDirectoryMode=0750
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+
+[Install]
+WantedBy=multi-user.target
