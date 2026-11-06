@@ -3,39 +3,35 @@
 name: prometheus
 description: "Prometheus monitoring system and time series database"
 homepage: https://prometheus.io
-
 upstream:
   git: https://github.com/prometheus/prometheus.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
   assets:
     # The built web UI, from the release; it is what upstream's own build embeds.
     web-ui: https://github.com/prometheus/prometheus/releases/download/v{version}/prometheus-web-ui-{version}.tar.gz
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/prometheus.git
-  ref: d4e0c93be747a2c8e6dc6a4d6baf322b02960bb9  # 3.5.3+ds1-6, unstable
-
+  ref: d4e0c93be747a2c8e6dc6a4d6baf322b02960bb9 # 3.5.3+ds1-6, unstable
 # main follows every release, lts the current LTS line. When upstream names the next LTS, move lts.line,
 # tag, commit, go and the asset checksum to it in a PR (https://prometheus.io/docs/introduction/release-cycle/).
 tracks:
   main:
-    tag: "v3.15.1"
-    commit: bae3eced0a5369e050e83ea73bc381d7c4b1a719
+    tag: "v3.16.0"
+    commit: e2e28adeee2c5883d000fc82aca6008cfbf7e96d
     revision: 1
-    go: "1.27.3"  # what upstream's release build uses (.promu.yml: go 1.27; go.mod: go 1.26.0)
-    patches: patches/main  # Debian's 0004 (default paths), refreshed; none of the patches that disable features
+    go: "1.27.3" # what upstream's release build uses (.promu.yml: go 1.27; go.mod: go 1.26.0)
+    patches: patches/main # Debian's 0004 (default paths), refreshed; none of the patches that disable features
     assets:
-      web-ui: adf30f35abf0d23ffd25616afe75d1966a7ceb18ddad4161fe8ad76e28f2b48f
+      web-ui: 000a45231f6dd22a5703218aad3ee11da125c8a44d1824a27670416c07531001
   lts:
-    line: "3.13"  # supported until 2027-07-31
+    line: "3.13" # supported until 2027-07-31
     tag: "v3.13.5"
     commit: f497435984d1ca1d84cda5ed309387ac2eb1f8f6
     revision: 1
-    go: "1.26.10"  # what upstream's release build uses (.promu.yml: go 1.26)
+    go: "1.26.10" # what upstream's release build uses (.promu.yml: go 1.26)
     patches: patches/lts
     assets:
       web-ui: c84c2c7eed84e184309cb5a07effade15a30ff767770eb9474e6fb4688ee02e1
-
 overlays:
   # Pinned Go toolchain, vendored modules and the embedded web UI instead of
   # dh-golang (all releases).
