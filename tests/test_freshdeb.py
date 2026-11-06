@@ -29,6 +29,12 @@ freshdeb.NETWORK_RETRY_DELAY = 0  # retries happen, without the waiting
 TODAY = dt.date(2026, 10, 27)
 
 
+def next_patch(tag):
+    """The release after a pinned tag ("9.1.3" -> "9.1.4"); watch.yml keeps moving the pins."""
+    head, patch = tag.rsplit(".", 1)
+    return f"{head}.{int(patch) + 1}"
+
+
 def git(root, *args):
     return subprocess.check_output(["git", "-C", str(root), *args], text=True, stderr=subprocess.STDOUT)
 
@@ -103,7 +109,8 @@ class CatalogTests(unittest.TestCase):
         self.assertTrue(any("must be quoted" in e for e in self.errors()))
 
     def test_tag_outside_its_track(self):
-        self.replace('tag: "9.1.3"', 'tag: "9.0.3"')
+        tag = freshdeb.load_package("valkey", self.tmp).tracks["9.1"].tag
+        self.replace(f'tag: "{tag}"', 'tag: "9.0.3"')
         self.assertTrue(any("does not belong to track 9.1" in e for e in self.errors()))
 
     def test_short_commit(self):
@@ -806,27 +813,38 @@ class LineTrackTests(unittest.TestCase):
         self.yaml = self.tmp / "packages/prometheus/package.yaml"
         self.pkg = freshdeb.load_package("prometheus", self.tmp)
         self.tags = {t.tag: t.commit for t in self.pkg.tracks.values()}
+        # Releases relative to the pinned tags, which watch.yml keeps moving.
+        self.main = [int(n) for n in self.pkg.tracks["main"].tag.lstrip("v").split(".")]
+        self.lts = [int(n) for n in self.pkg.tracks["lts"].tag.lstrip("v").split(".")]
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
 
     def test_lts_gets_only_its_line(self):
-        tags = {**self.tags, "v3.13.6": "a" * 40, "v3.16.0": "b" * 40, "v3.16.0-rc.0": "c" * 40}
+        lts_patch = next_patch(self.pkg.tracks["lts"].tag)
+        main_minor = "v{}.{}.0".format(self.main[0], self.main[1] + 1)
+        tags = {**self.tags, lts_patch: "a" * 40, main_minor: "b" * 40, f"{main_minor}-rc.0": "c" * 40}
         changes = freshdeb.watch_package(self.pkg, tags, TODAY)
-        self.assertEqual(sorted((c["track"], c["tag"]) for c in changes), [("lts", "v3.13.6"), ("main", "v3.16.0")])
+        self.assertEqual(sorted((c["track"], c["tag"]) for c in changes), [("lts", lts_patch), ("main", main_minor)])
 
     def test_main_follows_every_release(self):
-        changes = freshdeb.watch_package(self.pkg, {**self.tags, "v4.0.0": "a" * 40}, TODAY)
-        self.assertEqual([(c["track"], c["tag"]) for c in changes], [("main", "v4.0.0")])
+        main_major = "v{}.0.0".format(self.main[0] + 1)
+        changes = freshdeb.watch_package(self.pkg, {**self.tags, main_major: "a" * 40}, TODAY)
+        self.assertEqual([(c["track"], c["tag"]) for c in changes], [("main", main_major)])
 
     def test_tag_outside_the_line(self):
-        self.yaml.write_text(self.yaml.read_text().replace('tag: "v3.13.5"', 'tag: "v3.14.0"'))
-        self.assertTrue(any("does not belong to track lts (line 3.13)" in e
+        lts = self.pkg.tracks["lts"]
+        outside = "v{}.{}.0".format(self.lts[0], self.lts[1] + 1)
+        self.yaml.write_text(self.yaml.read_text().replace(f'tag: "{lts.tag}"', f'tag: "{outside}"'))
+        self.assertTrue(any(f"does not belong to track lts (line {lts.line})" in e
                             for e in freshdeb.validate_all(self.tmp, TODAY)))
 
     def test_line_is_only_for_named_tracks(self):
         y = self.tmp / "packages/valkey/package.yaml"
-        y.write_text(y.read_text().replace('    tag: "9.1.3"', '    line: "9.1"\n    tag: "9.1.3"'))
+        tag = freshdeb.load_package("valkey", self.tmp).tracks["9.1"].tag
+        text = y.read_text()
+        self.assertIn(f'    tag: "{tag}"', text)
+        y.write_text(text.replace(f'    tag: "{tag}"', f'    line: "9.1"\n    tag: "{tag}"'))
         self.assertTrue(any("line is only for named tracks" in e for e in freshdeb.validate_all(self.tmp, TODAY)))
 
 
@@ -1125,10 +1143,12 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(freshdeb.watch_package(self.pkg, self.tags, TODAY), [])
 
     def test_patch_release_bumps_its_track(self):
-        tags = {**self.tags, "9.1.4": "a" * 40, "9.1.5-rc1": "b" * 40, "9.0.6": "c" * 40}
+        pinned = self.pkg.tracks["9.1"].tag
+        new = next_patch(pinned)
+        tags = {**self.tags, new: "a" * 40, f"{next_patch(new)}-rc1": "b" * 40, "9.0.6": "c" * 40}
         changes = freshdeb.watch_package(self.pkg, tags, TODAY)
-        self.assertEqual(changes, [{"package": "valkey", "kind": "bump", "track": "9.1", "from": "9.1.3",
-                                    "tag": "9.1.4", "commit": "a" * 40}])
+        self.assertEqual(changes, [{"package": "valkey", "kind": "bump", "track": "9.1", "from": pinned,
+                                    "tag": new, "commit": "a" * 40}])
 
     def test_new_minor_becomes_a_track_and_moves_the_alias(self):
         tags = {**self.tags, "9.2.0-rc1": "a" * 40, "9.2.0": "b" * 40, "9.2.1": "c" * 40}
@@ -1152,7 +1172,8 @@ class WatchTests(unittest.TestCase):
         tmp = Path(tempfile.mkdtemp())
         shutil.copy(ROOT / "config.yaml", tmp / "config.yaml")
         shutil.copytree(ROOT / "packages", tmp / "packages")
-        freshdeb.apply_change(tmp, {"package": "valkey", "kind": "bump", "track": "9.1", "tag": "9.1.4",
+        new = next_patch(self.pkg.tracks["9.1"].tag)
+        freshdeb.apply_change(tmp, {"package": "valkey", "kind": "bump", "track": "9.1", "tag": new,
                                     "commit": "a" * 40})
         freshdeb.apply_change(tmp, {"package": "valkey", "kind": "new-track", "track": "9.2", "tag": "9.2.0",
                                     "commit": "b" * 40, "based_on": "9.1", "aliases": {"9": "9.2"}})
@@ -1162,7 +1183,7 @@ class WatchTests(unittest.TestCase):
         self.assertIn(header, text)
         pkg = freshdeb.load_package("valkey", tmp)
         self.assertEqual(list(pkg.tracks)[:2], ["9.2", "9.1"])
-        self.assertEqual((pkg.tracks["9.1"].tag, pkg.tracks["9.1"].revision), ("9.1.4", 1))
+        self.assertEqual((pkg.tracks["9.1"].tag, pkg.tracks["9.1"].revision), (new, 1))
         self.assertEqual(pkg.tracks["9.2"].patches, "patches/9.2")
         self.assertTrue((tmp / "packages/valkey/patches/9.2/series").is_file())
         self.assertEqual(pkg.aliases["9"], "9.2")
