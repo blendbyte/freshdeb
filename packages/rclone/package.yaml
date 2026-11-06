@@ -3,23 +3,19 @@
 name: rclone
 description: "rclone, rsync for cloud storage"
 homepage: https://rclone.org
-
 upstream:
   git: https://github.com/rclone/rclone.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/rclone.git
-  ref: 0107a8fe07db38bfa110b468256a41c246f7a19f  # 1.75.2-2, unstable
-
+  ref: 0107a8fe07db38bfa110b468256a41c246f7a19f # 1.75.2-2, unstable
 tracks:
   main:
-    tag: "v1.75.2"
-    commit: be8d6044eacb843b74d335db0c5fbe09222031fe
-    revision: 3
-    go: "1.26.10"  # upstream's go.mod: go 1.26.0; newest 1.26.x
-    patches: patches/main  # from Debian's: 0004 (manpage), none of the backend exclusions; ours: 0101 (no selfupdate page)
-
+    tag: "v1.76.0"
+    commit: e982ff36668f5130d94b4f70409babb3d964df42
+    revision: 1
+    go: "1.26.10" # upstream's go.mod: go 1.26.0; newest 1.26.x
+    patches: patches/main # from Debian's: 0004 (manpage), none of the backend exclusions; ours: 0101 (no selfupdate page)
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
   - patch: overlays/go-build.patch
