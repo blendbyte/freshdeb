@@ -1,0 +1,114 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: UnrealIRCd
+Upstream-Contact: https://www.unrealircd.org
+Source: https://www.unrealircd.org/downloads/
+Comment: The release tarball also carries copies of c-ares, PCRE2, argon2,
+ libsodium, jansson and GeoIP Classic under extras/. This package doesn't
+ build them: it links against the distribution's libraries.
+
+Files: *
+Copyright: 1988-2026, Jarkko Oikarinen, Darren Reed, Bram Matthys (Syzop)
+ and The UnrealIRCd Team; see doc/Authors
+License: GPL-1+
+Comment: The source files say "version 1, or (at your option) any later
+ version"; upstream ships the GPL version 2 as LICENSE.
+
+Files: src/crypt_blowfish.c include/crypt_blowfish.h
+Copyright: 1998-2014, Solar Designer
+License: public-domain
+ No copyright is claimed, and the software is hereby placed in the public
+ domain. In case this attempt to disclaim copyright and place the software
+ in the public domain is deemed null and void, then the software is
+ Copyright (c) 1998-2014 Solar Designer and it is hereby released to the
+ general public under the following terms:
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted.
+ .
+ There's ABSOLUTELY NO WARRANTY, express or implied.
+
+Files: src/hash.c
+Copyright: 1991, Darren Reed
+ 2012-2016, Jean-Philippe Aumasson
+ 2012-2014, Daniel J. Bernstein
+ 2017, Salvatore Sanfilippo
+License: GPL-1+ and CC0-1.0
+Comment: The SipHash functions are CC0-1.0, the rest GPL-1+.
+
+Files: src/openssl_hostname_validation.c include/openssl_hostname_validation.h
+Copyright: 1998-2012, Daniel Stenberg and others
+ 2012, iSEC Partners
+License: curl and MIT
+
+Files: src/modules/mmdb.c include/mmdb.h
+Copyright: 2015, Gregory J. Oschwald
+ 2026, The UnrealIRCd Team
+License: ISC
+
+Files: debian/*
+Copyright: 2026, freshdeb
+License: GPL-1+
+
+License: GPL-1+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 1, or (at your option)
+ any later version.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 1 can be found in /usr/share/common-licenses/GPL-1, version 2 in
+ /usr/share/common-licenses/GPL-2.
+
+License: CC0-1.0
+ To the extent possible under law, the author(s) have dedicated all
+ copyright and related and neighboring rights to this software to the
+ public domain worldwide. This software is distributed without any
+ warranty.
+ .
+ On Debian systems, the complete text of the CC0 1.0 Universal license can
+ be found in /usr/share/common-licenses/CC0-1.0.
+
+License: curl
+ Permission to use, copy, modify, and distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ DEALINGS IN THE SOFTWARE.
+
+License: ISC
+ Permission to use, copy, modify, and/or distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.

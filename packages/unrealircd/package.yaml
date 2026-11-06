@@ -1,0 +1,23 @@
+# UnrealIRCd (https://www.unrealircd.org), our own packaging: Debian and Ubuntu don't ship it.
+
+name: unrealircd
+description: "UnrealIRCd IRC server"
+homepage: https://www.unrealircd.org
+upstream:
+  # Upstream tags no releases in git; its download index (what its own upgrade check reads) lists
+  # the current one. The tarballs are signed with upstream's release key, from doc/KEYS:
+  # 36E6F65706E36B0937280299101001DAF48BB56D, expires 2030-11-17 (announced on
+  # https://forums.unrealircd.org/viewtopic.php?p=40832, also Gentoo's sec-keys/openpgp-keys-unrealircd).
+  index: https://www.unrealircd.org/downloads/list.json
+  index_regex: 'unrealircd-(?P<version>\d+(?:\.\d+)+)\.tar\.gz'
+  tarball: https://www.unrealircd.org/downloads/unrealircd-{version}.tar.gz
+  signature: https://www.unrealircd.org/downloads/unrealircd-{version}.tar.gz.asc
+  signing_key: upstream-signing-key.pub
+packaging:
+  origin: freshdeb
+# Upstream supports only UnrealIRCd 6 and fixes it in its latest release.
+tracks:
+  main:
+    version: "6.2.7"
+    sha256: e075375f469309bf1d54134bc914ec50a4ae3b09da6d2db2c11f9fa88d649370
+    revision: 1

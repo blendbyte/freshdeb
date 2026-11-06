@@ -1,0 +1,58 @@
+#!/bin/sh
+set -e
+
+# owned <owner:group> <mode> <path>: unless the admin set a dpkg-statoverride.
+owned() {
+  if ! dpkg-statoverride --list "$3" >/dev/null 2>&1; then
+    chown "$1" "$3"
+    chmod "$2" "$3"
+  fi
+}
+
+case "$1" in
+  configure)
+    if ! getent group unrealircd >/dev/null; then
+      groupadd --system unrealircd
+    fi
+    if ! getent passwd unrealircd >/dev/null; then
+      useradd --system --gid unrealircd --home-dir /var/lib/unrealircd --no-create-home \
+        --shell /usr/sbin/nologin --comment "UnrealIRCd" unrealircd
+    fi
+
+    # The configuration holds oper passwords and cloak keys: the server
+    # reads it, nobody else.
+    owned root:unrealircd 0750 /etc/unrealircd
+    owned root:unrealircd 0750 /etc/unrealircd/tls
+    # What the unit's StateDirectory=, CacheDirectory= and LogsDirectory=
+    # set up, for unrealircd and unrealircdctl run outside of it.
+    for dir in /var/lib/unrealircd /var/lib/unrealircd/tmp /var/cache/unrealircd /var/log/unrealircd; do
+      owned unrealircd:unrealircd 0750 "$dir"
+    done
+
+    # A self-signed certificate, as upstream's ./Config makes one
+    # ("unrealircd mkcert"), unless there is one already.
+    tls=/etc/unrealircd/tls
+    if [ ! -e "$tls/server.cert.pem" ] && [ ! -e "$tls/server.key.pem" ]; then
+      (
+        umask 077
+        openssl ecparam -name secp384r1 -genkey -noout -out "$tls/server.key.pem"
+        openssl req -new -x509 -key "$tls/server.key.pem" -subj "/CN=$(hostname)" -days 3650 -sha256 \
+          -out "$tls/server.cert.pem" 2>/dev/null
+      )
+      chown root:unrealircd "$tls/server.key.pem" "$tls/server.cert.pem"
+      chmod 0640 "$tls/server.key.pem" "$tls/server.cert.pem"
+    fi
+  ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
+
+  *)
+    echo "postinst called with unknown argument '$1'" >&2
+    exit 1
+  ;;
+esac
+
+#DEBHELPER#
+
+exit 0

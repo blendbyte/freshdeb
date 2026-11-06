@@ -1,0 +1,83 @@
+#!/usr/bin/make -f
+
+# Built like upstream's ./Config defaults (GeoIP via the bundled mmdb reader,
+# no libcurl: UnrealIRCd 6 fetches URLs itself), against the distribution's
+# libraries instead of the copies in extras/, laid out for a system service:
+# configuration in /etc/unrealircd, data in /var/lib/unrealircd, logs in
+# /var/log/unrealircd. Upstream's helper script, self-upgrade script and
+# module manager are left out (see README.Debian).
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+include /usr/share/dpkg/pkg-info.mk
+
+D       := debian/unrealircd
+MODULES := /usr/lib/unrealircd/modules
+
+%:
+	dh $@
+
+# ./configure refuses to run without --enable-dynamic-linking (it's what
+# ./Config always passes). The build directory is compiled in for the module
+# manager (0002), which never gets to use it. No private library directory
+# (and rpath): everything links against the distribution's libraries.
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--enable-dynamic-linking \
+		--enable-ssl \
+		--enable-mmdb \
+		--with-system-argon2 \
+		--with-system-cares \
+		--with-system-jansson \
+		--with-system-pcre2 \
+		--with-system-sodium \
+		--with-bindir=/usr/sbin \
+		--with-scriptdir=/usr/lib/unrealircd \
+		--with-builddir=/usr/lib/unrealircd/build \
+		--with-confdir=/etc/unrealircd \
+		--with-modulesdir=$(MODULES) \
+		--with-datadir=/var/lib/unrealircd \
+		--with-tmpdir=/var/lib/unrealircd/tmp \
+		--with-cachedir=/var/cache/unrealircd \
+		--with-logdir=/var/log/unrealircd \
+		--with-docdir=/usr/share/doc/unrealircd \
+		--with-pidfile=/run/unrealircd/unrealircd.pid \
+		--with-controlfile=/run/unrealircd/unrealircd.ctl \
+		--without-privatelibdir \
+		--with-nick-history=2000 \
+		--with-permissions=0600
+
+# Not upstream's suite (it needs a test network); a check of the built
+# server: the version (the server doesn't run before it's installed: it
+# looks for its CA bundle first), and the distribution's libraries instead
+# of extras/.
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	grep -aqF 'UnrealIRCd-$(DEB_VERSION_UPSTREAM)' src/ircd
+	! ldd src/ircd | grep 'not found'
+	! readelf -d src/ircd | grep -e RPATH -e RUNPATH
+endif
+
+# What upstream's "make install" installs, without its 0700 directories (it
+# expects to own them, in a home directory) and the parts we leave out.
+# Upstream's default configuration files (it overwrites them on every
+# install; they aren't meant to be edited) go to /usr/share/unrealircd/conf,
+# linked from /etc/unrealircd so that "include" lines find them; the files
+# upstream installs only once are conffiles.
+override_dh_auto_install:
+	install -D -m 0755 src/ircd $(D)/usr/sbin/unrealircd
+	install -D -m 0755 src/unrealircdctl $(D)/usr/sbin/unrealircdctl
+	cd src/modules && find . -name '*.so' -exec install -D -m 0644 {} $(CURDIR)/$(D)$(MODULES)/{} \;
+	install -d $(D)/usr/share/unrealircd/conf
+	cp -R doc/conf/*.default.conf doc/conf/*.optional.conf doc/conf/aliases doc/conf/help doc/conf/examples \
+		$(D)/usr/share/unrealircd/conf/
+	install -d $(D)/etc/unrealircd/tls
+	install -m 0644 doc/conf/badwords.conf doc/conf/dccallow.conf doc/conf/spamfilter.conf $(D)/etc/unrealircd/
+	install -m 0644 doc/conf/tls/tls.cnf $(D)/etc/unrealircd/tls/
+	cd $(D)/usr/share/unrealircd/conf && for f in *; do ln -s /usr/share/unrealircd/conf/$$f $(CURDIR)/$(D)/etc/unrealircd/$$f; done
+	# Outgoing TLS (remote includes, GeoIP downloads) trusts the system's CAs.
+	ln -s /etc/ssl/certs/ca-certificates.crt $(D)/etc/unrealircd/tls/curl-ca-bundle.crt
+
+override_dh_installchangelogs:
+	dh_installchangelogs doc/RELEASE-NOTES.md
+
+override_dh_auto_clean:
+	[ ! -f Makefile ] || $(MAKE) distclean

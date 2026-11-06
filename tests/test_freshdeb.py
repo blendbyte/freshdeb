@@ -9,6 +9,7 @@ import datetime as dt
 import hashlib
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -306,6 +307,12 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(set(selected), {("valkey", k) for k in ("9.1", "9.0", "8.1", "8.0")})
         self.assertEqual(len(errors), 4)
         self.assertIn("bump revision", errors[0])
+
+    def test_new_signing_key_needs_no_build(self):
+        # Upstream moved to a new release key: downloads verify against it, no binary changes.
+        self.edit("packages/unrealircd/upstream-signing-key.pub", "uid ", "uid (rotated) ")
+        self.commit()
+        self.assertEqual(self.plan(), ({}, [], set()))
 
     def test_packaging_change_with_bumps(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
@@ -1425,6 +1432,177 @@ class CompanionPlanTests(unittest.TestCase):
         selected, errors, _ = self.plan()
         self.assertEqual(set(selected), {("proftpd", "main")})
         self.assertTrue(errors and "bump revision" in errors[0], errors)
+
+
+class IndexTests(unittest.TestCase):
+    """upstream.index (releases from a download index, no git tags) and
+    upstream.signature, on a copy of unrealircd whose index, tarballs and
+    signatures (by a throwaway key) are served from file://."""
+
+    @classmethod
+    def setUpClass(cls):
+        if not shutil.which("gpg"):
+            raise unittest.SkipTest("gpg not available")
+        cls.gnupg = Path(tempfile.mkdtemp())
+        cls.gpg("--quick-generate-key", "freshdeb index tests <test@example.invalid>", "ed25519", "sign", "0")
+
+    @classmethod
+    def tearDownClass(cls):
+        subprocess.run(["gpgconf", "--kill", "gpg-agent"], env=cls.gpg_env(), capture_output=True)
+        shutil.rmtree(cls.gnupg)
+
+    @classmethod
+    def gpg_env(cls):
+        return {**os.environ, "GNUPGHOME": str(cls.gnupg)}
+
+    @classmethod
+    def gpg(cls, *args):
+        return subprocess.run(["gpg", "--batch", "--passphrase", "", *args], env=cls.gpg_env(),
+                              check=True, capture_output=True, text=True).stdout
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
+        shutil.copytree(ROOT / "packages", self.tmp / "packages")
+        self.yaml = self.tmp / "packages/unrealircd/package.yaml"
+        self.upstream = self.tmp / "upstream"
+        self.upstream.mkdir()
+        self.yaml.write_text(self.yaml.read_text()
+                             .replace("https://www.unrealircd.org/downloads/", f"file://{self.upstream}/"))
+        (self.tmp / "packages/unrealircd/upstream-signing-key.pub").write_text(self.gpg("--armor", "--export"))
+        (self.upstream / "list.json").write_text(
+            '{"6.0":{"Stable":{"version":"6.2.99","downloads":{"src":"https:\\/\\/www.unrealircd.org\\/downloads\\/'
+            'unrealircd-6.2.99.tar.gz","winssl":"https:\\/\\/www.unrealircd.org\\/downloads\\/unrealircd-6.2.99.exe"}}}}')
+        self.sha256 = self.release("6.2.99")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def release(self, version, signed=True):
+        """A signed release tarball; returns its sha256."""
+        tree = self.upstream / f"unrealircd-{version}"
+        tree.mkdir()
+        (tree / "Config").write_text("#!/bin/sh\n")
+        tarball = self.upstream / f"unrealircd-{version}.tar.gz"
+        subprocess.run(["tar", "-czf", str(tarball), "-C", str(self.upstream), tree.name], check=True)
+        if signed:
+            self.gpg("--armor", "--detach-sign", "-o", f"{tarball}.asc", str(tarball))
+        return hashlib.sha256(tarball.read_bytes()).hexdigest()
+
+    def package(self):
+        return freshdeb.load_package("unrealircd", self.tmp)
+
+    def errors(self, text=None):
+        if text is not None:
+            self.yaml.write_text(text)
+        return [e for e in freshdeb.validate_all(self.tmp, TODAY) if e.startswith("unrealircd:")]
+
+    def test_the_real_package_is_valid(self):
+        self.assertEqual([e for e in freshdeb.validate_all(ROOT, TODAY) if e.startswith("unrealircd:")], [])
+        pkg = freshdeb.load_package("unrealircd", ROOT)
+        self.assertEqual((pkg.tracks["main"].tag, pkg.tracks["main"].commit), ("6.2.7", ""))
+        self.assertEqual(pkg.upstream_version("6.2.7"), "6.2.7")
+
+    def test_index_lists_the_releases(self):
+        self.assertEqual(freshdeb.index_versions(self.package()), {"6.2.99": None})
+
+    def test_watch_bumps_to_the_listed_release(self):
+        pkg = self.package()
+        changes = freshdeb.watch_package(pkg, freshdeb.upstream_tags(pkg), TODAY)
+        self.assertEqual(changes, [{"package": "unrealircd", "kind": "bump", "track": "main", "from": "6.2.7",
+                                    "tag": "6.2.99", "commit": None}])
+        self.assertEqual(freshdeb.watch_report(pkg, {"6.2.99": None}, changes, None, TODAY)[0],
+                         "unrealircd: 1 upstream releases in upstream.index, newest 6.2.99")
+
+    def test_apply_pins_version_and_checksum(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        freshdeb.apply_change(self.tmp, {"package": "unrealircd", "kind": "bump", "track": "main",
+                                         "tag": "6.2.99", "commit": None})
+        text = self.yaml.read_text()
+        self.assertIn('    version: "6.2.99"\n', text)
+        self.assertNotIn("tag:", text)
+        self.assertNotIn("commit:", text)
+        track = self.package().tracks["main"]
+        self.assertEqual((track.tag, track.sha256, track.revision), ("6.2.99", self.sha256, 1))
+
+    def test_apply_refuses_a_bad_signature(self):
+        if not shutil.which("yq"):
+            self.skipTest("yq not available")
+        before = self.yaml.read_text()
+        tarball = self.upstream / "unrealircd-6.2.99.tar.gz"
+        tarball.write_bytes(tarball.read_bytes() + b"\0")
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "is not a valid signature"):
+            freshdeb.apply_change(self.tmp, {"package": "unrealircd", "kind": "bump", "track": "main",
+                                             "tag": "6.2.99", "commit": None})
+        self.assertEqual(self.yaml.read_text(), before)
+
+    def test_fetch_checks_the_signature(self):
+        pkg = self.package()
+        pkg.tracks["main"].tag, pkg.tracks["main"].sha256 = "6.2.99", self.sha256
+        freshdeb.fetch_tarball(pkg, pkg.tracks["main"], self.tmp / "orig.tar.gz", self.tmp / "src")
+        self.assertTrue((self.tmp / "src/Config").is_file())
+        # Signed by someone else: a key that isn't upstream's.
+        (self.tmp / "packages/unrealircd/upstream-signing-key.pub").write_text(
+            (ROOT / "packages/unrealircd/upstream-signing-key.pub").read_text())
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "is not a valid signature"):
+            freshdeb.fetch_tarball(pkg, pkg.tracks["main"], self.tmp / "orig2.tar.gz", self.tmp / "src2")
+        self.assertFalse((self.tmp / "src2").exists())
+
+    def test_dearmor_matches_gpg(self):
+        armored = self.gpg("--armor", "--export")
+        binary = subprocess.run(["gpg", "--batch", "--export"], env=self.gpg_env(),
+                                check=True, capture_output=True).stdout
+        self.assertEqual(freshdeb.dearmor("comment before the key\n" + armored), binary)
+        with self.assertRaisesRegex(freshdeb.FreshdebError, "no armored public key block"):
+            freshdeb.dearmor("no key here")
+
+    def test_changelog_names_the_index_and_signature(self):
+        pkg = freshdeb.load_package("unrealircd", ROOT)
+        entry = freshdeb.changelog_entry(pkg, freshdeb.load_config(ROOT), pkg.tracks["main"], "trixie", "1-1", 0)
+        self.assertIn("  * Upstream: release 6.2.7, listed at\n    https://www.unrealircd.org/downloads/list.json.",
+                      entry)
+        self.assertIn("  * Signature: https://www.unrealircd.org/downloads/unrealircd-6.2.7.tar.gz.asc,\n"
+                      "    verified with packages/unrealircd/upstream-signing-key.pub.", entry)
+        self.assertNotIn("commit", entry)
+
+    def test_index_packages_pin_a_version_only(self):
+        text = self.yaml.read_text()
+        self.assertTrue(any("pin a version (no tag or commit)" in e
+                            for e in self.errors(text.replace('version: "6.2.7"', 'tag: "6.2.7"'))))
+        self.assertTrue(any("upstream.index replaces upstream.git" in e
+                            for e in self.errors(text.replace("upstream:\n", "upstream:\n  git: https://x.invalid/x.git\n"))))
+        self.assertTrue(any("needs upstream.tarball" in e
+                            for e in self.errors(re.sub(r"\n  tarball: [^\n]*", "", text))))
+        self.assertTrue(any("index_regex needs a (?P<version>" in e
+                            for e in self.errors(text.replace("(?P<version>", "("))))
+
+    def test_git_packages_do_not_take_a_version(self):
+        y = self.tmp / "packages/memcached/package.yaml"
+        y.write_text(y.read_text().replace("    revision:", '    version: "1.0"\n    revision:', 1))
+        errors = [e for e in freshdeb.validate_all(self.tmp, TODAY) if e.startswith("memcached:")]
+        self.assertTrue(any("version is only for upstream.index packages" in e for e in errors), errors)
+
+    def test_watch_waits_for_the_signature(self):
+        # The tarball is out, its signature isn't uploaded yet.
+        self.release("6.2.100", signed=False)
+        change = {"kind": "bump", "tag": "6.2.100"}
+        urls = freshdeb.release_urls(self.package(), change)
+        self.assertEqual([Path(u).name for u in urls], ["unrealircd-6.2.100.tar.gz", "unrealircd-6.2.100.tar.gz.asc"])
+        with mock.patch.object(freshdeb, "published", lambda url: Path(url.removeprefix("file://")).exists()):
+            missing = freshdeb.unpublished(self.package(), [change])
+        self.assertEqual(list(missing.values()), [f"file://{self.upstream}/unrealircd-6.2.100.tar.gz.asc"])
+
+    def test_go_needs_a_git_upstream(self):
+        text = self.yaml.read_text().replace("    revision: 1", '    revision: 1\n    go: "1.25.14"')
+        self.assertTrue(any("go: needs upstream.git" in e for e in self.errors(text)))
+
+    def test_signature_needs_a_readable_key(self):
+        text = self.yaml.read_text()
+        self.assertTrue(any("upstream.signing_key must name" in e
+                            for e in self.errors(text.replace("upstream-signing-key.pub", "missing.asc"))))
+        (self.tmp / "packages/unrealircd/upstream-signing-key.pub").write_text("not a key\n")
+        self.assertTrue(any("no armored public key block" in e for e in self.errors(text)))
 
 
 if __name__ == "__main__":

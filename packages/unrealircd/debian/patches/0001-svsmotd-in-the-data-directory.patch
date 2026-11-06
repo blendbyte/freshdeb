@@ -1,0 +1,19 @@
+Description: Keep the services MOTD in the data directory
+ Services append to it with SVSMOTD (module svsmotd, loaded by default). The
+ server can't write to /etc/unrealircd under the unit's ProtectSystem=strict,
+ and its configuration shouldn't be writable by the server anyway.
+ set::files::svsmotd still overrides it.
+Author: freshdeb <packages@freshdeb.com>
+Forwarded: not-needed
+---
+--- a/include/config.h
++++ b/include/config.h
+@@ -107,7 +107,7 @@
+ #define RPATH    CONFDIR "/ircd.rules"      /* server rules file */
+ #define OPATH    CONFDIR "/oper.motd"       /* Operators MOTD file */
+ #define LPATH    LOGDIR "/debug.log"        /* Where the debug file lives, if DEBUGMODE */
+-#define VPATH    CONFDIR "/ircd.svsmotd"    /* Services MOTD append. */
++#define VPATH    PERMDATADIR "/ircd.svsmotd" /* Services MOTD append. */
+ #define BPATH    CONFDIR "/bot.motd"        /* Bot MOTD */
+ #define IRCDTUNE PERMDATADIR "/ircd.tune"   /* tuning .. */
+ 

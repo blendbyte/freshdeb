@@ -21,6 +21,7 @@ Only the Python standard library and PyYAML are required. "prepare" and
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime as dt
 import email.utils
 import hashlib
@@ -68,11 +69,12 @@ LATEST_ALIAS = "latest"
 PACKAGE_KEYS = {
     "package": {"name", "description", "homepage", "watch", "upstream", "packaging", "epoch", "codenames",
                 "build", "tests", "tracks", "aliases", "overlays", "companions"},
-    "upstream": {"git", "tag_regex", "tarball", "assets", "submodules"},
+    "upstream": {"git", "tag_regex", "tarball", "assets", "submodules", "index", "index_regex", "signature",
+                 "signing_key"},
     "packaging": {"origin", "ref", "source"},
     "build": {"go", "options", "profiles", "prepare"},
-    "track": {"tag", "commit", "revision", "eol", "patches", "codenames", "sha256", "go", "line", "assets",
-              "companions"},
+    "track": {"tag", "commit", "version", "revision", "eol", "patches", "codenames", "sha256", "go", "line",
+              "assets", "companions"},
     "overlay": {"patch", "tracks", "codenames"},
     "companion upstream": {"git", "tag_regex", "tarball", "submodules"},
     "pin": {"tag", "commit", "sha256", "patches"},
@@ -212,8 +214,8 @@ class Config:
 @dataclass
 class Track:
     key: str
-    tag: str
-    commit: str
+    tag: str     # the release tag; for upstream.index packages, the pinned version
+    commit: str  # the commit the tag points to; empty for upstream.index packages
     revision: int
     eol: dt.date | None = None
     patches: str | None = None
@@ -267,7 +269,16 @@ class Package:
         return (self.data.get("packaging") or {}).get("source") or self.name
 
     @property
+    def index(self):
+        """upstream.index: the download page that lists upstream's releases,
+        for upstreams without release tags; None for git upstreams."""
+        return self.upstream.get("index")
+
+    @property
     def tag_regex(self):
+        if self.index:
+            # Tracks pin versions, and watch finds versions in the index.
+            return re.compile(r"^(?P<version>.+)$")
         return re.compile(self.upstream.get("tag_regex", r"^v?(?P<version>\d+(?:\.\d+)*)$"))
 
     def tarball_url(self, version):
@@ -275,6 +286,12 @@ class Package:
         tarballs (generated configure scripts etc.), or None for git."""
         template = self.upstream.get("tarball")
         return template.format(version=version) if template else None
+
+    def signature(self, version):
+        """(URL, key file) for verifying the release tarball's detached
+        OpenPGP signature (upstream.signature), or None."""
+        template = self.upstream.get("signature")
+        return (template.format(version=version), self.path / self.upstream["signing_key"]) if template else None
 
     @property
     def assets(self):
@@ -410,7 +427,9 @@ def parse_package(name, path, data):
         require(isinstance(entry, dict), f"{name}: track {key} must be a mapping")
         eol = entry.get("eol")
         require(eol is None or isinstance(eol, dt.date), f"{name}: track {key} eol must be a YYYY-MM-DD date")
-        tracks[key] = Track(key=key, tag=str(entry.get("tag", "")), commit=str(entry.get("commit", "")),
+        # upstream.index packages pin a version instead of a tag and commit.
+        tag = entry["version"] if "version" in entry else entry.get("tag", "")
+        tracks[key] = Track(key=key, tag=str(tag), commit=str(entry.get("commit", "")),
                             revision=entry.get("revision"), eol=eol, patches=entry.get("patches"),
                             codenames=entry.get("codenames"),
                             sha256=str(entry["sha256"]) if entry.get("sha256") is not None else None,
@@ -536,9 +555,35 @@ def validate_package(pkg, config, today=None):
     for key in ("description", "homepage"):
         check(isinstance(data.get(key), str) and data.get(key), f"missing {key}")
     upstream = data.get("upstream") or {}
-    check(isinstance(upstream.get("git"), str) and upstream.get("git", "").startswith("https://"),
-          "upstream.git must be an https:// URL")
+    index = upstream.get("index")
+    if index is None:
+        check(isinstance(upstream.get("git"), str) and upstream.get("git", "").startswith("https://"),
+              "upstream.git must be an https:// URL")
+    else:
+        check(isinstance(index, str) and index.startswith("https://"), "upstream.index must be an https:// URL")
+        check(not {"git", "tag_regex", "submodules"} & set(upstream),
+              "upstream.index replaces upstream.git, tag_regex and submodules")
+        check(upstream.get("tarball") is not None, "upstream.index needs upstream.tarball (what gets built)")
+        try:
+            index_regex = re.compile(str(upstream.get("index_regex", "")))
+            check("version" in index_regex.groupindex,
+                  "upstream.index_regex needs a (?P<version>…) group (finds the releases in the index)")
+        except re.error as error:
+            check(False, f"upstream.index_regex is not a valid regex: {error}")
+    check(index is not None or "index_regex" not in upstream, "upstream.index_regex is only used with upstream.index")
     tarball = upstream.get("tarball")
+    if "signature" in upstream or "signing_key" in upstream:
+        signature, signing_key = upstream.get("signature"), upstream.get("signing_key")
+        check(tarball is not None, "upstream.signature verifies upstream.tarball; it needs one")
+        check(isinstance(signature, str) and signature.startswith("https://") and "{version}" in signature,
+              "upstream.signature must be an https:// URL containing {version}")
+        if isinstance(signing_key, str) and (pkg.path / signing_key).is_file():
+            try:
+                dearmor((pkg.path / signing_key).read_text())
+            except FreshdebError as error:
+                check(False, f"upstream.signing_key {signing_key}: {error}")
+        else:
+            check(False, "upstream.signing_key must name the signer's armored public key in the package directory")
     if tarball is not None:
         check(isinstance(tarball, str) and tarball.startswith("https://") and "{version}" in tarball
               and tarball.endswith(TARBALL_SUFFIXES),
@@ -597,8 +642,14 @@ def validate_package(pkg, config, today=None):
     check(pkg.tracks, "at least one track is required")
     for key, track in pkg.tracks.items():
         where = f"track {key}"
+        raw = (data.get("tracks") or {}).get(key) or {}
         check(TRACK_RE.match(key) is not None, f"{where}: invalid key (lowercase letters, digits, dots)")
-        check(track.tag != "", f"{where}: tag is required")
+        if index is not None:
+            check("version" in raw and not {"tag", "commit"} & set(raw),
+                  f"{where}: upstream.index packages pin a version (no tag or commit)")
+        else:
+            check("version" not in raw, f"{where}: version is only for upstream.index packages (pin tag and commit)")
+            check(track.tag != "", f"{where}: tag is required")
         if regex and track.tag:
             match = regex.match(track.tag)
             check(match is not None, f"{where}: tag {track.tag!r} does not match upstream.tag_regex")
@@ -613,8 +664,11 @@ def validate_package(pkg, config, today=None):
         if track.line is not None:
             check(not NUMERIC_RE.match(key), f"{where}: line is only for named tracks; {key} is a line already")
             check(NUMERIC_RE.match(track.line) is not None, f"{where}: line must be a version prefix like \"3.13\"")
-        check(COMMIT_RE.match(track.commit) is not None, f"{where}: commit must be a full 40-character SHA")
+        if index is None:
+            check(COMMIT_RE.match(track.commit) is not None, f"{where}: commit must be a full 40-character SHA")
         if track.go is not None:
+            # watch reads go.mod from the upstream git repository.
+            check(index is None, f"{where}: go: needs upstream.git (watch reads the release's go.mod)")
             sums = config.toolchains.get("go", {}).get(track.go)
             check(sums is not None, f"{where}: Go {track.go} is not in config.yaml toolchains.go")
             if sums is not None:
@@ -969,8 +1023,11 @@ def plan_changes(root, base, head, today=None, package_bases=None, registered=No
 
         changed = {}  # track -> what changed in its build
         tests_changed = any(f.startswith("tests/") for f in pkg_files)
+        # Upstream's new signing key verifies downloads; it changes no binary.
+        signing_key = (pkg.data.get("upstream") or {}).get("signing_key")
         for f in pkg_files:
-            if f != "package.yaml" and not f.startswith("tests/") and not f.endswith(NON_BUILD_SUFFIXES):
+            if (f != "package.yaml" and f != signing_key and not f.startswith("tests/")
+                    and not f.endswith(NON_BUILD_SUFFIXES)):
                 for key in file_tracks(f, (pkg, base_pkg), active):
                     changed.setdefault(key, set()).add(f)
         if "package.yaml" in pkg_files and base_pkg:
@@ -1223,14 +1280,51 @@ def download_verified(url, dest, expected):
         time.sleep(NETWORK_RETRY_DELAY * attempt)
 
 
+def dearmor(text):
+    """The binary packets of an ASCII-armored OpenPGP public key: gpgv (2.2
+    on bookworm and jammy) only reads binary keyrings."""
+    match = re.search(r"^-----BEGIN PGP PUBLIC KEY BLOCK-----\r?\n(.*?)^-----END PGP PUBLIC KEY BLOCK-----",
+                      text, re.S | re.M)
+    require(match, "no armored public key block")
+    lines = match.group(1).splitlines()
+    require("" in (line.strip() for line in lines), "armor has no blank line before its data")
+    body = lines[[line.strip() for line in lines].index("") + 1:]  # after the armor headers
+    data = "".join(line.strip() for line in body if not line.startswith("="))  # "=" starts the checksum
+    try:
+        packets = base64.b64decode(data, validate=True)
+    except ValueError as error:
+        raise FreshdebError(f"armor is not valid base64: {error}") from None
+    require(packets[:1] and packets[0] & 0x80, "armor holds no OpenPGP packets")
+    return packets
+
+
+def verify_signature(label, path, url, key_file):
+    """Check a detached signature (downloaded from url) of path against the
+    one key in key_file; fails unless gpgv reports a valid signature."""
+    require(shutil.which("gpgv"), f"{label}: gpgv is needed to verify {url} (apt-get install gpgv)")
+    with tempfile.TemporaryDirectory() as tmp:
+        keyring, signature = Path(tmp) / "keyring.gpg", Path(tmp) / "signature"
+        keyring.write_bytes(dearmor(key_file.read_text()))
+        download(url, signature)
+        result = subprocess.run(["gpgv", "--homedir", tmp, "--status-fd", "1", "--keyring", str(keyring),
+                                 str(signature), str(path)], text=True, capture_output=True)
+    valid = re.search(r"^\[GNUPG:\] VALIDSIG (\S+)", result.stdout, re.M)
+    require(result.returncode == 0 and valid,
+            f"{label}: {url} is not a valid signature of {path.name} by {key_file.name}:\n{result.stderr}")
+    print(f"  signature: {url} (good, key {valid.group(1)})")
+
+
 def fetch_tarball(pkg, track, orig, dest):
     """Download the release tarball as the orig tarball, verify it, unpack it."""
-    fetch_release_tarball(pkg.name, pkg.tarball_url(pkg.upstream_version(track.tag)), track.sha256, orig, dest)
+    version = pkg.upstream_version(track.tag)
+    fetch_release_tarball(pkg.name, pkg.tarball_url(version), track.sha256, orig, dest, pkg.signature(version))
 
 
-def fetch_release_tarball(label, url, sha256, orig, dest):
+def fetch_release_tarball(label, url, sha256, orig, dest, signature=None):
     digest = download_verified(url, orig, sha256)
     require(digest == sha256, f"{label}: {url} has sha256 {digest}, package.yaml pins {sha256}")
+    if signature:
+        verify_signature(label, orig, *signature)
     dest.mkdir(parents=True)
     run("tar", "-xf", str(orig), "-C", str(dest), "--strip-components=1")
     require(any(dest.iterdir()), f"{label}: {url} unpacked to nothing")
@@ -1378,14 +1472,20 @@ def rewrite_control(debian_dir, maintainer, source_name=None):
 def changelog_entry(pkg, config, track, codename, version, when):
     dist = config.distributions[codename]
     packaging = pkg.data["packaging"]
+    upstream_version = pkg.upstream_version(track.tag)
+    signature = pkg.signature(upstream_version)
     lines = [
         f"{pkg.name} ({version}) {codename}; urgency=medium",
         "",
-        f"  * freshdeb build of {pkg.name} {pkg.upstream_version(track.tag)} for {dist.title}.",
-        f"  * Upstream: {pkg.upstream['git']} tag {track.tag}",
-        f"    (commit {track.commit}).",  # debian/rules may read it from here (prometheus)
-        *([f"  * Release tarball: {pkg.tarball_url(pkg.upstream_version(track.tag))}",
+        f"  * freshdeb build of {pkg.name} {upstream_version} for {dist.title}.",
+        *([f"  * Upstream: release {upstream_version}, listed at",
+           f"    {pkg.index}."] if pkg.index else
+          [f"  * Upstream: {pkg.upstream['git']} tag {track.tag}",
+           f"    (commit {track.commit})."]),  # debian/rules may read it from here (prometheus)
+        *([f"  * Release tarball: {pkg.tarball_url(upstream_version)}",
            f"    (sha256 {track.sha256})."] if track.sha256 else []),
+        *([f"  * Signature: {signature[0]},",
+           f"    verified with packages/{pkg.name}/{pkg.upstream['signing_key']}."] if signature else []),
         *[line for name, template in pkg.assets.items()
           for line in (f"  * Release asset {name}: {template.format(version=pkg.upstream_version(track.tag))}",
                        f"    (sha256 {track.assets[name]}).")],
@@ -1483,7 +1583,8 @@ def prepare(root, name, key, codename, arch, out, publish=False, when=None):
     out.mkdir(parents=True, exist_ok=True)
     srcdir = out / f"{name}-{upstream_version}"
     require(not srcdir.exists(), f"{srcdir} already exists")
-    check_tag(pkg, track)
+    if not pkg.index:
+        check_tag(pkg, track)  # upstream.index releases have no tag: their checksum (and signature) pin them
     tarball = pkg.tarball_url(upstream_version)
     if tarball:
         suffix = next(s for s in TARBALL_SUFFIXES if tarball.endswith(s))
@@ -1635,6 +1736,20 @@ def remote_tags(url):
         else:
             tags.setdefault(name, sha)
     return tags
+
+
+def index_versions(pkg):
+    """{version: None} for every release upstream.index_regex finds in the
+    package's download index (no commits: those releases have no tags)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        download(pkg.index, Path(tmp) / "index")
+        text = (Path(tmp) / "index").read_text(errors="replace")
+    return {match.group("version"): None for match in re.finditer(pkg.upstream["index_regex"], text)}
+
+
+def upstream_tags(pkg):
+    """{tag: commit} of a package's upstream; versions for upstream.index."""
+    return index_versions(pkg) if pkg.index else remote_tags(pkg.upstream["git"])
 
 
 def numeric_prefix(version, depth):
@@ -1859,7 +1974,8 @@ def watch_report(pkg, tags, changes, go=None, today=None):
     toolchain, and new release lines."""
     releases = upstream_releases(pkg, tags)
     newest = max(releases, key=_VersionKey) if releases else None
-    lines = [f"{pkg.name}: {len(releases)} upstream releases match tag_regex"
+    lines = [f"{pkg.name}: {len(releases)} upstream releases "
+             + ("in upstream.index" if pkg.index else "match tag_regex")
              + (f", newest {newest}" if newest else "")]
     for key, track in pkg.tracks.items():
         label = f"{pkg.name} {key}" + (f" (line {track.line})" if track.line else "")
@@ -1914,8 +2030,8 @@ def watch_report(pkg, tags, changes, go=None, today=None):
 
 
 def release_urls(pkg, change):
-    """The release files apply_change pins for a change: its tarball and
-    assets."""
+    """The release files apply_change pins for a change: its tarball (and
+    signature) and assets."""
     if change["kind"] == "toolchain":
         return []
     if change["kind"] == "companion":
@@ -1924,7 +2040,9 @@ def release_urls(pkg, change):
         return [url] if url else []
     version = pkg.upstream_version(change["tag"])
     url = pkg.tarball_url(version)
-    return ([url] if url else []) + [template.format(version=version) for template in pkg.assets.values()]
+    signature = pkg.signature(version)
+    return (([url] if url else []) + ([signature[0]] if signature else [])
+            + [template.format(version=version) for template in pkg.assets.values()])
 
 
 def unpublished(pkg, changes):
@@ -1981,11 +2099,17 @@ def apply_change(root, change):
         return
     sha256 = change.get("sha256")
     if sha256 is None and pkg.upstream.get("tarball"):
-        # Pin the release tarball now; builds verify it against this.
-        url = pkg.tarball_url(pkg.upstream_version(change["tag"]))
+        # Pin the release tarball now; builds verify it against this. A
+        # signed one is only pinned once its signature checks out.
+        version = pkg.upstream_version(change["tag"])
+        url = pkg.tarball_url(version)
         with tempfile.TemporaryDirectory() as tmp:
             sha256 = download(url, Path(tmp) / "release")
+            if pkg.signature(version):
+                verify_signature(pkg.name, Path(tmp) / "release", *pkg.signature(version))
         change["sha256"] = sha256
+    # upstream.index packages pin the version alone, there's no tag or commit.
+    pin = {"version": change["tag"]} if pkg.index else {"tag": change["tag"], "commit": change["commit"]}
     assets = change.get("assets")
     if assets is None and pkg.assets:
         # Pin the release assets the same way.
@@ -1996,9 +2120,8 @@ def apply_change(root, change):
                 assets[name] = download(template.format(version=version), Path(tmp) / name)
         change["assets"] = assets
     if change["kind"] == "bump":
-        expr = (f'.tracks[{key}].tag = {yq_string(change["tag"])} | '
-                f'.tracks[{key}].commit = {yq_string(change["commit"])} | '
-                f'.tracks[{key}].revision = 1')
+        expr = " | ".join([*(f".tracks[{key}].{field} = {yq_string(value)}" for field, value in pin.items()),
+                           f".tracks[{key}].revision = 1"])
         if sha256:
             expr += f' | .tracks[{key}].sha256 = {yq_string(sha256)}'
         if change.get("go"):
@@ -2007,7 +2130,7 @@ def apply_change(root, change):
             expr += f' | .tracks[{key}].assets[{yq_string(name)}] = {yq_string(digest)}'
     else:
         base = pkg.tracks[change["based_on"]]
-        entry = {"tag": change["tag"], "commit": change["commit"], "revision": 1}
+        entry = {**pin, "revision": 1}
         if sha256:
             entry["sha256"] = sha256
         if change.get("go"):
@@ -2053,7 +2176,7 @@ def cmd_watch(args):
             if not pkg.data.get("watch", True):
                 print(f"{pkg.name}: watch disabled", file=sys.stderr)
                 continue
-            tags = remote_tags(pkg.upstream["git"])
+            tags = upstream_tags(pkg)
             found = watch_package(pkg, tags)
             if pkg.go_mode == "modules" and any(track.go for track in pkg.tracks.values()):
                 releases = releases if releases is not None else go_releases(list(config.architectures))

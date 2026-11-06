@@ -1,0 +1,5 @@
+unrealircd (6.2.7-1) unstable; urgency=medium
+
+  * Initial packaging for freshdeb.
+
+ -- freshdeb <packages@freshdeb.com>  Fri, 06 Nov 2026 12:00:00 +0000
