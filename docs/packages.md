@@ -33,6 +33,14 @@ upstream:
                                 # instead of the git tag (see below)
   assets:                       # optional; extra release files the build needs
     web-ui: https://github.com/prometheus/prometheus/releases/download/v{version}/prometheus-web-ui-{version}.tar.gz
+  signature: https://www.unrealircd.org/downloads/unrealircd-{version}.tar.gz.asc
+                                # optional; upstream's detached signature of the tarball
+  signing_key: upstream-signing-key.pub
+                                # with signature: the signer's armored public key, in the package directory
+  # index: https://www.unrealircd.org/downloads/list.json
+  # index_regex: 'unrealircd-(?P<version>\d+(?:\.\d+)+)\.tar\.gz'
+                                # replace git, tag_regex and submodules (never
+                                # together): releases without tags (see below)
 
 packaging:
   origin: https://salsa.debian.org/debian/valkey.git
@@ -50,6 +58,7 @@ tracks:                         # one APT component per track: main, or v<track>
   "9.1":                        # quote keys: YAML reads 9.1 as a number
     tag: "9.1.3"
     commit: <full commit the tag points to>
+                                # upstream.index packages pin version: "6.2.7" instead of both
     sha256: <tarball checksum>  # only with upstream.tarball; watch.yml fills it in
     go: "1.25.14"               # only for Go programs: toolchain from config.yaml (see below)
     assets:                     # only with upstream.assets: sha256 of each; watch.yml fills them in
@@ -90,6 +99,16 @@ tests:
 ### Git tag or release tarball
 
 By default the source is the git tag, checked out at the pinned commit. Set `upstream.tarball` when Debian builds from upstream's release tarball instead, typically because it contains generated files (`configure`, version stamps) that the git tag doesn't. The build downloads it and verifies it against the track's `sha256` before anything is unpacked. The tag's commit is still checked, so a moved tag fails the build either way.
+
+### Signed release tarballs
+
+When upstream signs its tarballs, set `upstream.signature` (the detached signature's URL) and `upstream.signing_key` (upstream's armored public key, committed in the package directory; take it from upstream's source or website and check its fingerprint against a second source). Builds check the signature with `gpgv` after the sha256, before anything is unpacked, and watch.yml only pins a new release's checksum once its signature checks out. When upstream moves to a new key, replace the file in a PR.
+
+### Releases without git tags
+
+Some upstreams don't tag their releases in git and only publish tarballs (UnrealIRCd). Instead of `git` and `tag_regex`, `upstream.index` names a page that lists the releases, such as a download directory or upstream's own version feed, and `upstream.index_regex` finds their versions in it (every match's `version` group). `upstream.tarball` is required; sign it with `upstream.signature` where upstream signs.
+
+Tracks pin `version:` (no tag or commit); the tarball's sha256 and signature are what pins the release, in place of the moved-tag check. watch.yml reads the index on each run, and its pull requests link to the package's homepage instead of a release page.
 
 ### Release assets
 

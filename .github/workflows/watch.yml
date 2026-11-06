@@ -109,9 +109,11 @@ jobs:
             branch="watch/${package}-${track}"
             [[ "$kind" == "toolchain" ]] && branch="watch/${package}-${track}-go"
             [[ "$kind" == "companion" ]] && branch="watch/${package}-${track}-${companion}"
-            upstream="$(yq -r .upstream.git "packages/${package}/package.yaml")"
+            upstream="$(yq -r '.upstream.git // ""' "packages/${package}/package.yaml")"
             [[ "$kind" == "companion" ]] && upstream="$(yq -r ".companions[\"${companion}\"].upstream.git" "packages/${package}/package.yaml")"
             notes="${upstream%.git}/releases/tag/${tag}"
+            # upstream.index packages have no git releases to link to.
+            [[ -z "$upstream" ]] && notes="$(yq -r .homepage "packages/${package}/package.yaml")"
 
             if [[ "$kind" == "toolchain" ]]; then
               title="${package} ${track}: rebuild with Go ${go}"

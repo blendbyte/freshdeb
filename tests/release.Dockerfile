@@ -1,6 +1,6 @@
 FROM debian:trixie
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        apt ca-certificates dpkg-dev git gnupg python3 python3-debian python3-yaml \
+        apt ca-certificates dpkg-dev git gnupg gpgv python3 python3-debian python3-yaml \
         reprepro rsync shellcheck tini \
     && rm -rf /var/lib/apt/lists/* \
     && ARCH="$(dpkg --print-architecture)" \

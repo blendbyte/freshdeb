@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         dpkg-dev \
         fakeroot \
         git \
+        gpgv \
         patch \
         python3 \
         python3-yaml \
