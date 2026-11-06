@@ -1594,7 +1594,8 @@ class IndexTests(unittest.TestCase):
         self.assertEqual(list(missing.values()), [f"file://{self.upstream}/unrealircd-6.2.100.tar.gz.asc"])
 
     def test_go_needs_a_git_upstream(self):
-        text = self.yaml.read_text().replace("    revision: 1", '    revision: 1\n    go: "1.25.14"')
+        text = re.sub(r"^(    revision: \d+)$", r'\1\n    go: "1.25.14"', self.yaml.read_text(), count=1, flags=re.M)
+        self.assertIn('go: "1.25.14"', text)
         self.assertTrue(any("go: needs upstream.git" in e for e in self.errors(text)))
 
     def test_signature_needs_a_readable_key(self):
