@@ -1392,7 +1392,8 @@ class CompanionTests(unittest.TestCase):
     def test_new_track_copies_pins_and_codenames(self):
         if not shutil.which("yq"):
             self.skipTest("yq not available")
-        self.replace(self.yaml, '\n    tag: "v1.3.9e"', '\n    codenames: [trixie]\n    tag: "v1.3.9e"')
+        tag = freshdeb.load_package("proftpd", self.tmp).tracks["main"].tag
+        self.replace(self.yaml, f'\n    tag: "{tag}"', f'\n    codenames: [trixie]\n    tag: "{tag}"')
         freshdeb.apply_change(self.tmp, {"package": "proftpd", "kind": "new-track", "track": "1.4",
                                          "tag": "v1.4.0", "commit": "b" * 40, "based_on": "main", "aliases": {}})
         pkg = freshdeb.load_package("proftpd", self.tmp)
@@ -1465,15 +1466,19 @@ class IndexTests(unittest.TestCase):
         shutil.copy(ROOT / "config.yaml", self.tmp / "config.yaml")
         shutil.copytree(ROOT / "packages", self.tmp / "packages")
         self.yaml = self.tmp / "packages/unrealircd/package.yaml"
+        # Releases relative to the pinned version, which watch.yml keeps moving.
+        self.pinned = freshdeb.load_package("unrealircd", ROOT).tracks["main"].tag
+        self.new = next_patch(self.pinned)
+        self.newer = next_patch(self.new)
         self.upstream = self.tmp / "upstream"
         self.upstream.mkdir()
         self.yaml.write_text(self.yaml.read_text()
                              .replace("https://www.unrealircd.org/downloads/", f"file://{self.upstream}/"))
         (self.tmp / "packages/unrealircd/upstream-signing-key.pub").write_text(self.gpg("--armor", "--export"))
         (self.upstream / "list.json").write_text(
-            '{"6.0":{"Stable":{"version":"6.2.99","downloads":{"src":"https:\\/\\/www.unrealircd.org\\/downloads\\/'
-            'unrealircd-6.2.99.tar.gz","winssl":"https:\\/\\/www.unrealircd.org\\/downloads\\/unrealircd-6.2.99.exe"}}}}')
-        self.sha256 = self.release("6.2.99")
+            f'{{"6.0":{{"Stable":{{"version":"{self.new}","downloads":{{"src":"https:\\/\\/www.unrealircd.org\\/downloads\\/'
+            f'unrealircd-{self.new}.tar.gz","winssl":"https:\\/\\/www.unrealircd.org\\/downloads\\/unrealircd-{self.new}.exe"}}}}}}}}')
+        self.sha256 = self.release(self.new)
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -1500,46 +1505,46 @@ class IndexTests(unittest.TestCase):
     def test_the_real_package_is_valid(self):
         self.assertEqual([e for e in freshdeb.validate_all(ROOT, TODAY) if e.startswith("unrealircd:")], [])
         pkg = freshdeb.load_package("unrealircd", ROOT)
-        self.assertEqual((pkg.tracks["main"].tag, pkg.tracks["main"].commit), ("6.2.7", ""))
-        self.assertEqual(pkg.upstream_version("6.2.7"), "6.2.7")
+        self.assertEqual(pkg.tracks["main"].commit, "")
+        self.assertEqual(pkg.upstream_version(self.pinned), self.pinned)
 
     def test_index_lists_the_releases(self):
-        self.assertEqual(freshdeb.index_versions(self.package()), {"6.2.99": None})
+        self.assertEqual(freshdeb.index_versions(self.package()), {self.new: None})
 
     def test_watch_bumps_to_the_listed_release(self):
         pkg = self.package()
         changes = freshdeb.watch_package(pkg, freshdeb.upstream_tags(pkg), TODAY)
-        self.assertEqual(changes, [{"package": "unrealircd", "kind": "bump", "track": "main", "from": "6.2.7",
-                                    "tag": "6.2.99", "commit": None}])
-        self.assertEqual(freshdeb.watch_report(pkg, {"6.2.99": None}, changes, None, TODAY)[0],
-                         "unrealircd: 1 upstream releases in upstream.index, newest 6.2.99")
+        self.assertEqual(changes, [{"package": "unrealircd", "kind": "bump", "track": "main", "from": self.pinned,
+                                    "tag": self.new, "commit": None}])
+        self.assertEqual(freshdeb.watch_report(pkg, {self.new: None}, changes, None, TODAY)[0],
+                         f"unrealircd: 1 upstream releases in upstream.index, newest {self.new}")
 
     def test_apply_pins_version_and_checksum(self):
         if not shutil.which("yq"):
             self.skipTest("yq not available")
         freshdeb.apply_change(self.tmp, {"package": "unrealircd", "kind": "bump", "track": "main",
-                                         "tag": "6.2.99", "commit": None})
+                                         "tag": self.new, "commit": None})
         text = self.yaml.read_text()
-        self.assertIn('    version: "6.2.99"\n', text)
+        self.assertIn(f'    version: "{self.new}"\n', text)
         self.assertNotIn("tag:", text)
         self.assertNotIn("commit:", text)
         track = self.package().tracks["main"]
-        self.assertEqual((track.tag, track.sha256, track.revision), ("6.2.99", self.sha256, 1))
+        self.assertEqual((track.tag, track.sha256, track.revision), (self.new, self.sha256, 1))
 
     def test_apply_refuses_a_bad_signature(self):
         if not shutil.which("yq"):
             self.skipTest("yq not available")
         before = self.yaml.read_text()
-        tarball = self.upstream / "unrealircd-6.2.99.tar.gz"
+        tarball = self.upstream / f"unrealircd-{self.new}.tar.gz"
         tarball.write_bytes(tarball.read_bytes() + b"\0")
         with self.assertRaisesRegex(freshdeb.FreshdebError, "is not a valid signature"):
             freshdeb.apply_change(self.tmp, {"package": "unrealircd", "kind": "bump", "track": "main",
-                                             "tag": "6.2.99", "commit": None})
+                                             "tag": self.new, "commit": None})
         self.assertEqual(self.yaml.read_text(), before)
 
     def test_fetch_checks_the_signature(self):
         pkg = self.package()
-        pkg.tracks["main"].tag, pkg.tracks["main"].sha256 = "6.2.99", self.sha256
+        pkg.tracks["main"].tag, pkg.tracks["main"].sha256 = self.new, self.sha256
         freshdeb.fetch_tarball(pkg, pkg.tracks["main"], self.tmp / "orig.tar.gz", self.tmp / "src")
         self.assertTrue((self.tmp / "src/Config").is_file())
         # Signed by someone else: a key that isn't upstream's.
@@ -1560,16 +1565,17 @@ class IndexTests(unittest.TestCase):
     def test_changelog_names_the_index_and_signature(self):
         pkg = freshdeb.load_package("unrealircd", ROOT)
         entry = freshdeb.changelog_entry(pkg, freshdeb.load_config(ROOT), pkg.tracks["main"], "trixie", "1-1", 0)
-        self.assertIn("  * Upstream: release 6.2.7, listed at\n    https://www.unrealircd.org/downloads/list.json.",
+        self.assertIn(f"  * Upstream: release {self.pinned}, listed at\n    https://www.unrealircd.org/downloads/list.json.",
                       entry)
-        self.assertIn("  * Signature: https://www.unrealircd.org/downloads/unrealircd-6.2.7.tar.gz.asc,\n"
+        self.assertIn(f"  * Signature: https://www.unrealircd.org/downloads/unrealircd-{self.pinned}.tar.gz.asc,\n"
                       "    verified with packages/unrealircd/upstream-signing-key.pub.", entry)
         self.assertNotIn("commit", entry)
 
     def test_index_packages_pin_a_version_only(self):
         text = self.yaml.read_text()
+        self.assertIn(f'version: "{self.pinned}"', text)
         self.assertTrue(any("pin a version (no tag or commit)" in e
-                            for e in self.errors(text.replace('version: "6.2.7"', 'tag: "6.2.7"'))))
+                            for e in self.errors(text.replace(f'version: "{self.pinned}"', f'tag: "{self.pinned}"'))))
         self.assertTrue(any("upstream.index replaces upstream.git" in e
                             for e in self.errors(text.replace("upstream:\n", "upstream:\n  git: https://x.invalid/x.git\n"))))
         self.assertTrue(any("needs upstream.tarball" in e
@@ -1585,13 +1591,13 @@ class IndexTests(unittest.TestCase):
 
     def test_watch_waits_for_the_signature(self):
         # The tarball is out, its signature isn't uploaded yet.
-        self.release("6.2.100", signed=False)
-        change = {"kind": "bump", "tag": "6.2.100"}
+        self.release(self.newer, signed=False)
+        change = {"kind": "bump", "tag": self.newer}
         urls = freshdeb.release_urls(self.package(), change)
-        self.assertEqual([Path(u).name for u in urls], ["unrealircd-6.2.100.tar.gz", "unrealircd-6.2.100.tar.gz.asc"])
+        self.assertEqual([Path(u).name for u in urls], [f"unrealircd-{self.newer}.tar.gz", f"unrealircd-{self.newer}.tar.gz.asc"])
         with mock.patch.object(freshdeb, "published", lambda url: Path(url.removeprefix("file://")).exists()):
             missing = freshdeb.unpublished(self.package(), [change])
-        self.assertEqual(list(missing.values()), [f"file://{self.upstream}/unrealircd-6.2.100.tar.gz.asc"])
+        self.assertEqual(list(missing.values()), [f"file://{self.upstream}/unrealircd-{self.newer}.tar.gz.asc"])
 
     def test_go_needs_a_git_upstream(self):
         text = re.sub(r"^(    revision: \d+)$", r'\1\n    go: "1.25.14"', self.yaml.read_text(), count=1, flags=re.M)
