@@ -18,6 +18,6 @@ packaging:
 # Upstream supports only UnrealIRCd 6 and fixes it in its latest release.
 tracks:
   main:
-    version: "6.2.7"
-    sha256: e075375f469309bf1d54134bc914ec50a4ae3b09da6d2db2c11f9fa88d649370
-    revision: 2
+    version: "6.2.7.1"
+    sha256: 4e372ba071f3211d34c5a3515af77fc2b275eb692e43e55c423e201b60958c3f
+    revision: 1
