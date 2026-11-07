@@ -115,7 +115,8 @@ class CatalogTests(unittest.TestCase):
         self.assertTrue(any("does not belong to track 9.1" in e for e in self.errors()))
 
     def test_short_commit(self):
-        self.replace("commit: 29173b67508b2de4c0f0ed551f3b47cf19fc3ca8", "commit: 29173b6")
+        commit = freshdeb.load_package("valkey", self.tmp).tracks["9.1"].commit
+        self.replace(f"commit: {commit}", f"commit: {commit[:7]}")
         self.assertTrue(any("40-character" in e for e in self.errors()))
 
     def test_alias_to_unknown_track(self):
@@ -135,7 +136,9 @@ class CatalogTests(unittest.TestCase):
                         r"upstream: unknown key\(s\) tag-regex$"):
             self.assertTrue(any(re.search(message, e) for e in errors), (message, errors))
         y = self.tmp / "packages/proftpd/package.yaml"
-        y.write_text(y.read_text().replace('proftpd-mod-vroot: {tag: "v0.9.12"', 'proftpd-mod-vroot: {tg: "x", tag: "v0.9.12"', 1))
+        text = y.read_text()
+        self.assertIn("proftpd-mod-vroot: {tag: ", text)
+        y.write_text(text.replace("proftpd-mod-vroot: {tag: ", 'proftpd-mod-vroot: {tg: "x", tag: ', 1))
         self.assertTrue(any("track main companion proftpd-mod-vroot: unknown key(s) tg" in e for e in self.errors()))
 
     def test_empty_codenames(self):
@@ -152,7 +155,9 @@ class CatalogTests(unittest.TestCase):
 
     def test_tarball_tracks_need_sha256(self):
         y = self.tmp / "packages/memcached/package.yaml"
-        y.write_text(y.read_text().replace("    sha256: d362", "    nosha: d362"))
+        text, count = re.subn(r"^    sha256: ", "    nosha: ", y.read_text(), count=1, flags=re.M)
+        self.assertEqual(count, 1)
+        y.write_text(text)
         self.assertTrue(any("sha256 of the release tarball is required" in e for e in self.errors()))
 
     def test_sha256_without_tarball_is_rejected(self):
@@ -356,7 +361,9 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(self.plan(), ({("valkey", line): True}, [], {"valkey"}))
 
     def test_build_field_change_needs_a_bump(self):
-        self.edit("packages/restic/package.yaml", 'go: "1.26.10"', 'go: "1.27.3"')
+        go = freshdeb.load_package("restic", self.repo).tracks["main"].go
+        other = next(v for v in freshdeb.load_config(self.repo).toolchains["go"] if v != go)
+        self.edit("packages/restic/package.yaml", f'go: "{go}"', f'go: "{other}"')
         self.commit()
         selected, errors, _ = self.plan()
         self.assertEqual(selected, {("restic", "main"): True})
@@ -568,7 +575,8 @@ class PrepareHookTests(unittest.TestCase):
     def test_hook_runs_in_the_source_tree(self):
         hook = self.hook('set -e\necho "$FRESHDEB_PACKAGE $FRESHDEB_UPSTREAM_VERSION" > fetched.txt\n')
         freshdeb.run_prepare_hook(self.pkg, self.pkg.tracks["main"], self.src, hook)
-        self.assertEqual((self.src / "fetched.txt").read_text().strip(), "neovim 0.12.6")
+        version = self.pkg.upstream_version(self.pkg.tracks["main"].tag)
+        self.assertEqual((self.src / "fetched.txt").read_text().strip(), f"neovim {version}")
 
     def test_failing_hook_stops_the_build(self):
         hook = self.hook('echo "checksum mismatch" >&2\nexit 1\n')
@@ -898,8 +906,11 @@ class AssetTests(unittest.TestCase):
             freshdeb.fetch_assets(pkg, track, self.tmp / "src")
 
     def test_every_track_pins_every_asset(self):
-        self.yaml.write_text(self.yaml.read_text().replace(
-            "      web-ui: c84c2c7eed84e184309cb5a07effade15a30ff767770eb9474e6fb4688ee02e1\n", "      other: " + "a" * 64 + "\n"))
+        lts = freshdeb.load_package("prometheus", self.tmp).tracks["lts"]
+        pinned = f"      web-ui: {lts.assets['web-ui']}\n"
+        text = self.yaml.read_text()
+        self.assertIn(pinned, text)
+        self.yaml.write_text(text.replace(pinned, "      other: " + "a" * 64 + "\n"))
         self.assertTrue(any("track lts: assets needs the sha256 of every upstream asset (web-ui)" in e
                             for e in freshdeb.validate_all(self.tmp, TODAY)))
 
@@ -1269,7 +1280,8 @@ class CompanionTests(unittest.TestCase):
         pkg = freshdeb.load_package("proftpd", ROOT)
         version = pkg.version(config, "main", "trixie")
         vroot = pkg.companion_version(config, "main", "trixie", "proftpd-mod-vroot")
-        self.assertEqual(vroot, f"0.9.12+{version}")
+        pin = pkg.tracks["main"].companions["proftpd-mod-vroot"]
+        self.assertEqual(vroot, f"{pkg.companions['proftpd-mod-vroot'].upstream_version(pin.tag)}+{version}")
         self.assertTrue(vroot.endswith(f"+{version}"))
         # Above the distributions' module packages, rc versions included.
         self.assertGreater(freshdeb.compare_versions(vroot, "0.9.12-2"), 0)
@@ -1298,7 +1310,8 @@ class CompanionTests(unittest.TestCase):
         self.assertTrue(any("needs a pin for every companion (proftpd-mod-vroot)" in e for e in self.errors()))
 
     def test_tag_must_match(self):
-        self.replace(self.yaml, '{tag: "v0.9.12"', '{tag: "0.9.12"')
+        tag = freshdeb.load_package("proftpd", self.tmp).tracks["main"].companions["proftpd-mod-vroot"].tag
+        self.replace(self.yaml, f'proftpd-mod-vroot: {{tag: "{tag}"', f'proftpd-mod-vroot: {{tag: "{tag.removeprefix("v")}"')
         self.assertTrue(any("does not match its upstream.tag_regex" in e for e in self.errors()))
 
     def test_missing_debian(self):
@@ -1340,22 +1353,31 @@ class CompanionTests(unittest.TestCase):
         pkg = freshdeb.load_package("proftpd", ROOT)
         tags = {name: {pin.tag: pin.commit} for name, pin in pkg.tracks["main"].companions.items()}
         self.assertEqual(freshdeb.watch_companions(pkg, tags, TODAY), [])
-        tags["proftpd-mod-vroot"].update({"v0.9.13": "d" * 40, "v0.9.14rc1": "e" * 40, "v1.0.0-beta": "f" * 40})
+        # Releases relative to the pins, which watch.yml keeps moving.
+        pinned = pkg.tracks["main"].companions["proftpd-mod-vroot"].tag
+        new = next_patch(pinned)
+        major = int(pinned.removeprefix("v").split(".")[0]) + 1
+        tags["proftpd-mod-vroot"].update({new: "d" * 40, f"{next_patch(new)}rc1": "e" * 40,
+                                          f"v{major}.0.0-beta": "f" * 40})
         changes = freshdeb.watch_companions(pkg, tags, TODAY)
         self.assertEqual(changes, [{"package": "proftpd", "kind": "companion", "track": "main",
-                                    "companion": "proftpd-mod-vroot", "from": "v0.9.12", "tag": "v0.9.13",
+                                    "companion": "proftpd-mod-vroot", "from": pinned, "tag": new,
                                     "commit": "d" * 40}])
         report = freshdeb.companion_report(pkg, tags, changes, TODAY)
-        self.assertIn("  proftpd main: companion proftpd-mod-vroot ours 0.9.12, upstream 0.9.13 -> update to v0.9.13",
-                      report)
-        self.assertIn("  proftpd main: companion proftpd-mod-case ours 0.9.1, upstream 0.9.1 -> up to date", report)
+        version = pkg.companions["proftpd-mod-vroot"].upstream_version
+        self.assertIn(f"  proftpd main: companion proftpd-mod-vroot ours {version(pinned)}, upstream {version(new)} "
+                      f"-> update to {new}", report)
+        case = pkg.companions["proftpd-mod-case"].upstream_version(pkg.tracks["main"].companions["proftpd-mod-case"].tag)
+        self.assertIn(f"  proftpd main: companion proftpd-mod-case ours {case}, upstream {case} -> up to date", report)
 
     def test_clamav_follows_release_candidates(self):
         pkg = freshdeb.load_package("proftpd", ROOT)
         pin = pkg.tracks["main"].companions["proftpd-mod-clamav"]
-        tags = {"proftpd-mod-clamav": {pin.tag: pin.commit, "v0.14rc3": "a" * 40}}
+        rc = re.sub(r"\d+$", lambda m: str(int(m[0]) + 1), pin.tag)  # v0.14rc2 -> v0.14rc3
+        self.assertIn("rc", rc)
+        tags = {"proftpd-mod-clamav": {pin.tag: pin.commit, rc: "a" * 40}}
         changes = freshdeb.watch_companions(pkg, tags, TODAY)
-        self.assertEqual([c["tag"] for c in changes], ["v0.14rc3"])
+        self.assertEqual([c["tag"] for c in changes], [rc])
 
     def test_prepare_builds_the_source_tree(self):
         if not shutil.which("patch"):
@@ -1421,8 +1443,9 @@ class CompanionPlanTests(unittest.TestCase):
                                            PlanTests.edit, PlanTests.plan)
 
     def test_companion_pin_selects_the_track(self):
-        self.edit("packages/proftpd/package.yaml", '{tag: "v0.9.12", commit: abcc817f322e1fa670b469ef0bc09419336b1d56}',
-                  '{tag: "v0.9.13", commit: ' + "d" * 40 + "}")
+        pin = freshdeb.load_package("proftpd", self.repo).tracks["main"].companions["proftpd-mod-vroot"]
+        self.edit("packages/proftpd/package.yaml", f'{{tag: "{pin.tag}", commit: {pin.commit}}}',
+                  f'{{tag: "{next_patch(pin.tag)}", commit: ' + "d" * 40 + "}")
         self.commit()
         selected, errors, _ = self.plan()
         self.assertEqual((selected, errors), ({("proftpd", "main"): True}, []))

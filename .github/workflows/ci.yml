@@ -73,6 +73,11 @@ jobs:
       - name: Unit and release tests
         run: docker run --rm -v "$PWD:/workspace:ro" freshdeb-tests
 
+      # The tests again, with every pin moved as watch.yml moves them: a test
+      # that spells out a pin fails here, not in the next watch pull request.
+      - name: Pin drill
+        run: docker run --rm -v "$PWD:/workspace:ro" freshdeb-tests python3 tests/pin_drill.py
+
   plan:
     name: plan
     runs-on: ubuntu-24.04
