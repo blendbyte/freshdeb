@@ -359,7 +359,7 @@ diff -ruN a/debian/rules b/debian/rules
 +	# Web UI: upstream's release tarball of the built UI (dist/, the files
 +	# upstream's own build embeds from ui/app/dist).
 +	tar -xzf freshdeb-assets/web-ui.tar.gz -C ui/app
-+	test -f ui/app/dist/index.html.gz
++	test -f ui/app/dist/elm/index.html.gz && test -f ui/app/dist/mantine/index.html.gz
 +	go build $(BUILDFLAGS) -o _build/bin/$(MANAGER_BINNAME) ./cmd/alertmanager
 +	go build $(BUILDFLAGS) -o _build/bin/$(TOOL_BINNAME) ./cmd/amtool
  	# Build bash completion scripts.

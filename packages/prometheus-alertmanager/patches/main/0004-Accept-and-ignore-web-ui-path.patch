@@ -14,16 +14,16 @@ diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
 --- a/cmd/alertmanager/main.go
 +++ b/cmd/alertmanager/main.go
 @@ -67,6 +67,9 @@ func run() int {
- 		corsOrigin     = kingpin.Flag("web.cors.origin", `Regex for CORS origin. It is fully anchored, so it must match the whole origin including scheme and port, and dots must be escaped. Browser pages from matching origins may call the API. Example: 'https?://(domain1|domain2)\.com'. If empty, no CORS headers are sent.`).String()
- 		getConcurrency = kingpin.Flag("web.get-concurrency", "Maximum number of GET requests processed concurrently. If negative or zero, the limit is GOMAXPROC or 8, whichever is larger.").Default("0").Int()
- 		httpTimeout    = kingpin.Flag("web.timeout", "Timeout for HTTP requests. If negative or zero, no timeout is set.").Default("0").Duration()
+ 		corsOrigin                 = kingpin.Flag("web.cors.origin", `Regex for CORS origin. It is fully anchored, so it must match the whole origin including scheme and port, and dots must be escaped. Browser pages from matching origins may call the API. Example: 'https?://(domain1|domain2)\.com'. If empty, no CORS headers are sent.`).String()
+ 		getConcurrency             = kingpin.Flag("web.get-concurrency", "Maximum number of GET requests processed concurrently. If negative or zero, the limit is GOMAXPROC or 8, whichever is larger.").Default("0").Int()
+ 		httpTimeout                = kingpin.Flag("web.timeout", "Timeout for HTTP requests. If negative or zero, no timeout is set.").Default("0").Duration()
 +		// Debian's packages had this flag for a separately built web UI; the
 +		// UI is built in now. Accepted so that existing settings still start.
 +		uiPath = kingpin.Flag("web.ui-path", "Ignored: the web UI is built in.").Hidden().String()
- 
- 		memlimitRatio = kingpin.Flag("auto-gomemlimit.ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value must be greater than 0 and less than or equal to 1.").
- 				Default("0.9").Float64()
-@@ -101,6 +104,10 @@ func run() int {
+ 		connectUnaryConcurrency    = kingpin.Flag("api.connect.unary-concurrency", "[EXPERIMENTAL] Maximum number of Connect unary RPCs processed concurrently. If negative or zero, the limit uses --web.get-concurrency.").Default("0").Int()
+ 		connectStreamConcurrency   = kingpin.Flag("api.connect.stream-concurrency", "[EXPERIMENTAL] Maximum number of Connect streams processed concurrently. If negative or zero, the limit uses --web.get-concurrency.").Default("0").Int()
+ 		connectUnaryTimeout        = kingpin.Flag("api.connect.unary-timeout", "[EXPERIMENTAL] Timeout for Connect unary RPCs, including request reads. Zero uses --web.timeout. A negative value disables the Connect unary timeout.").Default("0").Duration()
+@@ -113,6 +116,10 @@ func run() int {
  
  	logger := promslog.New(&promslogConfig)
  

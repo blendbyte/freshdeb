@@ -8,22 +8,20 @@ freshdeb: amtool reads upstream's config locations ($HOME/.config/amtool/config.
 Forwarded: not-needed
 Last-Update: 2019-10-29
 ---
+--- a/README.md
++++ b/README.md
+@@ -302,7 +302,7 @@ amtool template render --template.glob='/foo/bar/*.tmpl' --template.text='{{ tem
+ 
+ ### Configuration
+ 
+-`amtool` allows a configuration file to specify some options for convenience. The default configuration file paths are `$HOME/.config/amtool/config.yml` or `/etc/amtool/config.yml`
++`amtool` allows a configuration file to specify some options for convenience. The default configuration file paths are `$HOME/.config/prometheus/amtool.yml`, `$HOME/.config/amtool/config.yml`, `/etc/prometheus/amtool.yml` or `/etc/amtool/config.yml`
+ 
+ An example configuration file might look like the following:
+ 
 --- a/cli/root.go
 +++ b/cli/root.go
-@@ -45,7 +45,11 @@
- 	versionCheck    bool
- 	featureFlags    string
- 
--	configFiles = []string{os.ExpandEnv("$HOME/.config/amtool/config.yml"), "/etc/amtool/config.yml"}
-+	// Debian's locations, then upstream's; a user's before the system's.
-+	configFiles = []string{
-+		os.ExpandEnv("$HOME/.config/prometheus/amtool.yml"), os.ExpandEnv("$HOME/.config/amtool/config.yml"),
-+		"/etc/prometheus/amtool.yml", "/etc/amtool/config.yml",
-+	}
- 	legacyFlags = map[string]string{"comment_required": "require-comment"}
- )
- 
-@@ -151,7 +155,7 @@
+@@ -151,7 +151,7 @@ func Execute() {
  	format.InitFormatFlags(app)
  
  	app.Flag("verbose", "Verbose running information").Short('v').BoolVar(&verbose)
@@ -32,23 +30,40 @@ Last-Update: 2019-10-29
  	app.Flag("output", "Output formatter (simple, extended, json)").Short('o').Default("simple").EnumVar(&output, "simple", "extended", "json")
  	app.Flag("timeout", "Timeout for the executed command").Default("30s").DurationVar(&timeout)
  	app.Flag("http.config.file", "HTTP client configuration file for amtool to connect to Alertmanager.").PlaceHolder("<filename>").ExistingFileVar(&httpConfigFile)
-@@ -191,9 +195,10 @@
+@@ -191,11 +191,13 @@ const (
  	helpRoot = `View and modify the current Alertmanager state.
  
  Config File:
 -The alertmanager tool will read a config file in YAML format from one of two
--default config locations: $HOME/.config/amtool/config.yml or
--/etc/amtool/config.yml
+-default config locations depending on the operating system.
 +The alertmanager tool will read config files in YAML format from these
-+default config locations: $HOME/.config/prometheus/amtool.yml,
-+$HOME/.config/amtool/config.yml, /etc/prometheus/amtool.yml and
-+/etc/amtool/config.yml (the first file that sets a flag wins)
++default config locations depending on the operating system (the first file
++that sets a flag wins).
  
- All flags can be given in the config file, but the following are the suited for
- static configuration:
+ On non-Windows systems:
+-  $HOME/.config/amtool/config.yml or /etc/amtool/config.yml
++  $HOME/.config/prometheus/amtool.yml, $HOME/.config/amtool/config.yml,
++  /etc/prometheus/amtool.yml and /etc/amtool/config.yml
+ 
+ On Windows systems:
+   %APPDATA%\amtool\config.yml or %ProgramData%\amtool\config.yml
+--- a/cli/root_others.go
++++ b/cli/root_others.go
+@@ -31,8 +31,11 @@ func defaultConfigFiles() []string {
+ 		systemConfigDir = filepath.SplitList(envConfigDir)[0]
+ 	}
+ 
++	// Debian's locations, then upstream's; a user's before the system's.
+ 	return []string{
++		filepath.Join(userConfigDir, "prometheus", "amtool.yml"),
+ 		filepath.Join(userConfigDir, "amtool", "config.yml"),
++		filepath.Join(systemConfigDir, "prometheus", "amtool.yml"),
+ 		filepath.Join(systemConfigDir, "amtool", "config.yml"),
+ 	}
+ }
 --- a/cli/silence_add.go
 +++ b/cli/silence_add.go
-@@ -79,7 +79,7 @@
+@@ -79,7 +79,7 @@ func configureSilenceAddCmd(cc *kingpin.CmdClause) {
  		c      = &silenceAddCmd{}
  		addCmd = cc.Command("add", silenceAddHelp)
  	)
@@ -57,7 +72,7 @@ Last-Update: 2019-10-29
  	addCmd.Flag("require-comment", "Require comment to be set").Hidden().Default("true").BoolVar(&c.requireComment)
  	addCmd.Flag("duration", "Duration of silence").Short('d').Default("1h").StringVar(&c.duration)
  	addCmd.Flag("start", "Set when the silence should start. RFC3339 format 2006-01-02T15:04:05-07:00").StringVar(&c.start)
-@@ -126,6 +126,9 @@
+@@ -126,6 +126,9 @@ func (c *silenceAddCmd) add(ctx context.Context, _ *kingpin.ParseContext) error
  		startsAt = time.Now().UTC()
  	}
  
@@ -69,7 +84,7 @@ Last-Update: 2019-10-29
  		endsAt, err = time.Parse(time.RFC3339, c.end)
 --- a/cmd/alertmanager/main.go
 +++ b/cmd/alertmanager/main.go
-@@ -48,8 +48,8 @@
+@@ -49,8 +49,8 @@ func run() int {
  	}
  
  	var (
@@ -80,15 +95,3 @@ Last-Update: 2019-10-29
  		retention                   = kingpin.Flag("data.retention", "How long to keep data for.").Default("120h").Duration()
  		maintenanceInterval         = kingpin.Flag("data.maintenance-interval", "Interval between garbage collection and snapshotting to disk of the silences and the notification logs.").Default("15m").Duration()
  		maxSilences                 = kingpin.Flag("silences.max-silences", "Maximum number of silences, including expired silences. If negative or zero, no limit is set.").Default("0").Int()
-Only in b/cmd/alertmanager: main.go.orig
---- a/README.md
-+++ b/README.md
-@@ -296,7 +296,7 @@
- 
- ### Configuration
- 
--`amtool` allows a configuration file to specify some options for convenience. The default configuration file paths are `$HOME/.config/amtool/config.yml` or `/etc/amtool/config.yml`
-+`amtool` allows a configuration file to specify some options for convenience. The default configuration file paths are `$HOME/.config/prometheus/amtool.yml`, `$HOME/.config/amtool/config.yml`, `/etc/prometheus/amtool.yml` or `/etc/amtool/config.yml`
- 
- An example configuration file might look like the following:
- 
