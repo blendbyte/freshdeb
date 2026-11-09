@@ -14,13 +14,13 @@ packaging:
   ref: 7a0e028cbf67c952a0263ad88d03cbe311f9de4a # 0.33.1-5, unstable
 tracks:
   main:
-    tag: "v0.34.2"
-    commit: e8349048265ccc0871c3d0d668b05eacc68baf50
+    tag: "v0.35.0"
+    commit: 8cf67a8e75004bad6c3c6bacc829945cf8a3ee65
     revision: 1
     go: "1.26.10" # what upstream's release build uses (.promu.yml: go 1.26; go.mod: go 1.25.0)
     patches: patches/main # Debian's 0003 (Debian defaults; amtool also reads upstream's config paths) and a compat patch for Debian's --web.ui-path flag
     assets:
-      web-ui: 3d6b13c5af094724e0bed8f757399e08af44d40d6c6cd87392a1f8ee6ed1e457
+      web-ui: c6af197ce7dbd85be0ac62b50e031eb17945385f782d12039d37f71b752b63db
 overlays:
   # Pinned Go toolchain, vendored modules and the embedded web UI instead of
   # dh-golang (all releases).
