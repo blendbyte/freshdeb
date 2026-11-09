@@ -3,24 +3,20 @@
 name: victoriametrics
 description: "VictoriaMetrics time series database, vmagent, vmalert and tools"
 homepage: https://victoriametrics.com
-
 upstream:
   git: https://github.com/VictoriaMetrics/VictoriaMetrics.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/victoriametrics.git
-  ref: 8edbfc8eb7cecee204646b9d5cb8c6fadf2ab173  # 1.145.0+ds1-2, unstable
-
+  ref: 8edbfc8eb7cecee204646b9d5cb8c6fadf2ab173 # 1.145.0+ds1-2, unstable
 # One track: the LTS lines are for the enterprise version only.
 tracks:
   main:
-    tag: "v1.155.0"
-    commit: 3fec2f72414d00d1acda807c8818d7af90cc966d
-    revision: 2
-    go: "1.27.3"  # what upstream's release build uses (deployment/docker: golang:1.27.3); go.mod: go 1.27.3
-    patches: patches/main  # Debian's test fix only; the patches that remove the web UI are dropped
-
+    tag: "v1.156.0"
+    commit: 0c1bf87a0c9843c30566df0c0aa6593466425ac5
+    revision: 1
+    go: "1.27.3" # what upstream's release build uses (deployment/docker: golang:1.27.3); go.mod: go 1.27.3
+    patches: patches/main # Debian's test fix only; the patches that remove the web UI are dropped
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang, built like
   # upstream's release binaries with the web UI (all releases); also a working
