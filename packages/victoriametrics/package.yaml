@@ -14,8 +14,8 @@ tracks:
   main:
     tag: "v1.156.0"
     commit: 0c1bf87a0c9843c30566df0c0aa6593466425ac5
-    revision: 1
-    go: "1.27.3" # what upstream's release build uses (deployment/docker: golang:1.27.3); go.mod: go 1.27.3
+    revision: 2
+    go: "1.27.4" # what upstream's release build uses (deployment/docker: golang:1.27.3); go.mod: go 1.27.3
     patches: patches/main # Debian's test fix only; the patches that remove the web UI are dropped
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang, built like
