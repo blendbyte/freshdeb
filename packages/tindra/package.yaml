@@ -16,7 +16,7 @@ tracks:
   main:
     tag: "v1.4.1"
     commit: 6460d4a8e69ae1bdeeecdb8e834c5c48645f8179
-    revision: 1
-    go: "1.27.3" # go.mod: go 1.27.3; upstream's release build uses go.mod's version
+    revision: 2
+    go: "1.27.4" # go.mod: go 1.27.3; upstream's release build uses go.mod's version
     assets:
       web-ui: fe872a5bcc63fe2fd17fc498b832f8e1c1b2e141fbba63c7c2e41449ac86f761 # also in upstream's SHA256SUMS
