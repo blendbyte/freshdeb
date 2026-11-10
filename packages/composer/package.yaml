@@ -16,8 +16,8 @@ build:
 # One track: the 2.2 LTS line is only for PHP < 7.2.5, which no distribution has.
 tracks:
   main:
-    tag: "2.11.1"
-    commit: 472b418967419c6124edd91dc6310a3bec091dae
+    tag: "2.11.2"
+    commit: 12c820dbc3f030954b1d09f5884fcf1e9d29d6cb
     revision: 1
     patches: patches/main # ours: build without git, no self-update; Debian's adapt its unbundled layout
 overlays:
