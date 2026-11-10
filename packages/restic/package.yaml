@@ -3,23 +3,19 @@
 name: restic
 description: "restic backup program"
 homepage: https://restic.net
-
 upstream:
   git: https://github.com/restic/restic.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/restic.git
-  ref: f4e802a8a43f9c3facbb02c22bafa3f34b1831cd  # 0.19.1-1, unstable
-
+  ref: f4e802a8a43f9c3facbb02c22bafa3f34b1831cd # 0.19.1-1, unstable
 tracks:
   main:
     tag: "v0.19.1"
     commit: 6aa3a516ce654808a1f28f9fa21e9b7c8e6e90bf
-    revision: 3
-    go: "1.26.10"  # upstream's go.mod: toolchain go1.25.10; Go 1.25 is no longer supported, so the oldest supported minor
-    patches: patches/main  # Debian's, without 0002-disable-azure.patch (we vendor the Azure SDK) and python-is-python3.patch (for the tests, which we don't run)
-
+    revision: 4
+    go: "1.26.11" # upstream's go.mod: toolchain go1.25.10; Go 1.25 is no longer supported, so the oldest supported minor
+    patches: patches/main # Debian's, without 0002-disable-azure.patch (we vendor the Azure SDK) and python-is-python3.patch (for the tests, which we don't run)
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
   - patch: overlays/go-build.patch
