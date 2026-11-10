@@ -13,8 +13,8 @@ tracks:
   main:
     tag: "v0.66.3"
     commit: e0fbfd50c36e1ef88c52297ca34750e640b4f5f4
-    revision: 1
-    go: "1.26.10" # what upstream's release build uses (release.yml: go 1.26.x; go.mod: go 1.26.0)
+    revision: 2
+    go: "1.26.11" # what upstream's release build uses (release.yml: go 1.26.x; go.mod: go 1.26.0)
     patches: patches/main # empty: Debian's patches port lazygit to Debian's library packages
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
