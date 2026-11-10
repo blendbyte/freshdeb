@@ -141,7 +141,7 @@ tracks:
   main:
     tag: "v1.3.9e"
     commit: fc3f908a0d07fa3b17fbe1e3054b7520806bc75a
-    revision: 2
+    revision: 3
     patches: patches/main  # Debian's, plus upstream PR 2417: FTPS over TLSv1.3 broke with OpenSSL < 3.5 in 1.3.9e
     companions:
       proftpd-mod-autohost: {tag: "v0.6", commit: d05feed332055831adcf27791d7c48c24667ccb4}
@@ -158,7 +158,7 @@ tracks:
       proftpd-mod-proxy-protocol: {tag: "v0.6", commit: 7682710ad969aafd4bfaf0b8b825a23ca8dc79d2}
       proftpd-mod-sftp-ldap: {tag: "v0.2", commit: 450f9b4bc7c2e7a5cb9f0e2165064cb75714e256}
       proftpd-mod-statsd: {tag: "v0.1", commit: 4e3da69338120be9a05735d60ef8a19fb96d6ce0}
-      proftpd-mod-tar: {tag: "v0.4", commit: 4a6d4f4ceff3f9f01c8c13671f3fe4c2934bc827}
+      proftpd-mod-tar: {tag: "v0.4", commit: 4a6d4f4ceff3f9f01c8c13671f3fe4c2934bc827, patches: companions/proftpd-mod-tar/patches/main}
       proftpd-mod-vroot: {tag: "v0.9.12", commit: abcc817f322e1fa670b469ef0bc09419336b1d56}
 
 overlays:

@@ -8,7 +8,7 @@ freshdeb is for software that **doesn't publish its own APT repository** and whe
 
 1. Open a "New package" issue so we can agree it fits.
 2. Add `packages/<name>/` following [docs/packages.md](docs/packages.md), based on Debian's packaging when there is one.
-3. Build and verify it locally (`scripts/build.sh` + `scripts/verify.sh`, see [docs/packages.md](docs/packages.md#locally)). Pull requests only run checks; packages are built after merge. Maintainers can run the full build on a branch by dispatching `ci.yml` on it.
+3. Build and verify it locally (`scripts/build.sh` + `scripts/verify.sh`, see [docs/packages.md](docs/packages.md#locally)). Pull requests from forks only run checks; packages are built after merge. Maintainers can run the full build on a branch by dispatching `ci.yml` on it.
 
 ## Changing a package
 

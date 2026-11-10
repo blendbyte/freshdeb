@@ -85,8 +85,23 @@ fi
 mapfile -t build_env < <(python3 -c 'import json,sys
 for k, v in json.load(open(sys.argv[1])).get("build_env", {}).items(): print(f"{k}={v}")' "$WORK/build-info.json")
 
+# dpkg-source only tries the first patch of a series before applying it: if
+# that one doesn't apply it applies none and reports no error, and the package
+# builds without its patches. Apply the series first and insist on all of it.
+apply_patches() {
+    local src="$1" series="$1/debian/patches/series"
+    [[ "$(cat "$src/debian/source/format")" == "3.0 (quilt)" && -s "$series" ]] || return 0
+    runuser -u builder -- dpkg-source --before-build "$src"
+    if ! diff <(sed -E 's/(^|[[:space:]])#.*$//' "$series" | awk 'NF {print $1}') \
+              <(cat "$src/.pc/applied-patches" 2>/dev/null); then
+        echo "ERROR: $(basename "$src"): debian/patches did not apply (the diff above is series against applied)" >&2
+        exit 1
+    fi
+}
+
 echo "::group::Build ($build_type)"
 chown -R builder: "$WORK"
+apply_patches "$SRC"
 runuser -u builder -- env \
     DEB_BUILD_OPTIONS="$options noautodbgsym noddebs parallel=$(nproc)" \
     ${profiles:+DEB_BUILD_PROFILES="$profiles"} \
@@ -114,6 +129,7 @@ if (( ${#companions[@]} )); then
         echo "::group::Build companion $(basename "$csrc")"
         apt-get build-dep -y --no-install-recommends "${profile_args[@]}" "$csrc"
         chown -R builder: "$WORK/companions"
+        apply_patches "$csrc"
         runuser -u builder -- env \
             DEB_BUILD_OPTIONS="$options noautodbgsym noddebs parallel=$(nproc)" \
             ${profiles:+DEB_BUILD_PROFILES="$profiles"} \

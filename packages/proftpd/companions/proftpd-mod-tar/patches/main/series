@@ -1,0 +1,3 @@
+# None of Debian's patches: real_0.4_1..3 are upstream's commits after its
+# 0.4 tarball (the last one fixes the build with GCC 15), and the v0.4 tag we
+# build from already has them.

@@ -879,7 +879,8 @@ def cmd_validate(args):
 # ─── plan ───────────────────────────────────────────────────────────────────
 
 # How much a planned track builds, weakest first:
-#   canary  build machinery changed: one job, no upstream test suite
+#   canary  build machinery changed, or a pull request's test build: one job,
+#           no upstream test suite
 #   tests   only the package's own tests changed: every codename/arch, no
 #           upstream test suite (upstream's code didn't change)
 #   full    a release, or a manual rebuild: everything
@@ -1113,6 +1114,14 @@ def expand_matrix(root, selected, codename_filter=None, today=None):
     return include
 
 
+def test_build_selection(selected):
+    """What a pull request builds of a plan: one canary job per planned track,
+    never published. It catches what breaks on every codename, such as patches
+    that no longer apply; the rest shows in the full build after merge."""
+    return {key: {**entry, "publish": False, "codenames": {"*"}, "scope": "canary"}
+            for key, entry in selected.items()}
+
+
 def registry_projects(path):
     """{package: entry} from the registry (deb.freshdeb.com/status.json), or
     None without one."""
@@ -1182,12 +1191,16 @@ def cmd_plan(args):
     if errors:
         return 1
     codenames = None if not args.codenames or args.codenames == ["all"] else set(args.codenames)
-    include = expand_matrix(root, selected, codenames, today)
+    include = after_merge = expand_matrix(root, selected, codenames, today)
+    if args.test_build:
+        include = expand_matrix(root, test_build_selection(selected), codenames, today)
     # The projects this run releases: release.py moves only their registry
     # entry on, so whatever else is pending stays planned.
     projects = sorted({job["package"] for job in include if job["publish"]} | (alias_changes if args.publish else set()))
     publish = bool(projects)
     result = {"matrix": {"include": include}, "count": len(include), "publish": publish, "projects": projects}
+    if args.test_build:
+        result["after_merge"] = {"include": after_merge}
     text = json.dumps(result, indent=2)
     if args.github_output:
         with open(args.github_output, "a") as fh:
@@ -2293,6 +2306,8 @@ def main(argv=None):
     p.add_argument("--tracks", nargs="*")
     p.add_argument("--codenames", nargs="*")
     p.add_argument("--publish", action="store_true")
+    p.add_argument("--test-build", action="store_true",
+                   help="matrix of a pull request's test builds; the full plan goes to after_merge")
     p.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT"))
     p.set_defaults(func=cmd_plan)
 
