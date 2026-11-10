@@ -27,9 +27,9 @@ build:
 # debian/ from Debian's golang-1.XX branch, make the older track a rename overlay, set real eol dates.
 tracks:
   "1.27":
-    tag: "go1.27.3"
-    commit: 2aae1000ea1d4b28923b96db28acf4e3b99d6aff
-    sha256: 6e7749035cf360f06b2575d162ea79df9fda8ef671889e5c375f8e50777f26bb
+    tag: "go1.27.4"
+    commit: 7b2881024c95a11ddb86663a616340aa3a88b67f
+    sha256: 73cfb8571aec0c01177687db87163d46aa20e9779672772891aa17654d9a6099
     revision: 1
     go: "1.26.10"  # bootstrap; Go 1.27 needs go1.24.6 or newer (src/cmd/dist/buildtool.go minBootstrap)
     patches: patches/1.27  # none of Debian's (test skips for architectures we don't build)

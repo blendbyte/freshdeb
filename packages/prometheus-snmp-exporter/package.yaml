@@ -16,8 +16,8 @@ tracks:
   main:
     tag: "v0.31.0"
     commit: 181b59e7748732516e761b27c308794f2470d4bc
-    revision: 3
-    go: "1.27.3"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
+    revision: 4
+    go: "1.27.4"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
     patches: patches/main  # Debian's 0001 (default config path), refreshed; 0002 (kingpin import path) dropped
 
 overlays:
