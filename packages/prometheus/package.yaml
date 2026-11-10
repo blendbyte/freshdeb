@@ -18,8 +18,8 @@ tracks:
   main:
     tag: "v3.16.0"
     commit: e2e28adeee2c5883d000fc82aca6008cfbf7e96d
-    revision: 1
-    go: "1.27.3" # what upstream's release build uses (.promu.yml: go 1.27; go.mod: go 1.26.0)
+    revision: 2
+    go: "1.27.4" # what upstream's release build uses (.promu.yml: go 1.27; go.mod: go 1.26.0)
     patches: patches/main # Debian's 0004 (default paths), refreshed; none of the patches that disable features
     assets:
       web-ui: 000a45231f6dd22a5703218aad3ee11da125c8a44d1824a27670416c07531001
