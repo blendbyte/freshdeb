@@ -6,11 +6,12 @@ name: ci
 #   build    build + verify each one on a native runner (no emulation)
 #   release  publish to deb.freshdeb.com (main only)
 #
-# Pull requests only run checks and plan: plan rejects packaging changes
-# without a version bump and lists what merging will build. Packages are
-# built once, after merge; a failed check or build publishes nothing. To
-# build a branch before merging, dispatch this workflow on it (publish stays
-# off).
+# Pull requests run checks and plan: plan rejects packaging changes without a
+# version bump and lists what merging will build. Pull requests from branches
+# of this repository (every watch pull request) also get a test build, one
+# job per planned track; forks don't. Everything else is built after merge; a
+# failed check or build publishes nothing. For a full build of a branch before
+# merging, dispatch this workflow on it (publish stays off).
 #
 # What gets built is decided by scripts/freshdeb.py plan; see its docstring.
 
@@ -109,7 +110,7 @@ jobs:
           args=()
           case "$EVENT" in
             pull_request)
-              args=(--base "$PR_BASE")
+              args=(--base "$PR_BASE" --test-build)
               ;;
             push)
               # Each package is planned from the commit it was last released
@@ -141,20 +142,24 @@ jobs:
             if [[ "$EVENT" == "pull_request" ]]; then
               echo "### Builds after merge"
               echo
-              echo "Pull requests are not built. Merging builds and publishes these:"
+              echo "Merging builds and publishes these (this pull request only gets a test build of each track, and none from a fork):"
             else
               echo "### Build plan"
             fi
             echo
             echo "| package | track | codename | arch | version | publish | upstream tests |"
             echo "|---|---|---|---|---|---|---|"
-            jq -r '.matrix.include[] | "| \(.package) | \(.track) | \(.codename) | \(.arch) | `\(.version)` | \(.publish) | \(if .nocheck then "skipped" else "run" end) |"' plan.json
+            jq -r '(.after_merge // .matrix).include[] | "| \(.package) | \(.track) | \(.codename) | \(.arch) | `\(.version)` | \(.publish) | \(if .nocheck then "skipped" else "run" end) |"' plan.json
           } >> "$GITHUB_STEP_SUMMARY"
 
   build:
     name: ${{ matrix.package }} ${{ matrix.track }} ${{ matrix.codename }}/${{ matrix.arch }}
     needs: plan
-    if: github.event_name != 'pull_request' && needs.plan.outputs.count != '0'
+    # Not a security boundary (a fork can edit this file): that is pull_request
+    # runs getting no secrets, plus the repository's approval of fork runs.
+    if: |
+      needs.plan.outputs.count != '0' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}

@@ -423,6 +423,14 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(len(matrix), 5 * 2)
         self.assertTrue(all(j["nocheck"] and not j["publish"] for j in matrix))
 
+    def test_pull_request_test_build_is_one_job_and_never_publishes(self):
+        self.bump_valkey("9.1")
+        self.commit()
+        selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
+        matrix = freshdeb.expand_matrix(self.repo, freshdeb.test_build_selection(selected), None, TODAY)
+        self.assertEqual([(j["package"], j["track"], j["codename"], j["arch"], j["nocheck"], j["publish"]) for j in matrix],
+                         [("valkey", "9.1", "bookworm", "amd64", True, False)])
+
     def test_releases_run_upstream_tests_even_with_a_canary(self):
         self.bump_valkey("9.1")
         self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
