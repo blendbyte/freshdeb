@@ -3,23 +3,19 @@
 name: prometheus-snmp-exporter
 description: "Prometheus exporter for SNMP-enabled devices (snmp_exporter)"
 homepage: https://github.com/prometheus/snmp_exporter
-
 upstream:
   git: https://github.com/prometheus/snmp_exporter.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/prometheus-snmp-exporter.git
-  ref: 5709ab382773a3bd8a800edca70bd327d664499f  # 0.30.1-1, unstable
-
+  ref: 5709ab382773a3bd8a800edca70bd327d664499f # 0.30.1-1, unstable
 tracks:
   main:
     tag: "v0.31.0"
     commit: 181b59e7748732516e761b27c308794f2470d4bc
-    revision: 3
-    go: "1.27.3"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
-    patches: patches/main  # Debian's 0001 (default config path), refreshed; 0002 (kingpin import path) dropped
-
+    revision: 4
+    go: "1.27.4" # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
+    patches: patches/main # Debian's 0001 (default config path), refreshed; 0002 (kingpin import path) dropped
 overlays:
   # Pinned Go and vendored modules instead of dh-golang, generator linked to libsnmp, log directory.
   - patch: overlays/go-build.patch
