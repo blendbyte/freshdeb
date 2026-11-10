@@ -13,8 +13,8 @@ tracks:
   main:
     tag: "v1.97.0"
     commit: 72d2a71f1f7c91fc4564083bc4c58655df85e5d0
-    revision: 1
-    go: "1.27.3" # upstream's release build: Go 1.27 (release workflow); go.mod: go 1.26.0
+    revision: 2
+    go: "1.27.4" # upstream's release build: Go 1.27 (release workflow); go.mod: go 1.26.0
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
   - patch: overlays/go-build.patch

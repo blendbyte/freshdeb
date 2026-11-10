@@ -16,8 +16,8 @@ tracks:
   main:
     tag: "v0.29.1"
     commit: ad91668339ca265f460c23fc422a27ba6d788db9
-    revision: 1
-    go: "1.27.3"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
+    revision: 2
+    go: "1.27.4"  # upstream's release build: Go 1.27 (.promu.yml); go.mod: go 1.26.0
     patches: patches/main  # none of Debian's: 0001/0003 (tests needing ::1) are skipped as in upstream's CI, 0004/0005 (import paths for Debian's libraries) not needed
 
 overlays:
