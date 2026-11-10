@@ -3,23 +3,19 @@
 name: prometheus-node-exporter
 description: "Prometheus exporter for machine metrics (node_exporter)"
 homepage: https://github.com/prometheus/node_exporter
-
 upstream:
   git: https://github.com/prometheus/node_exporter.git
   tag_regex: '^v(?P<version>\d+\.\d+\.\d+)$'
-
 packaging:
   origin: https://salsa.debian.org/go-team/packages/prometheus-node-exporter.git
-  ref: 79081467a9092fe842567bb1b4d92565c79ea0be  # 1.11.1-3, unstable
-
+  ref: 79081467a9092fe842567bb1b4d92565c79ea0be # 1.11.1-3, unstable
 tracks:
   main:
     tag: "v1.12.1"
     commit: 6044da783597cc3b57aef7580ddcdcff58a4ee99
-    revision: 3
-    go: "1.26.10"  # upstream's release build: Go 1.26 (.promu.yml); go.mod: go 1.25.0
-    patches: patches/main  # Debian's 0001 reduced to the textfile directory; 0002 (kingpin import path) and 0003 (in 1.12) dropped
-
+    revision: 4
+    go: "1.26.11" # upstream's release build: Go 1.26 (.promu.yml); go.mod: go 1.25.0
+    patches: patches/main # Debian's 0001 reduced to the textfile directory; 0002 (kingpin import path) and 0003 (in 1.12) dropped
 overlays:
   # Pinned Go toolchain and vendored modules instead of dh-golang (all releases).
   - patch: overlays/go-build.patch
