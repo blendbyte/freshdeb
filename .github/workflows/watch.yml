@@ -1,15 +1,20 @@
 name: watch
 
 # Every 6 hours: look for new upstream releases and open one pull request
-# per change. Nothing is published from here; merging the PR does that.
+# per change, except a Go release, which is one pull request per Go minor.
+# Nothing is published from here; merging the PR does that.
 #
 #   patch release in a track  -> PR bumping tag/commit (revision back to 1)
 #   new minor/major line      -> PR adding the track (patches copied from the
 #                                newest track) and moving aliases; needs a
 #                                human: set eol, check the patches
-#   Go patch release          -> for Go packages: PR rebuilding the track with
-#                                the new toolchain (revision + 1); Go patch
-#                                releases are mostly security fixes
+#   Go patch release          -> one PR per Go minor (watch/go-1.26): every
+#                                track on that minor rebuilt with the new
+#                                toolchain (revision + 1), and golang's track
+#                                updated; Go patch releases are mostly
+#                                security fixes. One PR per track would each
+#                                add the release to config.yaml and conflict
+#                                with each other once one is merged.
 #
 # Each run refreshes its PR branches, except ones a maintainer pushed to,
 # and doesn't reopen a change whose PR was closed without merging.
@@ -75,16 +80,17 @@ jobs:
           if [[ "$(jq length changes.json)" == 0 ]]; then
             echo "No changes: every track is up to date."
           else
-            echo "Changes (one pull request each):"
-            jq -r '.[] | "  \(.package) \(.track): \(.kind) -> \(.tag // ("Go " + .go))"' changes.json
+            echo "Changes (one pull request each, or per group):"
+            jq -r '.[] | "  \(.package) \(.track): \(.kind) -> \(.tag // ("Go " + .go))"
+                         + (if .group then " (pull request watch/\(.group))" else "" end)' changes.json
           fi
           if [[ "$status" != 0 ]]; then
             echo "::error::watch failed for some packages, see ERROR lines above"
             echo "failed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # One pull request per change, each on its own: a failing one is
-      # logged and the rest still get theirs. A branch is only (re)written
+      # One pull request per change, or per group of changes (a Go release),
+      # each on its own: a failing one is logged and the rest still get theirs. A branch is only (re)written
       # by the bot: once a maintainer pushed to it, it is left alone. A
       # change whose pull request was closed unmerged isn't proposed again.
       - name: Open pull requests
@@ -97,17 +103,45 @@ jobs:
           base="$(git rev-parse HEAD)"
           gh label create watch --color 0e8a16 --description "Opened by watch.yml" --force >/dev/null
 
+          # A group's pull request: every change of one Go release.
+          open_group_pr() {
+            local unit="$1"
+            group="$(jq -r .group <<<"$unit")"
+            branch="watch/${group}"
+            go="$(jq -r '[.changes[] | select(.kind == "toolchain") | .go]
+                         + [.changes[] | select(.kind == "bump") | .tag | ltrimstr("go")] | .[0]' <<<"$unit")"
+            rebuilds="$(jq -r '.changes[] | select(.kind == "toolchain")
+                               | "- \(.package) \(.track): Go \(.from) -> \(.go)"
+                                 + (if .reason then " (\(.reason): check that upstream builds with it, go.mod)" else "" end)' <<<"$unit")"
+            updates="$(jq -r '.changes[] | select(.kind == "bump") | "- \(.package) \(.track): update to \(.tag)"' <<<"$unit")"
+            names="$(jq -r '[.changes[] | select(.kind == "bump") | "\(.package) \(.track)"] | join(", ")' <<<"$unit")"
+            if [[ -n "$rebuilds" && -n "$updates" ]]; then
+              title="Go ${go}: update ${names}, rebuild Go packages"
+            elif [[ -n "$updates" ]]; then
+              title="Go ${go}: update ${names}"
+            else
+              title="Go ${go}: rebuild Go packages"
+            fi
+            body="Go released [${go}](https://go.dev/doc/devel/release#go$(cut -d. -f1-2 <<<"$go")). Go patch releases are mostly security fixes, and Go programs are static binaries that only get them by being rebuilt.
+
+          This is every change for Go ${go} in one pull request: it pins Go ${go} (checksums from go.dev, added to config.yaml), rebuilds each track below with it (revision + 1), and updates Go's own package where listed. Merging builds, tests and publishes all of them.
+
+          ${updates}
+          ${rebuilds}"
+            apply=(--groups "$group")
+            paths=(packages config.yaml)
+            push_pr
+          }
+
+          # A change's own pull request.
           open_pr() {
             local change="$1"
             package="$(jq -r .package <<<"$change")"
             track="$(jq -r .track <<<"$change")"
             tag="$(jq -r .tag <<<"$change")"
             kind="$(jq -r .kind <<<"$change")"
-            go="$(jq -r '.go // empty' <<<"$change")"
-            reason="$(jq -r '.reason // empty' <<<"$change")"
             companion="$(jq -r '.companion // empty' <<<"$change")"
             branch="watch/${package}-${track}"
-            [[ "$kind" == "toolchain" ]] && branch="watch/${package}-${track}-go"
             [[ "$kind" == "companion" ]] && branch="watch/${package}-${track}-${companion}"
             upstream="$(yq -r '.upstream.git // ""' "packages/${package}/package.yaml")"
             [[ "$kind" == "companion" ]] && upstream="$(yq -r ".companions[\"${companion}\"].upstream.git" "packages/${package}/package.yaml")"
@@ -115,16 +149,7 @@ jobs:
             # upstream.index packages have no git releases to link to.
             [[ -z "$upstream" ]] && notes="$(yq -r .homepage "packages/${package}/package.yaml")"
 
-            if [[ "$kind" == "toolchain" ]]; then
-              title="${package} ${track}: rebuild with Go ${go}"
-              if [[ -n "$reason" ]]; then
-                body="${reason} (Go supports its two newest minors, see https://go.dev/doc/devel/release#policy), so it gets no more security fixes. This moves track \`${track}\` to Go ${go}, the oldest supported minor. Check that upstream builds with it (go.mod), then merge."
-              else
-                body="Go released [${go}](https://go.dev/doc/devel/release#go$(cut -d. -f1-2 <<<"$go")). Go patch releases are mostly security fixes, and ${package} is a static binary that only gets them by being rebuilt.
-
-          This pins Go ${go} (checksums from go.dev, added to config.yaml) for track \`${track}\` and bumps its revision. Merging builds, tests and publishes the rebuild."
-              fi
-            elif [[ "$kind" == "companion" ]]; then
+            if [[ "$kind" == "companion" ]]; then
               title="${package} ${track}: update ${companion} to ${tag}"
               body="${companion} released [${tag}](${notes}). This pins it for track \`${track}\` of ${package}; its packages are built against ${package} in the same job, versioned <${companion} version>+<${package} version>, so no revision bump is needed.
 
@@ -146,6 +171,15 @@ jobs:
           - [ ] Decide whether moving the aliases now is right (users of the alias get a minor/major upgrade)"
             fi
 
+            apply=(--packages "$package" --tracks "$track" --kinds "$kind" --groups "")
+            [[ "$kind" == "companion" ]] && apply+=(--companions "$companion")
+            paths=("packages/${package}" config.yaml)
+            push_pr
+          }
+
+          # Shared: (re)write $branch from main with "watch ${apply[@]} --apply",
+          # then push and open or update the pull request ($title, $body).
+          push_pr() {
             closed="$(gh pr list --head "$branch" --state closed --json title,mergedAt \
                       -q '.[] | select(.mergedAt == null) | .title')"
             if grep -Fxq "$title" <<<"$closed"; then
@@ -163,15 +197,13 @@ jobs:
 
             git checkout -q -f -B "$branch" "$base"
             git clean -qfd -- packages config.yaml
-            only=()
-            [[ "$kind" == "companion" ]] && only=(--companions "$companion")
-            python3 scripts/freshdeb.py watch --packages "$package" --tracks "$track" --kinds "$kind" "${only[@]}" --apply >/dev/null
-            git add -A "packages/${package}" config.yaml
+            python3 scripts/freshdeb.py watch "${apply[@]}" --apply >/dev/null
+            git add -A "${paths[@]}"
             if git diff --cached --quiet; then
               return 0
             fi
             git commit -q -m "$title"
-            if [[ -n "$remote" ]] && git diff --quiet "$remote" HEAD -- "packages/${package}" config.yaml; then
+            if [[ -n "$remote" ]] && git diff --quiet "$remote" HEAD -- "${paths[@]}"; then
               echo "${branch}: already up to date"
               return 0
             fi
@@ -185,17 +217,23 @@ jobs:
           }
 
           failed=0
-          while read -r change; do
+          # Ungrouped changes one by one, then one unit per group.
+          while read -r unit; do
             # A subshell with -e of its own: "if ! open_pr" would turn -e off.
             set +e
-            ( set -e; open_pr "$change" )
+            if [[ "$(jq -r '.unit // empty' <<<"$unit")" == "group" ]]; then
+              ( set -e; open_group_pr "$unit" )
+            else
+              ( set -e; open_pr "$unit" )
+            fi
             status=$?
             set -e
             if [[ "$status" != 0 ]]; then
-              echo "::error::pull request for $(jq -r '"\(.package) \(.track) \(.kind)"' <<<"$change") failed"
+              echo "::error::pull request for $(jq -r 'if .unit then "watch/\(.group)" else "\(.package) \(.track) \(.kind)" end' <<<"$unit") failed"
               failed=1
             fi
-          done < <(jq -c '.[]' changes.json)
+          done < <(jq -c '(map(select(.group == null)) | .[]),
+                          (map(select(.group != null)) | group_by(.group)[] | {unit: "group", group: .[0].group, changes: .})' changes.json)
           git checkout -q -f "$base"
           if [[ "$failed" != 0 ]]; then
             echo "failed=true" >> "$GITHUB_OUTPUT"

@@ -797,6 +797,44 @@ class GoTests(unittest.TestCase):
         self.assertIn("# toolchains:", (self.tmp / "config.yaml").read_text())
         self.assertEqual(freshdeb.validate_all(self.tmp, TODAY), [])
 
+    def test_apply_toolchain_rebuild_changes_only_its_lines(self):
+        y = self.tmp / "packages/restic/package.yaml"
+        before = y.read_text().splitlines()
+        freshdeb.apply_change(self.tmp, {"package": "restic", "kind": "toolchain", "track": "main",
+                                         "go": "1.25.15", "go_sha256": self.RELEASES["1.25.15"]})
+        after = y.read_text().splitlines()
+        self.assertEqual(len(before), len(after))
+        changed = [(a, b) for a, b in zip(before, after) if a != b]
+        self.assertEqual(len(changed), 2)
+        for old, new in changed:
+            self.assertEqual(old.split(":")[0], new.split(":")[0])
+        self.assertTrue(any(new.startswith('    go: "1.25.15"') for _, new in changed))
+
+    def test_toolchains_are_added_in_version_order(self):
+        # Each release goes right after the next older one: appended at the
+        # end, two pull requests adding different releases would conflict.
+        listed = lambda: re.findall(r'^    "(\d+\.\d+\.\d+)":$', (self.tmp / "config.yaml").read_text(), re.M)
+        for version in ("1.25.15", "1.24.99", "1.99.0"):
+            older = [v for v in listed() if freshdeb.go_key(v) < freshdeb.go_key(version)]
+            freshdeb.ensure_go_toolchain(self.tmp, version, {"amd64": "1" * 64, "arm64": "2" * 64})
+            after = listed()
+            if older:
+                self.assertEqual(after[after.index(version) - 1], older[-1], after)
+            else:
+                self.assertEqual(after[0], version)
+        self.assertTrue({"1.25.15", "1.24.99", "1.99.0"} <= set(freshdeb.load_config(self.tmp).toolchains["go"]))
+        self.assertEqual(freshdeb.validate_all(self.tmp, TODAY), [])
+
+    def test_a_go_release_is_one_pull_request_per_minor(self):
+        rebuild = {"package": "restic", "kind": "toolchain", "track": "main", "go": "1.25.15"}
+        self.assertEqual(freshdeb.change_group(self.pkg, rebuild), "go-1.25")
+        golang = freshdeb.load_package("golang", self.tmp)
+        key = next(iter(golang.tracks))
+        bump = {"package": "golang", "kind": "bump", "track": key, "tag": f"go{key}.99"}
+        self.assertEqual(freshdeb.change_group(golang, bump), f"go-{key}")
+        own = {"package": "restic", "kind": "bump", "track": "main", "tag": "v0.99.0"}
+        self.assertIsNone(freshdeb.change_group(self.pkg, own))
+
     def test_install_verifies_the_toolchain(self):
         tree = self.tmp / "dl/go/bin"
         tree.mkdir(parents=True)
@@ -1234,7 +1272,8 @@ class WatchFailureTests(unittest.TestCase):
         with mock.patch.object(freshdeb, "remote_tags", remote_tags), \
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             status = freshdeb.cmd_watch(SimpleNamespace(root=ROOT, packages=["memcached", "valkey"], tracks=None,
-                                                        kinds=None, companions=None, apply=False))
+                                                        kinds=None, companions=None, groups=None,
+                                                        apply=False))
         self.assertEqual(status, 1)
         self.assertEqual([(c["package"], c["tag"]) for c in json.loads(out.getvalue())], [("valkey", "9.1.99")])
         self.assertIn("ERROR: memcached: command failed", err.getvalue())
@@ -1248,7 +1287,8 @@ class WatchFailureTests(unittest.TestCase):
                 mock.patch.object(freshdeb, "published", lambda url: "1.6.99" not in url), \
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             status = freshdeb.cmd_watch(SimpleNamespace(root=ROOT, packages=["memcached"], tracks=None,
-                                                        kinds=None, companions=None, apply=False))
+                                                        kinds=None, companions=None, groups=None,
+                                                        apply=False))
         self.assertEqual(status, 0)
         self.assertEqual(json.loads(out.getvalue()), [])
         self.assertIn("memcached main: 1.6.99 is tagged but https://memcached.org/files/memcached-1.6.99.tar.gz "
