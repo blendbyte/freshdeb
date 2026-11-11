@@ -2070,13 +2070,48 @@ def unpublished(pkg, changes):
 
 
 def ensure_go_toolchain(root, version, sums):
-    """Add a Go release's checksums to config.yaml if they aren't there."""
+    """Add a Go release's checksums to config.yaml if they aren't there.
+    Edited as text, in version order: entries appended at the end would
+    conflict between two pull requests that each add a different release."""
     if version in load_config(root).toolchains.get("go", {}):
         return
     path = root / "config.yaml"
-    run("yq", "-i", f".toolchains.go[{json.dumps(version)}] = {json.dumps(sums)}", str(path))
     text = path.read_text()
-    path.write_text(re.sub(r'^(\s+)(\d+(?:\.\d+)+):', r'\1"\2":', text, flags=re.M))
+    section = re.search(r"^toolchains:\n  go:\n", text, re.M)
+    require(section, "config.yaml has no toolchains.go section")
+    end = re.search(r"^(?!    |\s*$)", text[section.end():], re.M)
+    body = text[section.end():section.end() + end.start()] if end else text[section.end():]
+    entries = list(re.finditer(r'^    "(\d+(?:\.\d+)+)":\n(?:      .*\n)*', body, re.M))
+    older = [e for e in entries if go_key(e[1]) < go_key(version)]
+    at = section.end() + (older[-1].end() if older else 0)
+    block = f'    "{version}":\n' + "".join(f"      {arch}: {sha}\n" for arch, sha in sorted(sums.items()))
+    path.write_text(text[:at] + block + text[at:])
+
+
+def set_track_scalars(path, track, values):
+    """Set scalar fields of one track in package.yaml in place: only those
+    lines change, comments, quoting and blank lines stay as they are (yq
+    rewrites the whole file). False if a field isn't there to set."""
+    lines = path.read_text().splitlines(keepends=True)
+    head = re.compile(rf'^  (?:"{re.escape(track)}"|{re.escape(track)}):[ \t]*(?:#.*)?$')
+    try:
+        start = lines.index("tracks:\n")
+        first = next(i for i in range(start + 1, len(lines)) if head.match(lines[i].rstrip("\n")))
+    except (ValueError, StopIteration):
+        return False
+    found = {}
+    for i in range(first + 1, len(lines)):
+        if lines[i].strip() and not lines[i].startswith("    "):
+            break
+        m = re.match(r'^    (\w+):( +)("?)([^"\s#]*)\3(.*)$', lines[i], re.S)
+        if m and m[1] in values:
+            found[m[1]] = (i, m)
+    if set(found) != set(values):
+        return False
+    for name, (i, m) in found.items():
+        lines[i] = f"    {name}:{m[2]}{m[3]}{values[name]}{m[3]}{m[5]}"
+    path.write_text("".join(lines))
+    return True
 
 
 def yq_string(value):
@@ -2107,8 +2142,9 @@ def apply_change(root, change):
         return
     if change["kind"] == "toolchain":
         revision = pkg.tracks[change["track"]].revision + 1
-        run("yq", "-i", f'.tracks[{key}].go = {yq_string(change["go"])} | .tracks[{key}].revision = {revision}',
-            str(path))
+        if not set_track_scalars(path, change["track"], {"go": change["go"], "revision": revision}):
+            run("yq", "-i", f'.tracks[{key}].go = {yq_string(change["go"])} | .tracks[{key}].revision = {revision}',
+                str(path))
         return
     sha256 = change.get("sha256")
     if sha256 is None and pkg.upstream.get("tarball"):
@@ -2133,6 +2169,12 @@ def apply_change(root, change):
                 assets[name] = download(template.format(version=version), Path(tmp) / name)
         change["assets"] = assets
     if change["kind"] == "bump":
+        values = {**pin, "revision": 1, **({"sha256": sha256} if sha256 else {}),
+                  **({"go": change["go"]} if change.get("go") else {})}
+        # In place where it can be: two pull requests that rewrote the whole
+        # file with yq would conflict even when they change different tracks.
+        if not assets and set_track_scalars(path, change["track"], values):
+            return
         expr = " | ".join([*(f".tracks[{key}].{field} = {yq_string(value)}" for field, value in pin.items()),
                            f".tracks[{key}].revision = 1"])
         if sha256:
@@ -2174,6 +2216,19 @@ def apply_change(root, change):
     path.write_text(text)
 
 
+def change_group(pkg, change):
+    """The pull request a change shares with others, or None for its own.
+    A Go release is one pull request per Go minor ("go-1.26"): every
+    toolchain rebuild onto it, and Go's own package (build.go bootstrap)
+    moving to it. One per track would each add the release to config.yaml
+    and conflict with each other as soon as one is merged."""
+    if change["kind"] == "toolchain":
+        return f"go-{go_minor(change['go'])}"
+    if change["kind"] == "bump" and pkg.go_mode == "bootstrap":
+        return f"go-{go_minor(pkg.upstream_version(change['tag']))}"
+    return None
+
+
 def cmd_watch(args):
     root = args.root
     names = args.packages or package_names(root)
@@ -2207,7 +2262,12 @@ def cmd_watch(args):
                         + [f"  {pkg.name} {found[i]['track']}: {found[i]['tag']} is tagged but {url} isn't "
                            f"published yet -> waiting for the next run" for i, url in missing.items()]),
               file=sys.stderr)
-        changes.extend(c for i, c in enumerate(found) if i not in missing)
+        for i, change in enumerate(found):
+            if i not in missing:
+                change["group"] = change_group(pkg, change)
+                changes.append(change)
+    if args.groups is not None:
+        changes = [c for c in changes if (c["group"] or "") in args.groups]
     if args.tracks:
         changes = [c for c in changes if c["track"] in args.tracks]
     if args.kinds:
@@ -2329,6 +2389,8 @@ def main(argv=None):
     p.add_argument("--tracks", nargs="*", help="only changes for these tracks (with --apply: one PR each)")
     p.add_argument("--kinds", nargs="*", help="only these kinds of change: bump, new-track, toolchain, companion")
     p.add_argument("--companions", nargs="*", help="only changes for these companions (with --apply: one PR each)")
+    p.add_argument("--groups", nargs="*", help='only changes of these groups (with --apply: one PR each); "" is '
+                                                 "changes that have a pull request of their own")
     p.add_argument("--apply", action="store_true")
     p.set_defaults(func=cmd_watch)
 
