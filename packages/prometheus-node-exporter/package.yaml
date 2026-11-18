@@ -14,9 +14,9 @@ packaging:
 
 tracks:
   main:
-    tag: "v1.12.1"
-    commit: 6044da783597cc3b57aef7580ddcdcff58a4ee99
-    revision: 4
+    tag: "v1.13.0"
+    commit: c8a8fa9da0b16e66c672e38f6993fbdc4bcb73a7
+    revision: 1
     go: "1.26.11"  # upstream's release build: Go 1.26 (.promu.yml); go.mod: go 1.25.0
     patches: patches/main  # Debian's 0001 reduced to the textfile directory; 0002 (kingpin import path) and 0003 (in 1.12) dropped
 
