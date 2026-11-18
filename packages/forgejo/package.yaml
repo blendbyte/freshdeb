@@ -22,10 +22,10 @@ tracks:
     go: "1.26.11"  # go.mod: toolchain go1.26.10
   lts:
     line: "15"  # current LTS; move to 19 (April 2027) in a PR
-    tag: "v15.0.11"
-    commit: 753f7edc775a97e66cd13d410404d5edc99b6b04
-    sha256: 335e244b7e624e0a548722b1a362bd8c5993143963ea52794cee08140f422777
-    revision: 3
+    tag: "v15.0.12"
+    commit: 94c6cd65f5c25043e5c9fdb9328d1b8d3f89941a
+    sha256: 56b9c5f7e0fd8dcbfe30e3ac2f023f96665dd84fcf290ef3fdcff4714aeeeff8
+    revision: 1
     go: "1.26.11"  # go.mod: toolchain go1.26.10
     eol: 2027-07-15
 
