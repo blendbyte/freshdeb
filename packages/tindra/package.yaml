@@ -14,9 +14,9 @@ packaging:
 # Upstream supports only its latest release: one track that follows every release.
 tracks:
   main:
-    tag: "v1.6.0"
-    commit: 46abe62c02d37be15cbd4b7893ba853be32959b8
+    tag: "v1.7.1"
+    commit: 30fe188ebefa74e16ce5386565fd78354fb8497a
     revision: 1
     go: "1.27.4" # go.mod: go 1.27.3; upstream's release build uses go.mod's version
     assets:
-      web-ui: bcc789586b4a7e44f1bdecc15986630943763573659bfe94578744297200c22a # also in upstream's SHA256SUMS
+      web-ui: 57dae3479415498fc9e38416115bc09d2cf99461c0498e34475c732195f67878 # also in upstream's SHA256SUMS
