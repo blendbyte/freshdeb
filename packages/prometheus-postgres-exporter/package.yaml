@@ -14,8 +14,8 @@ packaging:
 
 tracks:
   main:
-    tag: "v0.21.0"
-    commit: 4f815ef9ec214f990df981e24db197066233e34f
+    tag: "v0.21.1"
+    commit: 05ec47a115a2c5d813e64c664213a88682fc8dc7
     revision: 1
     go: "1.26.11"  # upstream's release build: Go 1.26 (.promu.yml); go.mod: go 1.25.0
     patches: patches/main  # empty: Debian's only patch (kingpin import path) isn't needed with vendored modules
