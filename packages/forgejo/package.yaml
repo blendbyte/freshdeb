@@ -15,10 +15,10 @@ packaging:
 
 tracks:
   main:  # every release; a new major every three months
-    tag: "v17.0.1"
-    commit: 363f3dc30beef902b187af5a5244ff7af44901e6
-    sha256: d6b32ac77e71af0737f30613d985a0dc335b694b8b989d609a0cc88972f2fd4d
-    revision: 3
+    tag: "v17.0.2"
+    commit: eea4b0052f24f5ee986b46c00ebf30bdbbf654cb
+    sha256: 5b08f6c24819aeb62b80f2f50f989cfcdfde0a8887f66438cbf32b556b1b6efb
+    revision: 1
     go: "1.26.11"  # go.mod: toolchain go1.26.10
   lts:
     line: "15"  # current LTS; move to 19 (April 2027) in a PR
