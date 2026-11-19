@@ -23,9 +23,9 @@ tracks:
     eol: 2031-05-19
     patches: patches/9.1
   "9.0":
-    tag: "9.0.7"
-    commit: fe8d406c0b5a64ec897f6455e4de684629883764
-    revision: 3
+    tag: "9.0.8"
+    commit: 825e3b1f590984ac91c90f65059c5f235072084a
+    revision: 1
     eol: 2028-10-21
     patches: patches/9.0  # from Ubuntu's 9.0.4-0ubuntu0.2; Debian skipped 9.0
   "8.1":
