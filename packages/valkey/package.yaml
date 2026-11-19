@@ -35,9 +35,9 @@ tracks:
     eol: 2030-03-31
     patches: patches/8.1  # from Debian 8.1.4+dfsg1-2, CVE patches dropped (upstream)
   "8.0":
-    tag: "8.0.12"
-    commit: 3982d41ef1984629a95b6f7ea0adc7e0ac2e3df7
-    revision: 3
+    tag: "8.0.13"
+    commit: 668bf64ed3d6b627daa5feee7341a881375e4b0f
+    revision: 1
     eol: 2027-09-15
     patches: patches/8.0  # from Debian 8.0.2+dfsg1-1
 
