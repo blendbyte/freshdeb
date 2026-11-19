@@ -29,9 +29,9 @@ tracks:
     eol: 2028-10-21
     patches: patches/9.0  # from Ubuntu's 9.0.4-0ubuntu0.2; Debian skipped 9.0
   "8.1":
-    tag: "8.1.11"
-    commit: 5fb5bc4b13b22084b54c7db2a88d14ce2f6fa867
-    revision: 3
+    tag: "8.1.12"
+    commit: 38316e6c481cc6d265ab52482223c68f63f0ac30
+    revision: 1
     eol: 2030-03-31
     patches: patches/8.1  # from Debian 8.1.4+dfsg1-2, CVE patches dropped (upstream)
   "8.0":
