@@ -120,7 +120,7 @@ class CatalogTests(unittest.TestCase):
         self.assertTrue(any("40-character" in e for e in self.errors()))
 
     def test_alias_to_unknown_track(self):
-        self.replace('"9": "9.1"', '"9": "9.7"')
+        self.replace('"9": "9.2"', '"9": "9.7"')
         self.assertTrue(any("unknown track 9.7" in e for e in self.errors()))
 
     def test_alias_to_eol_track_is_fine(self):
@@ -309,8 +309,8 @@ class PlanTests(unittest.TestCase):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
         self.commit()
         selected, errors, _ = self.plan()
-        self.assertEqual(set(selected), {("valkey", k) for k in ("9.1", "9.0", "8.1", "8.0")})
-        self.assertEqual(len(errors), 4)
+        self.assertEqual(set(selected), {("valkey", k) for k in ("9.2", "9.1", "9.0", "8.1", "8.0")})
+        self.assertEqual(len(errors), 5)
         self.assertIn("bump revision", errors[0])
 
     def test_new_signing_key_needs_no_build(self):
@@ -328,7 +328,7 @@ class PlanTests(unittest.TestCase):
         selected, errors, _ = self.plan()
         self.assertEqual(errors, [])
         self.assertTrue(all(selected.values()))
-        self.assertEqual(len(selected), 4)
+        self.assertEqual(len(selected), 5)
 
     def test_track_patches_affect_only_their_track(self):
         self.edit("packages/valkey/patches/8.0/series", "\n", "\n# changed\n")
@@ -381,7 +381,7 @@ class PlanTests(unittest.TestCase):
     def test_test_settings_change_is_test_only(self):
         self.edit("packages/valkey/package.yaml", "\ntracks:", "\ntests:\n  capabilities: [NET_ADMIN]\n\ntracks:")
         self.commit()
-        self.assertEqual(self.plan(), ({("valkey", "9.1"): False}, [], set()))
+        self.assertEqual(self.plan(), ({("valkey", "9.2"): False}, [], set()))
 
     def test_eol_tracks_are_not_built(self):
         self.edit("packages/valkey/debian/rules", "export BUILD_TLS = yes", "export BUILD_TLS = yes\n# changed")
@@ -394,7 +394,7 @@ class PlanTests(unittest.TestCase):
         self.commit()
         selected, errors, _ = self.plan()
         self.assertEqual(errors, [])
-        self.assertEqual(selected, {("valkey", "9.1"): False})
+        self.assertEqual(selected, {("valkey", "9.2"): False})
 
     def test_infrastructure_change_builds_a_canary(self):
         self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
@@ -404,7 +404,7 @@ class PlanTests(unittest.TestCase):
         expected = {(pkg.name, freshdeb.newest_track([k for k, tr in pkg.tracks.items() if tr.active(TODAY)])): False
                     for pkg in freshdeb.load_packages(self.repo)}
         self.assertEqual(selected, expected)
-        self.assertIn(("valkey", "9.1"), expected)
+        self.assertIn(("valkey", "9.2"), expected)
 
     def test_canary_is_one_job_per_package_without_upstream_tests(self):
         self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
@@ -432,7 +432,7 @@ class PlanTests(unittest.TestCase):
                          [("valkey", "9.1", "bookworm", "amd64", True, False)])
 
     def test_releases_run_upstream_tests_even_with_a_canary(self):
-        self.bump_valkey("9.1")
+        self.bump_valkey("9.2")
         self.edit("scripts/build.sh", "set -euo pipefail", "set -euo pipefail\n# changed")
         self.commit()
         selected, _, _ = freshdeb.plan_changes(self.repo, self.base, "HEAD", TODAY)
@@ -1163,7 +1163,7 @@ class WatchReportTests(unittest.TestCase):
     def test_release_line_between_tracks(self):
         pkg = freshdeb.load_package("valkey", self.tmp)
         lines = self.report(pkg, {"8.2.0": "a" * 40, "8.2.1": "b" * 40, "7.2.9": "c" * 40})
-        self.assertIn("  valkey: release line 8.2 (8.2.1) is between tracks 8.0 and 9.1 -> not added; "
+        self.assertIn("  valkey: release line 8.2 (8.2.1) is between tracks 8.0 and 9.2 -> not added; "
                       "add a track by hand if it should be", lines)
         self.assertFalse(any("release line 7.2" in line for line in lines))
 
@@ -1193,9 +1193,9 @@ class LatestAliasTests(unittest.TestCase):
     def test_numeric_aliases_unchanged(self):
         pkg = freshdeb.load_package("valkey", ROOT)
         self.assertNotIn("latest", pkg.aliases)
-        tags = {**{t.tag: t.commit for t in pkg.tracks.values()}, "9.2.0": "a" * 40}
+        tags = {**{t.tag: t.commit for t in pkg.tracks.values()}, "9.3.0": "a" * 40}
         changes = freshdeb.watch_package(pkg, tags, TODAY)
-        self.assertEqual(changes[0]["aliases"], {"9": "9.2"})
+        self.assertEqual(changes[0]["aliases"], {"9": "9.3"})
 
 
 class WatchTests(unittest.TestCase):
@@ -1215,12 +1215,12 @@ class WatchTests(unittest.TestCase):
                                     "tag": new, "commit": "a" * 40}])
 
     def test_new_minor_becomes_a_track_and_moves_the_alias(self):
-        tags = {**self.tags, "9.2.0-rc1": "a" * 40, "9.2.0": "b" * 40, "9.2.1": "c" * 40}
+        tags = {**self.tags, "9.3.0-rc1": "a" * 40, "9.3.0": "b" * 40, "9.3.1": "c" * 40}
         changes = freshdeb.watch_package(self.pkg, tags, TODAY)
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]["kind"], "new-track")
-        self.assertEqual((changes[0]["track"], changes[0]["tag"]), ("9.2", "9.2.1"))
-        self.assertEqual(changes[0]["aliases"], {"9": "9.2"})
+        self.assertEqual((changes[0]["track"], changes[0]["tag"]), ("9.3", "9.3.1"))
+        self.assertEqual(changes[0]["aliases"], {"9": "9.3"})
 
     def test_new_major_gets_its_own_alias(self):
         changes = freshdeb.watch_package(self.pkg, {**self.tags, "10.0.0": "d" * 40}, TODAY)
@@ -1228,7 +1228,7 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(changes[0]["aliases"], {"10": "10.0"})
 
     def test_release_candidates_are_ignored(self):
-        self.assertEqual(freshdeb.watch_package(self.pkg, {**self.tags, "9.2.0-rc1": "a" * 40}, TODAY), [])
+        self.assertEqual(freshdeb.watch_package(self.pkg, {**self.tags, "9.3.0-rc1": "a" * 40}, TODAY), [])
 
     def test_apply_keeps_comments(self):
         if not shutil.which("yq"):
@@ -1239,18 +1239,18 @@ class WatchTests(unittest.TestCase):
         new = next_patch(self.pkg.tracks["9.1"].tag)
         freshdeb.apply_change(tmp, {"package": "valkey", "kind": "bump", "track": "9.1", "tag": new,
                                     "commit": "a" * 40})
-        freshdeb.apply_change(tmp, {"package": "valkey", "kind": "new-track", "track": "9.2", "tag": "9.2.0",
-                                    "commit": "b" * 40, "based_on": "9.1", "aliases": {"9": "9.2"}})
+        freshdeb.apply_change(tmp, {"package": "valkey", "kind": "new-track", "track": "9.3", "tag": "9.3.0",
+                                    "commit": "b" * 40, "based_on": "9.2", "aliases": {"9": "9.3"}})
         text = (tmp / "packages/valkey/package.yaml").read_text()
         header = (ROOT / "packages/valkey/package.yaml").read_text().splitlines()[0]
         self.assertTrue(header.startswith("#"))
         self.assertIn(header, text)
         pkg = freshdeb.load_package("valkey", tmp)
-        self.assertEqual(list(pkg.tracks)[:2], ["9.2", "9.1"])
+        self.assertEqual(list(pkg.tracks)[:3], ["9.3", "9.2", "9.1"])
         self.assertEqual((pkg.tracks["9.1"].tag, pkg.tracks["9.1"].revision), (new, 1))
-        self.assertEqual(pkg.tracks["9.2"].patches, "patches/9.2")
-        self.assertTrue((tmp / "packages/valkey/patches/9.2/series").is_file())
-        self.assertEqual(pkg.aliases["9"], "9.2")
+        self.assertEqual(pkg.tracks["9.3"].patches, "patches/9.3")
+        self.assertTrue((tmp / "packages/valkey/patches/9.3/series").is_file())
+        self.assertEqual(pkg.aliases["9"], "9.3")
         self.assertEqual(freshdeb.validate_all(tmp, TODAY), [], text)
         shutil.rmtree(tmp)
 

@@ -1,0 +1,25 @@
+diff -ruN a/debian/control b/debian/control
+--- a/debian/control
++++ b/debian/control
+@@ -9,6 +9,7 @@
+  liblzf-dev,
+  libssl-dev,
+  libsystemd-dev,
++ libzstd-dev,
+  lua-bitop-dev,
+  lua-cjson-dev,
+  openssl <!nocheck>,
+diff -ruN a/debian/rules b/debian/rules
+--- a/debian/rules
++++ b/debian/rules
+@@ -4,6 +4,10 @@
+ include /usr/share/dpkg/buildflags.mk
+ 
+ export BUILD_TLS = yes
++# freshdeb: Zstandard streaming compression (rdbcompression and
++# repl-compression zstd, new in 9.2). Upstream links it statically so its
++# allocations count in used_memory.
++export BUILD_ZSTD = yes
+ export CFLAGS CPPFLAGS LDFLAGS
+ export DEB_BUILD_MAINT_OPTIONS = hardening=+all optimize=+lto
+ export DEB_CFLAGS_MAINT_APPEND = -I/usr/include/liblzf

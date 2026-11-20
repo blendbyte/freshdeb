@@ -16,6 +16,12 @@ packaging:
 # A track per supported minor (dates: https://valkey.io/topics/releases/); v9 and v8 follow their newest minor.
 # New minor: watch.yml copies the newest patch set; check Debian's packaging for the line and set eol before merging.
 tracks:
+  "9.2":
+    tag: "9.2.0"
+    commit: d23684e3ec302240754664417e3b99df23e8e4c9
+    revision: 1
+    eol: 2031-11-19
+    patches: patches/9.2
   "9.1":
     tag: "9.1.4"
     commit: 8efb5bb3dd3b69f707777352a105bbea911affd3
@@ -42,7 +48,7 @@ tracks:
     patches: patches/8.0  # from Debian 8.0.2+dfsg1-1
 
 aliases:
-  "9": "9.1"
+  "9": "9.2"
   "8": "8.1"
 
 overlays:
@@ -59,6 +65,10 @@ overlays:
     tracks: ["8.1"]
   - patch: overlays/news-8.0.patch
     tracks: ["8.0"]
+  # Zstandard streaming compression (rdbcompression/repl-compression zstd),
+  # new in 9.2 and off unless built with BUILD_ZSTD=yes; linked statically.
+  - patch: overlays/zstd.patch
+    tracks: ["9.2"]
   # debhelper 13.6 has no dh_installsysusers; create the user and its
   # directories in postinst, the way Debian did before 9.1.
   - patch: overlays/legacy-sysusers.patch
