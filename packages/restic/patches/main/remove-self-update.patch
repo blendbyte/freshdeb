@@ -107,7 +107,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
      commands+=("tag")
 --- a/cmd/restic/main.go
 +++ b/cmd/restic/main.go
-@@ -107,7 +107,6 @@ The full documentation can be found at h
+@@ -106,7 +106,6 @@ The full documentation can be found at h
  
  	registerDebugCommand(cmd, globalOptions)
  	registerMountCommand(cmd, globalOptions)
@@ -115,12 +115,12 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  	global.RegisterProfiling(cmd, os.Stderr)
  
  	return cmd
-@@ -118,7 +117,7 @@ The full documentation can be found at h
+@@ -117,7 +116,7 @@ The full documentation can be found at h
  // user for authentication).
  func needsPassword(cmd string) bool {
  	switch cmd {
--	case "cache", "generate", "help", "options", "self-update", "version", "__complete", "__completeNoDesc":
-+	case "cache", "generate", "help", "options", "version", "__complete", "__completeNoDesc":
+-	case "cache", "generate", "help", "options", "self-update", "version", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
++	case "cache", "generate", "help", "options", "version", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
  		return false
  	default:
  		return true
