@@ -68,6 +68,24 @@ esac
 stats="$(valkey-cli memory malloc-stats)"
 grep -qx "Page size: ${page_size}" <<<"$stats" || { grep -i 'page size' <<<"$stats" >&2; exit 1; }
 
+if dpkg --compare-versions "$expected" ge 9.2; then
+    echo "Zstandard compression is compiled in and round-trips through an RDB"
+    # Without BUILD_ZSTD this answers "Zstandard compression is not available
+    # in this build" (overlays/zstd.patch).
+    test "$(valkey-cli config set repl-compression zstd)" = OK
+    valkey-cli config set repl-compression no >/dev/null
+    test "$(valkey-cli config set rdbcompression zstd)" = OK
+    valkey-cli set freshdeb:zstd "$(printf 'freshdeb%.0s' $(seq 1 200))" >/dev/null
+    valkey-cli save
+    valkey-check-rdb /var/lib/valkey/dump.rdb
+    service valkey-server restart
+    wait_for 6379
+    test "$(valkey-cli strlen freshdeb:zstd)" = 1600
+    valkey-cli del freshdeb:zstd >/dev/null
+    valkey-cli config set rdbcompression yes >/dev/null
+    valkey-cli save
+fi
+
 echo "TLS support is compiled in"
 # Capture first: "cmd | grep -q" trips pipefail when grep exits early.
 cli_help="$(valkey-cli --help 2>&1 || true)"
