@@ -3,20 +3,24 @@
 name: valkey
 description: "Valkey key-value datastore (Redis fork)"
 homepage: https://valkey.io
+
 upstream:
   git: https://github.com/valkey-io/valkey.git
   # Release tags only; rc tags never match.
   tag_regex: '^(?P<version>\d+\.\d+\.\d+)$'
+
 packaging:
   origin: https://salsa.debian.org/debian/valkey.git
-  ref: d625d60ff17b73fa5d7eb4d1cfabc1ee2716d9c2 # 9.1.2-1, unstable
+  ref: d625d60ff17b73fa5d7eb4d1cfabc1ee2716d9c2  # 9.1.2-1, unstable
+
 # A track per supported minor (dates: https://valkey.io/topics/releases/); v9 and v8 follow their newest minor.
 # New minor: watch.yml copies the newest patch set; check Debian's packaging for the line and set eol before merging.
 tracks:
   "9.2":
-    tag: 9.2.0
+    tag: "9.2.0"
     commit: d23684e3ec302240754664417e3b99df23e8e4c9
     revision: 1
+    eol: 2031-11-19
     patches: patches/9.2
   "9.1":
     tag: "9.1.4"
@@ -29,22 +33,24 @@ tracks:
     commit: 825e3b1f590984ac91c90f65059c5f235072084a
     revision: 1
     eol: 2028-10-21
-    patches: patches/9.0 # from Ubuntu's 9.0.4-0ubuntu0.2; Debian skipped 9.0
+    patches: patches/9.0  # from Ubuntu's 9.0.4-0ubuntu0.2; Debian skipped 9.0
   "8.1":
     tag: "8.1.12"
     commit: 38316e6c481cc6d265ab52482223c68f63f0ac30
     revision: 1
     eol: 2030-03-31
-    patches: patches/8.1 # from Debian 8.1.4+dfsg1-2, CVE patches dropped (upstream)
+    patches: patches/8.1  # from Debian 8.1.4+dfsg1-2, CVE patches dropped (upstream)
   "8.0":
     tag: "8.0.13"
     commit: 668bf64ed3d6b627daa5feee7341a881375e4b0f
     revision: 1
     eol: 2027-09-15
-    patches: patches/8.0 # from Debian 8.0.2+dfsg1-1
+    patches: patches/8.0  # from Debian 8.0.2+dfsg1-1
+
 aliases:
   "9": "9.2"
   "8": "8.1"
+
 overlays:
   # Upstream's bundled jemalloc instead of the system one (all releases):
   # active defragmentation needs it. Built for 64K pages outside x86, so
@@ -66,6 +72,7 @@ overlays:
   # sysusers' "u!" modifier needs systemd 256 (bookworm 252, noble 255); "u" has no password either.
   - patch: overlays/sysusers-no-lock-modifier.patch
     codenames: [bookworm, noble]
+
 build:
   # Upstream's suite takes 40+ min and never gated Debian's build; tests/ and the autopkgtests are our gate.
   options: [nocheck]

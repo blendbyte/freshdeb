@@ -183,7 +183,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("v9.1", json.loads((self.remote / "valkey/status.json").read_text())["components"])
         release_file = (self.remote / "valkey/dists/trixie/Release").read_text()
         self.assertRegex(release_file, r"(?m)^Label: freshdeb valkey$")
-        self.assertRegex(release_file, r"(?m)^Components: v9\.1 v9\.0 v8\.1 v8\.0 v9 v8$")
+        self.assertRegex(release_file, r"(?m)^Components: v9\.2 v9\.1 v9\.0 v8\.1 v8\.0 v9 v8$")
 
     def test_apt_installs_from_project_repository(self):
         self.bootstrap()
@@ -202,7 +202,7 @@ class ReleaseTests(unittest.TestCase):
         run("apt-get", *options, "update")
         policy = run("apt-cache", *options, "policy", "valkey-server")
         pkg = freshdeb.load_package("valkey", self.root)
-        self.assertIn(pkg.version(self.config, "9.1", codename), policy)
+        self.assertIn(pkg.version(self.config, "9.2", codename), policy)
 
     # ─── bootstrap and registry ─────────────────────────────────────────
 
@@ -239,13 +239,13 @@ class ReleaseTests(unittest.TestCase):
 
     def test_partial_release_only_touches_its_track_and_alias(self):
         before = self.bootstrap()
-        self.edit_package('.tracks["9.1"].revision += 1')
-        revision = freshdeb.load_package("valkey", self.root).tracks["9.1"].revision
-        self.assertEqual(self.publish(self.artifacts(tracks=["9.1"]), commit="beef"), {})
+        self.edit_package('.tracks["9.2"].revision += 1')
+        revision = freshdeb.load_package("valkey", self.root).tracks["9.2"].revision
+        self.assertEqual(self.publish(self.artifacts(tracks=["9.2"]), commit="beef"), {})
         after = self.indexes()
         for key in set(before) | set(after):
-            if key[1] in ("v9.1", "v9"):
-                self.assertRegex(after[key]["Version"], rf"^9\.1\.\d+-{revision}\+freshdeb~")
+            if key[1] in ("v9.2", "v9"):
+                self.assertRegex(after[key]["Version"], rf"^9\.2\.\d+-{revision}\+freshdeb~")
             else:
                 self.assertEqual(before.get(key), after.get(key), key)
         self.assertEqual(self.registry()["projects"]["valkey"]["commit"], "beef")
@@ -253,15 +253,15 @@ class ReleaseTests(unittest.TestCase):
     def test_alias_follows_a_new_track(self):
         self.bootstrap()
         pkg = freshdeb.load_package("valkey", self.root)
-        nine_one = pkg.tracks["9.1"]
-        self.edit_package(f'.tracks = ({{"9.2": {{"tag": "9.2.0", "commit": "{nine_one.commit}", '
-                          f'"revision": 1, "patches": "patches/9.1"}}}} + .tracks) | .aliases["9"] = "9.2"')
-        self.assertEqual(self.publish(self.artifacts(tracks=["9.2"])), {})
+        nine_two = pkg.tracks["9.2"]
+        self.edit_package(f'.tracks = ({{"9.3": {{"tag": "9.3.0", "commit": "{nine_two.commit}", '
+                          f'"revision": 1, "patches": "patches/9.2"}}}} + .tracks) | .aliases["9"] = "9.3"')
+        self.assertEqual(self.publish(self.artifacts(tracks=["9.3"])), {})
         after = self.indexes()
         for codename in self.config.distributions:
-            self.assertEqual(self.version_in(after, codename, "v9"), self.version_in(after, codename, "v9.2"))
-            self.assertTrue(self.version_in(after, codename, "v9").startswith("9.2.0-1"))
-            self.assertTrue(self.version_in(after, codename, "v9.1").startswith("9.1."))
+            self.assertEqual(self.version_in(after, codename, "v9"), self.version_in(after, codename, "v9.3"))
+            self.assertTrue(self.version_in(after, codename, "v9").startswith("9.3.0-1"))
+            self.assertTrue(self.version_in(after, codename, "v9.2").startswith("9.2."))
 
     def test_same_version_is_not_republished(self):
         before = self.bootstrap()
@@ -285,7 +285,7 @@ class ReleaseTests(unittest.TestCase):
     def test_manual_release_publishes_test_only_builds(self):
         self.publish(self.artifacts(publish=False), bootstrap=True, all_builds=True)
         pkg = freshdeb.load_package("valkey", self.root)
-        self.assertEqual(self.version_in(self.indexes(), "bookworm", "v9"), pkg.version(self.config, "9.1", "bookworm"))
+        self.assertEqual(self.version_in(self.indexes(), "bookworm", "v9"), pkg.version(self.config, "9.2", "bookworm"))
 
     def test_refuses_builds_that_disagree_with_the_manifest(self):
         self.bootstrap()

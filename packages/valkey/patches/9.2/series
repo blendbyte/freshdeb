@@ -1,5 +1,5 @@
-# Debian's configuration defaults and CPPFLAGS for upstream's makefiles.
+# Debian's configuration defaults.
 # Dropped: the kFreeBSD and Hurd fixes (0001, 0003) and the system jemalloc
-# support (0004, 0005); we build with upstream's bundled jemalloc.
+# support (0004, 0005); we build with upstream's bundled jemalloc. CPPFLAGS
+# for upstream's makefiles (0002) is upstream since 9.2.
 debian-packaging/0001-Set-Debian-configuration-defaults.patch
-0002-Add-CPPFLAGS-to-upstream-makefiles.patch
