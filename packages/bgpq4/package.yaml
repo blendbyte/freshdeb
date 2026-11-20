@@ -15,8 +15,8 @@ packaging:
 # Two-part versions (1.16); the regex skips the 0.0.x tags from before 1.0.
 tracks:
   main:
-    tag: "1.16"
-    commit: 28232089197ab4582d99da1c3b048259d3dbef70
+    tag: "1.17"
+    commit: 4eba2c33be1a3a4e8ab2c889c1d1f73a5a0616f0
     revision: 1
 
 overlays:
