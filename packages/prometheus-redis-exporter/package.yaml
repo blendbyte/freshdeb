@@ -11,8 +11,8 @@ packaging:
   ref: 0886b3eda5585a86bb9a574d0b27111afbcece72 # 1.86.0-1, unstable
 tracks:
   main:
-    tag: "v1.98.0"
-    commit: 74c09b25afc53d152ea814398edde86490c584f2
+    tag: "v1.99.0"
+    commit: be1ea15b0c57af5d905edd33f4cd452e829bc5c0
     revision: 1
     go: "1.27.4" # upstream's release build: Go 1.27 (release workflow); go.mod: go 1.26.0
 overlays:
