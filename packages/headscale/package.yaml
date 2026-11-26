@@ -12,9 +12,9 @@ packaging:
 # latest follows the newest. Upstream supports only its latest release: set eol when the next minor is out.
 tracks:
   "0.29":
-    tag: "v0.29.7"
-    commit: c9cf210b8bc84d13177e18b91f555788a44b47b6
-    revision: 2
+    tag: "v0.29.8"
+    commit: 5aeae67c551d681f79e14be45eddac093c604de8
+    revision: 1
     go: "1.27.4" # go.mod: go 1.27.3; upstream's release build uses it too
     patches: patches/0.29 # ours: version, commit and build time from the linker (no git in a source tarball)
 aliases:
