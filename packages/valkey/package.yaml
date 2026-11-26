@@ -17,8 +17,8 @@ packaging:
 # New minor: watch.yml copies the newest patch set; check Debian's packaging for the line and set eol before merging.
 tracks:
   "9.2":
-    tag: "9.2.0"
-    commit: d23684e3ec302240754664417e3b99df23e8e4c9
+    tag: "9.2.1"
+    commit: d1a551720f5feb1a2ff5b9a7b5e22520ae77eeef
     revision: 1
     eol: 2031-11-19
     patches: patches/9.2
